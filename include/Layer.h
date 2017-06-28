@@ -9,6 +9,11 @@ namespace tkDNN {
 
 /**
     Data rapresentation beetween layers
+    n = batch size
+    c = channels
+    h = heigth (lines)
+    w = width  (rows)
+    l = lenght (3rd dimension)
 */
 struct dataDim_t {
 
@@ -27,6 +32,7 @@ struct dataDim_t {
         return n*c*h*w*l;
     }
 };
+
 
 /** 
     Simple layer Father class
@@ -49,6 +55,7 @@ protected:
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
 };
 
+
 /**
     Father class of all layer that need to load trained weights
 */
@@ -68,6 +75,7 @@ protected:
     value_type *bias_h, *bias_d;
 };
 
+
 /**
     Dense (full interconnection) layer
 */
@@ -85,7 +93,7 @@ protected:
 };
 
 /**
-    Activation layer (it doesnt need weigths)
+    Avaible activation functions
 */
 typedef enum {
     ACTIVATION_SIGMOID = 0,
@@ -94,6 +102,9 @@ typedef enum {
     ACTIVATION_ELU     = 100
 } tkdnnActivationMode_t;
 
+/**
+    Activation layer (it doesnt need weigths)
+*/
 class Activation : public Layer {
 
 public:
@@ -105,6 +116,33 @@ public:
 protected:
     tkdnnActivationMode_t act_mode;
     value_type *dstData;  //where results will be putted
+};
+
+
+/**
+    Convolutional 2D layer
+*/
+class Conv2d : public LayerWgs {
+
+public:
+    Conv2d(Network *net, dataDim_t in_dim, int out_ch,
+            int kernelH, int kernelW, int strideH, int strideW,
+            const char* fname_weights, const char* fname_bias); 
+    virtual ~Conv2d();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+    int kernelH, kernelW, strideH, strideW;
+
+    cudnnTensorDescriptor_t biasTensorDesc;
+    cudnnFilterDescriptor_t filterDesc;
+    cudnnConvolutionDescriptor_t convDesc;
+    cudnnConvolutionFwdAlgo_t algo;
+
+    void*  workSpace;
+    size_t ws_sizeInBytes;
 };
 
 }
