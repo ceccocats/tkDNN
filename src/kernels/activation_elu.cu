@@ -10,11 +10,18 @@ __global__
 void activation_elu(value_type *input, value_type *output, int size) {
 
     int i = threadIdx.x*(blockIdx.x +1);
-    
-    if(i<size) 
-        output[i] =  (input[i]>0)*input[i] + (input[i]<0)*(expf(input[i]) -1);
-    
-    // the if x > or < is condensed in one operation for better threads flow 
+
+    if(i<size) {    
+        value_type k0, k1;
+        
+        if (input[i]>0)
+            k0 = 1.0f;
+        else
+            k0 = 0.0f;
+        k1 = 1.0f-k0;
+
+        output[i] = k0*input[i] + k1*(expf(input[i]) -1.0f);
+    }
  }
 
 
