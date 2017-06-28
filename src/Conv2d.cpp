@@ -16,9 +16,9 @@ Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch,
     this->strideH = strideH;
     this->strideW = strideW;
 
-    checkCUDNN( cudnnCreateTensorDescriptor(&biasTensorDesc) );
     checkCUDNN( cudnnCreateFilterDescriptor(&filterDesc) );
     checkCUDNN( cudnnCreateConvolutionDescriptor(&convDesc) );
+    checkCUDNN( cudnnCreateTensorDescriptor(&biasTensorDesc) );
 
     int n = input_dim.n;
     int c = input_dim.c;
@@ -79,6 +79,10 @@ Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch,
 
 Conv2d::~Conv2d() {
     
+    checkCUDNN( cudnnDestroyFilterDescriptor(filterDesc) );
+    checkCUDNN( cudnnDestroyConvolutionDescriptor(convDesc) );
+    checkCUDNN( cudnnDestroyTensorDescriptor(biasTensorDesc) );
+
     if (ws_sizeInBytes!=0)
         checkCuda( cudaFree(workSpace) );
 
