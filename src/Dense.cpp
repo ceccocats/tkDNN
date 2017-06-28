@@ -8,9 +8,14 @@ Dense::Dense(Network *net, dataDim_t in_dim,
     int out_ch, const char* fname_weights, const char* fname_bias) : 
     LayerWgs(net, in_dim, in_dim.tot(), out_ch, 1, 1, 1, fname_weights, fname_bias) {
 
-    this->out_ch = out_ch;
+    output_dim.n = 1;
+    output_dim.c = out_ch;
+    output_dim.h = 1;
+    output_dim.w = 1;
+    output_dim.l = 1;
+
     //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, outputs*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(value_type)) );
 }
 
 Dense::~Dense() {
@@ -24,9 +29,9 @@ value_type* Dense::infer(dataDim_t &dim, value_type* srcData) {
         FatalError("Not Implemented"); 
     
     int dim_x = dim.tot();
-    int dim_y = outputs;
+    int dim_y = output_dim.tot();
 
-    if (dim_x != inputs)
+    if (dim_x != input_dim.tot())
         FatalError("Input mismatch");
 
     value_type alpha = value_type(1), beta = value_type(1);

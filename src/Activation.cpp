@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include "Layer.h"
+#include "kernels.h"
 
 namespace tkDNN {
 
-Activation::Activation(Network *net, dataDim_t input_dim, cudnnActivationMode_t act_mode) : 
+Activation::Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t act_mode) : 
     Layer(net, input_dim) {
 
     this->act_mode = act_mode;
@@ -29,17 +30,21 @@ Activation::~Activation() {
 
 value_type* Activation::infer(dataDim_t &dim, value_type* srcData) {
 
-    value_type alpha = value_type(1);
-    value_type beta  = value_type(0);
-    checkCUDNN( cudnnActivationForward(net->cudnnHandle,
-                                        act_mode,
-                                        &alpha,
-                                        srcTensorDesc,
-                                        srcData,
-                                        &beta,
-                                        dstTensorDesc,
-                                        dstData) );    
+    if(act_mode == ACTIVATION_ELU) {
+        activationELUForward(srcData, dstData, dim.tot());
 
+    } else {
+        value_type alpha = value_type(1);
+        value_type beta  = value_type(0);
+        checkCUDNN( cudnnActivationForward(net->cudnnHandle,
+                                            cudnnActivationMode_t(act_mode),
+                                            &alpha,
+                                            srcTensorDesc,
+                                            srcData,
+                                            &beta,
+                                            dstTensorDesc,
+                                            dstData) );    
+    }
     return dstData;
 }
 

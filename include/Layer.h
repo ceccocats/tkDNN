@@ -42,9 +42,10 @@ public:
         return NULL;
     }
 
+    dataDim_t input_dim, output_dim;
+
 protected:
     Network *net;
-    dataDim_t input_dim;
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
 };
 
@@ -81,22 +82,28 @@ public:
 
 protected:
     value_type *dstData;  //where results will be putted
-    int out_ch;
 };
 
 /**
     Activation layer (it doesnt need weigths)
 */
+typedef enum {
+    ACTIVATION_SIGMOID = 0,
+    ACTIVATION_RELU    = 1,
+    ACTIVATION_TANH    = 2,
+    ACTIVATION_ELU     = 100
+} tkdnnActivationMode_t;
+
 class Activation : public Layer {
 
 public:
-    Activation(Network *net, dataDim_t input_dim, cudnnActivationMode_t act_mode); 
+    Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t act_mode); 
     virtual ~Activation();
 
     value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    cudnnActivationMode_t act_mode;
+    tkdnnActivationMode_t act_mode;
     value_type *dstData;  //where results will be putted
 };
 
