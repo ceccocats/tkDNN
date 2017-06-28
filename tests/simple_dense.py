@@ -8,37 +8,37 @@ from keras.layers.pooling import MaxPooling2D, MaxPooling3D
 from keras.models import Sequential, Model
 from keras.layers import Cropping2D
 import keras.backend.tensorflow_backend as KTF
+from weights_exporter import *
 
-
-def dense_model(inp, out):
+def dense_model():
     model = Sequential()
-    model.add(Dense(out, input_shape=(1, inp)))
+    model.add(Dense(256, input_shape=(1, 512)))
     model.add(ELU())
-
+    model.add(Dense(32))
+    model.add(ELU())
+    model.add(Dense(2))
+    
     sgd = keras.optimizers.Adam(lr=1e-4, decay=1e-8)
     model.compile(optimizer=sgd, loss="mse")
-
     return model
-
 
 if __name__ == '__main__':
 
-    model = dense_model(8, 2)
+    model = dense_model()
     wg = model.get_weights()
-    w = np.squeeze(wg[0])
-    w = np.array([ i[0] for i in w ] + [ i[1] for i in w ], dtype=np.float32) 
-    b = np.squeeze(wg[1])
-    
-    print "weigths: ", w
-    print "bias: ", b
-    w.tofile("dense.bin", format="f")
-    b.tofile("dense.bias.bin", format="f")
+
+    export_dense("dense0", wg[0], wg[1])
+    export_dense("dense1", wg[2], wg[3])
+    export_dense("dense2", wg[4], wg[5])
+
+    model.set_weights(wg)
    
-    X = np.array([[[0,1,2,3,4,5,6,7]]], dtype=np.float32)
-    i = np.squeeze(X[0][0])
-    print "input: ", i    
+    X = np.random.rand(1, 512)
+    i = np.array(X, dtype=np.float32)
     i.tofile("input.bin", format="f")
-    
-    r = model.predict( X, batch_size=1)
+
+    print "Input: ", i
+    r = model.predict( X[None, :], batch_size=1)
+
     print "Result: ", r
     print "Result shape: ", np.shape(r) 
