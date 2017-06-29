@@ -17,18 +17,19 @@ def dense_model():
             batch_input_shape=(1, 100, 100, 4),         # 100by100by2
             output_shape=(100, 100, 4, 1)))                         # 100by100by2
     model.add(Convolution3D(16, kernel_size=(8, 8, 2), subsample=(4, 4, 1), border_mode="valid", 
-                bias_initializer="random_uniform", activation="relu"))
-    #model.add(ELU())
+                bias_initializer="random_uniform"))
+    model.add(ELU())
     model.add(AveragePooling3D(pool_size=(2, 2, 1)))
     model.add(Convolution3D(16, kernel_size=(4, 4, 2), subsample=(2, 2, 1), border_mode="valid", 
-                bias_initializer="random_uniform", activation="relu"))
+                bias_initializer="random_uniform"))
+    model.add(ELU())
     model.add(Convolution3D(24, kernel_size=(3, 3, 2), subsample=(1, 1, 1), border_mode="valid", 
-                bias_initializer="random_uniform", activation="relu"))
-    #model.add(ELU())
+                bias_initializer="random_uniform"))
+    model.add(ELU())
     model.add(Flatten())
-    model.add(Dense(256, activation="relu", bias_initializer="random_uniform"))
+    model.add(Dense(256, bias_initializer="random_uniform"))
+    model.add(ELU())
     model.add(Dense(32, activation="relu", bias_initializer="random_uniform"))
-    #model.add(ELU())
     model.add(Dense(2, bias_initializer="random_uniform"))
 
     sgd = keras.optimizers.Adam(lr=1e-4, decay=1e-8)
