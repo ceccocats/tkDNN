@@ -54,3 +54,13 @@ void matrixTranspose(cublasHandle_t handle, value_type* srcData, value_type* dst
     float const beta(0.0);
     checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, &alpha, A, n, &beta, A, m, clone, m ));
 }
+
+void matrixMulAdd(  cublasHandle_t handle, value_type* srcData, value_type* dstData, 
+                    value_type* add_vector, int dim, value_type mul) {
+
+    checkCuda( cudaMemcpy(dstData, add_vector, dim*sizeof(value_type), cudaMemcpyDeviceToDevice));
+        
+    value_type alpha = mul;
+    checkERROR( cublasSaxpy(handle, dim, &alpha, srcData, 1, dstData, 1));
+
+}

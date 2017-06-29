@@ -191,5 +191,23 @@ protected:
     value_type *dstData;  //where results will be putted
 };
 
+
+/**
+    MulAdd layer
+    apply a multiplication and then an addition for each data
+*/
+class MulAdd : public Layer {
+
+public:
+    MulAdd(Network *net, dataDim_t input_dim, value_type mul, value_type add); 
+    virtual ~MulAdd();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type mul, add;
+    value_type *dstData, *add_vector;  //where results will be putted
+};
+
 }
 #endif //LAYER_H
