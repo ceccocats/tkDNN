@@ -1,6 +1,5 @@
 import keras
 import numpy as np
-import pickle
 from keras.models import Sequential
 from keras.layers import Input, Dense, Activation, Flatten, Dropout, ELU, Reshape, Lambda
 from keras.layers.convolutional import Convolution2D, Convolution3D
