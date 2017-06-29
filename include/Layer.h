@@ -175,5 +175,21 @@ protected:
 };
 
 
+/**
+    Flatten layer
+    is actually a matrix transposition
+*/
+class Flatten : public Layer {
+
+public:
+    Flatten(Network *net, dataDim_t input_dim); 
+    virtual ~Flatten();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+};
+
 }
 #endif //LAYER_H

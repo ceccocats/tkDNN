@@ -19,6 +19,7 @@ def dense_model():
     model.add(Convolution3D(4, (2, 2, 2), subsample=(1, 1, 1), 
                            bias_initializer='random_uniform'))
     model.add(ELU())
+    model.add(Flatten())
 
     sgd = keras.optimizers.Adam(lr=1e-4, decay=1e-8)
     model.compile(optimizer=sgd, loss="mse")

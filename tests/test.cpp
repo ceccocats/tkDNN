@@ -18,6 +18,7 @@ int main() {
     tkDNN::Activation a0 (&net, c0.output_dim, tkDNN::ACTIVATION_RELU);
     tkDNN::Conv3d     c1 (&net, a0.output_dim, 4, 2, 2, 2, 1, 1, 1, c1_bin, c1_bias_bin);
     tkDNN::Activation a1 (&net, c1.output_dim, tkDNN::ACTIVATION_ELU);
+    tkDNN::Flatten    f1 (&net, a1.output_dim);
 
     // Load input
     value_type *data;
@@ -33,6 +34,7 @@ int main() {
     data = a0.infer(dim, data); dim.print();
     data = c1.infer(dim, data); dim.print();
     data = a1.infer(dim, data); dim.print();
+    data = f1.infer(dim, data); dim.print();
 
     TIMER_STOP
     // Print result

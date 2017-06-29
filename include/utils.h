@@ -65,5 +65,6 @@
 void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d);
 void printDeviceVector(int size, value_type* vec_d);
 void resize(int size, value_type **data);
+void matrixTranspose(cublasHandle_t handle, value_type* srcData, value_type* dstData, int rows, int cols);
 
 #endif //UTILS_H
