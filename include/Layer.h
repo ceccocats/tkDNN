@@ -209,5 +209,40 @@ protected:
     value_type *dstData, *add_vector;  //where results will be putted
 };
 
+
+
+/**
+    Avaible pooling functions (padding on tkDNN is not supported)
+*/
+typedef enum {
+    POOLING_MAX     = 0,
+    POOLING_AVERAGE = 1,                  // count for average includes padded values
+    POOLING_AVERAGE_EXCLUDE_PADDING = 2   // count for average does not include padded values
+} tkdnnPoolingMode_t;
+
+/**
+    Pooling layer
+    currenty supported only 2d pooing (also on 3d input)
+*/
+class Pooling : public Layer {
+
+public:
+    Pooling(Network *net, dataDim_t input_dim, int winH, int winW, 
+            int strideH, int strideW, tkdnnPoolingMode_t pool_mode); 
+    virtual ~Pooling();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+
+    cudnnPoolingDescriptor_t poolingDesc;
+
+    int winH, winW;
+    int strideH, strideW;
+    tkdnnPoolingMode_t pool_mode;
+    value_type *dstData, *tmpInputData, *tmpOutputData;  //where results will be putted
+    bool poolOn3d;
+};
+
 }
 #endif //LAYER_H
