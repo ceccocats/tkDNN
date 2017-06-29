@@ -1,5 +1,5 @@
 #include<iostream>
-#include "Layer.h"
+#include "tkdnn.h"
 
 const char *input_bin   = "../tests/input.bin";
 const char *c0_bin      = "../tests/conv0.bin";
@@ -60,7 +60,7 @@ int main() {
     data = d4.infer(dim, data); dim.print();
     data = a4.infer(dim, data); dim.print();
     data = d5.infer(dim, data); dim.print();
-    
+
     TIMER_STOP
 
     // Print result

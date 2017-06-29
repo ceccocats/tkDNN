@@ -14,5 +14,4 @@ add_library(tkDNN SHARED src/Layer.cpp src/LayerWgs.cpp
 target_link_libraries(tkDNN kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_TOOLKIT_ROOT_DIR}/lib/libcudnn.so)
 
 add_executable(tkDNNtest tests/test.cpp)
-message(${CUDA_LIBRARIES})
 target_link_libraries(tkDNNtest tkDNN)
