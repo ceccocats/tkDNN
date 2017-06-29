@@ -136,14 +136,44 @@ protected:
     value_type *dstData;  //where results will be putted
     int kernelH, kernelW, strideH, strideW;
 
-    cudnnTensorDescriptor_t biasTensorDesc;
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
     cudnnConvolutionFwdAlgo_t algo;
+    cudnnTensorDescriptor_t biasTensorDesc;
 
     void*  workSpace;
     size_t ws_sizeInBytes;
 };
+
+/**
+    Convolutional 3D layer
+*/
+class Conv3d : public LayerWgs {
+
+public:
+    Conv3d(Network *net, dataDim_t in_dim, int out_ch,
+            int kernelH, int kernelW, int kernelL, 
+            int strideH, int strideW, int strideL,
+            const char* fname_weights, const char* fname_bias); 
+    virtual ~Conv3d();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+    int kernelH, kernelW, kernelL; 
+    int strideH, strideW, strideL;
+
+    cudnnFilterDescriptor_t filterDesc;
+    cudnnConvolutionDescriptor_t convDesc;
+    cudnnConvolutionFwdAlgo_t algo;
+    cudnnTensorDescriptor_t biasTensorDesc;
+    cudnnTensorDescriptor_t biasDstTensorDesc;
+
+    void*  workSpace;
+    size_t ws_sizeInBytes;
+};
+
 
 }
 #endif //LAYER_H
