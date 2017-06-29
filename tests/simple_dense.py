@@ -13,12 +13,13 @@ from weights_exporter import *
 def dense_model():
     model = Sequential()
 
-    model.add(Reshape((10, 10, 1), input_shape=(10, 10)))
-    model.add(Convolution2D(2, (4, 4), subsample=(2, 2), 
+    model.add(Reshape((10, 10, 4, 1), input_shape=(10, 10, 4)))
+    model.add(Convolution3D(2, (4, 4, 2), subsample=(2, 2, 1), activation="relu",
+                           bias_initializer='random_uniform'))
+    model.add(Convolution3D(4, (2, 2, 2), subsample=(1, 1, 1), 
                            bias_initializer='random_uniform'))
     model.add(ELU())
-    model.add(Convolution2D(4, (2, 2), subsample=(1, 1), 
-                           bias_initializer='random_uniform', activation="relu"))
+
     sgd = keras.optimizers.Adam(lr=1e-4, decay=1e-8)
     model.compile(optimizer=sgd, loss="mse")
     return model
@@ -29,10 +30,10 @@ if __name__ == '__main__':
 
     model = dense_model()
     wg = model.get_weights()
-    export_conv2d("conv0", wg[0], wg[1])
-    export_conv2d("conv1", wg[2], wg[3])
+    export_conv3d("conv0", wg[0], wg[1])
+    export_conv3d("conv1", wg[2], wg[3])
 
-    grid = np.random.rand(10,10)
+    grid = np.random.rand(10,10,4)
     X = grid[None,:,:]
     i = np.array(grid.flatten(), dtype=np.float32)
     print i

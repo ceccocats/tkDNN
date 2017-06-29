@@ -13,11 +13,11 @@ int main() {
 
     // Network layout
     tkDNN::Network net;
-    tkDNN::dataDim_t dim(1, 1, 10, 10);
-    tkDNN::Conv2d     c0 (&net, dim,           2, 4, 4, 2, 2, c0_bin, c0_bias_bin);
-    tkDNN::Activation a0 (&net, c0.output_dim, tkDNN::ACTIVATION_ELU);
-    tkDNN::Conv2d     c1 (&net, a0.output_dim, 4, 2, 2, 1, 1, c1_bin, c1_bias_bin);
-    tkDNN::Activation a1 (&net, c1.output_dim, tkDNN::ACTIVATION_RELU);
+    tkDNN::dataDim_t dim(1, 1, 10, 10, 4);
+    tkDNN::Conv3d     c0 (&net, dim,           2, 4, 4, 2, 2, 2, 1, c0_bin, c0_bias_bin);
+    tkDNN::Activation a0 (&net, c0.output_dim, tkDNN::ACTIVATION_RELU);
+    tkDNN::Conv3d     c1 (&net, a0.output_dim, 4, 2, 2, 2, 1, 1, 1, c1_bin, c1_bias_bin);
+    tkDNN::Activation a1 (&net, c1.output_dim, tkDNN::ACTIVATION_ELU);
 
     // Load input
     value_type *data;

@@ -14,12 +14,14 @@ Activation::Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t 
     checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc,
                                         net->tensorFormat,
                                         net->dataType,
-                                        input_dim.n, input_dim.c,
+                                        input_dim.n*input_dim.l, 
+                                        input_dim.c,
                                         input_dim.h, input_dim.w) );
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
                                             net->tensorFormat,
                                             net->dataType,
-                                            input_dim.n, input_dim.c,
+                                            input_dim.n*input_dim.l, 
+                                            input_dim.c,
                                             input_dim.h, input_dim.w) );
 }
 
