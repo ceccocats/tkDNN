@@ -43,3 +43,24 @@ void resize(int size, value_type **data)
         checkCuda( cudaFree(*data) );
     checkCuda( cudaMalloc(data, size*sizeof(value_type)) );
 }
+
+void matrixTranspose(cublasHandle_t handle, value_type* srcData, value_type* dstData, int rows, int cols) {
+
+    value_type *A = srcData, *clone = dstData;
+    int m = rows, n= cols;
+    checkCuda( cudaMemcpy(clone, A, m*n*sizeof(value_type), cudaMemcpyDeviceToDevice));
+   
+    float const alpha(1.0);
+    float const beta(0.0);
+    checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, &alpha, A, n, &beta, A, m, clone, m ));
+}
+
+void matrixMulAdd(  cublasHandle_t handle, value_type* srcData, value_type* dstData, 
+                    value_type* add_vector, int dim, value_type mul) {
+
+    checkCuda( cudaMemcpy(dstData, add_vector, dim*sizeof(value_type), cudaMemcpyDeviceToDevice));
+        
+    value_type alpha = mul;
+    checkERROR( cublasSaxpy(handle, dim, &alpha, srcData, 1, dstData, 1));
+
+}

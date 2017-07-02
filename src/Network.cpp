@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "tkdnn.h"
 #include "Network.h"
 #include "Layer.h"
 
@@ -7,7 +8,10 @@ namespace tkDNN {
 
 Network::Network() {
 
-    std::cout<<"New NETWORK with CUDNN v"<<float(cudnnGetVersion())/1000<<"\n";
+    float tk_ver = float(tkDNN::getVersion())/1000;
+    float cu_ver = float(cudnnGetVersion())/1000;
+
+    std::cout<<"New NETWORK (tkDNN v"<<tk_ver<<", CUDNN v"<<cu_ver<<")\n";
     dataType = CUDNN_DATA_FLOAT;
     tensorFormat = CUDNN_TENSOR_NCHW;
 

@@ -9,7 +9,7 @@
 __global__
 void activation_elu(value_type *input, value_type *output, int size) {
 
-    int i = threadIdx.x*(blockIdx.x +1);
+    int i = blockDim.x*blockIdx.x + threadIdx.x;
 
     if(i<size) {    
         value_type k0, k1;
@@ -30,6 +30,9 @@ void activation_elu(value_type *input, value_type *output, int size) {
 */
 void activationELUForward(value_type* srcData, value_type* dstData, int size)
 {
-    activation_elu<<<(size+255)/256, 256>>>(srcData, dstData, size);
+    int blocks = (size+255)/256;
+    int threads = 256;
+    
+    activation_elu<<<blocks, threads>>>(srcData, dstData, size);
     checkCuda( cudaDeviceSynchronize() );
 }

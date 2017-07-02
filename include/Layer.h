@@ -136,13 +136,112 @@ protected:
     value_type *dstData;  //where results will be putted
     int kernelH, kernelW, strideH, strideW;
 
-    cudnnTensorDescriptor_t biasTensorDesc;
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
     cudnnConvolutionFwdAlgo_t algo;
+    cudnnTensorDescriptor_t biasTensorDesc;
 
     void*  workSpace;
     size_t ws_sizeInBytes;
+};
+
+/**
+    Convolutional 3D layer
+*/
+class Conv3d : public LayerWgs {
+
+public:
+    Conv3d(Network *net, dataDim_t in_dim, int out_ch,
+            int kernelH, int kernelW, int kernelL, 
+            int strideH, int strideW, int strideL,
+            const char* fname_weights, const char* fname_bias); 
+    virtual ~Conv3d();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+    int kernelH, kernelW, kernelL; 
+    int strideH, strideW, strideL;
+
+    cudnnFilterDescriptor_t filterDesc;
+    cudnnConvolutionDescriptor_t convDesc;
+    cudnnConvolutionFwdAlgo_t algo;
+    cudnnTensorDescriptor_t biasTensorDesc;
+    cudnnTensorDescriptor_t biasDstTensorDesc;
+
+    void*  workSpace;
+    size_t ws_sizeInBytes;
+};
+
+
+/**
+    Flatten layer
+    is actually a matrix transposition
+*/
+class Flatten : public Layer {
+
+public:
+    Flatten(Network *net, dataDim_t input_dim); 
+    virtual ~Flatten();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+};
+
+
+/**
+    MulAdd layer
+    apply a multiplication and then an addition for each data
+*/
+class MulAdd : public Layer {
+
+public:
+    MulAdd(Network *net, dataDim_t input_dim, value_type mul, value_type add); 
+    virtual ~MulAdd();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type mul, add;
+    value_type *dstData, *add_vector;  //where results will be putted
+};
+
+
+
+/**
+    Avaible pooling functions (padding on tkDNN is not supported)
+*/
+typedef enum {
+    POOLING_MAX     = 0,
+    POOLING_AVERAGE = 1,                  // count for average includes padded values
+    POOLING_AVERAGE_EXCLUDE_PADDING = 2   // count for average does not include padded values
+} tkdnnPoolingMode_t;
+
+/**
+    Pooling layer
+    currenty supported only 2d pooing (also on 3d input)
+*/
+class Pooling : public Layer {
+
+public:
+    Pooling(Network *net, dataDim_t input_dim, int winH, int winW, 
+            int strideH, int strideW, tkdnnPoolingMode_t pool_mode); 
+    virtual ~Pooling();
+
+    value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+
+    cudnnPoolingDescriptor_t poolingDesc;
+
+    int winH, winW;
+    int strideH, strideW;
+    tkdnnPoolingMode_t pool_mode;
+    value_type *dstData, *tmpInputData, *tmpOutputData;  //where results will be putted
+    bool poolOn3d;
 };
 
 }
