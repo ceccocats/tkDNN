@@ -29,11 +29,15 @@ int main() {
     TIMER_START
 
     // Inference
+    data = net.infer(dim, data); dim.print();
+
+    /*
+    //old Inference method
     data = c0.infer(dim, data); dim.print();
     data = a0.infer(dim, data); dim.print();
     data = c1.infer(dim, data); dim.print();
     data = a1.infer(dim, data); dim.print();
-
+    */
     TIMER_STOP
     // Print result
     printDeviceVector(dim.tot(), data);
