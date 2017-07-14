@@ -5,7 +5,7 @@
 
 namespace tkDNN {
 
-Activation::Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t act_mode) : 
+Activation::Activation(Network *net, dataDim_t input_dim, cudnnActivationMode_t act_mode) : 
     Layer(net, input_dim) {
 
     this->act_mode = act_mode;
@@ -23,6 +23,13 @@ Activation::Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t 
                                             input_dim.n*input_dim.l, 
                                             input_dim.c,
                                             input_dim.h, input_dim.w) );
+
+
+    checkCUDNN( cudnnCreateActivationDescriptor(&activDesc) );
+    checkCUDNN( cudnnSetActivationDescriptor(activDesc,
+                                             act_mode,
+                                             CUDNN_PROPAGATE_NAN,
+                                             0.0) );
 }
 
 Activation::~Activation() {
@@ -32,21 +39,16 @@ Activation::~Activation() {
 
 value_type* Activation::infer(dataDim_t &dim, value_type* srcData) {
 
-    if(act_mode == ACTIVATION_ELU) {
-        activationELUForward(srcData, dstData, dim.tot());
-
-    } else {
-        value_type alpha = value_type(1);
-        value_type beta  = value_type(0);
-        checkCUDNN( cudnnActivationForward(net->cudnnHandle,
-                                            cudnnActivationMode_t(act_mode),
-                                            &alpha,
-                                            srcTensorDesc,
-                                            srcData,
-                                            &beta,
-                                            dstTensorDesc,
-                                            dstData) );    
-    }
+    value_type alpha = value_type(1);
+    value_type beta  = value_type(0);
+    checkCUDNN( cudnnActivationForward(net->cudnnHandle,
+                                        activDesc,
+                                        &alpha,
+                                        srcTensorDesc,
+                                        srcData,
+                                        &beta,
+                                        dstTensorDesc,
+                                        dstData) );    
     return dstData;
 }
 

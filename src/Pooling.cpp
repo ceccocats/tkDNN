@@ -40,7 +40,7 @@ Pooling::Pooling(   Network *net, dataDim_t input_dim,
     }
 
     checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnnPoolingMode_t(pool_mode),
-                winH, winW, 0, 0, strideH, strideW) );
+                CUDNN_NOT_PROPAGATE_NAN, winH, winW, 0, 0, strideH, strideW) );
 
     checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc, 
                 net->tensorFormat, net->dataType, n, c, h, w) );

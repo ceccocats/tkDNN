@@ -29,7 +29,7 @@ Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch,
                 net->tensorFormat, net->dataType, n, c, h, w) );
 
     checkCUDNN( cudnnSetFilter4dDescriptor(filterDesc,
-                net->dataType, out_ch, input_dim.c, 
+                net->dataType, net->tensorFormat, out_ch, input_dim.c, 
                 kernelH, kernelW) );
 
     checkCUDNN( cudnnSetConvolution2dDescriptor(convDesc,
@@ -103,7 +103,7 @@ value_type* Conv2d::infer(dataDim_t &dim, value_type* srcData) {
     // bias
     alpha = value_type(1);
     beta  = value_type(1);
-    checkCUDNN( cudnnAddTensor(net->cudnnHandle, CUDNN_ADD_SAME_C,
+    checkCUDNN( cudnnAddTensor(net->cudnnHandle,
                 &alpha, biasTensorDesc, bias_d,
                 &beta, dstTensorDesc, dstData) );
 

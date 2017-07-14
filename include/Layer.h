@@ -92,15 +92,6 @@ protected:
     value_type *dstData;  //where results will be putted
 };
 
-/**
-    Avaible activation functions
-*/
-typedef enum {
-    ACTIVATION_SIGMOID = 0,
-    ACTIVATION_RELU    = 1,
-    ACTIVATION_TANH    = 2,
-    ACTIVATION_ELU     = 100
-} tkdnnActivationMode_t;
 
 /**
     Activation layer (it doesnt need weigths)
@@ -108,13 +99,14 @@ typedef enum {
 class Activation : public Layer {
 
 public:
-    Activation(Network *net, dataDim_t input_dim, tkdnnActivationMode_t act_mode); 
+    Activation(Network *net, dataDim_t input_dim, cudnnActivationMode_t act_mode); 
     virtual ~Activation();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    tkdnnActivationMode_t act_mode;
+    cudnnActivationMode_t act_mode;
+    cudnnActivationDescriptor_t activDesc;
     value_type *dstData;  //where results will be putted
 };
 
@@ -140,35 +132,6 @@ protected:
     cudnnConvolutionDescriptor_t convDesc;
     cudnnConvolutionFwdAlgo_t algo;
     cudnnTensorDescriptor_t biasTensorDesc;
-
-    void*  workSpace;
-    size_t ws_sizeInBytes;
-};
-
-/**
-    Convolutional 3D layer
-*/
-class Conv3d : public LayerWgs {
-
-public:
-    Conv3d(Network *net, dataDim_t in_dim, int out_ch,
-            int kernelH, int kernelW, int kernelL, 
-            int strideH, int strideW, int strideL,
-            const char* fname_weights, const char* fname_bias); 
-    virtual ~Conv3d();
-
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
-
-protected:
-    value_type *dstData;  //where results will be putted
-    int kernelH, kernelW, kernelL; 
-    int strideH, strideW, strideL;
-
-    cudnnFilterDescriptor_t filterDesc;
-    cudnnConvolutionDescriptor_t convDesc;
-    cudnnConvolutionFwdAlgo_t algo;
-    cudnnTensorDescriptor_t biasTensorDesc;
-    cudnnTensorDescriptor_t biasDstTensorDesc;
 
     void*  workSpace;
     size_t ws_sizeInBytes;
