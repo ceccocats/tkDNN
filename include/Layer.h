@@ -207,5 +207,20 @@ protected:
     bool poolOn3d;
 };
 
+/**
+    Softmax layer
+*/
+class Softmax : public Layer {
+
+public:
+    Softmax(Network *net, dataDim_t input_dim); 
+    virtual ~Softmax();
+
+    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    value_type *dstData;  //where results will be putted
+};
+
 }
 #endif //LAYER_H
