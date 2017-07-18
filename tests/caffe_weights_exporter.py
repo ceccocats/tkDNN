@@ -18,6 +18,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
 
     print "\n\n ====== NET LOADED ====== "
     net = caffe.Net(args.model, args.weights, caffe.TEST)
@@ -26,8 +28,12 @@ if __name__ == '__main__':
     for i in xrange(n_lay):
         key = net.params.keys()[i]
         print "Layer", key
-        print "    type: ", net.layer_dict[key].type 
+        t = net.layer_dict[key].type 
+        print "    type: ", t
         w = net.params[key][0].data
         b = net.params[key][1].data 
         print "    weights shape:", np.shape(w)
         print "    bias shape:", np.shape(b)
+        
+        w.tofile(args.output + "/" + t + str(i) + ".bin", format="f")
+        b.tofile(args.output + "/" + t + str(i) + ".bias.bin", format="f")
