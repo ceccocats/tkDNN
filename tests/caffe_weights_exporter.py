@@ -14,7 +14,6 @@ if __name__ == '__main__':
         help='Path to caffemodel file')
         
     parser.add_argument('--output', type=str, help="output directory", default="layers")
-    parser.add_argument('--test_db', type=str, help="input db to test", default=None)
 
     args = parser.parse_args()
 

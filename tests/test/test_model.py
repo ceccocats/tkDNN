@@ -7,7 +7,6 @@ from keras.layers.pooling import MaxPooling2D, MaxPooling3D, AveragePooling3D
 from keras.models import Sequential, Model
 from keras.layers import Cropping2D
 import keras.backend.tensorflow_backend as KTF
-from weights_exporter import *
 
 def dense_model():
     model = Sequential()
@@ -17,6 +16,8 @@ def dense_model():
                            bias_initializer='random_uniform', activation="relu"))
     model.add(Convolution2D(4, (2, 2), subsample=(1, 1), 
                            bias_initializer='random_uniform', activation="relu"))
+    model.add(Flatten())
+    model.add(Dense(4, bias_initializer='random_uniform', activation="relu"))    
     sgd = keras.optimizers.Adam(lr=1e-4, decay=1e-8)
     model.compile(optimizer=sgd, loss="mse")
     return model
@@ -26,9 +27,7 @@ if __name__ == '__main__':
     print "DATA FORMAT: ", keras.backend.image_data_format()
 
     model = dense_model()
-    wg = model.get_weights()
-    export_conv2d("conv0", wg[0], wg[1])
-    export_conv2d("conv1", wg[2], wg[3])
+    model.save("net.h5")
 
     grid = np.random.rand(10,10)
     X = grid[None,:,:]
@@ -41,3 +40,4 @@ if __name__ == '__main__':
     print np.shape(r)  
     print "Result: ", r
     print "Result shape: ", np.shape(r) 
+    r.tofile("output.bin", format="f")

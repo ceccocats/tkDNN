@@ -99,9 +99,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='KERAS WEIGHTS EXPORTER TO CUDNN')
     parser.add_argument('model',type=str,
         help='Path to model h5 file. Model should be on the same path.')
-    parser.add_argument('layers', type=str, help="layers list [ dense, conv2d ]", nargs='+')
     parser.add_argument('--output', type=str, help="output directory", default="layers")
-    parser.add_argument('--test_db', type=str, help="input db to test", default=None)
 
     args = parser.parse_args()
     
@@ -119,34 +117,17 @@ if __name__ == '__main__':
 
     num = 0
     name_num = 0
-    for i in args.layers:
-        if i == "conv3d":
+    for l in model.layers:
+        name = l.name        
+        if name.startswith("conv3d"):
             export_conv3d(args.output + "/conv" + str(name_num), weights[num], weights[num+1])
-        elif i == "conv2d":
+        elif name.startswith("conv2d"):
             export_conv2d(args.output + "/conv" + str(name_num), weights[num], weights[num+1])
-        elif i == "dense":
+        elif name.startswith("dense"):
             export_dense(args.output + "/dense" + str(name_num), weights[num], weights[num+1])
         else:
-            print "error: ", i, "is not a layer type"
-            break
+            print "skip:", name, "has no weights"
+            continue
         name_num += 1
         num += 2
 
-    if args.test_db != None:
-        print "Test on db: ", args.test_db
-        db = lmdb.open(args.test_db, subdir=False, readonly=True, lock=False) 
-        txn = db.begin()
-
-        s = random.randint(0, txn.stat()["entries"]-1)
-        print "camp number: ", s
-        s = txn.get(str(s))
-        c = msgpack.unpackb(s)
-    
-        print "Steer, throttle: ", c["actuators"]
-        print "Speed (m/s): ", c["speed"]
-        grid = np.asarray(c["bitmap"], np.float32)
-        i = np.array(grid.flatten(), dtype=np.float32)
-        i.tofile(args.output + "input.bin", format="f")
-        X = grid[None, :, :]
-    
-        print "Prediction: ", model.predict(X)

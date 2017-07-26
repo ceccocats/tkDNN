@@ -13,8 +13,8 @@ add_library(tkDNN SHARED src/Layer.cpp src/LayerWgs.cpp
     src/Network.cpp src/utils.cpp)
 target_link_libraries(tkDNN kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn)
 
-add_executable(tkDNNtest tests/test.cpp)
-target_link_libraries(tkDNNtest tkDNN)
+add_executable(test_simple tests/test/test.cpp)
+target_link_libraries(test_simple tkDNN)
 
-add_executable(mnist tests/mnist/test.cpp)
-target_link_libraries(mnist tkDNN)
+add_executable(test_mnist tests/mnist/test.cpp)
+target_link_libraries(test_mnist tkDNN)
