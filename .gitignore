@@ -3,3 +3,6 @@ build/
 .vscode/
 *.bin
 *.pyc
+*.prototxt
+*.caffemodel
+*.h5
