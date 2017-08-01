@@ -69,7 +69,6 @@ public:
              const char* fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
-protected:
     int inputs, outputs;
     std::string weights_path;
 
@@ -137,9 +136,9 @@ public:
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
-protected:
     int kernelH, kernelW, strideH, strideW;
 
+protected:
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
     cudnnConvolutionFwdAlgo_t algo;

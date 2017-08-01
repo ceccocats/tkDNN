@@ -28,28 +28,42 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
                                 cudaMemcpyHostToDevice) );
 }
 
-void printDeviceVector(int size, value_type* vec_d)
+void printDeviceVector(int size, value_type* vec_d, bool device)
 {
     value_type *vec;
-    vec = new value_type[size];
-    cudaDeviceSynchronize();
-    cudaMemcpy(vec, vec_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+    if(device) {
+        vec = new value_type[size];
+        cudaDeviceSynchronize();
+        cudaMemcpy(vec, vec_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+    } else {
+        vec = vec_d;
+    }
+    
     for (int i = 0; i < size; i++)
     {
         std::cout << vec[i] << " ";
     }
     std::cout << std::endl;
-    delete [] vec;
+
+    if(device)
+        delete [] vec;
 }
 
-int checkResult(int size, value_type *data_d, value_type *correct_d) {
+int checkResult(int size, value_type *data_d, value_type *correct_d, bool device) {
 
     value_type *data_h, *correct_h;
-    data_h = new value_type[size];
-    correct_h = new value_type[size];
-    cudaDeviceSynchronize();
-    cudaMemcpy(data_h, data_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
-    cudaMemcpy(correct_h, correct_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+
+    if(device) {
+        data_h = new value_type[size];
+        correct_h = new value_type[size];
+        cudaDeviceSynchronize();
+        cudaMemcpy(data_h, data_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+        cudaMemcpy(correct_h, correct_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+    
+    } else {
+        data_h = data_d;
+        correct_h = correct_d;
+    }
 
     int diffs = 0;
     for(int i=0; i<size; i++) {
@@ -59,8 +73,10 @@ int checkResult(int size, value_type *data_d, value_type *correct_d) {
         }
     }
 
-    delete [] data_h;
-    delete [] correct_h;
+    if(device) {
+        delete [] data_h;
+        delete [] correct_h;
+    }
 
     return diffs;
 }
