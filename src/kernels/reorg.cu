@@ -35,14 +35,15 @@ __global__ void reorg_kernel(int N, float *x, int w, int h, int c, int batch, in
 /**
     reorg function function
 */
-void reorgForward(value_type* srcData, value_type* dstData, tkDNN::dataDim_t dim, int stride)
-{
-    int size = dim.tot();
+void reorgForward(value_type* srcData, value_type* dstData, 
+                  int n, int c, int h, int w, int stride) {
+
+    int size = n*c*h*w;
 
     int blocks = (size+255)/256;
     int threads = 256;
     
-    reorg_kernel<<<blocks, threads>>>(size, srcData, dim.w, dim.h, dim.c, dim.n, stride, false, dstData);
+    reorg_kernel<<<blocks, threads>>>(size, srcData, w, h, c, n, stride, false, dstData);
     checkCuda( cudaDeviceSynchronize() );
 }
 

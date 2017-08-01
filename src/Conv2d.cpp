@@ -37,7 +37,7 @@ Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch,
                 paddingH, paddingW, // padding
                 strideH, strideW, // stride
                 1,1, // upscale
-                CUDNN_CROSS_CORRELATION) );
+                CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT) );
 
     // find dimension of convolution output
     checkCUDNN( cudnnGetConvolution2dForwardOutputDim(

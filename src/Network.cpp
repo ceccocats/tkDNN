@@ -1,4 +1,5 @@
 #include <iostream>
+#include "NvInfer.h"
 
 #include "tkdnn.h"
 #include "Network.h"
@@ -10,8 +11,10 @@ Network::Network() {
 
     float tk_ver = float(tkDNN::getVersion())/1000;
     float cu_ver = float(cudnnGetVersion())/1000;
+    float rt_ver = float(NV_TENSORRT_MAJOR) + float(NV_TENSORRT_MINOR)/10 + float(NV_TENSORRT_PATCH)/100;
 
-    std::cout<<"New NETWORK (tkDNN v"<<tk_ver<<", CUDNN v"<<cu_ver<<")\n";
+    std::cout<<"New NETWORK (tkDNN v"<<tk_ver
+             <<", CUDNN v"<<cu_ver<<", TensorRT v"<<rt_ver<<")\n";
     dataType = CUDNN_DATA_FLOAT;
     tensorFormat = CUDNN_TENSOR_NCHW;
 
@@ -32,7 +35,7 @@ value_type* Network::infer(dataDim_t &dim, value_type* data) {
     //do infer for every layer
     for(int i=0; i<num_layers; i++)
         data = layers[i]->infer(dim, data);
-        
+
     return data;
 }
 
