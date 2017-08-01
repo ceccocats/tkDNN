@@ -46,11 +46,13 @@ int main() {
 
     dim.print(); //print initial dimension
     
-    TIMER_START
     // Inference
-    data = net.infer(dim, data);
-    TIMER_STOP
-    dim.print();   
+    {
+        TIMER_START
+        data = net.infer(dim, data);
+        TIMER_STOP
+        dim.print();   
+    }
 
     // Print real test
     std::cout<<"\n==== CHECK CUDNN RESULT ====\n";
@@ -77,16 +79,17 @@ int main() {
 	auto conv1 = network->addConvolution(*input, 20, DimsHW{5, 5}, w, b);
 	assert(conv1 != nullptr);
 	conv1->setStride(DimsHW{1, 1});
-    conv1->getOutput(0)->setName("out");
 
-/*
 	// Add a max pooling layer with stride of 2x2 and kernel size of 2x2.
 	auto pool1 = network->addPooling(*conv1->getOutput(0), PoolingType::kMAX, DimsHW{2, 2});
 	assert(pool1 != nullptr);
 	pool1->setStride(DimsHW{2, 2});
 
+    tkDNN::Conv2d *c1 = (tkDNN::Conv2d*) (net.layers[2]); 
+    Weights w1 { dt, c1->data_h, c1->inputs*c1->outputs*c1->kernelH*c1->kernelW};
+    Weights b1 { dt, c1->bias_h, c1->outputs};
 	// Add a second convolution layer with 50 outputs and a 5x5 filter.
-	auto conv2 = network->addConvolution(*pool1->getOutput(0), 50, DimsHW{5, 5}, weightMap["conv2filter"], weightMap["conv2bias"]);
+	auto conv2 = network->addConvolution(*pool1->getOutput(0), 50, DimsHW{5, 5}, w1, b1);
 	assert(conv2 != nullptr);
 	conv2->setStride(DimsHW{1, 1});
 
@@ -95,24 +98,30 @@ int main() {
 	assert(pool2 != nullptr);
 	pool2->setStride(DimsHW{2, 2});
 
+    tkDNN::Dense *d2 = (tkDNN::Dense*) (net.layers[4]); 
+    Weights w2 { dt, d2->data_h, d2->inputs*d2->outputs};
+    Weights b2 { dt, d2->bias_h, d2->outputs};
 	// Add a fully connected layer with 500 outputs.
-	auto ip1 = network->addFullyConnected(*pool2->getOutput(0), 500, weightMap["ip1filter"], weightMap["ip1bias"]);
+	auto ip1 = network->addFullyConnected(*pool2->getOutput(0), 500, w2, b2);
 	assert(ip1 != nullptr);
 
 	// Add an activation layer using the ReLU algorithm.
 	auto relu1 = network->addActivation(*ip1->getOutput(0), ActivationType::kRELU);
 	assert(relu1 != nullptr);
 
+    tkDNN::Conv2d *d3 = (tkDNN::Conv2d*) (net.layers[6]); 
+    Weights w3 { dt, d3->data_h, d3->inputs*d3->outputs};
+    Weights b3 { dt, d3->bias_h, d3->outputs};
 	// Add a second fully connected layer with 20 outputs.
-	auto ip2 = network->addFullyConnected(*relu1->getOutput(0), OUTPUT_SIZE, weightMap["ip2filter"], weightMap["ip2bias"]);
+	auto ip2 = network->addFullyConnected(*relu1->getOutput(0), 10, w3, b3);
 	assert(ip2 != nullptr);
 
 	// Add a softmax layer to determine the probability.
 	auto prob = network->addSoftMax(*ip2->getOutput(0));
 	assert(prob != nullptr);
-	prob->getOutput(0)->setName(OUTPUT_BLOB_NAME);
-*/
-	network->markOutput(*conv1->getOutput(0));
+	prob->getOutput(0)->setName("out");
+
+	network->markOutput(*prob->getOutput(0));
 
 	// Build the engine
 	builder->setMaxBatchSize(1);
@@ -135,23 +144,27 @@ int main() {
 	int inputIndex = engine->getBindingIndex("data"); 
     int outputIndex = engine->getBindingIndex("out");
 
-    float output[5*5*20];
+    float output[10];
 	// create GPU buffers and a stream
 	checkCuda(cudaMalloc(&buffers[inputIndex], 28*28*sizeof(float)));
-	checkCuda(cudaMalloc(&buffers[outputIndex], 5*5*20*sizeof(float)));
+	checkCuda(cudaMalloc(&buffers[outputIndex], 10*sizeof(float)));
 
 	cudaStream_t stream;
 	checkCuda(cudaStreamCreate(&stream));
 
 	// DMA the input to the GPU,  execute the batch asynchronously, and DMA it back:
-	checkCuda(cudaMemcpyAsync(buffers[inputIndex], input_h, 1 * 28*28* sizeof(float), cudaMemcpyHostToDevice, stream));
-	context->enqueue(1, buffers, stream, nullptr);
-	checkCuda(cudaMemcpyAsync(output, buffers[outputIndex],5*5*20*sizeof(float), cudaMemcpyDeviceToHost, stream));
-	cudaStreamSynchronize(stream);
-
+    {
+        checkCuda(cudaMemcpyAsync(buffers[inputIndex], input_h, 1 * 28*28* sizeof(float), cudaMemcpyHostToDevice, stream));
+        cudaStreamSynchronize(stream);  //want to test only the inference time
+        TIMER_START
+        context->enqueue(1, buffers, stream, nullptr);
+        TIMER_STOP
+        checkCuda(cudaMemcpyAsync(output, buffers[outputIndex],10*sizeof(float), cudaMemcpyDeviceToHost, stream));
+        cudaStreamSynchronize(stream);
+    }
 
     std::cout<<"\n==== CHECK CUDNN RESULT ====\n";
-    std::cout<<"Diff: "<<checkResult(dim.tot(), (float*)buffers[outputIndex], c0->dstData)<<"\n";
+    std::cout<<"Diff: "<<checkResult(dim.tot(), (float*)buffers[outputIndex], data)<<"\n";
 
 	// release the stream and the buffers
 	cudaStreamDestroy(stream);
