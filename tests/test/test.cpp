@@ -3,11 +3,8 @@
 
 const char *input_bin   = "../tests/test/input.bin";
 const char *c0_bin      = "../tests/test/layers/conv0.bin";
-const char *c0_bias_bin = "../tests/test/layers/conv0.bias.bin";
 const char *c1_bin      = "../tests/test/layers/conv1.bin";
-const char *c1_bias_bin = "../tests/test/layers/conv1.bias.bin";
 const char *d2_bin      = "../tests/test/layers/dense2.bin";
-const char *d2_bias_bin = "../tests/test/layers/dense2.bias.bin";
 const char *output_bin   = "../tests/test/output.bin";
 
 int main() {
@@ -16,12 +13,12 @@ int main() {
     tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 1, 10, 10, 1);
     tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim, 2, 4, 4, 2, 2, c0_bin, c0_bias_bin);
+    l = new tkDNN::Conv2d     (&net, dim, 2, 4, 4, 2, 2, 1, 1, c0_bin);
     l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 4, 2, 2, 1, 1, c1_bin, c1_bias_bin);
+    l = new tkDNN::Conv2d     (&net, l->output_dim, 4, 2, 2, 1, 1, 1, 1, c1_bin);
     l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Flatten      (&net, l->output_dim);
-    l = new tkDNN::Dense      (&net, l->output_dim, 4, d2_bin, d2_bias_bin);
+    l = new tkDNN::Flatten    (&net, l->output_dim);
+    l = new tkDNN::Dense      (&net, l->output_dim, 4, d2_bin);
     l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
 
     // Load input

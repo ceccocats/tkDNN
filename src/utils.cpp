@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d)
+void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek)
 {
     std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
     std::stringstream error_s;
@@ -9,6 +9,11 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
         error_s << "Error opening file " << fname; 
         FatalError(error_s.str());
     }
+
+    if(seek != 0) {
+        dataFile.seekg(seek, dataFile.cur);
+    }
+
     int size_b = size*sizeof(value_type);
     *data_h = new value_type[size];
     if (!dataFile.read ((char*) *data_h, size_b)) 
@@ -35,6 +40,29 @@ void printDeviceVector(int size, value_type* vec_d)
     }
     std::cout << std::endl;
     delete [] vec;
+}
+
+int checkResult(int size, value_type *data_d, value_type *correct_d) {
+
+    value_type *data_h, *correct_h;
+    data_h = new value_type[size];
+    correct_h = new value_type[size];
+    cudaDeviceSynchronize();
+    cudaMemcpy(data_h, data_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+    cudaMemcpy(correct_h, correct_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+
+    int diffs = 0;
+    for(int i=0; i<size; i++) {
+        if(fabs(data_h[i] - correct_h[i]) > 0.0001) {
+            diffs += 1;
+            printf("%d\n", i);
+        }
+    }
+
+    delete [] data_h;
+    delete [] correct_h;
+
+    return diffs;
 }
 
 void resize(int size, value_type **data)

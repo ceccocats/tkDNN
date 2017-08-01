@@ -6,10 +6,11 @@ namespace tkDNN {
 
 Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch, 
                 int kernelH, int kernelW, int strideH, int strideW,
-                const char* fname_weights, const char* fname_bias) : 
+                int paddingH, int paddingW,
+                const char* fname_weights, bool batchnorm) : 
     
     LayerWgs(net, in_dim, in_dim.c, out_ch, kernelH, kernelW, 1, 
-             fname_weights, fname_bias) {
+             fname_weights, batchnorm) {
 
     this->kernelH = kernelH;
     this->kernelW = kernelW;
@@ -33,7 +34,7 @@ Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch,
                 kernelH, kernelW) );
 
     checkCUDNN( cudnnSetConvolution2dDescriptor(convDesc,
-                0,0, // padding
+                paddingH, paddingW, // padding
                 strideH, strideW, // stride
                 1,1, // upscale
                 CUDNN_CROSS_CORRELATION) );
@@ -100,13 +101,23 @@ value_type* Conv2d::infer(dataDim_t &dim, value_type* srcData) {
                 data_d, convDesc, algo, workSpace, ws_sizeInBytes,
                 &beta, dstTensorDesc, dstData) );
 
-    // bias
-    alpha = value_type(1);
-    beta  = value_type(1);
-    checkCUDNN( cudnnAddTensor(net->cudnnHandle,
-                &alpha, biasTensorDesc, bias_d,
-                &beta, dstTensorDesc, dstData) );
-
+    if(!batchnorm) {
+        // bias
+        alpha = value_type(1);
+        beta  = value_type(1);
+        checkCUDNN( cudnnAddTensor(net->cudnnHandle,
+                    &alpha, biasTensorDesc, bias_d,
+                    &beta, dstTensorDesc, dstData) );
+    } else {
+        float one = 1;
+        float zero = 0;
+        cudnnBatchNormalizationForwardInference(net->cudnnHandle,
+            CUDNN_BATCHNORM_SPATIAL, &one, &zero, 
+            dstTensorDesc, dstData, dstTensorDesc, 
+            dstData, biasTensorDesc, //same tensor descriptor as bias 
+            scales_d, bias_d, mean_d, variance_d, 
+            CUDNN_BN_MIN_EPSILON);
+    }
     //update data dimensions    
     dim = output_dim;
 

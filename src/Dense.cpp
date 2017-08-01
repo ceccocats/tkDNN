@@ -5,8 +5,8 @@
 namespace tkDNN {
 
 Dense::Dense(Network *net, dataDim_t in_dim, 
-    int out_ch, const char* fname_weights, const char* fname_bias) : 
-    LayerWgs(net, in_dim, in_dim.tot(), out_ch, 1, 1, 1, fname_weights, fname_bias) {
+    int out_ch, const char* fname_weights) : 
+    LayerWgs(net, in_dim, in_dim.tot(), out_ch, 1, 1, 1, fname_weights) {
 
     output_dim.n = 1;
     output_dim.c = out_ch;

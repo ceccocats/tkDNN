@@ -27,7 +27,6 @@ public:
     cudnnHandle_t cudnnHandle;
     cublasHandle_t cublasHandle;
 
-private:
     Layer* layers[MAX_LAYERS];  //contains layers of the net
     int num_layers; //current number of layers
 };

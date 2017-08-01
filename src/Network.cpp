@@ -32,7 +32,7 @@ value_type* Network::infer(dataDim_t &dim, value_type* data) {
     //do infer for every layer
     for(int i=0; i<num_layers; i++)
         data = layers[i]->infer(dim, data);
-
+        
     return data;
 }
 

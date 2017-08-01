@@ -49,10 +49,12 @@ public:
     }
 
     dataDim_t input_dim, output_dim;
+    value_type *dstData;  //where results will be putted
 
 protected:
     Network *net;
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
+
 };
 
 
@@ -64,15 +66,21 @@ class LayerWgs : public Layer {
 public:
     LayerWgs(Network *net, dataDim_t input_dim, 
              int inputs, int outputs, int kh, int kw, int kt, 
-             const char* fname_weights, const char* fname_bias); 
+             const char* fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
 protected:
     int inputs, outputs;
-    std::string weights_path, bias_path;
+    std::string weights_path;
 
     value_type *data_h, *data_d;
     value_type *bias_h, *bias_d;
+
+    //batchnorm
+    bool batchnorm;
+    value_type *scales_h,   *scales_d;
+    value_type *mean_h,     *mean_d;
+    value_type *variance_h, *variance_d;
 };
 
 
@@ -83,15 +91,20 @@ class Dense : public LayerWgs {
 
 public:
     Dense(Network *net, dataDim_t in_dim, int out_ch, 
-          const char* fname_weights, const char* fname_bias); 
+          const char* fname_weights); 
     virtual ~Dense();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
-
-protected:
-    value_type *dstData;  //where results will be putted
 };
 
+
+/**
+    Avaible activation functions
+*/
+typedef enum {
+    ACTIVATION_ELU     = 100,
+    ACTIVATION_LEAKY   = 101
+} tkdnnActivationMode_t;
 
 /**
     Activation layer (it doesnt need weigths)
@@ -99,15 +112,14 @@ protected:
 class Activation : public Layer {
 
 public:
-    Activation(Network *net, dataDim_t input_dim, cudnnActivationMode_t act_mode); 
+    Activation(Network *net, dataDim_t input_dim, int act_mode); 
     virtual ~Activation();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    cudnnActivationMode_t act_mode;
+    int act_mode;
     cudnnActivationDescriptor_t activDesc;
-    value_type *dstData;  //where results will be putted
 };
 
 
@@ -117,15 +129,15 @@ protected:
 class Conv2d : public LayerWgs {
 
 public:
-    Conv2d(Network *net, dataDim_t in_dim, int out_ch,
-            int kernelH, int kernelW, int strideH, int strideW,
-            const char* fname_weights, const char* fname_bias); 
+    Conv2d( Network *net, dataDim_t in_dim, int out_ch, 
+                int kernelH, int kernelW, int strideH, int strideW,
+                int paddingH, int paddingW,
+                const char* fname_weights, bool batchnorm = false); 
     virtual ~Conv2d();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    value_type *dstData;  //where results will be putted
     int kernelH, kernelW, strideH, strideW;
 
     cudnnFilterDescriptor_t filterDesc;
@@ -149,9 +161,6 @@ public:
     virtual ~Flatten();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
-
-protected:
-    value_type *dstData;  //where results will be putted
 };
 
 
@@ -169,7 +178,7 @@ public:
 
 protected:
     value_type mul, add;
-    value_type *dstData, *add_vector;  //where results will be putted
+    value_type *add_vector;
 };
 
 
@@ -203,7 +212,7 @@ protected:
     int winH, winW;
     int strideH, strideW;
     tkdnnPoolingMode_t pool_mode;
-    value_type *dstData, *tmpInputData, *tmpOutputData;  //where results will be putted
+    value_type *tmpInputData, *tmpOutputData;
     bool poolOn3d;
 };
 
@@ -217,10 +226,63 @@ public:
     virtual ~Softmax();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+};
+
+/**
+    Route layer
+    Merge a list of layers
+*/
+class Route : public Layer {
+
+public:
+    Route(Network *net, int *layers_id, int layers_n); 
+    virtual ~Route();
+
+    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+
+public:
+    Layer **layers;  //ids of layers to be merged
+    int layers_n; //number of layers
+};
+
+
+/**
+    Reorg layer
+    Mantain same dimension but change C*H*W distribution
+*/
+class Reorg : public Layer {
+
+public:
+    Reorg(Network *net, dataDim_t input_dim, int stride);
+    virtual ~Reorg();
+
+    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    value_type *dstData;  //where results will be putted
+    int stride;
 };
+
+/**
+    Region layer
+    Mantain same dimension but change C*H*W distribution
+*/
+class Region : public Layer {
+
+public:
+    Region(Network *net, dataDim_t input_dim, 
+        int classes, int coords, int num, float thresh);
+    virtual ~Region();
+
+    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+
+protected:
+    int classes, coords, num;
+    float thresh;
+
+    int entry_index(int batch, int location, int entry);
+};
+
+
 
 }
 #endif //LAYER_H
