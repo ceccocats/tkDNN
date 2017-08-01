@@ -11,7 +11,7 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
     }
 
     if(seek != 0) {
-        dataFile.seekg(seek, dataFile.cur);
+        dataFile.seekg(seek*sizeof(value_type), dataFile.cur);
     }
 
     int size_b = size*sizeof(value_type);

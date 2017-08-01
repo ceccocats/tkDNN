@@ -22,3 +22,6 @@ target_link_libraries(test_simple tkDNN)
 
 add_executable(test_mnist tests/mnist/test.cpp)
 target_link_libraries(test_mnist tkDNN)
+
+add_executable(test_yolo tests/yolo/yolo.cpp)
+target_link_libraries(test_yolo tkDNN)

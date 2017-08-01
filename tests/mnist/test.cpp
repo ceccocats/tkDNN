@@ -2,10 +2,10 @@
 #include "tkdnn.h"
 
 const char *input_bin   = "../tests/mnist/input.bin";
-const char *c0_bin      = "../tests/mnist/layers/Convolution0.bin";
-const char *c1_bin      = "../tests/mnist/layers/Convolution1.bin";
-const char *d2_bin      = "../tests/mnist/layers/InnerProduct2.bin";
-const char *d3_bin      = "../tests/mnist/layers/InnerProduct3.bin";
+const char *c0_bin      = "../tests/mnist/layers/c0.bin";
+const char *c1_bin      = "../tests/mnist/layers/c1.bin";
+const char *d2_bin      = "../tests/mnist/layers/d2.bin";
+const char *d3_bin      = "../tests/mnist/layers/d3.bin";
 const char *output_bin   = "../tests/mnist/output.bin";
 
 int main() {
@@ -14,9 +14,9 @@ int main() {
     tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 1, 28, 28, 1);
     tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim, 20, 5, 5, 1, 1, 1, 1, c0_bin);
+    l = new tkDNN::Conv2d     (&net, dim, 20, 5, 5, 1, 1, 0, 0, c0_bin);
     l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 50, 5, 5, 1, 1, 1, 1, c1_bin);
+    l = new tkDNN::Conv2d     (&net, l->output_dim, 50, 5, 5, 1, 1, 0, 0, c1_bin);
     l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
     l = new tkDNN::Dense      (&net, l->output_dim, 500, d2_bin);
     l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
