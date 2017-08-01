@@ -27,17 +27,16 @@ int main() {
 
     std::cout<<"\n==== CUDNN ====\n";
     // Network layout
-    tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 1, 28, 28, 1);
-    tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim, 20, 5, 5, 1, 1, 0, 0, c0_bin);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 50, 5, 5, 1, 1, 0, 0, c1_bin);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
-    l = new tkDNN::Dense      (&net, l->output_dim, 500, d2_bin);
-    l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Dense      (&net, l->output_dim, 10, d3_bin);
-    l = new tkDNN::Softmax    (&net, l->output_dim);
+	tkDNN::Network net(dim);
+    tkDNN::Conv2d     l0(&net, 20, 5, 5, 1, 1, 0, 0, c0_bin);
+    tkDNN::Pooling    l1(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
+    tkDNN::Pooling    l3(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Dense      l4(&net, 500, d2_bin);
+    tkDNN::Activation l5(&net, CUDNN_ACTIVATION_RELU);
+    tkDNN::Dense      l6(&net, 10, d3_bin);
+    tkDNN::Softmax    l7(&net);
  
     // Load input
     value_type *data;
@@ -72,7 +71,7 @@ int main() {
 	auto input = network->addInput("data", dt, DimsCHW{ 1, 28, 28});
 	assert(input != nullptr);
 
-    tkDNN::Conv2d *c0 = (tkDNN::Conv2d*) (net.layers[0]); 
+    tkDNN::Conv2d *c0 = &l0; 
     Weights w { dt, c0->data_h, c0->inputs*c0->outputs*c0->kernelH*c0->kernelW};
     Weights b { dt, c0->bias_h, c0->outputs};
 	// Add a convolution layer with 20 outputs and a 5x5 filter.
@@ -85,7 +84,7 @@ int main() {
 	assert(pool1 != nullptr);
 	pool1->setStride(DimsHW{2, 2});
 
-    tkDNN::Conv2d *c1 = (tkDNN::Conv2d*) (net.layers[2]); 
+    tkDNN::Conv2d *c1 = &l2; 
     Weights w1 { dt, c1->data_h, c1->inputs*c1->outputs*c1->kernelH*c1->kernelW};
     Weights b1 { dt, c1->bias_h, c1->outputs};
 	// Add a second convolution layer with 50 outputs and a 5x5 filter.
@@ -98,7 +97,7 @@ int main() {
 	assert(pool2 != nullptr);
 	pool2->setStride(DimsHW{2, 2});
 
-    tkDNN::Dense *d2 = (tkDNN::Dense*) (net.layers[4]); 
+    tkDNN::Dense *d2 = &l4; 
     Weights w2 { dt, d2->data_h, d2->inputs*d2->outputs};
     Weights b2 { dt, d2->bias_h, d2->outputs};
 	// Add a fully connected layer with 500 outputs.
@@ -109,7 +108,7 @@ int main() {
 	auto relu1 = network->addActivation(*ip1->getOutput(0), ActivationType::kRELU);
 	assert(relu1 != nullptr);
 
-    tkDNN::Conv2d *d3 = (tkDNN::Conv2d*) (net.layers[6]); 
+    tkDNN::Dense *d3 = &l6; 
     Weights w3 { dt, d3->data_h, d3->inputs*d3->outputs};
     Weights b3 { dt, d3->bias_h, d3->outputs};
 	// Add a second fully connected layer with 20 outputs.

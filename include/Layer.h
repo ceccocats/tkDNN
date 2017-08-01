@@ -7,40 +7,13 @@
 
 namespace tkDNN {
 
-/**
-    Data rapresentation beetween layers
-    n = batch size
-    c = channels
-    h = heigth (lines)
-    w = width  (rows)
-    l = lenght (3rd dimension)
-*/
-struct dataDim_t {
-
-    int n, c, h, w, l;
-
-    dataDim_t() : n(1), c(1), h(1), w(1), l(1) {};
-
-    dataDim_t(int _n, int _c, int _h, int _w, int _l = 1) :
-        n(_n), c(_c), h(_h), w(_w), l(_l) {};
-
-    void print() {
-        std::cout<<"Data dim: "<<n<<" "<<c<<" "<<h<<" "<<w<<" "<<l<<"\n";
-    }
-
-    int tot() {
-        return n*c*h*w*l;
-    }
-};
-
-
 /** 
     Simple layer Father class
 */
 class Layer {
 
 public:
-    Layer(Network *net, dataDim_t input_dim);
+    Layer(Network *net);
     virtual ~Layer();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData) {
@@ -64,8 +37,7 @@ protected:
 class LayerWgs : public Layer {
 
 public:
-    LayerWgs(Network *net, dataDim_t input_dim, 
-             int inputs, int outputs, int kh, int kw, int kt, 
+    LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt, 
              const char* fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
@@ -89,8 +61,7 @@ public:
 class Dense : public LayerWgs {
 
 public:
-    Dense(Network *net, dataDim_t in_dim, int out_ch, 
-          const char* fname_weights); 
+    Dense(Network *net, int out_ch, const char* fname_weights); 
     virtual ~Dense();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -111,7 +82,7 @@ typedef enum {
 class Activation : public Layer {
 
 public:
-    Activation(Network *net, dataDim_t input_dim, int act_mode); 
+    Activation(Network *net, int act_mode); 
     virtual ~Activation();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -128,9 +99,8 @@ protected:
 class Conv2d : public LayerWgs {
 
 public:
-    Conv2d( Network *net, dataDim_t in_dim, int out_ch, 
-                int kernelH, int kernelW, int strideH, int strideW,
-                int paddingH, int paddingW,
+    Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
+                int strideH, int strideW, int paddingH, int paddingW,
                 const char* fname_weights, bool batchnorm = false); 
     virtual ~Conv2d();
 
@@ -156,7 +126,7 @@ protected:
 class Flatten : public Layer {
 
 public:
-    Flatten(Network *net, dataDim_t input_dim); 
+    Flatten(Network *net); 
     virtual ~Flatten();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -170,7 +140,7 @@ public:
 class MulAdd : public Layer {
 
 public:
-    MulAdd(Network *net, dataDim_t input_dim, value_type mul, value_type add); 
+    MulAdd(Network *net, value_type mul, value_type add); 
     virtual ~MulAdd();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -198,7 +168,7 @@ typedef enum {
 class Pooling : public Layer {
 
 public:
-    Pooling(Network *net, dataDim_t input_dim, int winH, int winW, 
+    Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, tkdnnPoolingMode_t pool_mode); 
     virtual ~Pooling();
 
@@ -221,7 +191,7 @@ protected:
 class Softmax : public Layer {
 
 public:
-    Softmax(Network *net, dataDim_t input_dim); 
+    Softmax(Network *net); 
     virtual ~Softmax();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -234,7 +204,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, int *layers_id, int layers_n); 
+    Route(Network *net, Layer **layers, int layers_n); 
     virtual ~Route();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -252,7 +222,7 @@ public:
 class Reorg : public Layer {
 
 public:
-    Reorg(Network *net, dataDim_t input_dim, int stride);
+    Reorg(Network *net, int stride);
     virtual ~Reorg();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
@@ -268,8 +238,7 @@ protected:
 class Region : public Layer {
 
 public:
-    Region(Network *net, dataDim_t input_dim, 
-        int classes, int coords, int num, float thresh);
+    Region(Network *net, int classes, int coords, int num, float thresh);
     virtual ~Region();
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);

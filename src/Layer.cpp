@@ -4,11 +4,11 @@
 
 namespace tkDNN {
 
-Layer::Layer(Network *net, dataDim_t in_dim) {
+Layer::Layer(Network *net) {
 
     this->net = net;
-    this->input_dim = in_dim;
-    this->output_dim = in_dim;
+    this->input_dim = net->getOutputDim();
+    this->output_dim = input_dim;
     
     checkCUDNN( cudnnCreateTensorDescriptor(&srcTensorDesc) );
     checkCUDNN( cudnnCreateTensorDescriptor(&dstTensorDesc) );

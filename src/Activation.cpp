@@ -5,8 +5,8 @@
 
 namespace tkDNN {
 
-Activation::Activation(Network *net, dataDim_t input_dim, int act_mode) : 
-    Layer(net, input_dim) {
+Activation::Activation(Network *net, int act_mode) : 
+    Layer(net) {
 
     this->act_mode = act_mode;
     checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );

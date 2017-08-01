@@ -5,9 +5,9 @@
 
 namespace tkDNN {
 
-Pooling::Pooling(   Network *net, dataDim_t input_dim, 
-                    int winH, int winW, int strideH, int strideW, tkdnnPoolingMode_t pool_mode) : 
-    Layer(net, input_dim) {
+Pooling::Pooling(   Network *net, int winH, int winW, 
+                    int strideH, int strideW, tkdnnPoolingMode_t pool_mode) : 
+    Layer(net) {
 
 
     if(winH != strideH || winW != strideW)

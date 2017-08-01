@@ -10,16 +10,15 @@ const char *output_bin   = "../tests/test/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 1, 10, 10, 1);
-    tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim, 2, 4, 4, 2, 2, 0, 0, c0_bin);
-    l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 4, 2, 2, 1, 1, 0, 0, c1_bin);
-    l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Flatten    (&net, l->output_dim);
-    l = new tkDNN::Dense      (&net, l->output_dim, 4, d2_bin);
-    l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
+    tkDNN::Network net(dim);
+    tkDNN::Conv2d     l0(&net, 2, 4, 4, 2, 2, 0, 0, c0_bin);
+    tkDNN::Activation l1(&net, CUDNN_ACTIVATION_RELU);
+    tkDNN::Conv2d     l2(&net, 4, 2, 2, 1, 1, 0, 0, c1_bin);
+    tkDNN::Activation l3(&net, CUDNN_ACTIVATION_RELU);
+    tkDNN::Flatten    l4(&net);
+    tkDNN::Dense      l5(&net, 4, d2_bin);
+    tkDNN::Activation l6(&net, CUDNN_ACTIVATION_RELU);
 
     // Load input
     value_type *data;
@@ -30,11 +29,8 @@ int main() {
     dim.print(); //print initial dimension
     
     TIMER_START
-
     // Inference
     data = net.infer(dim, data); dim.print();
-    
-
     TIMER_STOP
 
     // Print result

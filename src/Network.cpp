@@ -7,7 +7,8 @@
 
 namespace tkDNN {
 
-Network::Network() {
+Network::Network(dataDim_t input_dim) {
+    this->input_dim = input_dim;
 
     float tk_ver = float(tkDNN::getVersion())/1000;
     float cu_ver = float(cudnnGetVersion())/1000;
@@ -45,6 +46,14 @@ bool Network::addLayer(Layer *l) {
     
     layers[num_layers++] = l;
     return true;
+}
+
+dataDim_t Network::getOutputDim() {
+
+        if(num_layers == 0)
+            return input_dim;
+        else
+            return layers[num_layers-1]->output_dim;
 }
 
 }

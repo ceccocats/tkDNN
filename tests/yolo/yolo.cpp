@@ -30,74 +30,74 @@ const char *output_bin = "../tests/yolo/layers/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 3, 608, 608, 1);
-    tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim,           32, 3, 3, 1, 1, 1, 1,   c0_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Network net(dim);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 64, 3, 3, 1, 1, 1, 1,   c2_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     c0 (&net, 32, 3, 3, 1, 1, 1, 1,   c0_bin, true);
+    tkDNN::Activation a0 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Pooling    p1 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 128, 3, 3, 1, 1, 1, 1,  c4_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 64, 1, 1, 1, 1, 0, 0,   c5_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     c2 (&net, 64, 3, 3, 1, 1, 1, 1,   c2_bin, true);
+    tkDNN::Activation a2 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Pooling    p3 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 128, 1, 1, 1, 1, 0, 0,  c9_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 256, 3, 3, 1, 1, 1, 1,  c10_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     c4 (&net, 128, 3, 3, 1, 1, 1, 1,  c4_bin, true);
+    tkDNN::Activation a4 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c5 (&net, 64, 1, 1, 1, 1, 0, 0,   c5_bin, true);
+    tkDNN::Activation a5 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
+    tkDNN::Activation a6 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Pooling    p7 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 512, 3, 3, 1, 1, 1, 1,  c12_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 256, 1, 1, 1, 1, 0, 0,  c13_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 512, 3, 3, 1, 1, 1, 1,  c14_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 256, 1, 1, 1, 1, 0, 0,  c15_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 512, 3, 3, 1, 1, 1, 1,  c16_bin, true); 
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);                //29
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     c8 (&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
+    tkDNN::Activation a8 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c9 (&net, 128, 1, 1, 1, 1, 0, 0,  c9_bin, true);
+    tkDNN::Activation a9 (&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c10(&net, 256, 3, 3, 1, 1, 1, 1,  c10_bin, true);
+    tkDNN::Activation a10(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Pooling    p11(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c18_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 512, 1, 1, 1, 1, 0, 0,  c19_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c20_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 512, 1, 1, 1, 1, 0, 0,  c21_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c22_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c23_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c24_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);                //44
+    tkDNN::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1,  c12_bin, true);
+    tkDNN::Activation a12(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c13(&net, 256, 1, 1, 1, 1, 0, 0,  c13_bin, true);
+    tkDNN::Activation a13(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c14(&net, 512, 3, 3, 1, 1, 1, 1,  c14_bin, true);
+    tkDNN::Activation a14(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c15(&net, 256, 1, 1, 1, 1, 0, 0,  c15_bin, true);
+    tkDNN::Activation a15(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c16(&net, 512, 3, 3, 1, 1, 1, 1,  c16_bin, true); 
+    tkDNN::Activation a16(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Pooling    p17(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
 
-    int rlayers[1] = {29};
-    l = new tkDNN::Route      (&net, rlayers, 1);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 64, 1, 1, 1, 1, 0, 0,   c26_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);
-    l = new tkDNN::Reorg      (&net, l->output_dim, 2);                                      //48
+    tkDNN::Conv2d     c18(&net, 1024, 3, 3, 1, 1, 1, 1, c18_bin, true);
+    tkDNN::Activation a18(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c19(&net, 512, 1, 1, 1, 1, 0, 0,  c19_bin, true);
+    tkDNN::Activation a19(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c20(&net, 1024, 3, 3, 1, 1, 1, 1, c20_bin, true);
+    tkDNN::Activation a20(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c21(&net, 512, 1, 1, 1, 1, 0, 0,  c21_bin, true);
+    tkDNN::Activation a21(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c22(&net, 1024, 3, 3, 1, 1, 1, 1, c22_bin, true);
+    tkDNN::Activation a22(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c23(&net, 1024, 3, 3, 1, 1, 1, 1, c23_bin, true);
+    tkDNN::Activation a23(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c24(&net, 1024, 3, 3, 1, 1, 1, 1, c24_bin, true);
+    tkDNN::Activation a24(&net, tkDNN::ACTIVATION_LEAKY);
 
-    int rlayers2[2] = {48,44};
-    l = new tkDNN::Route      (&net, rlayers2, 2);
+    tkDNN::Layer *m25_layers[1] = { &a16 };
+    tkDNN::Route      m25(&net, m25_layers, 1);
+    tkDNN::Conv2d     c26(&net, 64, 1, 1, 1, 1, 0, 0,   c26_bin, true);
+    tkDNN::Activation a26(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Reorg      r27(&net, 2);
 
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
-    l = new tkDNN::Activation (&net, l->output_dim, tkDNN::ACTIVATION_LEAKY);   
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
+    tkDNN::Layer *m28_layers[2] = { &r27, &a24 };
+    tkDNN::Route      m28(&net, m28_layers, 2);
 
-    l = new tkDNN::Region     (&net, l->output_dim, 80, 4, 5, 0.6f);
+    tkDNN::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
+    tkDNN::Activation a29(&net, tkDNN::ACTIVATION_LEAKY);   
+    tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
+
+    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f);
 
     // Load input
     value_type *data;

@@ -5,8 +5,7 @@
 
 namespace tkDNN {
 
-MulAdd::MulAdd(Network *net, dataDim_t input_dim, value_type mul, value_type add) : 
-    Layer(net, input_dim) {
+MulAdd::MulAdd(Network *net, value_type mul, value_type add) : Layer(net) {
 
     this->mul = mul;
     this->add = add;

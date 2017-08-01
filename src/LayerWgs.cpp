@@ -4,9 +4,9 @@
 
 namespace tkDNN {
 
-LayerWgs::LayerWgs(Network *net, dataDim_t in_dim, 
-                int inputs, int outputs, int kh, int kw, int kl, 
-                const char* fname_weights, bool batchnorm) : Layer(net, in_dim) {
+LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
+                   int kh, int kw, int kl, 
+                   const char* fname_weights, bool batchnorm) : Layer(net) {
 
     this->inputs  = inputs;
     this->outputs = outputs;    

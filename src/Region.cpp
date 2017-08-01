@@ -5,9 +5,8 @@
 
 namespace tkDNN {
 
-Region::Region(Network *net, dataDim_t input_dim, 
-               int classes, int coords, int num, float thresh) : 
-    Layer(net, input_dim) {
+Region::Region(Network *net, int classes, int coords, int num, float thresh) : 
+    Layer(net) {
 
     this->classes = classes;
     this->coords = coords;

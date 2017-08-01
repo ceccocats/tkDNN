@@ -5,8 +5,7 @@
 
 namespace tkDNN {
 
-Softmax::Softmax(Network *net, dataDim_t input_dim) : 
-    Layer(net, input_dim) {
+Softmax::Softmax(Network *net) : Layer(net) {
 
     checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
 

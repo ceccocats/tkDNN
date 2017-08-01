@@ -11,17 +11,16 @@ const char *output_bin   = "../tests/mnist/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::Network net;
     tkDNN::dataDim_t dim(1, 1, 28, 28, 1);
-    tkDNN::Layer *l;
-    l = new tkDNN::Conv2d     (&net, dim, 20, 5, 5, 1, 1, 0, 0, c0_bin);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
-    l = new tkDNN::Conv2d     (&net, l->output_dim, 50, 5, 5, 1, 1, 0, 0, c1_bin);
-    l = new tkDNN::Pooling    (&net, l->output_dim, 2, 2, 2, 2, tkDNN::POOLING_MAX);
-    l = new tkDNN::Dense      (&net, l->output_dim, 500, d2_bin);
-    l = new tkDNN::Activation (&net, l->output_dim, CUDNN_ACTIVATION_RELU);
-    l = new tkDNN::Dense      (&net, l->output_dim, 10, d3_bin);
-    l = new tkDNN::Softmax    (&net, l->output_dim);
+    tkDNN::Network net(dim);
+    tkDNN::Conv2d     l0(&net, 20, 5, 5, 1, 1, 0, 0, c0_bin);
+    tkDNN::Pooling    l1(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
+    tkDNN::Pooling    l3(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tkDNN::Dense      l4(&net, 500, d2_bin);
+    tkDNN::Activation l5(&net, CUDNN_ACTIVATION_RELU);
+    tkDNN::Dense      l6(&net, 10, d3_bin);
+    tkDNN::Softmax    l7(&net);
  
     // Load input
     value_type *data;

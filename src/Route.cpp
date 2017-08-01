@@ -5,16 +5,10 @@
 
 namespace tkDNN {
 
-Route::Route(Network *net, int *layers_id, int layers_n) : 
-    Layer(net, dataDim_t()) {
+Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
 
+    this->layers = layers;
     this->layers_n = layers_n;
-
-    //get layers
-    layers = new Layer*[layers_n];
-    for(int i=0; i<layers_n; i++) 
-        layers[i] = net->layers[layers_id[i]]; 
-        
 
     //get dims
     output_dim.l = 1;

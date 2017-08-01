@@ -5,8 +5,7 @@
 
 namespace tkDNN {
 
-Reorg::Reorg(Network *net, dataDim_t input_dim, int stride) : 
-    Layer(net, input_dim) {
+Reorg::Reorg(Network *net, int stride) : Layer(net) {
 
     this->stride = stride;
     

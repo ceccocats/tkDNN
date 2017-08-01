@@ -4,12 +4,11 @@
 
 namespace tkDNN {
 
-Conv2d::Conv2d( Network *net, dataDim_t in_dim, int out_ch, 
-                int kernelH, int kernelW, int strideH, int strideW,
-                int paddingH, int paddingW,
+Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
+                int strideH, int strideW, int paddingH, int paddingW,
                 const char* fname_weights, bool batchnorm) : 
     
-    LayerWgs(net, in_dim, in_dim.c, out_ch, kernelH, kernelW, 1, 
+    LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1, 
              fname_weights, batchnorm) {
 
     this->kernelH = kernelH;
