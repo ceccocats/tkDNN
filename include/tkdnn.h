@@ -3,6 +3,7 @@
 */
 #include "Network.h"
 #include "Layer.h"
+#include "NetworkRT.h"
 
 namespace tkDNN {
 

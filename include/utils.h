@@ -62,6 +62,14 @@
     }                                                                  \
 }
 
+#define checkNULL(ptr) {                                               \
+    std::stringstream _error;                                          \
+    if (ptr == nullptr) {                                              \
+      _error << "Null pointer";                                        \
+      FatalError(_error.str());                                        \
+    }                                                                  \
+}
+
 void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek = 0);
 int  checkResult(int size, value_type *data_d, value_type *correct_d, bool device = true);
 void printDeviceVector(int size, value_type* vec_d, bool device = true);

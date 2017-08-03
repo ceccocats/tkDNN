@@ -15,6 +15,8 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     this->kernelW = kernelW;
     this->strideH = strideH;
     this->strideW = strideW;
+    this->paddingH = paddingH;
+    this->paddingW = paddingW;
 
     checkCUDNN( cudnnCreateFilterDescriptor(&filterDesc) );
     checkCUDNN( cudnnCreateConvolutionDescriptor(&convDesc) );

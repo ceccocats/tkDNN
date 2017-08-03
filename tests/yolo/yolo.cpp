@@ -104,22 +104,30 @@ int main() {
     value_type *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
 
-    dim.print(); //print initial dimension
-    
-    TIMER_START
+    tkDNN::NetworkRT netRT(&net);
 
-    // Inference
-    data = net.infer(dim, data);
-    
-    TIMER_STOP
-    dim.print();   
+    value_type *out_data, *out_data2;
+
+    std::cout<<"CUDNN inference:\n"; {
+        dim.print(); //print initial dimension  
+        TIMER_START
+        out_data = net.infer(dim, data);    
+        TIMER_STOP
+        dim.print();   
+    }
  
-    // Print real test
-    std::cout<<"\n==== CHECK RESULT ====\n";
-    value_type *out;
-    value_type *out_h;
-    readBinaryFile(output_bin, dim.tot(), &out_h, &out);
-    int diff = checkResult(dim.tot(), data, out);
-    printf("Output diffs: %d\n", diff);
+    tkDNN::dataDim_t dim2(1, 3, 608, 608, 1);
+
+    std::cout<<"TENSORRT inference:\n"; {
+        dim2.print();
+        TIMER_START
+        out_data2 = netRT.infer(dim2, data);
+        TIMER_STOP
+        dim2.print();
+    }
+
+    std::cout<<"\n======= CHECK RESULT =======\n";
+    std::cout<<"Diffs: "<<checkResult(dim.tot(), out_data, out_data2)<<"\n";
+
     return 0;
 }

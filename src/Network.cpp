@@ -37,6 +37,7 @@ value_type* Network::infer(dataDim_t &dim, value_type* data) {
     for(int i=0; i<num_layers; i++)
         data = layers[i]->infer(dim, data);
 
+    checkCuda(cudaDeviceSynchronize());
     return data;
 }
 

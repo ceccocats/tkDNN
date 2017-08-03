@@ -69,7 +69,8 @@ int checkResult(int size, value_type *data_d, value_type *correct_d, bool device
     for(int i=0; i<size; i++) {
         if(fabs(data_h[i] - correct_h[i]) > 0.0001) {
             diffs += 1;
-            printf("%d\n", i);
+            if(diffs < 10)
+                printf("%f %f\n", data_h[i], correct_h[i]);
         }
     }
 

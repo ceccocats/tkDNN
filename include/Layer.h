@@ -7,6 +7,19 @@
 
 namespace tkDNN {
 
+enum layerType_t {
+    LAYER_DENSE,
+    LAYER_CONV2D,
+    LAYER_ACTIVATION,
+    LAYER_FLATTEN,
+    LAYER_MULADD,
+    LAYER_POOLING,
+    LAYER_SOFTMAX,
+    LAYER_ROUTE,
+    LAYER_REORG,
+    LAYER_REGION
+};
+
 /** 
     Simple layer Father class
 */
@@ -15,6 +28,7 @@ class Layer {
 public:
     Layer(Network *net);
     virtual ~Layer();
+    virtual layerType_t getLayerType() = 0;
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData) {
         std::cout<<"No infer action for this layer\n";
@@ -63,6 +77,7 @@ class Dense : public LayerWgs {
 public:
     Dense(Network *net, int out_ch, const char* fname_weights); 
     virtual ~Dense();
+    virtual layerType_t getLayerType() { return LAYER_DENSE; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 };
@@ -84,6 +99,7 @@ class Activation : public Layer {
 public:
     Activation(Network *net, int act_mode); 
     virtual ~Activation();
+    virtual layerType_t getLayerType() { return LAYER_ACTIVATION; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
@@ -103,10 +119,11 @@ public:
                 int strideH, int strideW, int paddingH, int paddingW,
                 const char* fname_weights, bool batchnorm = false); 
     virtual ~Conv2d();
+    virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
-    int kernelH, kernelW, strideH, strideW;
+    int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
 
 protected:
     cudnnFilterDescriptor_t filterDesc;
@@ -128,6 +145,7 @@ class Flatten : public Layer {
 public:
     Flatten(Network *net); 
     virtual ~Flatten();
+    virtual layerType_t getLayerType() { return LAYER_FLATTEN; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 };
@@ -142,6 +160,7 @@ class MulAdd : public Layer {
 public:
     MulAdd(Network *net, value_type mul, value_type add); 
     virtual ~MulAdd();
+    virtual layerType_t getLayerType() { return LAYER_MULADD; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
@@ -168,18 +187,19 @@ typedef enum {
 class Pooling : public Layer {
 
 public:
+    int winH, winW;
+    int strideH, strideW;
+
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, tkdnnPoolingMode_t pool_mode); 
     virtual ~Pooling();
+    virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
 
     cudnnPoolingDescriptor_t poolingDesc;
-
-    int winH, winW;
-    int strideH, strideW;
     tkdnnPoolingMode_t pool_mode;
     value_type *tmpInputData, *tmpOutputData;
     bool poolOn3d;
@@ -193,6 +213,7 @@ class Softmax : public Layer {
 public:
     Softmax(Network *net); 
     virtual ~Softmax();
+    virtual layerType_t getLayerType() { return LAYER_SOFTMAX; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 };
@@ -206,6 +227,7 @@ class Route : public Layer {
 public:
     Route(Network *net, Layer **layers, int layers_n); 
     virtual ~Route();
+    virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
@@ -224,6 +246,7 @@ class Reorg : public Layer {
 public:
     Reorg(Network *net, int stride);
     virtual ~Reorg();
+    virtual layerType_t getLayerType() { return LAYER_REORG; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
@@ -240,6 +263,7 @@ class Region : public Layer {
 public:
     Region(Network *net, int classes, int coords, int num, float thresh);
     virtual ~Region();
+    virtual layerType_t getLayerType() { return LAYER_REGION; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
