@@ -38,6 +38,8 @@ public:
     nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Dense *l);
     nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Pooling *l);
     nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Softmax *l);
+    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Route *l);
+    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Reorg *l);
 };
 
 

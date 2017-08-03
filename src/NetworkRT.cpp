@@ -1,10 +1,12 @@
 #include <iostream>
+#include <map>
 #include "NvInfer.h"
 
 #include "NetworkRT.h"
 
 using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.cpp"
+#include "pluginsRT/ReorgRT.cpp"
 
 // Logger for info/warning/errors
 class Logger : public ILogger			
@@ -16,6 +18,8 @@ class Logger : public ILogger
 } loggerRT;
 
 namespace tkDNN {
+
+std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
 NetworkRT::NetworkRT(Network *net) {
 
@@ -33,6 +37,7 @@ NetworkRT::NetworkRT(Network *net) {
     for(int i=0; i<net->num_layers; i++) {
         Layer *l = net->layers[i];
         input = convert_layer(input, l);
+        tensors[l] = input;
     }
     if(input == NULL)
         FatalError("conversion failed");
@@ -102,6 +107,10 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
+    if(type == LAYER_ROUTE)
+        return convert_layer(input, (Route*) l);
+    if(type == LAYER_REORG)
+        return convert_layer(input, (Reorg*) l);
 
     FatalError("Layer not implemented in tensorRT");
     return NULL;
@@ -203,6 +212,28 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
     ISoftMaxLayer *lRT = networkRT->addSoftMax(*input);
     checkNULL(lRT);
 
+    return lRT->getOutput(0);
+}
+
+ITensor* NetworkRT::convert_layer(ITensor *input, Route *l) {
+    std::cout<<"convert route\n";
+
+    ITensor *tens[256];
+    for(int i=0; i<l->layers_n; i++)
+        tens[i] = tensors[l->layers[i]];
+    IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
+    checkNULL(lRT);
+
+    return lRT->getOutput(0);
+}
+
+ITensor* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
+    std::cout<<"convert Reorg\n";
+
+    std::cout<<"New plugin REORG\n";
+    IPlugin *plugin = new ReorgRT(l->stride);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
     return lRT->getOutput(0);
 }
 
