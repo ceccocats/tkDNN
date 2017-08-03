@@ -96,7 +96,7 @@ int main() {
     tkDNN::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
     tkDNN::Activation a29(&net, tkDNN::ACTIVATION_LEAKY);   
     tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
-//    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f);
+    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f);
 
     // Load input
     value_type *data;
@@ -126,7 +126,12 @@ int main() {
     }
 
     std::cout<<"\n======= CHECK RESULT =======\n";
-    std::cout<<"Diffs: "<<checkResult(net.getOutputDim().tot(), out_data, out_data2)<<"\n";
+    value_type *out, *out_h;
+    int out_dim = net.getOutputDim().tot();
+    readBinaryFile(output_bin, out_dim, &out_h, &out);
+    std::cout<<"CUDNN vs correct Diffs: "<<checkResult(out_dim, out_data, out)<<"\n";
+    std::cout<<"TRT   vs correct Diffs: "<<checkResult(out_dim, out_data2, out)<<"\n";
+    std::cout<<"CUDNN vs TRT     Diffs: "<<checkResult(out_dim, out_data, out)<<"\n";
 
     return 0;
 }

@@ -267,7 +267,6 @@ public:
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
-protected:
     int classes, coords, num;
     float thresh;
 

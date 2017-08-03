@@ -7,6 +7,7 @@
 using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.cpp"
 #include "pluginsRT/ReorgRT.cpp"
+#include "pluginsRT/RegionRT.cpp"
 
 // Logger for info/warning/errors
 class Logger : public ILogger			
@@ -111,6 +112,8 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Route*) l);
     if(type == LAYER_REORG)
         return convert_layer(input, (Reorg*) l);
+    if(type == LAYER_REGION)
+        return convert_layer(input, (Region*) l);
 
     FatalError("Layer not implemented in tensorRT");
     return NULL;
@@ -232,6 +235,16 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
 
     std::cout<<"New plugin REORG\n";
     IPlugin *plugin = new ReorgRT(l->stride);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT->getOutput(0);
+}
+
+ITensor* NetworkRT::convert_layer(ITensor *input, Region *l) {
+    std::cout<<"convert Region\n";
+
+    std::cout<<"New plugin REGION\n";
+    IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num, l->thresh);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT->getOutput(0);
