@@ -1,11 +1,11 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin   = "../tests/test/input.bin";
-const char *c0_bin      = "../tests/test/layers/c0.bin";
-const char *c1_bin      = "../tests/test/layers/c1.bin";
-const char *d2_bin      = "../tests/test/layers/d2.bin";
-const char *output_bin   = "../tests/test/output.bin";
+const char *input_bin   = "../tests/simple/input.bin";
+const char *c0_bin      = "../tests/simple/layers/c0.bin";
+const char *c1_bin      = "../tests/simple/layers/c1.bin";
+const char *d2_bin      = "../tests/simple/layers/d2.bin";
+const char *output_bin  = "../tests/simple/output.bin";
 
 int main() {
 

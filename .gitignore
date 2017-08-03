@@ -6,3 +6,4 @@ build/
 *.prototxt
 *.caffemodel
 *.h5
+*.tar.gz
