@@ -18,7 +18,7 @@ int main() {
     tkDNN::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
     tkDNN::Pooling    l3(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
     tkDNN::Dense      l4(&net, 500, d2_bin);
-    tkDNN::Activation l5(&net, CUDNN_ACTIVATION_RELU);
+    tkDNN::Activation l5(&net, tkDNN::ACTIVATION_LEAKY);
     tkDNN::Dense      l6(&net, 10, d3_bin);
     tkDNN::Softmax    l7(&net);
 

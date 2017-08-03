@@ -97,6 +97,8 @@ typedef enum {
 class Activation : public Layer {
 
 public:
+    int act_mode;
+
     Activation(Network *net, int act_mode); 
     virtual ~Activation();
     virtual layerType_t getLayerType() { return LAYER_ACTIVATION; };
@@ -104,7 +106,6 @@ public:
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
 protected:
-    int act_mode;
     cudnnActivationDescriptor_t activDesc;
 };
 

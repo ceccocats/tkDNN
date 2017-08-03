@@ -4,6 +4,7 @@
 #include "NetworkRT.h"
 
 using namespace nvinfer1;
+#include "pluginsRT/ActivationLeakyRT.cpp"
 
 // Logger for info/warning/errors
 class Logger : public ILogger			
@@ -183,14 +184,21 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 ITensor* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     std::cout<<"convert Activation\n";
 
+    if(l->act_mode == ACTIVATION_LEAKY) {
+        std::cout<<"New plugin LEAKY\n";
+        IPlugin *plugin = new ActivationLeakyRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT->getOutput(0);
+    }
+
     IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
     checkNULL(lRT);
-
     return lRT->getOutput(0);
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
-    std::cout<<"convert Activation\n";
+    std::cout<<"convert softmax\n";
 
     ISoftMaxLayer *lRT = networkRT->addSoftMax(*input);
     checkNULL(lRT);

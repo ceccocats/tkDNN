@@ -83,7 +83,7 @@ int main() {
     tkDNN::Activation a23(&net, tkDNN::ACTIVATION_LEAKY);
     tkDNN::Conv2d     c24(&net, 1024, 3, 3, 1, 1, 1, 1, c24_bin, true);
     tkDNN::Activation a24(&net, tkDNN::ACTIVATION_LEAKY);
-
+/*
     tkDNN::Layer *m25_layers[1] = { &a16 };
     tkDNN::Route      m25(&net, m25_layers, 1);
     tkDNN::Conv2d     c26(&net, 64, 1, 1, 1, 1, 0, 0,   c26_bin, true);
@@ -98,7 +98,7 @@ int main() {
     tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
 
     tkDNN::Region     g31(&net, 80, 4, 5, 0.6f);
-
+*/
     // Load input
     value_type *data;
     value_type *input_h;
@@ -108,16 +108,16 @@ int main() {
 
     value_type *out_data, *out_data2;
 
+    tkDNN::dataDim_t dim1 = dim;
     std::cout<<"CUDNN inference:\n"; {
-        dim.print(); //print initial dimension  
+        dim1.print(); //print initial dimension  
         TIMER_START
-        out_data = net.infer(dim, data);    
+        out_data = net.infer(dim1, data);    
         TIMER_STOP
-        dim.print();   
+        dim1.print();   
     }
  
-    tkDNN::dataDim_t dim2(1, 3, 608, 608, 1);
-
+    tkDNN::dataDim_t dim2 = dim;
     std::cout<<"TENSORRT inference:\n"; {
         dim2.print();
         TIMER_START
@@ -127,7 +127,7 @@ int main() {
     }
 
     std::cout<<"\n======= CHECK RESULT =======\n";
-    std::cout<<"Diffs: "<<checkResult(dim.tot(), out_data, out_data2)<<"\n";
+    std::cout<<"Diffs: "<<checkResult(net.getOutputDim().tot(), out_data, out_data2)<<"\n";
 
     return 0;
 }
