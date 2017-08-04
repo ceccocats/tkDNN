@@ -21,7 +21,7 @@
 #define TIMER_STOP  clock_gettime(CLOCK_MONOTONIC, &end);              \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
-    std::cout<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"; 
+    std::cout<<"\033[1;36mTime:"<<std::setw(16)<<t_ns<<" ms\033[0m\n"; 
 
 
 /********************************************************

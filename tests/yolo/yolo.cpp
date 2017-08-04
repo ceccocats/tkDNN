@@ -129,9 +129,8 @@ int main() {
     value_type *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
-    std::cout<<"CUDNN vs correct Diffs: "<<checkResult(out_dim, out_data, out)<<"\n";
-    std::cout<<"TRT   vs correct Diffs: "<<checkResult(out_dim, out_data2, out)<<"\n";
-    std::cout<<"CUDNN vs TRT     Diffs: "<<checkResult(out_dim, out_data, out)<<"\n";
-
+    std::cout<<"CUDNN vs correct Wrongs: "<<checkResult(out_dim, out_data, out)<<"\n";
+    std::cout<<"TRT   vs correct Wrongs: "<<checkResult(out_dim, out_data2, out)<<"\n";
+    std::cout<<"CUDNN vs TRT     Wrongs: "<<checkResult(out_dim, out_data, out)<<"\n";
     return 0;
 }
