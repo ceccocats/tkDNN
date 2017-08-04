@@ -23,9 +23,7 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
     }
     
     checkCuda( cudaMalloc(data_d, size_b) );
-    checkCuda( cudaMemcpy(*data_d, *data_h,
-                                size_b,
-                                cudaMemcpyHostToDevice) );
+    checkCuda( cudaMemcpy(*data_d, *data_h, size_b, cudaMemcpyHostToDevice) );
 }
 
 void printDeviceVector(int size, value_type* vec_d, bool device)
@@ -39,8 +37,7 @@ void printDeviceVector(int size, value_type* vec_d, bool device)
         vec = vec_d;
     }
     
-    for (int i = 0; i < size; i++)
-    {
+    for (int i = 0; i < size; i++) {
         std::cout << vec[i] << " ";
     }
     std::cout << std::endl;
@@ -52,6 +49,7 @@ void printDeviceVector(int size, value_type* vec_d, bool device)
 int checkResult(int size, value_type *data_d, value_type *correct_d, bool device) {
 
     value_type *data_h, *correct_h;
+    const float eps = 0.0001f;
 
     if(device) {
         data_h = new value_type[size];
@@ -67,10 +65,12 @@ int checkResult(int size, value_type *data_d, value_type *correct_d, bool device
 
     int diffs = 0;
     for(int i=0; i<size; i++) {
-        if(fabs(data_h[i] - correct_h[i]) > 0.0001) {
+        if(fabs(data_h[i] - correct_h[i]) > eps) {
             diffs += 1;
+            if(diffs == 1)
+                std::cout<<"\n";
             if(diffs < 10)
-                printf("%d: %f %f\n", i, data_h[i], correct_h[i]);
+                std::cout<<" | [ "<<i<<" ]: "<<data_h[i]<<" "<<correct_h[i]<<"\n";
         }
     }
 
@@ -79,6 +79,13 @@ int checkResult(int size, value_type *data_d, value_type *correct_d, bool device
         delete [] correct_h;
     }
 
+    std::cout<<" | ";
+    if(diffs == 0)
+        std::cout<<COL_GREENB<<"OK";
+    else
+        std::cout<<COL_REDB<<"Wrongs: "<<diffs;
+
+    std::cout<<COL_END<<" ~"<<eps<<"\n";
     return diffs;
 }
 

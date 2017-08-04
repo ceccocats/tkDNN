@@ -58,7 +58,7 @@ int main() {
     //printDeviceVector(10, out_data);
 
     std::cout<<"\n======= CHECK RESULT =======\n";
-    std::cout<<"Diffs: "<<checkResult(dim.tot(), out_data, out_data2)<<"\n";
+    checkResult(dim.tot(), out_data, out_data2);
 
  /*
     // Print real test

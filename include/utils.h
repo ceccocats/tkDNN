@@ -14,14 +14,31 @@
 
 #define value_type float
 
+// Colored output
+#define COL_END "\033[0m"
 
+#define COL_RED "\033[31m"
+#define COL_GREEN "\033[32m"
+#define COL_ORANGE "\033[33m"
+#define COL_BLUE "\033[34m"
+#define COL_PURPLE "\033[35m"
+#define COL_CYAN "\033[36m"
+
+#define COL_REDB "\033[1;31m"
+#define COL_GREENB "\033[1;32m"
+#define COL_ORANGEB "\033[1;33m"
+#define COL_BLUEB "\033[1;34m"
+#define COL_PURPLEB "\033[1;35m"
+#define COL_CYANB "\033[1;36m"
+
+// Simple Timer 
 #define TIMER_START timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
 #define TIMER_STOP  clock_gettime(CLOCK_MONOTONIC, &end);              \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
-    std::cout<<"\033[1;36mTime:"<<std::setw(16)<<t_ns<<" ms\033[0m\n"; 
+    std::cout<<COL_CYANB<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
 
 /********************************************************
@@ -71,7 +88,7 @@
 }
 
 void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek = 0);
-int  checkResult(int size, value_type *data_d, value_type *correct_d, bool device = true);
+int checkResult(int size, value_type *data_d, value_type *correct_d, bool device = true);
 void printDeviceVector(int size, value_type* vec_d, bool device = true);
 void resize(int size, value_type **data);
 

@@ -103,13 +103,14 @@ int main() {
     value_type *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
 
+    //convert network to tensorRT
     tkDNN::NetworkRT netRT(&net);
 
-    value_type *out_data, *out_data2;
+    value_type *out_data, *out_data2; // cudnn output, tensorRT output
 
-    tkDNN::dataDim_t dim1 = dim;
+    tkDNN::dataDim_t dim1 = dim; //input dim
     std::cout<<"\n==== CUDNN inference =======\n"; {
-        dim1.print(); //print initial dimension  
+        dim1.print();
         TIMER_START
         out_data = net.infer(dim1, data);    
         TIMER_STOP
@@ -129,8 +130,8 @@ int main() {
     value_type *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
-    std::cout<<"CUDNN vs correct Wrongs: "<<checkResult(out_dim, out_data, out)<<"\n";
-    std::cout<<"TRT   vs correct Wrongs: "<<checkResult(out_dim, out_data2, out)<<"\n";
-    std::cout<<"CUDNN vs TRT     Wrongs: "<<checkResult(out_dim, out_data, out)<<"\n";
+    std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
+    std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
+    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
     return 0;
 }

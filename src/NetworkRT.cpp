@@ -10,12 +10,10 @@ using namespace nvinfer1;
 #include "pluginsRT/RegionRT.cpp"
 
 // Logger for info/warning/errors
-class Logger : public ILogger			
-{
-	void log(Severity severity, const char* msg) override
-	{
-		std::cout <<"TENSORRT: "<< msg << std::endl;
-	}
+class Logger : public ILogger {
+    void log(Severity severity, const char* msg) override {
+        std::cout <<"TENSORRT LOG: "<< msg << std::endl;
+    }
 } loggerRT;
 
 namespace tkDNN {
@@ -23,6 +21,11 @@ namespace tkDNN {
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
 NetworkRT::NetworkRT(Network *net) {
+
+    float rt_ver = float(NV_TENSORRT_MAJOR) + 
+                   float(NV_TENSORRT_MINOR)/10 + 
+                   float(NV_TENSORRT_PATCH)/100;
+    std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
 
     builderRT = createInferBuilder(loggerRT);
     networkRT = builderRT->createNetwork();
