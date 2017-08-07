@@ -45,7 +45,11 @@ NetworkRT::NetworkRT(Network *net) {
     }
     if(input == NULL)
         FatalError("conversion failed");
-    output_dim = net->layers[net->num_layers-1]->output_dim;
+    output_dim = dim;
+    Dims oDim = input->getDimensions();
+    output_dim.c = oDim.d[0];
+    output_dim.h = oDim.d[1];
+    output_dim.w = oDim.d[2];
 
     //build tensorRT
     input->setName("out");

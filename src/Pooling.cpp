@@ -5,20 +5,18 @@
 
 namespace tkDNN {
 
-Pooling::Pooling(   Network *net, int winH, int winW, 
-                    int strideH, int strideW, tkdnnPoolingMode_t pool_mode) : 
+Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
+                  tkdnnPoolingMode_t pool_mode) : 
     Layer(net) {
-
-
-    if(winH != strideH || winW != strideW)
-        FatalError("stride pooling not yet implemented");
 
     this->winH = winH;
     this->winW = winW;
     this->strideH = strideH;
     this->strideW = strideW;
     this->pool_mode = pool_mode;
-    
+    this->paddingH = 0;
+    this->paddingW = 0;
+
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
     int n = input_dim.n;
@@ -46,12 +44,13 @@ Pooling::Pooling(   Network *net, int winH, int winW,
                 net->tensorFormat, net->dataType, n, c, h, w) );
 
     //get out dim
-    h = h / winH; w = w / winW;
-    
+    checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
+    //h = (h + winH*this->paddingH)/strideH;
+    //w = (w + winW*this->paddingW)/strideW;
+
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
                 net->tensorFormat, net->dataType, n, c, h, w) );
        
-
     output_dim.n = n;
     output_dim.c = c;
     output_dim.h = h;
