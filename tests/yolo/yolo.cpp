@@ -25,6 +25,7 @@ const char *c24_bin    = "../tests/yolo/layers/c24.bin";
 const char *c26_bin    = "../tests/yolo/layers/c26.bin";
 const char *c29_bin    = "../tests/yolo/layers/c29.bin";
 const char *c30_bin    = "../tests/yolo/layers/c30.bin";
+const char *g31_bin    = "../tests/yolo/layers/g31.bin";
 const char *output_bin = "../tests/yolo/layers/output.bin";
 
 int main() {
@@ -96,7 +97,7 @@ int main() {
     tkDNN::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
     tkDNN::Activation a29(&net, tkDNN::ACTIVATION_LEAKY);   
     tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
-    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f);
+    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f, g31_bin);
 
     // Load input
     value_type *data;
@@ -133,5 +134,8 @@ int main() {
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
     std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
+    
+    std::cout<<"\n\nDetected objects: \n";
+    g31.interpretData();
     return 0;
 }

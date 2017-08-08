@@ -272,6 +272,11 @@ public:
     int stride;
 };
 
+
+struct box {
+    float x, y, w, h;
+};
+
 /**
     Region layer
     Mantain same dimension but change C*H*W distribution
@@ -279,16 +284,23 @@ public:
 class Region : public Layer {
 
 public:
-    Region(Network *net, int classes, int coords, int num, float thresh);
+    Region(Network *net, int classes, int coords, int num, float thresh, const char* fname_weights);
     virtual ~Region();
     virtual layerType_t getLayerType() { return LAYER_REGION; };
 
     virtual value_type* infer(dataDim_t &dim, value_type* srcData);
 
+    value_type *bias_h, *bias_d;
     int classes, coords, num;
     float thresh;
 
     int entry_index(int batch, int location, int entry);
+    box get_region_box(float *x, float *biases, int n, int index, int i, int j, int w, int h, int stride);
+    void get_region_boxes(  float *input, int w, int h, int netw, int neth, float thresh, 
+                            float **probs, box *boxes, int only_objectness, 
+                            int *map, float tree_thresh, int relative); 
+    void correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative);
+    void interpretData();
 };
 
 
