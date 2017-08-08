@@ -1,4 +1,16 @@
 #include "utils.h"
+#include <string.h>
+
+void printCenteredTitle(const char *title, char fill, int dim) {
+
+    int len = strlen(title);
+    int first = dim/2 + len/2;
+
+    std::cout.width(first); std::cout.fill(fill); std::cout<<std::right<<title;
+    std::cout.width(dim - first); std::cout<<"\n"; 
+    std::cout.fill(' ');
+}
+
 
 void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek)
 {

@@ -46,6 +46,7 @@ public:
     value_type* infer(dataDim_t &dim, value_type* data);
 
     bool addLayer(Layer *l);
+    void print();
 
     cudnnDataType_t dataType;
     cudnnTensorFormat_t tensorFormat;

@@ -38,6 +38,23 @@ public:
     dataDim_t input_dim, output_dim;
     value_type *dstData;  //where results will be putted
 
+    std::string getLayerName() {
+        layerType_t type = getLayerType();
+        switch(type) {
+            case LAYER_DENSE:       return "Dense";
+            case LAYER_CONV2D:      return "Conv2d";
+            case LAYER_ACTIVATION:  return "Activation";
+            case LAYER_FLATTEN:     return "Flatten";
+            case LAYER_MULADD:      return "MulAdd";
+            case LAYER_POOLING:     return "Pooling";
+            case LAYER_SOFTMAX:     return "Softmax";
+            case LAYER_ROUTE:       return "Route";            
+            case LAYER_REORG:       return "Reorg";
+            case LAYER_REGION:      return "Region";
+            default:                return "unknown";
+        }
+    }
+
 protected:
     Network *net;
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;

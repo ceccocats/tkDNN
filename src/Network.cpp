@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "tkdnn.h"
 #include "Network.h"
@@ -34,7 +35,6 @@ value_type* Network::infer(dataDim_t &dim, value_type* data) {
     //do infer for every layer
     for(int i=0; i<num_layers; i++) {
         data = layers[i]->infer(dim, data);
-        //dim.print();
     }
     checkCuda(cudaDeviceSynchronize());
     return data;
@@ -55,5 +55,41 @@ dataDim_t Network::getOutputDim() {
         else
             return layers[num_layers-1]->output_dim;
 }
+
+void Network::print() {
+
+    std::cout<<"\n";
+    printCenteredTitle(" NETWORK MODEL ", '=', 60);
+    std::cout.width(3); std::cout<<std::left<<"N.";
+    std::cout<<" ";
+    std::cout.width(17); std::cout<<std::left<<"Layer type";
+    std::cout.width(22); std::cout<<std::left<<"input (H*W,CH)";
+    std::cout.width(16); std::cout<<std::left<<"output (H*W,CH)";
+    std::cout<<"\n";
+
+    for(int i=0; i<num_layers; i++) {
+        dataDim_t in = layers[i]->input_dim;
+        dataDim_t out = layers[i]->output_dim;
+
+        std::cout.width(3); std::cout<<std::right<<i;
+        std::cout<<" ";
+        std::cout.width(16); std::cout<<std::left<<layers[i]->getLayerName();
+        std::cout.width(4);  std::cout<<std::right<<in.h;
+        std::cout<<" x ";
+        std::cout.width(4);  std::cout<<std::right<<in.w;
+        std::cout<<", ";
+        std::cout.width(4);  std::cout<<std::right<<in.c;
+        std::cout<<"  -> ";
+        std::cout.width(4);  std::cout<<std::right<<out.h;
+        std::cout<<" x ";
+        std::cout.width(4);  std::cout<<std::right<<out.w;
+        std::cout<<", ";
+        std::cout.width(4);  std::cout<<std::right<<out.c;
+        std::cout<<"\n";
+    }
+    printCenteredTitle("", '=', 60);
+    std::cout<<"\n";
+}
+
 
 }
