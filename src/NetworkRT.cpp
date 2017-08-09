@@ -12,7 +12,9 @@ using namespace nvinfer1;
 // Logger for info/warning/errors
 class Logger : public ILogger {
     void log(Severity severity, const char* msg) override {
+#ifdef DEBUG
         std::cout <<"TENSORRT LOG: "<< msg << std::endl;
+#endif
     }
 } loggerRT;
 
@@ -59,7 +61,7 @@ NetworkRT::NetworkRT(Network *net) {
 	builderRT->setMaxBatchSize(1);
 	builderRT->setMaxWorkspaceSize(1 << 20);
 
-    std::cout<<"BUILD cuda engine\n";
+    std::cout<<"Building tensorRT cuda engine...\n";
 	engineRT = builderRT->buildCudaEngine(*networkRT);
 	// we don't need the network any more
 	//networkRT->destroy();
@@ -127,7 +129,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Layer *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Dense *l) {
-    std::cout<<"convert Dense\n";
+    //std::cout<<"convert Dense\n";
 
     Weights w { dtRT, l->data_h, l->inputs*l->outputs};
     Weights b = { dtRT, l->bias_h, l->outputs};
@@ -138,7 +140,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Dense *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
-    std::cout<<"convert conv2D\n";
+    //std::cout<<"convert conv2D\n";
 
     Weights w { dtRT, l->data_h, l->inputs*l->outputs*l->kernelH*l->kernelW};
     Weights b;
@@ -190,7 +192,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
-    std::cout<<"convert Pooling\n";
+    //std::cout<<"convert Pooling\n";
 
     IPoolingLayer *lRT = networkRT->addPooling(*input, 
         PoolingType::kMAX, DimsHW{l->winH, l->winW});
@@ -201,10 +203,10 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Activation *l) {
-    std::cout<<"convert Activation\n";
+    //std::cout<<"convert Activation\n";
 
     if(l->act_mode == ACTIVATION_LEAKY) {
-        std::cout<<"New plugin LEAKY\n";
+        //std::cout<<"New plugin LEAKY\n";
         IPlugin *plugin = new ActivationLeakyRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
@@ -217,7 +219,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Activation *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
-    std::cout<<"convert softmax\n";
+    //std::cout<<"convert softmax\n";
 
     ISoftMaxLayer *lRT = networkRT->addSoftMax(*input);
     checkNULL(lRT);
@@ -226,7 +228,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Route *l) {
-    std::cout<<"convert route\n";
+    //std::cout<<"convert route\n";
 
     ITensor *tens[256];
     for(int i=0; i<l->layers_n; i++)
@@ -238,9 +240,9 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Route *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
-    std::cout<<"convert Reorg\n";
+    //std::cout<<"convert Reorg\n";
 
-    std::cout<<"New plugin REORG\n";
+    //std::cout<<"New plugin REORG\n";
     IPlugin *plugin = new ReorgRT(l->stride);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
@@ -248,9 +250,9 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
 }
 
 ITensor* NetworkRT::convert_layer(ITensor *input, Region *l) {
-    std::cout<<"convert Region\n";
+    //std::cout<<"convert Region\n";
 
-    std::cout<<"New plugin REGION\n";
+    //std::cout<<"New plugin REGION\n";
     IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num, l->thresh);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);

@@ -58,7 +58,6 @@ dataDim_t Network::getOutputDim() {
 
 void Network::print() {
 
-    std::cout<<"\n";
     printCenteredTitle(" NETWORK MODEL ", '=', 60);
     std::cout.width(3); std::cout<<std::left<<"N.";
     std::cout<<" ";

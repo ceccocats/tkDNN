@@ -5,7 +5,9 @@ void printCenteredTitle(const char *title, char fill, int dim) {
 
     int len = strlen(title);
     int first = dim/2 + len/2;
-
+    
+    if(len >0)
+        std::cout<<"\n";
     std::cout.width(first); std::cout.fill(fill); std::cout<<std::right<<title;
     std::cout.width(dim - first); std::cout<<"\n"; 
     std::cout.fill(' ');

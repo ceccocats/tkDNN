@@ -13,6 +13,10 @@ if( ${BUILD_DEPS} )
 	message("Finished dowloading test weights")
 endif()
 
+if(DEBUG)
+    add_definitions(-DDEBUG)
+endif()
+
 find_package(CUDA QUIET REQUIRED)
 
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS})

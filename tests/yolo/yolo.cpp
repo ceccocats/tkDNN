@@ -103,6 +103,9 @@ int main() {
     value_type *data;
     value_type *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
+    
+    //print network model
+    net.print();
 
     //convert network to tensorRT
     tkDNN::NetworkRT netRT(&net);
@@ -110,7 +113,7 @@ int main() {
     value_type *out_data, *out_data2; // cudnn output, tensorRT output
 
     tkDNN::dataDim_t dim1 = dim; //input dim
-    std::cout<<"\n==== CUDNN inference =======\n"; {
+    printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
         TIMER_START
         out_data = net.infer(dim1, data);    
@@ -119,7 +122,7 @@ int main() {
     }
  
     tkDNN::dataDim_t dim2 = dim;
-    std::cout<<"\n==== TENSORRT inference ====\n"; {
+    printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
         TIMER_START
         out_data2 = netRT.infer(dim2, data);
@@ -127,7 +130,7 @@ int main() {
         dim2.print();
     }
 
-    std::cout<<"\n======= CHECK RESULT =======\n";
+    printCenteredTitle(" CHECK RESULTS ", '=', 30);
     value_type *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
