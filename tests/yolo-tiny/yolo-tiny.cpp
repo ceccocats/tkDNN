@@ -9,11 +9,11 @@ const char *c5_bin     = "../tests/yolo-tiny/layers/c5.bin";
 const char *c6_bin     = "../tests/yolo-tiny/layers/c6.bin";
 const char *c8_bin     = "../tests/yolo-tiny/layers/c8.bin";
 const char *c10_bin    = "../tests/yolo-tiny/layers/c10.bin";
+const char *c11_bin    = "../tests/yolo-tiny/layers/c11.bin";
 const char *c12_bin    = "../tests/yolo-tiny/layers/c12.bin";
 const char *c13_bin    = "../tests/yolo-tiny/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo-tiny/layers/c14.bin";
-const char *g15_bin    = "../tests/yolo-tiny/layers/g15.bin";
-const char *output_bin = "../tests/yolo-tiny/layers/outputLEL.bin";
+const char *g14_bin    = "../tests/yolo-tiny/layers/g14.bin";
+const char *output_bin = "../tests/yolo-tiny/layers/output.bin";
 
 int main() {
 
@@ -43,14 +43,13 @@ int main() {
 
     tkDNN::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tkDNN::Activation a10(&net, tkDNN::ACTIVATION_LEAKY);
-    //tkDNN::Pooling    p11(&net, 2, 2, 1, 1, tkDNN::POOLING_MAX);
 
-    tkDNN::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c12_bin, true);
+    tkDNN::Conv2d     c11(&net, 1024, 3, 3, 1, 1, 1, 1, c11_bin, true);
+    tkDNN::Activation a11(&net, tkDNN::ACTIVATION_LEAKY);
+    tkDNN::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1, c12_bin, true);
     tkDNN::Activation a12(&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Conv2d     c13(&net, 1024, 3, 3, 1, 1, 1, 1, c13_bin, true);
-    tkDNN::Activation a13(&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Conv2d     c14(&net, 125, 1, 1, 1, 1, 0, 0, c14_bin, false);
-    tkDNN::Region     g15(&net, 20, 4, 5, 0.6f, g15_bin);
+    tkDNN::Conv2d     c13(&net, 425, 1, 1, 1, 1, 0, 0, c13_bin, false);
+    tkDNN::Region     g14(&net, 80, 4, 5, 0.6f, g14_bin);
 
     // Load input
     value_type *data;
@@ -89,6 +88,6 @@ int main() {
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
 
     std::cout<<"\n\nDetected objects: \n";
-    g15.interpretData();
+    g14.interpretData();
     return 0;
 }
