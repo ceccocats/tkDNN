@@ -35,7 +35,7 @@ __global__ void reorg_kernel(int N, float *x, int w, int h, int c, int batch, in
 /**
     reorg function function
 */
-void reorgForward(value_type* srcData, value_type* dstData, 
+void reorgForward(dnnType* srcData, dnnType* dstData, 
                   int n, int c, int h, int w, int stride) {
 
     int size = n*c*h*w;

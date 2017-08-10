@@ -1,7 +1,7 @@
 #include "kernels.h"
 
 __global__
-void activation_leaky(value_type *input, value_type *output, int size) {
+void activation_leaky(dnnType *input, dnnType *output, int size) {
 
     int i = blockDim.x*blockIdx.x + threadIdx.x;
 
@@ -17,7 +17,7 @@ void activation_leaky(value_type *input, value_type *output, int size) {
 /**
     ELU activation function
 */
-void activationLEAKYForward(value_type* srcData, value_type* dstData, int size)
+void activationLEAKYForward(dnnType* srcData, dnnType* dstData, int size)
 {
     int blocks = (size+255)/256;
     int threads = 256;

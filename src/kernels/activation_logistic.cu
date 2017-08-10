@@ -1,7 +1,7 @@
 #include "kernels.h"
 
 __global__
-void activation_logistic(value_type *input, value_type *output, int size) {
+void activation_logistic(dnnType *input, dnnType *output, int size) {
 
     int i = blockDim.x*blockIdx.x + threadIdx.x;
 
@@ -14,7 +14,7 @@ void activation_logistic(value_type *input, value_type *output, int size) {
 /**
     LOGISTIC activation function
 */
-void activationLOGISTICForward(value_type* srcData, value_type* dstData, int size)
+void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size)
 {
     int blocks = (size+255)/256;
     int threads = 256;

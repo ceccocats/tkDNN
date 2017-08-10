@@ -43,7 +43,7 @@ public:
     /**
         Do inferece for every added layer
     */
-    value_type* infer(dataDim_t &dim, value_type* data);
+    dnnType* infer(dataDim_t &dim, dnnType* data);
 
     bool addLayer(Layer *l);
     void print();

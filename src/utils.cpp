@@ -14,7 +14,7 @@ void printCenteredTitle(const char *title, char fill, int dim) {
 }
 
 
-void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek)
+void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** data_d, int seek)
 {
     std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
     std::stringstream error_s;
@@ -25,11 +25,11 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
     }
 
     if(seek != 0) {
-        dataFile.seekg(seek*sizeof(value_type), dataFile.cur);
+        dataFile.seekg(seek*sizeof(dnnType), dataFile.cur);
     }
 
-    int size_b = size*sizeof(value_type);
-    *data_h = new value_type[size];
+    int size_b = size*sizeof(dnnType);
+    *data_h = new dnnType[size];
     if (!dataFile.read ((char*) *data_h, size_b)) 
     {
         error_s << "Error reading file " << fname; 
@@ -40,13 +40,13 @@ void readBinaryFile(const char* fname, int size, value_type** data_h, value_type
     checkCuda( cudaMemcpy(*data_d, *data_h, size_b, cudaMemcpyHostToDevice) );
 }
 
-void printDeviceVector(int size, value_type* vec_d, bool device)
+void printDeviceVector(int size, dnnType* vec_d, bool device)
 {
-    value_type *vec;
+    dnnType *vec;
     if(device) {
-        vec = new value_type[size];
+        vec = new dnnType[size];
         cudaDeviceSynchronize();
-        cudaMemcpy(vec, vec_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+        cudaMemcpy(vec, vec_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
     } else {
         vec = vec_d;
     }
@@ -60,17 +60,17 @@ void printDeviceVector(int size, value_type* vec_d, bool device)
         delete [] vec;
 }
 
-int checkResult(int size, value_type *data_d, value_type *correct_d, bool device) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
 
-    value_type *data_h, *correct_h;
+    dnnType *data_h, *correct_h;
     const float eps = 0.0001f;
 
     if(device) {
-        data_h = new value_type[size];
-        correct_h = new value_type[size];
+        data_h = new dnnType[size];
+        correct_h = new dnnType[size];
         cudaDeviceSynchronize();
-        cudaMemcpy(data_h, data_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(correct_h, correct_d, size*sizeof(value_type), cudaMemcpyDeviceToHost);
+        cudaMemcpy(data_h, data_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
+        cudaMemcpy(correct_h, correct_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
     
     } else {
         data_h = data_d;
@@ -103,30 +103,30 @@ int checkResult(int size, value_type *data_d, value_type *correct_d, bool device
     return diffs;
 }
 
-void resize(int size, value_type **data)
+void resize(int size, dnnType **data)
 {
     if (*data != NULL)
         checkCuda( cudaFree(*data) );
-    checkCuda( cudaMalloc(data, size*sizeof(value_type)) );
+    checkCuda( cudaMalloc(data, size*sizeof(dnnType)) );
 }
 
-void matrixTranspose(cublasHandle_t handle, value_type* srcData, value_type* dstData, int rows, int cols) {
+void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, int rows, int cols) {
 
-    value_type *A = srcData, *clone = dstData;
+    dnnType *A = srcData, *clone = dstData;
     int m = rows, n= cols;
-    checkCuda( cudaMemcpy(clone, A, m*n*sizeof(value_type), cudaMemcpyDeviceToDevice));
+    checkCuda( cudaMemcpy(clone, A, m*n*sizeof(dnnType), cudaMemcpyDeviceToDevice));
    
     float const alpha(1.0);
     float const beta(0.0);
     checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, &alpha, A, n, &beta, A, m, clone, m ));
 }
 
-void matrixMulAdd(  cublasHandle_t handle, value_type* srcData, value_type* dstData, 
-                    value_type* add_vector, int dim, value_type mul) {
+void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData, 
+                    dnnType* add_vector, int dim, dnnType mul) {
 
-    checkCuda( cudaMemcpy(dstData, add_vector, dim*sizeof(value_type), cudaMemcpyDeviceToDevice));
+    checkCuda( cudaMemcpy(dstData, add_vector, dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
         
-    value_type alpha = mul;
+    dnnType alpha = mul;
     checkERROR( cublasSaxpy(handle, dim, &alpha, srcData, 1, dstData, 1));
 
 }

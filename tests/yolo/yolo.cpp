@@ -100,8 +100,8 @@ int main() {
     tkDNN::Region     g31(&net, 80, 4, 5, 0.6f, g31_bin);
 
     // Load input
-    value_type *data;
-    value_type *input_h;
+    dnnType *data;
+    dnnType *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
     
     //print network model
@@ -110,7 +110,7 @@ int main() {
     //convert network to tensorRT
     tkDNN::NetworkRT netRT(&net);
 
-    value_type *out_data, *out_data2; // cudnn output, tensorRT output
+    dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 
     tkDNN::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
@@ -131,7 +131,7 @@ int main() {
     }
 
     printCenteredTitle(" CHECK RESULTS ", '=', 30);
-    value_type *out, *out_h;
+    dnnType *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
@@ -140,5 +140,6 @@ int main() {
     
     std::cout<<"\n\nDetected objects: \n";
     g31.interpretData();
+    g31.showImageResult(input_h);
     return 0;
 }

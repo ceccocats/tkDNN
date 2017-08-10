@@ -30,13 +30,13 @@ public:
     virtual ~Layer();
     virtual layerType_t getLayerType() = 0;
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData) {
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
         std::cout<<"No infer action for this layer\n";
         return NULL;
     }
 
     dataDim_t input_dim, output_dim;
-    value_type *dstData;  //where results will be putted
+    dnnType *dstData;  //where results will be putted
 
     std::string getLayerName() {
         layerType_t type = getLayerType();
@@ -75,14 +75,14 @@ public:
     int inputs, outputs;
     std::string weights_path;
 
-    value_type *data_h, *data_d;
-    value_type *bias_h, *bias_d;
+    dnnType *data_h, *data_d;
+    dnnType *bias_h, *bias_d;
 
     //batchnorm
     bool batchnorm;
-    value_type *scales_h,   *scales_d;
-    value_type *mean_h,     *mean_d;
-    value_type *variance_h, *variance_d;
+    dnnType *scales_h,   *scales_d;
+    dnnType *mean_h,     *mean_d;
+    dnnType *variance_h, *variance_d;
 };
 
 
@@ -96,7 +96,7 @@ public:
     virtual ~Dense();
     virtual layerType_t getLayerType() { return LAYER_DENSE; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
 
@@ -120,7 +120,7 @@ public:
     virtual ~Activation();
     virtual layerType_t getLayerType() { return LAYER_ACTIVATION; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 protected:
     cudnnActivationDescriptor_t activDesc;
@@ -139,7 +139,7 @@ public:
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
 
@@ -165,7 +165,7 @@ public:
     virtual ~Flatten();
     virtual layerType_t getLayerType() { return LAYER_FLATTEN; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
 
@@ -176,15 +176,15 @@ public:
 class MulAdd : public Layer {
 
 public:
-    MulAdd(Network *net, value_type mul, value_type add); 
+    MulAdd(Network *net, dnnType mul, dnnType add); 
     virtual ~MulAdd();
     virtual layerType_t getLayerType() { return LAYER_MULADD; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 protected:
-    value_type mul, add;
-    value_type *add_vector;
+    dnnType mul, add;
+    dnnType *add_vector;
 };
 
 
@@ -214,13 +214,13 @@ public:
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 protected:
 
     cudnnPoolingDescriptor_t poolingDesc;
     tkdnnPoolingMode_t pool_mode;
-    value_type *tmpInputData, *tmpOutputData;
+    dnnType *tmpInputData, *tmpOutputData;
     bool poolOn3d;
 };
 
@@ -234,7 +234,7 @@ public:
     virtual ~Softmax();
     virtual layerType_t getLayerType() { return LAYER_SOFTMAX; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
 /**
@@ -248,7 +248,7 @@ public:
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 public:
     Layer **layers;  //ids of layers to be merged
@@ -267,7 +267,7 @@ public:
     virtual ~Reorg();
     virtual layerType_t getLayerType() { return LAYER_REORG; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int stride;
 };
@@ -288,11 +288,13 @@ public:
     virtual ~Region();
     virtual layerType_t getLayerType() { return LAYER_REGION; };
 
-    virtual value_type* infer(dataDim_t &dim, value_type* srcData);
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-    value_type *bias_h, *bias_d;
+    dnnType *bias_h, *bias_d;
     int classes, coords, num;
     float thresh;
+    box res_boxes[256];
+    int res_boxes_n;
 
     int entry_index(int batch, int location, int entry);
     box get_region_box(float *x, float *biases, int n, int index, int i, int j, int w, int h, int stride);
@@ -301,6 +303,7 @@ public:
                             int *map, float tree_thresh, int relative); 
     void correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative);
     void interpretData();
+    void showImageResult(dnnType *input_h);
 };
 
 

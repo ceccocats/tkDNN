@@ -18,6 +18,13 @@ if(DEBUG)
 endif()
 
 find_package(CUDA QUIET REQUIRED)
+find_package(OpenCV QUIET)
+if(${OpenCV_FOUND})
+    message("Compiling with openCV support")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
+else()
+    message(WARNING "OpenCV not found, compiling without it")
+endif()
 
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED src/kernels/activation_elu.cu 
@@ -27,11 +34,11 @@ cuda_add_library(kernels SHARED src/kernels/activation_elu.cu
                                 src/kernels/softmax.cu)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS})
 add_library(tkDNN SHARED src/Layer.cpp src/LayerWgs.cpp
     src/Dense.cpp src/Activation.cpp src/Conv2d.cpp src/Flatten.cpp src/MulAdd.cpp src/Pooling.cpp src/Softmax.cpp
     src/Route.cpp src/Reorg.cpp src/Region.cpp src/Network.cpp src/utils.cpp src/NetworkRT.cpp)
-target_link_libraries(tkDNN kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer)
+target_link_libraries(tkDNN kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
 
 add_executable(test_simple tests/simple/test_simple.cpp)
 target_link_libraries(test_simple tkDNN)

@@ -28,7 +28,7 @@ Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
 
     input_dim = output_dim;
 
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }
 
 Route::~Route() {
@@ -36,14 +36,14 @@ Route::~Route() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Route::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Route::infer(dataDim_t &dim, dnnType* srcData) {
 
 
     int offset = 0;
     for(int i=0; i<layers_n; i++) {
-        value_type *input = layers[i]->dstData;
+        dnnType *input = layers[i]->dstData;
         int in_dim = layers[i]->input_dim.tot();
-        checkCuda( cudaMemcpy(dstData + offset, input, in_dim*sizeof(value_type), cudaMemcpyDeviceToDevice));
+        checkCuda( cudaMemcpy(dstData + offset, input, in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
         offset += in_dim;
     }
 

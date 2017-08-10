@@ -9,7 +9,7 @@ Activation::Activation(Network *net, int act_mode) :
     Layer(net) {
 
     this->act_mode = act_mode;
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 
     if(int(act_mode) < 100) {
 
@@ -43,14 +43,14 @@ Activation::~Activation() {
         checkCUDNN( cudnnDestroyActivationDescriptor(activDesc) );
 }
 
-value_type* Activation::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
 
     if(act_mode == ACTIVATION_LEAKY) {
         activationLEAKYForward(srcData, dstData, dim.tot());
     
     } else {
-        value_type alpha = value_type(1);
-        value_type beta  = value_type(0);
+        dnnType alpha = dnnType(1);
+        dnnType beta  = dnnType(0);
         checkCUDNN( cudnnActivationForward(net->cudnnHandle,
                                             activDesc,
                                             &alpha,

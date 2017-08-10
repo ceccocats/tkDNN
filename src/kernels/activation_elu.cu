@@ -7,12 +7,12 @@
         x > 0 :    y = x
 */
 __global__
-void activation_elu(value_type *input, value_type *output, int size) {
+void activation_elu(dnnType *input, dnnType *output, int size) {
 
     int i = blockDim.x*blockIdx.x + threadIdx.x;
 
     if(i<size) {    
-        value_type k0, k1;
+        dnnType k0, k1;
         
         if (input[i]>0)
             k0 = 1.0f;
@@ -28,7 +28,7 @@ void activation_elu(value_type *input, value_type *output, int size) {
 /**
     ELU activation function
 */
-void activationELUForward(value_type* srcData, value_type* dstData, int size)
+void activationELUForward(dnnType* srcData, dnnType* dstData, int size)
 {
     int blocks = (size+255)/256;
     int threads = 256;

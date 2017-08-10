@@ -21,8 +21,8 @@ int main() {
     tkDNN::Activation l6(&net, CUDNN_ACTIVATION_RELU);
 
     // Load input
-    value_type *data;
-    value_type *input_h;
+    dnnType *data;
+    dnnType *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
 
     printDeviceVector(dim.tot(), data);
@@ -39,8 +39,8 @@ int main() {
 
     // Print real test
     std::cout<<"\n==== CHECK RESULT ====\n";
-    value_type *out;
-    value_type *out_h;
+    dnnType *out;
+    dnnType *out_h;
     readBinaryFile(output_bin, dim.tot(), &out_h, &out);
     printDeviceVector(dim.tot(), out);
     return 0;

@@ -7,7 +7,7 @@ namespace tkDNN {
 
 Flatten::Flatten(Network *net) : Layer(net) {
 
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 
     output_dim.n = 1;
     output_dim.c = input_dim.tot();
@@ -22,7 +22,7 @@ Flatten::~Flatten() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Flatten::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Flatten::infer(dataDim_t &dim, dnnType* srcData) {
 
     //transpose per channel
     matrixTranspose(net->cublasHandle, srcData, dstData, dim.c, dim.h*dim.w*dim.l);

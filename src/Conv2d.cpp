@@ -76,7 +76,7 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     output_dim.l = 1;
 
     //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }
 
 Conv2d::~Conv2d() {
@@ -91,12 +91,12 @@ Conv2d::~Conv2d() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Conv2d::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Conv2d::infer(dataDim_t &dim, dnnType* srcData) {
 
 
     // convolution
-    value_type alpha = value_type(1);
-    value_type beta  = value_type(0);
+    dnnType alpha = dnnType(1);
+    dnnType beta  = dnnType(0);
     checkCUDNN( cudnnConvolutionForward(net->cudnnHandle,
                 &alpha, srcTensorDesc, srcData, filterDesc,
                 data_d, convDesc, algo, workSpace, ws_sizeInBytes,
@@ -104,8 +104,8 @@ value_type* Conv2d::infer(dataDim_t &dim, value_type* srcData) {
 
     if(!batchnorm) {
         // bias
-        alpha = value_type(1);
-        beta  = value_type(1);
+        alpha = dnnType(1);
+        beta  = dnnType(1);
         checkCUDNN( cudnnAddTensor(net->cudnnHandle,
                     &alpha, biasTensorDesc, bias_d,
                     &beta, dstTensorDesc, dstData) );

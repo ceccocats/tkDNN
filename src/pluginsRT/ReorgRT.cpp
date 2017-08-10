@@ -40,8 +40,8 @@ public:
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
-		reorgForward((value_type*)reinterpret_cast<const value_type*>(inputs[0]), 
-					  reinterpret_cast<value_type*>(outputs[0]), 
+		reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
+					  reinterpret_cast<dnnType*>(outputs[0]), 
 					  batchSize, c, h, w, stride);
 		return 0;
 	}

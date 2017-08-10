@@ -7,7 +7,7 @@ namespace tkDNN {
 
 Softmax::Softmax(Network *net) : Layer(net) {
 
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 
     checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc,
                                         net->tensorFormat,
@@ -28,10 +28,10 @@ Softmax::~Softmax() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Softmax::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Softmax::infer(dataDim_t &dim, dnnType* srcData) {
 
-    value_type alpha = value_type(1);
-    value_type beta  = value_type(0);
+    dnnType alpha = dnnType(1);
+    dnnType beta  = dnnType(0);
     checkCUDNN( cudnnSoftmaxForward(net->cudnnHandle,
                                     CUDNN_SOFTMAX_ACCURATE ,
                                     CUDNN_SOFTMAX_MODE_CHANNEL,

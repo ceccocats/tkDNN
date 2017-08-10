@@ -14,7 +14,7 @@ Dense::Dense(Network *net, int out_ch, const char* fname_weights) :
     output_dim.l = 1;
 
     //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }
 
 Dense::~Dense() {
@@ -22,7 +22,7 @@ Dense::~Dense() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Dense::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Dense::infer(dataDim_t &dim, dnnType* srcData) {
 
     if (dim.n != 1)
         FatalError("Not Implemented"); 
@@ -33,9 +33,9 @@ value_type* Dense::infer(dataDim_t &dim, value_type* srcData) {
     if (dim_x != input_dim.tot())
         FatalError("Input mismatch");
 
-    value_type alpha = value_type(1), beta = value_type(1);
+    dnnType alpha = dnnType(1), beta = dnnType(1);
     // place bias into dstData
-    checkCuda( cudaMemcpy(dstData, bias_d, dim_y*sizeof(value_type), cudaMemcpyDeviceToDevice) );
+    checkCuda( cudaMemcpy(dstData, bias_d, dim_y*sizeof(dnnType), cudaMemcpyDeviceToDevice) );
     
     //do matrix moltiplication
     checkERROR( cublasSgemv(net->cublasHandle, CUBLAS_OP_T,

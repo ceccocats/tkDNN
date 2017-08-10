@@ -81,9 +81,9 @@ NetworkRT::NetworkRT(Network *net) {
     std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 	// create GPU buffers and a stream
-    checkCuda(cudaMalloc(&buffersRT[buf_input_idx],  dim.tot()*sizeof(value_type)));
-    checkCuda(cudaMalloc(&buffersRT[buf_output_idx], output_dim.tot()*sizeof(value_type)));
-    checkCuda(cudaMalloc(&output, output_dim.tot()*sizeof(value_type)));
+    checkCuda(cudaMalloc(&buffersRT[buf_input_idx],  dim.tot()*sizeof(dnnType)));
+    checkCuda(cudaMalloc(&buffersRT[buf_output_idx], output_dim.tot()*sizeof(dnnType)));
+    checkCuda(cudaMalloc(&output, output_dim.tot()*sizeof(dnnType)));
 	checkCuda(cudaStreamCreate(&stream));
 }
 
@@ -91,7 +91,7 @@ NetworkRT::~NetworkRT() {
 
 }
 
-value_type* NetworkRT::infer(dataDim_t &dim, value_type* data) {
+dnnType* NetworkRT::infer(dataDim_t &dim, dnnType* data) {
 
     checkCuda(cudaMemcpyAsync(buffersRT[buf_input_idx], data, dim.tot()*sizeof(float), cudaMemcpyDeviceToDevice, stream));
     contextRT->enqueue(1, buffersRT, stream, nullptr);
@@ -161,7 +161,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         float eps = CUDNN_BN_MIN_EPSILON;
 
         //make power array of ones
-        value_type *power_h = new value_type[l->outputs];
+        dnnType *power_h = new dnnType[l->outputs];
         for(int i=0; i<l->outputs; i++) power_h[i] = 1.0f;
 
         //convert mean

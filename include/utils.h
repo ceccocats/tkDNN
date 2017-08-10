@@ -12,7 +12,7 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
-#define value_type float
+#define dnnType float
 
 // Colored output
 #define COL_END "\033[0m"
@@ -88,13 +88,13 @@
 }
 
 void printCenteredTitle(const char *title, char fill, int dim);
-void readBinaryFile(const char* fname, int size, value_type** data_h, value_type** data_d, int seek = 0);
-int checkResult(int size, value_type *data_d, value_type *correct_d, bool device = true);
-void printDeviceVector(int size, value_type* vec_d, bool device = true);
-void resize(int size, value_type **data);
+void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true);
+void printDeviceVector(int size, dnnType* vec_d, bool device = true);
+void resize(int size, dnnType **data);
 
-void matrixTranspose(cublasHandle_t handle, value_type* srcData, value_type* dstData, int rows, int cols);
+void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, int rows, int cols);
 
-void matrixMulAdd(  cublasHandle_t handle, value_type* srcData, value_type* dstData, 
-                    value_type* add_vector, int dim, value_type mul);
+void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData, 
+                    dnnType* add_vector, int dim, dnnType mul);
 #endif //UTILS_H

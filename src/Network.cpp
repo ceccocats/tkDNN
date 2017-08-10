@@ -30,7 +30,7 @@ Network::~Network() {
     checkERROR( cublasDestroy(cublasHandle) );
 }
 
-value_type* Network::infer(dataDim_t &dim, value_type* data) {
+dnnType* Network::infer(dataDim_t &dim, dnnType* data) {
 
     //do infer for every layer
     for(int i=0; i<num_layers; i++) {

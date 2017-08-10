@@ -1,5 +1,10 @@
 #include <iostream>
 
+#ifdef OPENCV
+    #include <opencv2/core/core.hpp>
+    #include <opencv2/highgui/highgui.hpp>
+#endif
+
 #include "Layer.h"
 #include "kernels.h"
 
@@ -12,6 +17,7 @@ Region::Region(Network *net, int classes, int coords, int num, float thresh, con
     this->coords = coords;
     this->num = num;
     this->thresh = thresh;
+    this->res_boxes_n = 0;
     
     // same
     output_dim.n = input_dim.n;
@@ -23,7 +29,7 @@ Region::Region(Network *net, int classes, int coords, int num, float thresh, con
     //load anchors
     readBinaryFile(fname_weights, 2*num, &bias_h, &bias_d);
 
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 }
 
 Region::~Region() {
@@ -36,9 +42,9 @@ int Region::entry_index(int batch, int location, int entry) {
     return batch*output_dim.tot() + n*input_dim.w*input_dim.h*(coords+classes+1) + entry*input_dim.w*input_dim.h + loc;
 }
 
-value_type* Region::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
 
-    checkCuda( cudaMemcpy(dstData, srcData, dim.tot()*sizeof(value_type), cudaMemcpyDeviceToDevice));
+    checkCuda( cudaMemcpy(dstData, srcData, dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
 
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < num; ++n){
@@ -192,11 +198,11 @@ int max_index(float *a, int n) {
 
 void Region::interpretData() {
 
-    int imW = 768, imH = 576;
+    int imW = net->input_dim.w, imH = net->input_dim.h;
 
     int tot = output_dim.w*output_dim.h*num;
-    float *lel = new value_type[output_dim.tot()];
-    cudaMemcpy(lel, dstData, output_dim.tot()*sizeof(value_type), cudaMemcpyDeviceToHost);
+    float *lel = new dnnType[output_dim.tot()];
+    cudaMemcpy(lel, dstData, output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost);
     box *boxes =  (box*) calloc(tot, sizeof(box));
     float **probs = (float**) calloc(tot, sizeof(float *));
     for(int j = 0; j < tot; ++j) probs[j] = (float*)calloc(classes + 1, sizeof(float *));
@@ -232,10 +238,51 @@ void Region::interpretData() {
         int cl = max_index(probs[i], classes);
         float prob = probs[i][cl];
         if(prob > thresh) {
-            //printf("%d %s: %.0f%%\n", i, names[class], prob*100);
-            printf("%d: %.0f%%\n", cl, prob*100);
+            box b = boxes[i];
+            int x = (b.x-b.w/2.)*imW;
+            int w = (b.x+b.w/2.)*imW - b.x;
+            int y = (b.y-b.h/2.)*imH;
+            int h = (b.y+b.h/2.)*imH - b.y;
+
+            printf("%d: %.0f%% box(x1, y1, x2, y2): %d %d %d %d\n", cl, prob*100, x, y, w, h);
+            b.x = x;
+            b.y = y;
+            b.h = h;
+            b.w = w;
+            res_boxes[res_boxes_n] = b;
+            res_boxes_n++;
         }
     }
+}
+
+void Region::showImageResult(dnnType *input_h) {
+
+#ifdef OPENCV
+    dataDim_t dim = net->input_dim;
+    // read an image
+    cv::Mat r(dim.h, dim.w, CV_32F, input_h);
+    cv::Mat g(dim.h, dim.w, CV_32F, input_h + dim.h*dim.w);
+    cv::Mat b(dim.h, dim.w, CV_32F, input_h + dim.h*dim.w*2);
+    std::vector<cv::Mat> array_to_merge;
+    array_to_merge.push_back(b);
+    array_to_merge.push_back(g);
+    array_to_merge.push_back(r);
+    cv::Mat color;
+    cv::merge(array_to_merge, color);
+
+    for(int i=0; i<res_boxes_n; i++) {
+        box bx = res_boxes[i];
+        cv::rectangle(color, cv::Point(bx.x, bx.y), cv::Point(bx.w, bx.h),
+        cv::Scalar( 0, 0, 255), 2);
+    }
+    cv::namedWindow("result");
+    // show the image on window
+    cv::imshow("result", color);
+    // wait key for 5000 ms
+    cv::waitKey(5000);
+#else
+    std::cout<<"Visualization not supported, please recompile with OpenCV\n";
+#endif
 }
 
 }

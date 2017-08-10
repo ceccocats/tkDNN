@@ -5,7 +5,7 @@
 
 namespace tkDNN {
 
-MulAdd::MulAdd(Network *net, value_type mul, value_type add) : Layer(net) {
+MulAdd::MulAdd(Network *net, dnnType mul, dnnType add) : Layer(net) {
 
     this->mul = mul;
     this->add = add;
@@ -13,16 +13,16 @@ MulAdd::MulAdd(Network *net, value_type mul, value_type add) : Layer(net) {
     int size = input_dim.tot();
 
     // create a vector with all value setted to add 
-    value_type *add_vector_h = new value_type[size];
+    dnnType *add_vector_h = new dnnType[size];
     for(int i=0; i<size; i++)
         add_vector_h[i] = add;
 
-    checkCuda( cudaMalloc(&add_vector, size*sizeof(value_type)));
-    checkCuda( cudaMemcpy(add_vector, add_vector_h, size*sizeof(value_type), cudaMemcpyHostToDevice));
+    checkCuda( cudaMalloc(&add_vector, size*sizeof(dnnType)));
+    checkCuda( cudaMemcpy(add_vector, add_vector_h, size*sizeof(dnnType), cudaMemcpyHostToDevice));
     delete [] add_vector_h;
 
 
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 }
 
 MulAdd::~MulAdd() {
@@ -31,7 +31,7 @@ MulAdd::~MulAdd() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* MulAdd::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* MulAdd::infer(dataDim_t &dim, dnnType* srcData) {
 
     matrixMulAdd(net->cublasHandle, srcData, dstData, add_vector, input_dim.tot(), mul);
     

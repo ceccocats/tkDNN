@@ -44,10 +44,10 @@ public:
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
-		value_type *srcData = (value_type*)reinterpret_cast<const value_type*>(inputs[0]);
-		value_type *dstData = reinterpret_cast<value_type*>(outputs[0]);
+		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
-		checkCuda( cudaMemcpy(dstData, srcData, batchSize*c*h*w*sizeof(value_type), cudaMemcpyDeviceToDevice));
+		checkCuda( cudaMemcpy(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice));
 
 		for (int b = 0; b < batchSize; ++b){
 			for(int n = 0; n < num; ++n){

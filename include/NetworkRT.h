@@ -21,7 +21,7 @@ public:
     int buf_input_idx, buf_output_idx;
 
     dataDim_t output_dim;
-    value_type *output;
+    dnnType *output;
     cudaStream_t stream;
 
     NetworkRT(Network *net);
@@ -30,7 +30,7 @@ public:
     /**
         Do inferece
     */
-    value_type* infer(dataDim_t &dim, value_type* data);
+    dnnType* infer(dataDim_t &dim, dnnType* data);
 
     nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Layer *l);
     nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Conv2d *l);

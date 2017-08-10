@@ -57,15 +57,15 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     output_dim.w = w;
     output_dim.l = l;
 
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 
     //pool on 3d data need transposition at the enter and on the exit
     //allocate for initial and final transposition
     if(poolOn3d) {
         output_dim.n = 1;
 
-        checkCuda( cudaMalloc(&tmpInputData, input_dim.tot()*sizeof(value_type)) );
-        checkCuda( cudaMalloc(&tmpOutputData, output_dim.tot()*sizeof(value_type)) );
+        checkCuda( cudaMalloc(&tmpInputData, input_dim.tot()*sizeof(dnnType)) );
+        checkCuda( cudaMalloc(&tmpOutputData, output_dim.tot()*sizeof(dnnType)) );
     }
 
 }
@@ -81,10 +81,10 @@ Pooling::~Pooling() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Pooling::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
 
-    value_type *poolSrc = srcData;
-    value_type *poolDst = dstData;
+    dnnType *poolSrc = srcData;
+    dnnType *poolDst = dstData;
 
     if(poolOn3d) {
         matrixTranspose(net->cublasHandle, srcData, tmpInputData, dim.h*dim.w*dim.c, dim.l);
@@ -92,8 +92,8 @@ value_type* Pooling::infer(dataDim_t &dim, value_type* srcData) {
         poolDst = tmpOutputData;
     }
 
-    value_type alpha = value_type(1);
-    value_type beta = value_type(0);
+    dnnType alpha = dnnType(1);
+    dnnType beta = dnnType(0);
     checkCUDNN( cudnnPoolingForward(net->cudnnHandle, poolingDesc,
                 &alpha, srcTensorDesc, poolSrc,
                 &beta, dstTensorDesc, poolDst) );

@@ -15,7 +15,7 @@ Reorg::Reorg(Network *net, int stride) : Layer(net) {
     output_dim.w = input_dim.w/stride;
     output_dim.l = input_dim.l;
     
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(value_type)) );
+    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 }
 
 Reorg::~Reorg() {
@@ -23,7 +23,7 @@ Reorg::~Reorg() {
     checkCuda( cudaFree(dstData) );
 }
 
-value_type* Reorg::infer(dataDim_t &dim, value_type* srcData) {
+dnnType* Reorg::infer(dataDim_t &dim, dnnType* srcData) {
 
     reorgForward(srcData, dstData, dim.n, dim.c, dim.h, dim.w, stride);
 
