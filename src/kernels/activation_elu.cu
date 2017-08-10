@@ -28,10 +28,10 @@ void activation_elu(dnnType *input, dnnType *output, int size) {
 /**
     ELU activation function
 */
-void activationELUForward(dnnType* srcData, dnnType* dstData, int size)
+void activationELUForward(dnnType* srcData, dnnType* dstData, int size, const cudaStream_t stream)
 {
     int blocks = (size+255)/256;
     int threads = 256;
     
-    activation_elu<<<blocks, threads>>>(srcData, dstData, size);
+    activation_elu<<<blocks, threads, 0, stream>>>(srcData, dstData, size);
 }

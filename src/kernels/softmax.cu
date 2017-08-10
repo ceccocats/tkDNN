@@ -32,11 +32,11 @@ __global__ void softmax_kernel(float *input, int n, int batch, int batch_offset,
     softmax function
 */
 void softmaxForward(float *input, int n, int batch, int batch_offset, 
-                    int groups, int group_offset, int stride, float temp, float *output)
+                    int groups, int group_offset, int stride, float temp, float *output, cudaStream_t stream)
 {
     int size = groups*batch;
     int blocks = (size+255)/256;
     int threads = 256;
 
-    softmax_kernel<<<blocks, threads>>>(input, n, batch, batch_offset, groups, group_offset, stride, temp, output);
+    softmax_kernel<<<blocks, threads, 0, stream>>>(input, n, batch, batch_offset, groups, group_offset, stride, temp, output);
 }

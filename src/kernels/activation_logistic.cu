@@ -14,12 +14,12 @@ void activation_logistic(dnnType *input, dnnType *output, int size) {
 /**
     LOGISTIC activation function
 */
-void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size)
+void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream)
 {
     int blocks = (size+255)/256;
     int threads = 256;
     
-    activation_logistic<<<blocks, threads>>>(srcData, dstData, size);
+    activation_logistic<<<blocks, threads, 0, stream>>>(srcData, dstData, size);
 }
 
 

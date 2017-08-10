@@ -36,14 +36,14 @@ __global__ void reorg_kernel(int N, float *x, int w, int h, int c, int batch, in
     reorg function function
 */
 void reorgForward(dnnType* srcData, dnnType* dstData, 
-                  int n, int c, int h, int w, int stride) {
+                  int n, int c, int h, int w, int stride, cudaStream_t stream) {
 
     int size = n*c*h*w;
 
     int blocks = (size+255)/256;
     int threads = 256;
     
-    reorg_kernel<<<blocks, threads>>>(size, srcData, w, h, c, n, stride, false, dstData);
+    reorg_kernel<<<blocks, threads, 0, stream>>>(size, srcData, w, h, c, n, stride, false, dstData);
 }
 
 

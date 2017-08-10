@@ -52,10 +52,10 @@ public:
 		for (int b = 0; b < batchSize; ++b){
 			for(int n = 0; n < num; ++n){
 				int index = entry_index(b, n*w*h, 0, batchSize);
-				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h);
+				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
 				
 				index = entry_index(b, n*w*h, coords, batchSize);
-				activationLOGISTICForward(srcData + index, dstData + index, w*h);
+				activationLOGISTICForward(srcData + index, dstData + index, w*h, stream);
 			}
 		}
 
@@ -63,7 +63,7 @@ public:
 		int index = entry_index(0, 0, coords + 1, batchSize);
 		softmaxForward(	srcData + index, classes, batchSize*num, 
 						(batchSize*c*h*w)/num, 
-						w*h, 1, w*h, 1, dstData + index);
+						w*h, 1, w*h, 1, dstData + index, stream);
 
 		return 0;
 	}

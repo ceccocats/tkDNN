@@ -42,7 +42,7 @@ public:
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
 		activationLEAKYForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-											reinterpret_cast<dnnType*>(outputs[0]), size);
+											reinterpret_cast<dnnType*>(outputs[0]), size, stream);
 		return 0;
 	}
 

@@ -17,12 +17,12 @@ void activation_leaky(dnnType *input, dnnType *output, int size) {
 /**
     ELU activation function
 */
-void activationLEAKYForward(dnnType* srcData, dnnType* dstData, int size)
+void activationLEAKYForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream)
 {
     int blocks = (size+255)/256;
     int threads = 256;
     
-    activation_leaky<<<blocks, threads>>>(srcData, dstData, size);
+    activation_leaky<<<blocks, threads, 0, stream>>>(srcData, dstData, size);
 }
 
 
