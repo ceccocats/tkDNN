@@ -279,7 +279,7 @@ void Region::showImageResult(dnnType *input_h) {
     // show the image on window
     cv::imshow("result", color);
     // wait key for 5000 ms
-    cv::waitKey(5000);
+    cv::waitKey(0);
 #else
     std::cout<<"Visualization not supported, please recompile with OpenCV\n";
 #endif
