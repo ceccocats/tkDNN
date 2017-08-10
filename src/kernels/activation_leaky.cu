@@ -23,7 +23,6 @@ void activationLEAKYForward(dnnType* srcData, dnnType* dstData, int size)
     int threads = 256;
     
     activation_leaky<<<blocks, threads>>>(srcData, dstData, size);
-    checkCuda( cudaDeviceSynchronize() );
 }
 
 

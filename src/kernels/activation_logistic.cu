@@ -20,7 +20,6 @@ void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size)
     int threads = 256;
     
     activation_logistic<<<blocks, threads>>>(srcData, dstData, size);
-    checkCuda( cudaDeviceSynchronize() );
 }
 
 

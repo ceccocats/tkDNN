@@ -44,7 +44,6 @@ void reorgForward(dnnType* srcData, dnnType* dstData,
     int threads = 256;
     
     reorg_kernel<<<blocks, threads>>>(size, srcData, w, h, c, n, stride, false, dstData);
-    checkCuda( cudaDeviceSynchronize() );
 }
 
 

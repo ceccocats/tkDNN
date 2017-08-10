@@ -34,5 +34,4 @@ void activationELUForward(dnnType* srcData, dnnType* dstData, int size)
     int threads = 256;
     
     activation_elu<<<blocks, threads>>>(srcData, dstData, size);
-    checkCuda( cudaDeviceSynchronize() );
 }

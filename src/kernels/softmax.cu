@@ -39,5 +39,4 @@ void softmaxForward(float *input, int n, int batch, int batch_offset,
     int threads = 256;
 
     softmax_kernel<<<blocks, threads>>>(input, n, batch, batch_offset, groups, group_offset, stride, temp, output);
-    checkCuda( cudaDeviceSynchronize() );
 }
