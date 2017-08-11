@@ -35,36 +35,39 @@ NetworkRT::NetworkRT(Network *net) {
 
     //add input layer
     dataDim_t dim = net->layers[0]->input_dim;
-    ITensor *input = networkRT->addInput("data", dtRT, 
-                     DimsCHW{ dim.c, dim.h, dim.w});
-    checkNULL(input);
+    if(!fileExist("net.rt")) {
+        ITensor *input = networkRT->addInput("data", dtRT, 
+                        DimsCHW{ dim.c, dim.h, dim.w});
+        checkNULL(input);
 
-    //add other layers
-    for(int i=0; i<net->num_layers; i++) {
-        Layer *l = net->layers[i];
-        input = convert_layer(input, l);
-        tensors[l] = input;
+        //add other layers
+        for(int i=0; i<net->num_layers; i++) {
+            Layer *l = net->layers[i];
+            ILayer *Ilay = convert_layer(input, l);
+            Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
+            
+            input = Ilay->getOutput(0);
+            tensors[l] = input;
+        }
+        if(input == NULL)
+            FatalError("conversion failed");
+
+        //build tensorRT
+        input->setName("out");
+        networkRT->markOutput(*input);
+
+        // Build the engine
+        builderRT->setMaxBatchSize(1);
+        builderRT->setMaxWorkspaceSize(1 << 20);
+
+        std::cout<<"Building tensorRT cuda engine...\n";
+        engineRT = builderRT->buildCudaEngine(*networkRT);
+        // we don't need the network any more
+        //networkRT->destroy();
+        serialize("net.rt");
+    } else {
+        deserialize("net.rt");
     }
-    if(input == NULL)
-        FatalError("conversion failed");
-    output_dim = dim;
-    Dims oDim = input->getDimensions();
-    output_dim.c = oDim.d[0];
-    output_dim.h = oDim.d[1];
-    output_dim.w = oDim.d[2];
-
-    //build tensorRT
-    input->setName("out");
-	networkRT->markOutput(*input);
-
-	// Build the engine
-	builderRT->setMaxBatchSize(1);
-	builderRT->setMaxWorkspaceSize(1 << 20);
-
-    std::cout<<"Building tensorRT cuda engine...\n";
-	engineRT = builderRT->buildCudaEngine(*networkRT);
-	// we don't need the network any more
-	//networkRT->destroy();
 
     std::cout<<"create execution context\n";
 	contextRT = engineRT->createExecutionContext();
@@ -73,14 +76,20 @@ NetworkRT::NetworkRT(Network *net) {
 	// of these, but in this case we know that there is exactly one input and one output.
 	if(engineRT->getNbBindings() != 2)
         FatalError("Incorrect buffers number");
-	
+
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
 	buf_input_idx = engineRT->getBindingIndex("data"); 
     buf_output_idx = engineRT->getBindingIndex("out");
     std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
-	// create GPU buffers and a stream
+    output_dim = dim;
+    Dims oDim = engineRT->getBindingDimensions(buf_output_idx);
+    output_dim.c = oDim.d[0];
+    output_dim.h = oDim.d[1];
+    output_dim.w = oDim.d[2];
+	
+    // create GPU buffers and a stream
     checkCuda(cudaMalloc(&buffersRT[buf_input_idx],  dim.tot()*sizeof(dnnType)));
     checkCuda(cudaMalloc(&buffersRT[buf_output_idx], output_dim.tot()*sizeof(dnnType)));
     checkCuda(cudaMalloc(&output, output_dim.tot()*sizeof(dnnType)));
@@ -103,7 +112,7 @@ dnnType* NetworkRT::infer(dataDim_t &dim, dnnType* data) {
     return output;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Layer *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
 
     layerType_t type = l->getLayerType();
 
@@ -128,7 +137,7 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Layer *l) {
     return NULL;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Dense *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
     //std::cout<<"convert Dense\n";
 
     Weights w { dtRT, l->data_h, l->inputs*l->outputs};
@@ -136,10 +145,10 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Dense *l) {
     IFullyConnectedLayer *lRT = networkRT->addFullyConnected(*input, l->outputs, w, b);
 
     checkNULL(lRT);
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     //std::cout<<"convert conv2D\n";
 
     Weights w { dtRT, l->data_h, l->inputs*l->outputs*l->kernelH*l->kernelW};
@@ -185,13 +194,13 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
                     shift2, scale2, power);
         checkNULL(lRT3);
 
-        return lRT3->getOutput(0);
+        return lRT3;
     }
 
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     //std::cout<<"convert Pooling\n";
 
     IPoolingLayer *lRT = networkRT->addPooling(*input, 
@@ -199,10 +208,10 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     checkNULL(lRT);
     lRT->setStride(DimsHW{l->strideH, l->strideW});
 
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Activation *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     //std::cout<<"convert Activation\n";
 
     if(l->act_mode == ACTIVATION_LEAKY) {
@@ -210,24 +219,24 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         IPlugin *plugin = new ActivationLeakyRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
-        return lRT->getOutput(0);
+        return lRT;
     }
 
     IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
     checkNULL(lRT);
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
     //std::cout<<"convert softmax\n";
 
     ISoftMaxLayer *lRT = networkRT->addSoftMax(*input);
     checkNULL(lRT);
 
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Route *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     //std::cout<<"convert route\n";
 
     ITensor *tens[256];
@@ -236,27 +245,85 @@ ITensor* NetworkRT::convert_layer(ITensor *input, Route *l) {
     IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
     checkNULL(lRT);
 
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
     //std::cout<<"New plugin REORG\n";
     IPlugin *plugin = new ReorgRT(l->stride);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
-    return lRT->getOutput(0);
+    return lRT;
 }
 
-ITensor* NetworkRT::convert_layer(ITensor *input, Region *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Region *l) {
     //std::cout<<"convert Region\n";
 
     //std::cout<<"New plugin REGION\n";
     IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num, l->thresh);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
-    return lRT->getOutput(0);
+    return lRT;
+}
+
+bool NetworkRT::serialize(const char *filename) {
+
+    std::ofstream p(filename);
+    if (!p) {
+        FatalError("could not open plan output file");
+        return false;
+    }
+
+    IHostMemory *ptr = engineRT->serialize();
+    if(ptr == nullptr)
+        FatalError("Cant serialize network");
+
+    p.write(reinterpret_cast<const char*>(ptr->data()), ptr->size());
+    ptr->destroy();
+    return true;
+}
+
+class PluginFactory : IPluginFactory
+{
+public:
+	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
+        const char * buf = reinterpret_cast<const char*>(serialData);
+        
+        std::string name(layerName);
+
+        if(name.find("Activation") == 0) {
+            ActivationLeakyRT *a = new ActivationLeakyRT();
+            a->size = readBUF<int>(buf);
+            return a;
+        } 
+        FatalError("Cant deserialize Plugin");
+        return NULL;
+    }
+};
+
+bool NetworkRT::deserialize(const char *filename) {
+
+    char *gieModelStream{nullptr};
+    size_t size{0};
+    std::ifstream file(filename, std::ios::binary);
+    if (file.good()) {
+        file.seekg(0, file.end);
+        size = file.tellg();
+        file.seekg(0, file.beg);
+        gieModelStream = new char[size];
+        file.read(gieModelStream, size);
+        file.close();
+    }
+
+    PluginFactory plfact;
+
+    runtimeRT = createInferRuntime(loggerRT);
+    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) &plfact);
+    //if (gieModelStream) delete [] gieModelStream;
+
+    return true;
 }
 
 }

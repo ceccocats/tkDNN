@@ -48,10 +48,12 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 0;
+		return 1*sizeof(int);
 	}
 
 	virtual void serialize(void* buffer) override {
+		char *buf = reinterpret_cast<char*>(buffer);
+		tkDNN::writeBUF(buf, size);
 	}
 
 	int size;

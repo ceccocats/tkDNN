@@ -13,6 +13,7 @@ class NetworkRT {
 public:
     nvinfer1::DataType dtRT;
     nvinfer1::IBuilder *builderRT;
+    nvinfer1::IRuntime *runtimeRT;
     nvinfer1::INetworkDefinition *networkRT; 
     
     nvinfer1::ICudaEngine *engineRT;
@@ -32,18 +33,33 @@ public:
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
 
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Layer *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Conv2d *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Activation *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Dense *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Pooling *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Softmax *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Route *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Reorg *l);
-    nvinfer1::ITensor* convert_layer(nvinfer1::ITensor *input, Region *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Conv2d *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Activation *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Dense *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Pooling *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Softmax *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Route *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reorg *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
 
+    bool serialize(const char *filename);
+    bool deserialize(const char *filename);
 };
 
+
+template<typename T> void writeBUF(char*& buffer, const T& val)
+{
+    *reinterpret_cast<T*>(buffer) = val;
+    buffer += sizeof(T);
+}
+
+template<typename T> T readBUF(const char*& buffer)
+{
+    T val = *reinterpret_cast<const T*>(buffer);
+    buffer += sizeof(T);
+    return val;
+}
 
 }
 #endif //NETWORKRT_H

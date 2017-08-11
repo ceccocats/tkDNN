@@ -13,6 +13,11 @@ void printCenteredTitle(const char *title, char fill, int dim) {
     std::cout.fill(' ');
 }
 
+bool fileExist(const char *fname) {
+    std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
+    return dataFile;
+}
+
 
 void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** data_d, int seek)
 {
