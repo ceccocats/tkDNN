@@ -25,7 +25,7 @@ public:
     dnnType *output;
     cudaStream_t stream;
 
-    NetworkRT(Network *net);
+    NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();
 
     /**

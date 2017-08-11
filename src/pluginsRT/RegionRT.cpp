@@ -70,10 +70,18 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 0;
+		return 6*sizeof(int) + 1*sizeof(float);
 	}
 
 	virtual void serialize(void* buffer) override {
+		char *buf = reinterpret_cast<char*>(buffer);
+		tkDNN::writeBUF(buf, classes);
+		tkDNN::writeBUF(buf, coords);
+		tkDNN::writeBUF(buf, num);
+		tkDNN::writeBUF(buf, thresh);
+		tkDNN::writeBUF(buf, c);
+		tkDNN::writeBUF(buf, h);
+		tkDNN::writeBUF(buf, w);
 	}
 
 	int c, h, w;

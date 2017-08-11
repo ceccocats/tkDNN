@@ -1,5 +1,7 @@
 #include <iostream>
 #include <map>
+#include <errno.h>
+
 #include "NvInfer.h"
 
 #include "NetworkRT.h"
@@ -22,7 +24,7 @@ namespace tkDNN {
 
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
-NetworkRT::NetworkRT(Network *net) {
+NetworkRT::NetworkRT(Network *net, const char *name) {
 
     float rt_ver = float(NV_TENSORRT_MAJOR) + 
                    float(NV_TENSORRT_MINOR)/10 + 
@@ -35,7 +37,7 @@ NetworkRT::NetworkRT(Network *net) {
 
     //add input layer
     dataDim_t dim = net->layers[0]->input_dim;
-    if(!fileExist("net.rt")) {
+    if(!fileExist(name)) {
         ITensor *input = networkRT->addInput("data", dtRT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
@@ -64,9 +66,9 @@ NetworkRT::NetworkRT(Network *net) {
         engineRT = builderRT->buildCudaEngine(*networkRT);
         // we don't need the network any more
         //networkRT->destroy();
-        serialize("net.rt");
+        serialize(name);
     } else {
-        deserialize("net.rt");
+        deserialize(name);
     }
 
     std::cout<<"create execution context\n";
@@ -220,11 +222,16 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-    }
 
-    IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
-    checkNULL(lRT);
-    return lRT;
+    } else if(l->act_mode == CUDNN_ACTIVATION_RELU) {
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
+        checkNULL(lRT);
+        return lRT;
+    
+    } else {
+        FatalError("this Activation mode is not yet implemented");
+        return NULL;
+    }
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
@@ -297,7 +304,27 @@ public:
             ActivationLeakyRT *a = new ActivationLeakyRT();
             a->size = readBUF<int>(buf);
             return a;
+        }
+
+        if(name.find("Region") == 0) {
+            RegionRT *r = new RegionRT(readBUF<int>(buf),    //classes
+                                       readBUF<int>(buf),    //coords
+                                       readBUF<int>(buf),    //num
+                                       readBUF<float>(buf)); //thesh
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
         } 
+
+        if(name.find("Reorg") == 0) {
+            ReorgRT *r = new ReorgRT(readBUF<int>(buf)); //stride
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
+        } 
+
         FatalError("Cant deserialize Plugin");
         return NULL;
     }
