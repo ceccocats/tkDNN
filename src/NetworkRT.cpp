@@ -36,12 +36,29 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
 	std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
     networkRT = builderRT->createNetwork();
-    dtRT = DataType::kFLOAT;
 
     if(!fileExist(name)) {
-        //add input layer
+
+        //input and dataType
         dataDim_t dim = net->layers[0]->input_dim;
-        
+        dtRT = DataType::kFLOAT;
+
+        builderRT->setMaxBatchSize(1);
+        builderRT->setMaxWorkspaceSize(1 << 30);
+
+        //change datatype based on system specs
+        if(builderRT->platformHasFastInt8()) {
+            BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
+            Int8EntropyCalibrator calib(bstream, 0, false);
+            builderRT->setInt8Mode(true);
+            builderRT->setInt8Calibrator(&calib);
+
+        } else if(builderRT->platformHasFastFp16()) {
+            dtRT = DataType::kHALF;
+            builderRT->setHalf2Mode(true);
+        }
+
+        //add input layer
         ITensor *input = networkRT->addInput("data", dtRT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
@@ -62,15 +79,6 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         input->setName("out");
         networkRT->markOutput(*input);
 
-        // Build the engine
-        builderRT->setMaxBatchSize(1);
-        builderRT->setMaxWorkspaceSize(1 << 20);
-/*
-        BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
-        Int8EntropyCalibrator calib(bstream, 0, false);
-        builderRT->setInt8Mode(true);
-        builderRT->setInt8Calibrator(&calib);
-*/
         std::cout<<"Building tensorRT cuda engine...\n";
         engineRT = builderRT->buildCudaEngine(*networkRT);
         // we don't need the network any more
