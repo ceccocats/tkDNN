@@ -65,12 +65,12 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         // Build the engine
         builderRT->setMaxBatchSize(1);
         builderRT->setMaxWorkspaceSize(1 << 20);
-
+/*
         BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
         Int8EntropyCalibrator calib(bstream, 0, false);
         builderRT->setInt8Mode(true);
         builderRT->setInt8Calibrator(&calib);
-
+*/
         std::cout<<"Building tensorRT cuda engine...\n";
         engineRT = builderRT->buildCudaEngine(*networkRT);
         // we don't need the network any more
@@ -95,11 +95,12 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
-    Dims iDim = engineRT->getBindingDimensions(buf_output_idx);
+    Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
     input_dim.n = 1;
     input_dim.c = iDim.d[0];
     input_dim.h = iDim.d[1];
     input_dim.w = iDim.d[2];
+    input_dim.print();
 
     Dims oDim = engineRT->getBindingDimensions(buf_output_idx);
     output_dim.n = 1;
