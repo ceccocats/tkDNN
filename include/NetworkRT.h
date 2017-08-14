@@ -21,7 +21,7 @@ public:
     void* buffersRT[2];
     int buf_input_idx, buf_output_idx;
 
-    dataDim_t output_dim;
+    dataDim_t input_dim, output_dim;
     dnnType *output;
     cudaStream_t stream;
 

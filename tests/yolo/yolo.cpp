@@ -28,7 +28,7 @@ const char *c30_bin    = "../tests/yolo/layers/c30.bin";
 const char *g31_bin    = "../tests/yolo/layers/g31.bin";
 const char *output_bin = "../tests/yolo/layers/output.bin";
 
-int main(int argc, char *argv[]) {
+int main() {
 
     // Network layout
     tkDNN::dataDim_t dim(1, 3, 608, 608, 1);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     net.print();
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(&net, argv[1]);
+    tkDNN::NetworkRT netRT(&net, "yolo.rt");
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 

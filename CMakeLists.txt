@@ -54,3 +54,6 @@ target_link_libraries(test_yolo tkDNN)
 
 add_executable(test_yolo_tiny tests/yolo-tiny/yolo-tiny.cpp)
 target_link_libraries(test_yolo_tiny tkDNN)
+
+add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
+target_link_libraries(test_rtinference tkDNN)
