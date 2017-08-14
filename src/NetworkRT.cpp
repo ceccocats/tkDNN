@@ -31,8 +31,10 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
                    float(NV_TENSORRT_MINOR)/10 + 
                    float(NV_TENSORRT_PATCH)/100;
     std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
-
+  
     builderRT = createInferBuilder(loggerRT);
+    std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
+	std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
     networkRT = builderRT->createNetwork();
     dtRT = DataType::kFLOAT;
 
