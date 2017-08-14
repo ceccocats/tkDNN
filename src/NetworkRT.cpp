@@ -10,6 +10,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.cpp"
 #include "pluginsRT/ReorgRT.cpp"
 #include "pluginsRT/RegionRT.cpp"
+#include "pluginsRT/Int8Calibrator.cpp"
 
 // Logger for info/warning/errors
 class Logger : public ILogger {
@@ -61,6 +62,11 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         // Build the engine
         builderRT->setMaxBatchSize(1);
         builderRT->setMaxWorkspaceSize(1 << 20);
+
+        BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
+        Int8EntropyCalibrator calib(bstream, 0, false);
+        builderRT->setInt8Mode(true);
+        builderRT->setInt8Calibrator(&calib);
 
         std::cout<<"Building tensorRT cuda engine...\n";
         engineRT = builderRT->buildCudaEngine(*networkRT);
