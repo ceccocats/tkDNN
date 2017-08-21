@@ -143,8 +143,10 @@ public:
 		mCalibrationCache.clear();
 		std::ifstream input("table.calib", std::ios::binary);
 		input >> std::noskipws;
-		if (mReadCache && input.good())
-			std::copy(std::istream_iterator<char>(input), std::istream_iterator<char>(), std::back_inserter(mCalibrationCache));
+		
+        FatalError("rewrite different");
+        //if (mReadCache && input.good())
+		//	std::copy(std::istream_iterator<char>(input), std::istream_iterator<char>(), std::back_inserter(mCalibrationCache));
 
 		length = mCalibrationCache.size();
 		return length ? &mCalibrationCache[0] : nullptr;

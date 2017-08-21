@@ -33,12 +33,17 @@ cuda_add_library(kernels SHARED src/kernels/activation_elu.cu
                                 src/kernels/reorg.cu
                                 src/kernels/softmax.cu)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+file(GLOB tkdnn_SRC "src/*.cpp")
+set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS})
-add_library(tkDNN SHARED src/Layer.cpp src/LayerWgs.cpp
-    src/Dense.cpp src/Activation.cpp src/Conv2d.cpp src/Flatten.cpp src/MulAdd.cpp src/Pooling.cpp src/Softmax.cpp
-    src/Route.cpp src/Reorg.cpp src/Region.cpp src/Network.cpp src/utils.cpp src/NetworkRT.cpp)
-target_link_libraries(tkDNN kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
+add_library(tkDNN SHARED ${tkdnn_SRC})
+target_link_libraries(tkDNN ${tkdnn_LIBS})
+
+#static 
+#add_library(tkDNN_static STATIC ${tkdnn_SRC})
+#target_link_libraries(tkDNN_static ${tkdnn_LIBS})
 
 add_executable(test_simple tests/simple/test_simple.cpp)
 target_link_libraries(test_simple tkDNN)
@@ -56,7 +61,7 @@ add_executable(test_yolo_tiny tests/yolo-tiny/yolo-tiny.cpp)
 target_link_libraries(test_yolo_tiny tkDNN)
 
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
-target_link_libraries(test_rtinference tkDNN)
+target_link_libraries(test_rtinference tkDNN_static)
 
 #install
 install(DIRECTORY include/ DESTINATION include/${CMAKE_PROJECT_NAME}

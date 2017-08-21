@@ -15,7 +15,9 @@ void printCenteredTitle(const char *title, char fill, int dim) {
 
 bool fileExist(const char *fname) {
     std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
-    return (bool) dataFile;
+    if(!dataFile)
+        return false;
+    return true;
 }
 
 
