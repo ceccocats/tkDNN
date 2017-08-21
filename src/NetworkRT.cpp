@@ -139,6 +139,10 @@ dnnType* NetworkRT::infer(dataDim_t &dim, dnnType* data) {
     return output;
 }
 
+void NetworkRT::enqueue() {
+    contextRT->enqueue(1, buffersRT, stream, nullptr);
+}
+
 ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
 
     layerType_t type = l->getLayerType();

@@ -32,6 +32,7 @@ public:
         Do inferece
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
+    void enqueue();    
 
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Conv2d *l);
