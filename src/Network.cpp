@@ -10,7 +10,7 @@ namespace tkDNN {
 Network::Network(dataDim_t input_dim) {
     this->input_dim = input_dim;
 
-    float tk_ver = float(tkDNN::getVersion())/1000;
+    float tk_ver = float(TKDNN_VERSION)/1000;
     float cu_ver = float(cudnnGetVersion())/1000;
 
     std::cout<<"New NETWORK (tkDNN v"<<tk_ver

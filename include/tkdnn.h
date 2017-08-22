@@ -5,13 +5,4 @@
 #include "Layer.h"
 #include "NetworkRT.h"
 
-namespace tkDNN {
-
-    /**
-        Return the tkDNN version
-    */
-    int getVersion() {
-
-        return 100;
-    }
-}
+#define TKDNN_VERSION 200
