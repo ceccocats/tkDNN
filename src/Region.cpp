@@ -282,7 +282,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
 void RegionInterpret::showImageResult(dnnType *input_h) {
 
 #ifdef OPENCV
-    dataDim_t dim = net->input_dim;
+    dataDim_t dim = input_dim;
     // read an image
     cv::Mat r(dim.h, dim.w, CV_32F, input_h);
     cv::Mat g(dim.h, dim.w, CV_32F, input_h + dim.h*dim.w);
