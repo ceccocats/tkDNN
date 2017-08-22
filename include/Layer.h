@@ -276,6 +276,11 @@ public:
 struct box {
     float x, y, w, h;
 };
+struct sortable_bbox {
+    int index;
+    int cl;
+    float **probs;
+};
 
 /**
     Region layer
@@ -284,29 +289,42 @@ struct box {
 class Region : public Layer {
 
 public:
-    Region(Network *net, int classes, int coords, int num, float thresh, const char* fname_weights);
+    Region(Network *net, int classes, int coords, int num);
     virtual ~Region();
     virtual layerType_t getLayerType() { return LAYER_REGION; };
 
+    int classes, coords, num;
+    
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+};
 
-    dnnType *bias_h, *bias_d;
+class RegionInterpret {
+
+public:
+    RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
+                    int classes, int coords, int num, float thresh, const char* fname_weights);
+    ~RegionInterpret();
+
+    dataDim_t input_dim, output_dim;
+    dnnType *bias_h, *bias_d; //anchors
     int classes, coords, num;
     float thresh;
+
+    
+    box *boxes;
+    float **probs;
+    sortable_bbox *s;
     box res_boxes[256];
     int res_boxes_n;
 
-    int entry_index(int batch, int location, int entry);
     box get_region_box(float *x, float *biases, int n, int index, int i, int j, int w, int h, int stride);
     void get_region_boxes(  float *input, int w, int h, int netw, int neth, float thresh, 
                             float **probs, box *boxes, int only_objectness, 
                             int *map, float tree_thresh, int relative); 
     void correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative);
-    void interpretData();
+    void interpretData(dnnType *data_h);
     void showImageResult(dnnType *input_h);
 };
-
-
 
 }
 #endif //LAYER_H

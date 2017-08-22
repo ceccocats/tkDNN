@@ -61,9 +61,14 @@ add_executable(test_yolo_tiny tests/yolo-tiny/yolo-tiny.cpp)
 target_link_libraries(test_yolo_tiny tkDNN)
 
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
-target_link_libraries(test_rtinference tkDNN_static)
+target_link_libraries(test_rtinference tkDNN)
 
 #install
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
+         CACHE PATH "default install path" FORCE)
+endif()
+message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/${CMAKE_PROJECT_NAME}
 FILES_MATCHING PATTERN "*.h")
 install(TARGETS tkDNN DESTINATION lib)

@@ -4,12 +4,11 @@
 class RegionRT : public IPlugin {
 
 public:
-	RegionRT(int classes, int coords, int num, float thresh) {
+	RegionRT(int classes, int coords, int num) {
 
 		this->classes = classes;
 		this->coords = coords;
 		this->num = num;
-		this->thresh = thresh;
 	}
 
 	~RegionRT(){
@@ -78,7 +77,6 @@ public:
 		tkDNN::writeBUF(buf, classes);
 		tkDNN::writeBUF(buf, coords);
 		tkDNN::writeBUF(buf, num);
-		tkDNN::writeBUF(buf, thresh);
 		tkDNN::writeBUF(buf, c);
 		tkDNN::writeBUF(buf, h);
 		tkDNN::writeBUF(buf, w);
@@ -86,7 +84,6 @@ public:
 
 	int c, h, w;
     int classes, coords, num;
-    float thresh;
 
 	int entry_index(int batch, int location, int entry, int batchSize) {
 		int n =   location / (w*h);

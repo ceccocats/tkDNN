@@ -97,7 +97,9 @@ int main() {
     tkDNN::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
     tkDNN::Activation a29(&net, tkDNN::ACTIVATION_LEAKY);   
     tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
-    tkDNN::Region     g31(&net, 80, 4, 5, 0.6f, g31_bin);
+    tkDNN::Region     g31(&net, 80, 4, 5);
+    
+    tkDNN::RegionInterpret rI(dim, g31.output_dim, 80, 4, 5, 0.6f, g31_bin);
 
     // Load input
     dnnType *data;
@@ -120,7 +122,7 @@ int main() {
         TIMER_STOP
         dim1.print();   
     }
- 
+    
     tkDNN::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
@@ -139,7 +141,10 @@ int main() {
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
     
     std::cout<<"\n\nDetected objects: \n";
-    g31.interpretData();
-    g31.showImageResult(input_h);
+    dnnType *output_h = new dnnType[rI.output_dim.tot()];
+    checkCuda(cudaMemcpy(output_h, out_data2, 
+              rI.output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost));
+    rI.interpretData(output_h);
+    rI.showImageResult(input_h);
     return 0;
 }

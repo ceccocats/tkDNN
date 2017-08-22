@@ -49,7 +49,7 @@ int main() {
     tkDNN::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1, c12_bin, true);
     tkDNN::Activation a12(&net, tkDNN::ACTIVATION_LEAKY);
     tkDNN::Conv2d     c13(&net, 425, 1, 1, 1, 1, 0, 0, c13_bin, false);
-    tkDNN::Region     g14(&net, 80, 4, 5, 0.6f, g14_bin);
+    tkDNN::Region     g14(&net, 80, 4, 5);
 
     // Load input
     dnnType *data;
@@ -89,9 +89,5 @@ int main() {
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
     std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
-
-    std::cout<<"\n\nDetected objects: \n";
-    g14.interpretData();
-    g14.showImageResult(input_h);
     return 0;
 }

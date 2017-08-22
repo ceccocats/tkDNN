@@ -45,7 +45,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
         builderRT->setMaxBatchSize(1);
         builderRT->setMaxWorkspaceSize(1 << 30);
-
+/*
         //change datatype based on system specs
         if(builderRT->platformHasFastInt8()) {
             BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
@@ -57,7 +57,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
-
+*/
         //add input layer
         ITensor *input = networkRT->addInput("data", dtRT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
@@ -298,7 +298,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Region *l) {
     //std::cout<<"convert Region\n";
 
     //std::cout<<"New plugin REGION\n";
-    IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num, l->thresh);
+    IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
@@ -338,8 +338,8 @@ public:
         if(name.find("Region") == 0) {
             RegionRT *r = new RegionRT(readBUF<int>(buf),    //classes
                                        readBUF<int>(buf),    //coords
-                                       readBUF<int>(buf),    //num
-                                       readBUF<float>(buf)); //thesh
+                                       readBUF<int>(buf));   //num
+
         	r->c = readBUF<int>(buf);
 		    r->h = readBUF<int>(buf);
 		    r->w = readBUF<int>(buf);

@@ -10,24 +10,19 @@
 
 namespace tkDNN {
 
-Region::Region(Network *net, int classes, int coords, int num, float thresh, const char* fname_weights) : 
+Region::Region(Network *net, int classes, int coords, int num) : 
     Layer(net) {
 
     this->classes = classes;
     this->coords = coords;
     this->num = num;
-    this->thresh = thresh;
-    this->res_boxes_n = 0;
-    
+
     // same
     output_dim.n = input_dim.n;
     output_dim.c = input_dim.c;
     output_dim.h = input_dim.h;
     output_dim.w = input_dim.w;
     output_dim.l = input_dim.l;
-
-    //load anchors
-    readBinaryFile(fname_weights, 2*num, &bias_h, &bias_d);
 
     checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 }
@@ -36,10 +31,12 @@ Region::~Region() {
     checkCuda( cudaFree(dstData) );
 }
 
-int Region::entry_index(int batch, int location, int entry) {
+int entry_index(int batch, int location, int entry, 
+            int coords, int classes, dataDim_t &input_dim, dataDim_t &output_dim) {
     int n =   location / (input_dim.w*input_dim.h);
     int loc = location % (input_dim.w*input_dim.h);
-    return batch*output_dim.tot() + n*input_dim.w*input_dim.h*(coords+classes+1) + entry*input_dim.w*input_dim.h + loc;
+    return batch*output_dim.tot() + n*input_dim.w*input_dim.h*(coords+classes+1) +
+           entry*input_dim.w*input_dim.h + loc;
 }
 
 dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
@@ -48,16 +45,16 @@ dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
 
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < num; ++n){
-            int index = entry_index(b, n*dim.w*dim.h, 0);
+            int index = entry_index(b, n*dim.w*dim.h, 0, coords, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
             
-            index = entry_index(b, n*dim.w*dim.h, coords);
+            index = entry_index(b, n*dim.w*dim.h, coords, coords, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, dim.w*dim.h);
         }
     }
 
     //softmax start
-    int index = entry_index(0, 0, coords + 1);
+    int index = entry_index(0, 0, coords + 1, coords, classes, input_dim, output_dim);
     softmaxForward(srcData + index, classes, output_dim.n*num, output_dim.tot()/num, 
                    output_dim.w*output_dim.h, 1, output_dim.w*output_dim.h, 1, dstData + index);
 
@@ -66,7 +63,42 @@ dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
 }
 
 
-box Region::get_region_box(float *x, float *biases, int n, int index, int i, int j, int w, int h, int stride)
+/* Intepret class */
+RegionInterpret::RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
+    int classes, int coords, int num, float thresh, const char* fname_weights) {
+
+    this->input_dim = input_dim;
+    this->output_dim = output_dim;
+
+    this->classes = classes;
+    this->coords = coords;
+    this->num = num;
+    this->thresh = thresh;
+    this->res_boxes_n = 0;
+
+    int tot = output_dim.w*output_dim.h*num;
+    boxes = (box*)    malloc(tot*sizeof(box));
+    probs = (float**) malloc(tot*sizeof(float *));
+    for(int j = 0; j < tot; ++j) probs[j] = (float*) malloc((classes + 1)*sizeof(float *));
+    s = (sortable_bbox*) malloc(tot*sizeof(sortable_bbox));
+
+    //load anchors
+    readBinaryFile(fname_weights, 2*num, &bias_h, &bias_d);
+}
+
+RegionInterpret::~RegionInterpret() {
+
+    delete [] boxes;
+    for(int j = 0; j < output_dim.w*output_dim.h*num; ++j) 
+        delete [] probs[j];
+    delete [] probs;
+    delete [] s;
+
+    delete [] bias_h;
+    checkCuda( cudaFree(bias_d) );
+}
+
+box RegionInterpret::get_region_box(float *x, float *biases, int n, int index, int i, int j, int w, int h, int stride)
 {
     box b;
     b.x = (i + x[index + 0*stride]) / w;
@@ -76,7 +108,7 @@ box Region::get_region_box(float *x, float *biases, int n, int index, int i, int
     return b;
 }
 
-void Region::get_region_boxes(  float *input, int w, int h, int netw, int neth, float thresh, 
+void RegionInterpret::get_region_boxes(  float *input, int w, int h, int netw, int neth, float thresh, 
                                 float **probs, box *boxes, int only_objectness, 
                                 int *map, float tree_thresh, int relative) {
     int lh = output_dim.h;
@@ -92,14 +124,17 @@ void Region::get_region_boxes(  float *input, int w, int h, int netw, int neth, 
             for(int j = 0; j < classes; ++j){
                 probs[index][j] = 0;
             }
-            int obj_index  = entry_index(0, n*lw*lh + i, coords);
-            int box_index  = entry_index(0, n*lw*lh + i, 0);
+            int obj_index  = entry_index(0, n*lw*lh + i, 
+                                         coords, coords, classes, output_dim, output_dim);
+            int box_index  = entry_index(0, n*lw*lh + i, 0, 
+                                         coords, classes, output_dim, output_dim);
             float scale = predictions[obj_index];
             boxes[index] = get_region_box(predictions, bias_h, n, box_index, col, row, lw, lh, lw*lh);
 
             float max = 0;
             for(int j = 0; j < classes; ++j){
-                int class_index = entry_index(0, n*lw*lh + i, coords + 1 + j);
+                int class_index = entry_index(0, n*lw*lh + i, coords + 1 + j,
+                                              coords, classes, output_dim, output_dim);
                 float prob = scale*predictions[class_index];
                 probs[index][j] = (prob > thresh) ? prob : 0;
                 if(prob > max) max = prob;
@@ -111,7 +146,7 @@ void Region::get_region_boxes(  float *input, int w, int h, int netw, int neth, 
 }
 
 
-void Region::correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative) {
+void RegionInterpret::correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative) {
     int i;
     int new_w=0;
     int new_h=0;
@@ -142,11 +177,6 @@ void Region::correct_region_boxes(box *boxes, int n, int w, int h, int netw, int
 
 
 //############################ BOX PROBABILITY UTILS ############################
-struct sortable_bbox {
-    int index;
-    int cl;
-    float **probs;
-};
 int nms_comparator(const void *pa, const void *pb) {
     sortable_bbox a = *(sortable_bbox *)pa;
     sortable_bbox b = *(sortable_bbox *)pb;
@@ -196,21 +226,15 @@ int max_index(float *a, int n) {
 
 
 
-void Region::interpretData() {
+void RegionInterpret::interpretData(dnnType *data_h) {
 
-    int imW = net->input_dim.w, imH = net->input_dim.h;
+    int imW = input_dim.w, imH = input_dim.h;
 
     int tot = output_dim.w*output_dim.h*num;
-    float *lel = new dnnType[output_dim.tot()];
-    cudaMemcpy(lel, dstData, output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost);
-    box *boxes =  (box*) calloc(tot, sizeof(box));
-    float **probs = (float**) calloc(tot, sizeof(float *));
-    for(int j = 0; j < tot; ++j) probs[j] = (float*)calloc(classes + 1, sizeof(float *));
 
-    get_region_boxes(lel, imW, imH, output_dim.w, output_dim.h, thresh, probs, boxes, 0, 0, 0.5, 1);
+    get_region_boxes(data_h, imW, imH, output_dim.w, output_dim.h, thresh, probs, boxes, 0, 0, 0.5, 1);
 
     //delete repeats
-    sortable_bbox *s = (sortable_bbox*)calloc(tot, sizeof(sortable_bbox));
     for(int i = 0; i < tot; ++i){
         s[i].index = i;       
         s[i].cl = classes;
@@ -230,13 +254,13 @@ void Region::interpretData() {
             }
         }
     }
-    free(s);
     //
 
     //print results
     for(int i = 0; i < tot; ++i){
         int cl = max_index(probs[i], classes);
         float prob = probs[i][cl];
+
         if(prob > thresh) {
             box b = boxes[i];
             int x = (b.x-b.w/2.)*imW;
@@ -255,7 +279,7 @@ void Region::interpretData() {
     }
 }
 
-void Region::showImageResult(dnnType *input_h) {
+void RegionInterpret::showImageResult(dnnType *input_h) {
 
 #ifdef OPENCV
     dataDim_t dim = net->input_dim;
