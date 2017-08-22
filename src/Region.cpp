@@ -235,12 +235,12 @@ void RegionInterpret::interpretData(dnnType *data_h) {
     get_region_boxes(data_h, imW, imH, output_dim.w, output_dim.h, thresh, probs, boxes, 0, 0, 0.5, 1);
 
     //delete repeats
+/*
     for(int i = 0; i < tot; ++i){
         s[i].index = i;       
         s[i].cl = classes;
         s[i].probs = probs;
     }
-
     qsort(s, tot, sizeof(sortable_bbox), nms_comparator);
     for(int i = 0; i < tot; ++i){
         if(probs[s[i].index][classes] == 0) continue;
@@ -254,7 +254,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
             }
         }
     }
-    //
+*/
 
     res_boxes_n = 0;
     //print results
