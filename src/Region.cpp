@@ -256,6 +256,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
     }
     //
 
+    res_boxes_n = 0;
     //print results
     for(int i = 0; i < tot; ++i){
         int cl = max_index(probs[i], classes);
@@ -273,6 +274,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
             b.y = y;
             b.h = h;
             b.w = w;
+            b.cl = cl;
             res_boxes[res_boxes_n] = b;
             res_boxes_n++;
         }

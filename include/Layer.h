@@ -274,6 +274,7 @@ public:
 
 
 struct box {
+    int cl;
     float x, y, w, h;
 };
 struct sortable_bbox {
