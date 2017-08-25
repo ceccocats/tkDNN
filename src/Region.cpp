@@ -186,6 +186,8 @@ int nms_comparator(const void *pa, const void *pb) {
     return 0;
 }
 float overlap(float x1, float w1, float x2, float w2) {
+    /*
+    //SLOW METHOD
     float l1 = x1 - w1/2;
     float l2 = x2 - w2/2;
     float left = l1 > l2 ? l1 : l2;
@@ -193,11 +195,22 @@ float overlap(float x1, float w1, float x2, float w2) {
     float r2 = x2 + w2/2;
     float right = r1 < r2 ? r1 : r2;
     return right - left;
+    */
+
+    //SPALLA METHOD
+    float l;
+    w1 < w2? l=w1 : l=w2;
+    float d = fabs(x1 - x2);
+    float k = fabs(w1 - w2)/2;
+    if      (d <= k)    return l;
+    else if (d <= k +l) return l - (d-k);
+    else                return 0;
 }
 float box_intersection(box a, box b) {
     float w = overlap(a.x, a.w, b.x, b.w);
+    if(w <= 0) return 0;
     float h = overlap(a.y, a.h, b.y, b.h);
-    if(w < 0 || h < 0) return 0;
+    if(h <= 0) return 0;
     float area = w*h;
     return area;
 }
@@ -207,6 +220,8 @@ float box_union(box a, box b) {
     return u;
 }
 float box_iou(box a, box b) {
+    if(fabs(a.x - b.x) > (a.w+b.w)/2 || fabs(a.y - b.y) > (a.h+b.h)/2)
+        return 0;
     return box_intersection(a, b)/box_union(a, b);
 }
 int max_index(float *a, int n) {
@@ -235,13 +250,13 @@ void RegionInterpret::interpretData(dnnType *data_h) {
     get_region_boxes(data_h, imW, imH, output_dim.w, output_dim.h, thresh, probs, boxes, 0, 0, 0.5, 1);
 
     //delete repeats
-/*
     for(int i = 0; i < tot; ++i){
         s[i].index = i;       
         s[i].cl = classes;
         s[i].probs = probs;
     }
     qsort(s, tot, sizeof(sortable_bbox), nms_comparator);
+    TIMER_START
     for(int i = 0; i < tot; ++i){
         if(probs[s[i].index][classes] == 0) continue;
         box a = boxes[s[i].index];
@@ -254,8 +269,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
             }
         }
     }
-*/
-
+    TIMER_STOP
     res_boxes_n = 0;
     //print results
     for(int i = 0; i < tot; ++i){
