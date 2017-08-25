@@ -262,7 +262,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
         box a = boxes[s[i].index];
         for(int j = i+1; j < tot; ++j){
             box b = boxes[s[j].index];
-            if (box_iou(a, b) > thresh){
+            if (box_iou(a, b) > 0.3f){
                 for(int k = 0; k < classes+1; ++k){
                     probs[s[j].index][k] = 0;
                 }
