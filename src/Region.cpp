@@ -208,8 +208,9 @@ float overlap(float x1, float w1, float x2, float w2) {
 }
 float box_intersection(box a, box b) {
     float w = overlap(a.x, a.w, b.x, b.w);
+    if(w <= 0) return 0;
     float h = overlap(a.y, a.h, b.y, b.h);
-    if(w < 0 || h < 0) return 0;
+    if(h <= 0) return 0;
     float area = w*h;
     return area;
 }
@@ -219,6 +220,8 @@ float box_union(box a, box b) {
     return u;
 }
 float box_iou(box a, box b) {
+    if(fabs(a.x - b.x) > (a.w+b.w)/2 || fabs(a.y - b.y) > (a.h+b.h)/2)
+        return 0;
     return box_intersection(a, b)/box_union(a, b);
 }
 int max_index(float *a, int n) {
@@ -253,6 +256,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
         s[i].probs = probs;
     }
     qsort(s, tot, sizeof(sortable_bbox), nms_comparator);
+    TIMER_START
     for(int i = 0; i < tot; ++i){
         if(probs[s[i].index][classes] == 0) continue;
         box a = boxes[s[i].index];
@@ -265,7 +269,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
             }
         }
     }
-
+    TIMER_STOP
     res_boxes_n = 0;
     //print results
     for(int i = 0; i < tot; ++i){
