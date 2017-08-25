@@ -35,11 +35,12 @@
 #define TIMER_START timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
-#define TIMER_STOP  clock_gettime(CLOCK_MONOTONIC, &end);              \
+#define TIMER_STOP_C(col)  clock_gettime(CLOCK_MONOTONIC, &end);       \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
-    std::cout<<COL_CYANB<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
+    std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
+#define TIMER_STOP TIMER_STOP_C(COL_CYANB)
 
 /********************************************************
  * Prints the error message, and exits
