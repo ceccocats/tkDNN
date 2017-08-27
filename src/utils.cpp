@@ -86,7 +86,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
 
     int diffs = 0;
     for(int i=0; i<size; i++) {
-        if(data_h[i] != data_h[i] && correct_h[i] != correct_h[i] && //nan control
+        if(data_h[i] != data_h[i] || correct_h[i] != correct_h[i] || //nan control
            fabs(data_h[i] - correct_h[i]) > eps) {
             diffs += 1;
             if(diffs == 1)
