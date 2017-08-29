@@ -87,7 +87,18 @@ void compute_image( cv::Mat imageORIG,
 
 int main(int argc, char *argv[]) {
 
-    if(argc < 2 || !fileExist(argv[1]))
+    if(argc < 3) {
+        std::cout<<"usage: "<<argv[0]<<" net.rt validation_list.txt\n"
+                 <<"> validation_list.txt format: \n"
+                 <<"    path/to/image.jpg path/to/label.txt\n"
+                 <<"> label.txt format: \n"  
+                 <<"    <object-class> <x> <y> <width> <height>\n"
+                 <<"    x and y are the box center, "   
+                 <<"all values are relative to the image size\n\n"; 
+        return 1; 
+    }
+
+    if(!fileExist(argv[1]))
         FatalError("unable to read serialRT file");
 
     //convert network to tensorRT
