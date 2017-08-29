@@ -219,11 +219,6 @@ float box_union(box a, box b) {
     float u = a.w*a.h + b.w*b.h - i;
     return u;
 }
-float box_iou(box a, box b) {
-    if(fabs(a.x - b.x) > (a.w+b.w)/2 || fabs(a.y - b.y) > (a.h+b.h)/2)
-        return 0;
-    return box_intersection(a, b)/box_union(a, b);
-}
 int max_index(float *a, int n) {
     if(n <= 0) return -1;
     int i, max_i = 0;
@@ -237,13 +232,24 @@ int max_index(float *a, int n) {
     return max_i;
 }
 //###############################################################################
+float RegionInterpret::box_iou(box a, box b) {
+    if(fabs(a.x - b.x) > (a.w+b.w)/2 || fabs(a.y - b.y) > (a.h+b.h)/2)
+        return 0;
+    return box_intersection(a, b)/box_union(a, b);
+}
 
 
 
+void RegionInterpret::interpretData(dnnType *data_h, int imageW, int imageH) {
 
-void RegionInterpret::interpretData(dnnType *data_h) {
-
-    int imW = input_dim.w, imH = input_dim.h;
+    int imW, imH;
+    if(imageW <= 0 || imageH <= 0) {
+        imW = input_dim.w;
+        imH = input_dim.h;
+    } else {
+        imW = imageW;
+        imH = imageH;
+    }
 
     int tot = output_dim.w*output_dim.h*num;
 
@@ -256,7 +262,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
         s[i].probs = probs;
     }
     qsort(s, tot, sizeof(sortable_bbox), nms_comparator);
-    TIMER_START
+
     for(int i = 0; i < tot; ++i){
         if(probs[s[i].index][classes] == 0) continue;
         box a = boxes[s[i].index];
@@ -269,7 +275,7 @@ void RegionInterpret::interpretData(dnnType *data_h) {
             }
         }
     }
-    TIMER_STOP
+
     res_boxes_n = 0;
     //print results
     for(int i = 0; i < tot; ++i){
@@ -278,17 +284,23 @@ void RegionInterpret::interpretData(dnnType *data_h) {
 
         if(prob > thresh) {
             box b = boxes[i];
-            int x = (b.x-b.w/2.)*imW;
-            int w = (b.x+b.w/2.)*imW - b.x;
-            int y = (b.y-b.h/2.)*imH;
-            int h = (b.y+b.h/2.)*imH - b.y;
+            int x = (b.x)*imW;
+            int w = (b.w)*imW - b.x;
+            int y = (b.y)*imH;
+            int h = (b.h)*imH - b.y;
 
-            printf("%d: %.0f%% box(x1, y1, x2, y2): %d %d %d %d\n", cl, prob*100, x, y, w, h);
+            //if(x < 0) x = 0;
+            //if(y < 0) y = 0;
+            //if(w > imW) w = imW;
+            //if(h > imH) h = imH;
+
+            //printf("%d: %.0f%% box(x1, y1, x2, y2): %d %d %d %d\n", cl, prob*100, x, y, w, h);
             b.x = x;
             b.y = y;
             b.h = h;
             b.w = w;
             b.cl = cl;
+            b.prob = prob;
             res_boxes[res_boxes_n] = b;
             res_boxes_n++;
         }

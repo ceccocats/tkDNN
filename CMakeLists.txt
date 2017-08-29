@@ -66,6 +66,9 @@ target_link_libraries(test_yolo_tiny tkDNN)
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
 
+add_executable(detection demo/detection/detection.cpp)
+target_link_libraries(detection tkDNN)
+
 #install
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 

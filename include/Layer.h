@@ -276,6 +276,7 @@ public:
 struct box {
     int cl;
     float x, y, w, h;
+    float prob;
 };
 struct sortable_bbox {
     int index;
@@ -323,8 +324,10 @@ public:
                             float **probs, box *boxes, int only_objectness, 
                             int *map, float tree_thresh, int relative); 
     void correct_region_boxes(box *boxes, int n, int w, int h, int netw, int neth, int relative);
-    void interpretData(dnnType *data_h);
+    void interpretData(dnnType *data_h, int imageW = 0, int imageH = 0);
     void showImageResult(dnnType *input_h);
+
+    static float box_iou(box a, box b);
 };
 
 }
