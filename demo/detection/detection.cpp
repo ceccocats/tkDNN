@@ -46,7 +46,8 @@ cv::Mat GetSquareImage(const cv::Mat& img, int target_width) {
     return square;
 }
 
-void compute_image( cv::Mat imageORIG, 
+//return inference time
+double compute_image( cv::Mat imageORIG, 
                     tkDNN::NetworkRT *netRT, tkDNN::RegionInterpret *rI,
                     dnnType *input, dnnType *output) {
 
@@ -83,11 +84,14 @@ void compute_image( cv::Mat imageORIG,
 
     rI->interpretData(output, imageORIG.cols, imageORIG.rows);
 
+    return t_ns;
 }
 
 int print_usage() {
-    std::cout<<"usage: ./detection net.rt validation_list.txt [-t <thresh>] [-s]\n"
-             <<" -t: set thresh value\n -s: show images as compute\n\n" 
+    std::cout<<"usage: ./detection net.rt validation_list.txt"
+             <<" [-t <thresh>] [-s] [-i <iterations>]\n"
+             <<" -t: set thresh value\n -s: show images as compute\n"
+             <<" -i: images to compute\n\n" 
              <<"> validation_list.txt format: \n"
              <<"    path/to/image.jpg path/to/label.txt\n"
              <<"> label.txt format: \n"  
@@ -105,13 +109,15 @@ int main(int argc, char *argv[]) {
     char *imageset_path = NULL; 
     float thresh = 0.3f;
     bool  show = false;
+    int iterations = INT_MAX;
 
     //parse params
     int c;
-    while ((c = getopt (argc, argv, "t:s")) != -1) {
+    while ((c = getopt (argc, argv, "t:si:")) != -1) {
         switch(c) {
-        case 't':   thresh = atof(optarg); break;
-        case 's':   show = true;           break;
+        case 't':   thresh = atof(optarg);       break;
+        case 's':   show = true;                 break;
+        case 'i':   iterations = atoi(optarg);   break;
         case '?':   
             return print_usage();
         default:    return print_usage();
@@ -141,9 +147,13 @@ int main(int argc, char *argv[]) {
     if(!imageset.is_open())
         FatalError("could not read imageset");
     
+    double mTime = 0;
     float mAP = 0;
     int processed_images;
-    for(processed_images=1; getline(imageset, line); processed_images++) {
+
+    for(processed_images=1; 
+        processed_images-1 < iterations && getline(imageset, line); 
+        processed_images++) {
         
         std::string image_path = line.substr(0, line.find(" "));
         std::string label_path = line.substr(line.find(" ")+1, line.size());
@@ -155,7 +165,7 @@ int main(int argc, char *argv[]) {
             FatalError("Could not open image");
         std::cout<<"Image size: ("<<img.cols<<"x"<<img.rows<<")\n";
 
-        compute_image(img, &netRT, &rI, input, output); 
+        mTime += compute_image(img, &netRT, &rI, input, output); 
 
         std::ifstream labels(label_path.c_str());
         if(!labels.is_open())
@@ -223,9 +233,17 @@ int main(int argc, char *argv[]) {
         if(show) {
             cv::namedWindow("result");
             cv::imshow("result", img);
-            cv::waitKey(1000);
+            cv::waitKey(10);
         }        
     }
 
+    //print results to file
+    processed_images -= 1;
+    std::ofstream res("results.txt", std::ios::app);
+    res<<"#### "<<tensor_path<<"\n";
+    res<<"processed images: "<<processed_images<<"\n";
+    res<<"mean inference time: "<<mTime/processed_images<<"\n";
+    res<<"mean AP: "<<mAP/processed_images<<"\n";
+    res<<"thesh used: "<<thresh<<"\n\n";
     return 0;
 }

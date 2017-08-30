@@ -80,9 +80,19 @@ public:
 
     //batchnorm
     bool batchnorm;
+    dnnType *power_h;
     dnnType *scales_h,   *scales_d;
     dnnType *mean_h,     *mean_d;
     dnnType *variance_h, *variance_d;
+
+    //fp16
+    __half *data16_h, *bias16_h;
+    __half *data16_d, *bias16_d;
+
+    __half *power16_h,    *power16_d;
+    __half *scales16_h,   *scales16_d;
+    __half *mean16_h,     *mean16_d;
+    __half *variance16_h, *variance16_d;
 };
 
 

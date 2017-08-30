@@ -12,4 +12,6 @@ void reorgForward(  dnnType* srcData, dnnType* dstData,
 void softmaxForward(float *input, int n, int batch, int batch_offset, 
                     int groups, int group_offset, int stride, float temp, float *output, cudaStream_t stream = cudaStream_t(0));
 
+
+void float2half(float* srcData, __half* dstData, int size, const cudaStream_t stream = cudaStream_t(0));
 #endif //KERNELS_H

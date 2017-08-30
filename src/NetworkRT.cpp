@@ -1,9 +1,13 @@
 #include <iostream>
 #include <map>
 #include <errno.h>
+#include <string.h> // memcpy
+#include <stdlib.h>
 
+#include "kernels.h"
+
+#include "utils.h"
 #include "NvInfer.h"
-
 #include "NetworkRT.h"
 
 using namespace nvinfer1;
@@ -45,7 +49,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
         builderRT->setMaxBatchSize(1);
         builderRT->setMaxWorkspaceSize(1 << 30);
-/*
+
         //change datatype based on system specs
         if(builderRT->platformHasFastInt8()) {
             BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
@@ -53,13 +57,13 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setInt8Mode(true);
             builderRT->setInt8Calibrator(&calib);
 
-        } else if(builderRT->platformHasFastFp16()) {
+        } else if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
-*/
+
         //add input layer
-        ITensor *input = networkRT->addInput("data", dtRT, 
+        ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
 
@@ -170,22 +174,49 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
     //std::cout<<"convert Dense\n";
+    void *data_b, *bias_b;
+    if(dtRT == DataType::kHALF) {
+        data_b     = l->data16_h;    
+        bias_b     = l->bias16_h;
+    } else {
+        data_b     = l->data_h;    
+        bias_b     = l->bias_h;
+    }
 
-    Weights w { dtRT, l->data_h, l->inputs*l->outputs};
-    Weights b = { dtRT, l->bias_h, l->outputs};
+    Weights w { dtRT, data_b, l->inputs*l->outputs};
+    Weights b = { dtRT, bias_b, l->outputs};
     IFullyConnectedLayer *lRT = networkRT->addFullyConnected(*input, l->outputs, w, b);
 
     checkNULL(lRT);
     return lRT;
 }
 
+
 ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     //std::cout<<"convert conv2D\n";
 
-    Weights w { dtRT, l->data_h, l->inputs*l->outputs*l->kernelH*l->kernelW};
+    void *data_b, *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
+    if(dtRT == DataType::kHALF) {
+        data_b     = l->data16_h;    
+        bias_b     = l->bias16_h;
+        power_b    = l->power16_h;
+        mean_b     = l->mean16_h;
+        variance_b = l->variance16_h;
+        scales_b   = l->scales16_h;
+    } else {
+        data_b     = l->data_h;    
+        bias_b     = l->bias_h;
+        power_b    = l->power_h;
+        mean_b     = l->mean_h;
+        variance_b = l->variance_h;
+        scales_b   = l->scales_h;
+    }
+
+
+    Weights w { dtRT, data_b, l->inputs*l->outputs*l->kernelH*l->kernelW};
     Weights b;
     if(!l->batchnorm)
-        b = { dtRT, l->bias_h, l->outputs};
+        b = { dtRT, bias_b, l->outputs};
     else
         b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
 
@@ -198,29 +229,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
 
     if(l->batchnorm) {
-        float eps = CUDNN_BN_MIN_EPSILON;
-
-        //make power array of ones
-        dnnType *power_h = new dnnType[l->outputs];
-        for(int i=0; i<l->outputs; i++) power_h[i] = 1.0f;
-
-        //convert mean
-        for(int i=0; i<l->outputs; i++)
-            l->mean_h[i] = l->mean_h[i] / -sqrt(eps + l->variance_h[i]); 
-        
-        //convert variance
-        for(int i=0; i<l->outputs; i++)
-            l->variance_h[i] = 1.0f / sqrt(eps + l->variance_h[i]); 
-
-        Weights power{dtRT, power_h, l->outputs};
-        Weights shift{dtRT, l->mean_h, l->outputs};
-        Weights scale{dtRT, l->variance_h, l->outputs};
+        Weights power{dtRT, power_b, l->outputs};
+        Weights shift{dtRT, mean_b, l->outputs};
+        Weights scale{dtRT, variance_b, l->outputs};
         IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
                     shift, scale, power);
         checkNULL(lRT2);
 
-        Weights shift2{dtRT, l->bias_h, l->outputs};
-        Weights scale2{dtRT, l->scales_h, l->outputs};
+        Weights shift2{dtRT, bias_b, l->outputs};
+        Weights scale2{dtRT, scales_b, l->outputs};
         IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
                     shift2, scale2, power);
         checkNULL(lRT3);

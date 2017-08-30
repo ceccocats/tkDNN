@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include "tkdnn.h"
 #include "Network.h"
@@ -22,6 +22,14 @@ Network::Network(dataDim_t input_dim) {
     checkERROR( cublasCreate(&cublasHandle) );
 
     num_layers = 0;
+
+    fp16 = false;
+    if(const char* env_p = std::getenv("TKDNN_MODE"))
+        if(strcmp(env_p, "FP16") == 0)
+            fp16 = true;
+   
+    if(fp16)
+        std::cout<<COL_REDB<<"!! FP16 INERENCE ENABLED !!"<<COL_END<<"\n";
 }
 
 Network::~Network() {

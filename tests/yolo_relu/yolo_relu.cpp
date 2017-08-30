@@ -139,12 +139,13 @@ int main() {
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
     std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
-    
+  
     std::cout<<"\n\nDetected objects: \n";
     dnnType *output_h = new dnnType[rI.output_dim.tot()];
     checkCuda(cudaMemcpy(output_h, out_data2, 
               rI.output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost));
     rI.interpretData(output_h, 608, 608);
     rI.showImageResult(input_h);
+
     return 0;
 }

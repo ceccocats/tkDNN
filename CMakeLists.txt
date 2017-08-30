@@ -31,7 +31,8 @@ cuda_add_library(kernels SHARED src/kernels/activation_elu.cu
                                 src/kernels/activation_leaky.cu
                                 src/kernels/activation_logistic.cu
                                 src/kernels/reorg.cu
-                                src/kernels/softmax.cu)
+                                src/kernels/softmax.cu
+                                src/kernels/convert.cu)
 
 file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
