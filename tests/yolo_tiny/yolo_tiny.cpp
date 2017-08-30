@@ -1,19 +1,19 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo-tiny/layers/input.bin";
-const char *c0_bin     = "../tests/yolo-tiny/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo-tiny/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo-tiny/layers/c4.bin";
-const char *c5_bin     = "../tests/yolo-tiny/layers/c5.bin";
-const char *c6_bin     = "../tests/yolo-tiny/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo-tiny/layers/c8.bin";
-const char *c10_bin    = "../tests/yolo-tiny/layers/c10.bin";
-const char *c11_bin    = "../tests/yolo-tiny/layers/c11.bin";
-const char *c12_bin    = "../tests/yolo-tiny/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo-tiny/layers/c13.bin";
-const char *g14_bin    = "../tests/yolo-tiny/layers/g14.bin";
-const char *output_bin = "../tests/yolo-tiny/layers/output.bin";
+const char *input_bin  = "../tests/yolo_tiny/layers/input.bin";
+const char *c0_bin     = "../tests/yolo_tiny/layers/c0.bin";
+const char *c2_bin     = "../tests/yolo_tiny/layers/c2.bin";
+const char *c4_bin     = "../tests/yolo_tiny/layers/c4.bin";
+const char *c5_bin     = "../tests/yolo_tiny/layers/c5.bin";
+const char *c6_bin     = "../tests/yolo_tiny/layers/c6.bin";
+const char *c8_bin     = "../tests/yolo_tiny/layers/c8.bin";
+const char *c10_bin    = "../tests/yolo_tiny/layers/c10.bin";
+const char *c11_bin    = "../tests/yolo_tiny/layers/c11.bin";
+const char *c12_bin    = "../tests/yolo_tiny/layers/c12.bin";
+const char *c13_bin    = "../tests/yolo_tiny/layers/c13.bin";
+const char *g14_bin    = "../tests/yolo_tiny/layers/g14.bin";
+const char *output_bin = "../tests/yolo_tiny/layers/output.bin";
 
 int main() {
 
@@ -60,7 +60,7 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(&net, "yolo-tiny.rt");
+    tkDNN::NetworkRT netRT(&net, "yolo_tiny.rt");
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 

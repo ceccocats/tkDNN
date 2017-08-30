@@ -324,7 +324,8 @@ void RegionInterpret::showImageResult(dnnType *input_h) {
 
     for(int i=0; i<res_boxes_n; i++) {
         box bx = res_boxes[i];
-        cv::rectangle(color, cv::Point(bx.x, bx.y), cv::Point(bx.w, bx.h),
+        cv::rectangle(color, cv::Point(bx.x - bx.w/2, bx.y - bx.h/2), 
+                             cv::Point(bx.x + bx.w/2, bx.y + bx.h/2),
         cv::Scalar( 0, 0, 255), 2);
     }
     cv::namedWindow("result");

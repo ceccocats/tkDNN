@@ -7,3 +7,4 @@ build/
 *.caffemodel
 *.h5
 *.tar.gz
+*.weights

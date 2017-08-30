@@ -57,11 +57,21 @@ target_link_libraries(test_mnist tkDNN)
 add_executable(test_mnistRT tests/mnist/test_mnistRT.cpp)
 target_link_libraries(test_mnistRT tkDNN)
 
+## YOLO NETS
 add_executable(test_yolo tests/yolo/yolo.cpp)
 target_link_libraries(test_yolo tkDNN)
 
-add_executable(test_yolo_tiny tests/yolo-tiny/yolo-tiny.cpp)
+add_executable(test_yolo_tiny tests/yolo_tiny/yolo_tiny.cpp)
 target_link_libraries(test_yolo_tiny tkDNN)
+
+add_executable(test_yolo_relu tests/yolo_relu/yolo_relu.cpp)
+target_link_libraries(test_yolo_relu tkDNN)
+
+
+add_executable(test_yolo_224 tests/yolo_224/yolo_224.cpp)
+target_link_libraries(test_yolo_224 tkDNN)
+################################################################################
+
 
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)

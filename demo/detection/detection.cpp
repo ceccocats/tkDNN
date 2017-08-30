@@ -1,6 +1,7 @@
 #include<iostream>
 #include "tkdnn.h"
 #include <stdlib.h>     /* srand, rand */
+#include <unistd.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -84,35 +85,61 @@ void compute_image( cv::Mat imageORIG,
 
 }
 
+int print_usage() {
+    std::cout<<"usage: ./detection net.rt validation_list.txt [-t <thresh>] [-s]\n"
+             <<" -t: set thresh value\n -s: show images as compute\n\n" 
+             <<"> validation_list.txt format: \n"
+             <<"    path/to/image.jpg path/to/label.txt\n"
+             <<"> label.txt format: \n"  
+             <<"    <object-class> <x> <y> <width> <height>\n"
+             <<"    x and y are the box center, "   
+             <<"all values are relative to the image size\n\n";
+    return 1;
+}
+
 
 int main(int argc, char *argv[]) {
 
-    if(argc < 3) {
-        std::cout<<"usage: "<<argv[0]<<" net.rt validation_list.txt\n"
-                 <<"> validation_list.txt format: \n"
-                 <<"    path/to/image.jpg path/to/label.txt\n"
-                 <<"> label.txt format: \n"  
-                 <<"    <object-class> <x> <y> <width> <height>\n"
-                 <<"    x and y are the box center, "   
-                 <<"all values are relative to the image size\n\n"; 
-        return 1; 
+    //params
+    char *tensor_path = NULL;
+    char *imageset_path = NULL; 
+    float thresh = 0.3f;
+    bool  show = false;
+
+    //parse params
+    int c;
+    while ((c = getopt (argc, argv, "t:s")) != -1) {
+        switch(c) {
+        case 't':   thresh = atof(optarg); break;
+        case 's':   show = true;           break;
+        case '?':   
+            return print_usage();
+        default:    return print_usage();
+        }
     }
 
-    if(!fileExist(argv[1]))
-        FatalError("unable to read serialRT file");
+    if(argc - optind == 2) {
+        tensor_path   = argv[optind];
+        imageset_path = argv[optind+1];
+    } else {
+        std::cout<<"not enough arguments.\n";
+        return print_usage();
+    }
+    //end parsing
 
+    if(!fileExist(tensor_path))
+        FatalError("unable to read serialRT file");
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(NULL, argv[1]);
-    tkDNN::RegionInterpret rI(netRT.input_dim, netRT.output_dim, 80, 4, 5, 0.3f, reg_bias);
+    tkDNN::NetworkRT netRT(NULL, tensor_path);
+    tkDNN::RegionInterpret rI(netRT.input_dim, netRT.output_dim, 80, 4, 5, thresh, reg_bias);
 
     dnnType *input = new float[netRT.input_dim.tot()];
     dnnType *output = new float[netRT.output_dim.tot()];
 
     std::string line;
-    std::ifstream imageset(argv[2]);
+    std::ifstream imageset(imageset_path);
     if(!imageset.is_open())
         FatalError("could not read imageset");
-
     
     float mAP = 0;
     int processed_images;
@@ -193,9 +220,11 @@ int main(int argc, char *argv[]) {
                  <<", mAP: "<<mAP/processed_images<<"\n";        
 
         //show results
-        //cv::namedWindow("result");
-        //cv::imshow("result", img);
-        //cv::waitKey(1);        
+        if(show) {
+            cv::namedWindow("result");
+            cv::imshow("result", img);
+            cv::waitKey(1000);
+        }        
     }
 
     return 0;
