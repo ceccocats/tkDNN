@@ -33,3 +33,17 @@ Assumiung you have correctly builded the library these are the test ready to exe
 * test_yolo: YOLO detection network (CUDNN and TENSORRT)
 * test_yolo_tiny: smaller version of YOLO (CUDNN and TENSRRT)
 
+## Live detection
+For the live detection you need to precompile the tensorRT file by luncing the desidered network test, this is the recommended process:
+```
+export TKDNN_MODE=FP16   # set the half floating point optimization
+rm yolo.rt		 # be sure to delete(or move) old tensorRT files
+./test_yolo              # run the yolo test (is slow)
+# with f16 inference the result will be a bit incorrect
+```
+this will genereate a yolo.rt file that can be used for live detection:
+```
+./live yolo.rt 1 -s -t0.3    # launch detection on device 1 with 0.3 thresh
+```
+
+

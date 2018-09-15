@@ -80,6 +80,9 @@ target_link_libraries(test_rtinference tkDNN)
 add_executable(detection demo/detection/detection.cpp)
 target_link_libraries(detection tkDNN)
 
+add_executable(live demo/live/live.cpp)
+target_link_libraries(live tkDNN)
+
 #install
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
