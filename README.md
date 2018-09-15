@@ -2,7 +2,7 @@
 tkDNN is a Deep Neural Network library built with cuDNN primitives specifically thought to work on NVIDIA TK1 board.<br>
 The main scope is to do high performance inference on already trained models.
 
-this branch is actually work on every NVIDIA GPU that support the dependencies:
+this branch actually work on every NVIDIA GPU that support the dependencies:
 * CUDA 8
 * CUDNN 6
 * TENSORRT 2
