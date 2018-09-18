@@ -7,7 +7,15 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#define VOC
+
+#ifdef VOC
+const char *reg_bias = "../tests/yolo_voc/layers/g31.bin";
+#define CLASS 20
+#else
 const char *reg_bias = "../tests/yolo/layers/g31.bin";
+#define CLASS 80
+#endif
 
 int prob_sort(const void *pa, const void *pb) {
     tkDNN::box a = *(tkDNN::box *)pa;
@@ -126,18 +134,26 @@ int main(int argc, char *argv[]) {
     }
     //end parsing
 
-    std::cout<<"open video stream on device: "<<device<<"\n";
-    cv::VideoCapture cap(device); 
+    //std::cout<<"open video stream on device: "<<device<<"\n";
+    //cv::VideoCapture cap(device);
+		const char* pipe = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)480, format=(string)I420, framerate=(fraction)30/1 ! nvvidconv ! video/x-raw, format=(string)I420 ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+		/*const char* pipe = "nvcamerasrc ! "
+		"video/x-raw(memory:NVMM), width=(int)2592, height=(int)1458, format=(string)I420, framerate=(fraction)30/1 ! "
+		"nvvidconv ! video/x-raw, width=(int)1280, height=(int)720, format=(string)BGRx ! "
+		"videoconvert ! appsink";*/
+
+		cv::VideoCapture cap(pipe);
+
     if(!cap.isOpened())
         FatalError("unable to open video stream");
-    cap.set(CV_CAP_PROP_BUFFERSIZE, 1); // process only last frame
+    //cap.set(CV_CAP_PROP_BUFFERSIZE, 1); // process only last frame
 
     if(!fileExist(tensor_path))
         FatalError("unable to read serialRT file");
 
     //convert network to tensorRT
     tkDNN::NetworkRT netRT(NULL, tensor_path);
-    tkDNN::RegionInterpret rI(netRT.input_dim, netRT.output_dim, 80, 4, 5, thresh, reg_bias);
+    tkDNN::RegionInterpret rI(netRT.input_dim, netRT.output_dim, CLASS, 4, 5, thresh, reg_bias);
 
     dnnType *input = new float[netRT.input_dim.tot()];
     dnnType *output = new float[netRT.output_dim.tot()];

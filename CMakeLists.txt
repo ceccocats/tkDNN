@@ -62,6 +62,9 @@ target_link_libraries(test_mnistRT tkDNN)
 add_executable(test_yolo tests/yolo/yolo.cpp)
 target_link_libraries(test_yolo tkDNN)
 
+add_executable(test_yolo_voc tests/yolo_voc/yolo_voc.cpp)
+target_link_libraries(test_yolo_voc tkDNN)
+
 add_executable(test_yolo_tiny tests/yolo_tiny/yolo_tiny.cpp)
 target_link_libraries(test_yolo_tiny tkDNN)
 
