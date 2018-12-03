@@ -17,16 +17,19 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
-find_package(CUDA QUIET REQUIRED)
-find_package(OpenCV QUIET)
-if(OPENCV)
-    message("Compiling with openCV support")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
-else()
-    message(WARNING "compiling without OpenCV")
+find_package(CUDA REQUIRED)
+find_package(OpenCV REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
+
+# compile Discovery only if TensorRT is installed
+find_library(NVINFER NAMES nvinfer)
+if(NVINFER STREQUAL "NVINFER-NOTFOUND")
+    set(NVINFER_INCLUDES "/usr/local/nvidia/tensorrt/include/")
+    link_directories(/usr/local/nvidia/tensorrt/targets/x86_64-linux-gnu/lib/ 
+		     /usr/local/cuda/targets/x86_64-linux/lib/)
 endif()
 
-cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS})
+cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 cuda_add_library(kernels SHARED src/kernels/activation_elu.cu 
                                 src/kernels/activation_leaky.cu
                                 src/kernels/activation_logistic.cu
@@ -38,10 +41,7 @@ file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
-if(NOT OPENCV) 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0") 
-endif()
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
 
