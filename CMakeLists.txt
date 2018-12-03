@@ -95,3 +95,6 @@ message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/${CMAKE_PROJECT_NAME}
 FILES_MATCHING PATTERN "*.h")
 install(TARGETS tkDNN kernels DESTINATION lib)
+install(FILES "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" # source directory
+        DESTINATION "share/${CMAKE_PROJECT_NAME}/cmake/" # target directory
+)
