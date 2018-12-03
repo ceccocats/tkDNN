@@ -87,10 +87,10 @@ add_executable(live demo/live/live.cpp)
 target_link_libraries(live tkDNN)
 
 #install
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
-         CACHE PATH "default install path" FORCE)
-endif()
+#if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
+#         CACHE PATH "default install path" FORCE)
+#endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/${CMAKE_PROJECT_NAME}
 FILES_MATCHING PATTERN "*.h")

@@ -134,16 +134,12 @@ int main(int argc, char *argv[]) {
     }
     //end parsing
 
-    //std::cout<<"open video stream on device: "<<device<<"\n";
-    //cv::VideoCapture cap(device);
-		const char* pipe = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)480, format=(string)I420, framerate=(fraction)30/1 ! nvvidconv ! video/x-raw, format=(string)I420 ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
-		/*const char* pipe = "nvcamerasrc ! "
-		"video/x-raw(memory:NVMM), width=(int)2592, height=(int)1458, format=(string)I420, framerate=(fraction)30/1 ! "
-		"nvvidconv ! video/x-raw, width=(int)1280, height=(int)720, format=(string)BGRx ! "
-		"videoconvert ! appsink";*/
-
-		cv::VideoCapture cap(pipe);
-
+    std::cout<<"open video stream on device: "<<device<<"\n";  
+    cv::VideoCapture cap(device);
+/*   
+    const char* pipe = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)480, format=(string)I420, framerate=(fraction)30/1 ! nvvidconv ! video/x-raw, format=(string)I420 ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+    cv::VideoCapture cap(pipe);
+*/
     if(!cap.isOpened())
         FatalError("unable to open video stream");
     //cap.set(CV_CAP_PROP_BUFFERSIZE, 1); // process only last frame
