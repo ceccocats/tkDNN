@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "Network.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 enum layerType_t {
     LAYER_DENSE,
@@ -340,5 +340,5 @@ public:
     static float box_iou(box a, box b);
 };
 
-}
+}}
 #endif //LAYER_H

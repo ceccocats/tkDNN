@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   tkdnnPoolingMode_t pool_mode) : 
@@ -107,4 +107,4 @@ dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

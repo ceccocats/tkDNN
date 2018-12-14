@@ -4,7 +4,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
                    int kh, int kw, int kl, 
@@ -114,4 +114,4 @@ LayerWgs::~LayerWgs() {
     }
 }
 
-}
+}}

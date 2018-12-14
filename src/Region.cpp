@@ -9,7 +9,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Region::Region(Network *net, int classes, int coords, int num) : 
     Layer(net) {
@@ -339,4 +339,4 @@ void RegionInterpret::showImageResult(dnnType *input_h) {
 #endif
 }
 
-}
+}}

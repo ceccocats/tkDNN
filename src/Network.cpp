@@ -5,7 +5,7 @@
 #include "Network.h"
 #include "Layer.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Network::Network(dataDim_t input_dim) {
     this->input_dim = input_dim;
@@ -99,4 +99,4 @@ void Network::print() {
 }
 
 
-}
+}}

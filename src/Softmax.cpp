@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Softmax::Softmax(Network *net) : Layer(net) {
 
@@ -44,4 +44,4 @@ dnnType* Softmax::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

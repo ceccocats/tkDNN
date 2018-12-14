@@ -25,7 +25,7 @@ class Logger : public ILogger {
     }
 } loggerRT;
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
@@ -399,4 +399,4 @@ bool NetworkRT::deserialize(const char *filename) {
     return true;
 }
 
-}
+}}

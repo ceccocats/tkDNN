@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Reorg::Reorg(Network *net, int stride) : Layer(net) {
 
@@ -31,4 +31,4 @@ dnnType* Reorg::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

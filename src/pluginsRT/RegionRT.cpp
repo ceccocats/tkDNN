@@ -74,12 +74,12 @@ public:
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
-		tkDNN::writeBUF(buf, classes);
-		tkDNN::writeBUF(buf, coords);
-		tkDNN::writeBUF(buf, num);
-		tkDNN::writeBUF(buf, c);
-		tkDNN::writeBUF(buf, h);
-		tkDNN::writeBUF(buf, w);
+		tk::dnn::writeBUF(buf, classes);
+		tk::dnn::writeBUF(buf, coords);
+		tk::dnn::writeBUF(buf, num);
+		tk::dnn::writeBUF(buf, c);
+		tk::dnn::writeBUF(buf, h);
+		tk::dnn::writeBUF(buf, w);
 	}
 
 	int c, h, w;

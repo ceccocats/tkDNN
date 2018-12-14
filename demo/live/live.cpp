@@ -18,8 +18,8 @@ const char *reg_bias = "../tests/yolo/layers/g31.bin";
 #endif
 
 int prob_sort(const void *pa, const void *pb) {
-    tkDNN::box a = *(tkDNN::box *)pa;
-    tkDNN::box b = *(tkDNN::box *)pb;
+    tk::dnn::box a = *(tk::dnn::box *)pa;
+    tk::dnn::box b = *(tk::dnn::box *)pb;
     float diff = a.prob - b.prob;
     if(diff < 0) return 1;
     else if(diff > 0) return -1;
@@ -56,7 +56,7 @@ cv::Mat GetSquareImage(const cv::Mat& img, int target_width) {
 
 //return inference time
 double compute_image( cv::Mat imageORIG, 
-                    tkDNN::NetworkRT *netRT, tkDNN::RegionInterpret *rI,
+                    tk::dnn::NetworkRT *netRT, tk::dnn::RegionInterpret *rI,
                     dnnType *input, dnnType *output) {
     TIMER_START
 
@@ -148,8 +148,8 @@ int main(int argc, char *argv[]) {
         FatalError("unable to read serialRT file");
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(NULL, tensor_path);
-    tkDNN::RegionInterpret rI(netRT.input_dim, netRT.output_dim, CLASS, 4, 5, thresh, reg_bias);
+    tk::dnn::NetworkRT netRT(NULL, tensor_path);
+    tk::dnn::RegionInterpret rI(netRT.input_dim, netRT.output_dim, CLASS, 4, 5, thresh, reg_bias);
 
     dnnType *input = new float[netRT.input_dim.tot()];
     dnnType *output = new float[netRT.output_dim.tot()];
@@ -170,9 +170,9 @@ int main(int argc, char *argv[]) {
 
         mTime += compute_image(img, &netRT, &rI, input, output); 
 
-        qsort(rI.res_boxes, rI.res_boxes_n, sizeof(tkDNN::box), prob_sort);
+        qsort(rI.res_boxes, rI.res_boxes_n, sizeof(tk::dnn::box), prob_sort);
         for(int i=0; i<rI.res_boxes_n; i++) {
-            tkDNN::box bx = rI.res_boxes[i];
+            tk::dnn::box bx = rI.res_boxes[i];
             std::cout<<" ("<<int(bx.prob*100)<<"%) "<<bx.cl
                      <<": "<<bx.x<<" "<<bx.y<<" "<<bx.w<<" "<<bx.h<<"\n";
 

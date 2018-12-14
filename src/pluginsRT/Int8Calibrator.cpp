@@ -8,7 +8,7 @@
 class BatchStream
 {
 public:
-	BatchStream(tkDNN::dataDim_t dim, int batchSize, int maxBatches)
+	BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches)
 	{
         mBatchSize = batchSize;
         mMaxBatches = maxBatches;

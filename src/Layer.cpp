@@ -2,7 +2,7 @@
 
 #include "Layer.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Layer::Layer(Network *net) {
 
@@ -23,4 +23,4 @@ Layer::~Layer() {
     checkCUDNN( cudnnDestroyTensorDescriptor(dstTensorDesc) );
 }
 
-}
+}}

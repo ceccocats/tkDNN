@@ -2,7 +2,7 @@
 
 #include "Layer.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
@@ -125,4 +125,4 @@ dnnType* Conv2d::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

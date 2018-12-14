@@ -6,7 +6,7 @@
 #include "Layer.h"
 #include "NvInfer.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 class NetworkRT {
 
@@ -62,5 +62,5 @@ template<typename T> T readBUF(const char*& buffer)
     return val;
 }
 
-}
+}}
 #endif //NETWORKRT_H

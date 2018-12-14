@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Flatten::Flatten(Network *net) : Layer(net) {
 
@@ -33,4 +33,4 @@ dnnType* Flatten::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

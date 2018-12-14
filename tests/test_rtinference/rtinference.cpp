@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     srand (0); 
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(NULL, argv[1]);
+    tk::dnn::NetworkRT netRT(NULL, argv[1]);
 
     dnnType *input = new float[netRT.input_dim.tot()];
     dnnType *output = new float[netRT.input_dim.tot()];

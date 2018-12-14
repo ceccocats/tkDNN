@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
 
@@ -53,4 +53,4 @@ dnnType* Route::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

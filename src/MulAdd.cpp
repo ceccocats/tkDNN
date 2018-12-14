@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 MulAdd::MulAdd(Network *net, dnnType mul, dnnType add) : Layer(net) {
 
@@ -41,4 +41,4 @@ dnnType* MulAdd::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

@@ -53,7 +53,7 @@ public:
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
-		tkDNN::writeBUF(buf, size);
+		tk::dnn::writeBUF(buf, size);
 	}
 
 	int size;

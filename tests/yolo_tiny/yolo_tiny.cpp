@@ -18,38 +18,38 @@ const char *output_bin = "../tests/yolo_tiny/layers/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::dataDim_t dim(1, 3, 416, 416, 1);
-    tkDNN::Network net(dim);
+    tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
+    tk::dnn::Network net(dim);
 
-    tkDNN::Conv2d     c0 (&net, 16, 3, 3, 1, 1, 1, 1,   c0_bin, true);
-    tkDNN::Activation a0 (&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Pooling    p1 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c0 (&net, 16, 3, 3, 1, 1, 1, 1,   c0_bin, true);
+    tk::dnn::Activation a0 (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Pooling    p1 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c2 (&net, 32, 3, 3, 1, 1, 1, 1,   c2_bin, true);
-    tkDNN::Activation a2 (&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Pooling    p3 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c2 (&net, 32, 3, 3, 1, 1, 1, 1,   c2_bin, true);
+    tk::dnn::Activation a2 (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Pooling    p3 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c4 (&net, 64, 3, 3, 1, 1, 1, 1,  c4_bin, true);
-    tkDNN::Activation a4 (&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Pooling    p5 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c4 (&net, 64, 3, 3, 1, 1, 1, 1,  c4_bin, true);
+    tk::dnn::Activation a4 (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Pooling    p5 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
-    tkDNN::Activation a6 (&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Pooling    p7(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
+    tk::dnn::Activation a6 (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Pooling    p7(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c8(&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
-    tkDNN::Activation a8(&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Pooling    p9(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c8(&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
+    tk::dnn::Activation a8(&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Pooling    p9(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
-    tkDNN::Activation a10(&net, tkDNN::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
+    tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
 
-    tkDNN::Conv2d     c11(&net, 1024, 3, 3, 1, 1, 1, 1, c11_bin, true);
-    tkDNN::Activation a11(&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1, c12_bin, true);
-    tkDNN::Activation a12(&net, tkDNN::ACTIVATION_LEAKY);
-    tkDNN::Conv2d     c13(&net, 425, 1, 1, 1, 1, 0, 0, c13_bin, false);
-    tkDNN::Region     g14(&net, 80, 4, 5);
+    tk::dnn::Conv2d     c11(&net, 1024, 3, 3, 1, 1, 1, 1, c11_bin, true);
+    tk::dnn::Activation a11(&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1, c12_bin, true);
+    tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c13(&net, 425, 1, 1, 1, 1, 0, 0, c13_bin, false);
+    tk::dnn::Region     g14(&net, 80, 4, 5);
 
     // Load input
     dnnType *data;
@@ -60,11 +60,11 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(&net, "yolo_tiny.rt");
+    tk::dnn::NetworkRT netRT(&net, "yolo_tiny.rt");
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 
-    tkDNN::dataDim_t dim1 = dim; //input dim
+    tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
         TIMER_START
@@ -73,7 +73,7 @@ int main() {
         dim1.print();   
     }
  
-    tkDNN::dataDim_t dim2 = dim;
+    tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
         TIMER_START

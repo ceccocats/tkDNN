@@ -3,7 +3,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Activation::Activation(Network *net, int act_mode) : 
     Layer(net) {
@@ -63,4 +63,4 @@ dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

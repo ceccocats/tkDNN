@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 /**
     Data rapresentation beetween layers
@@ -62,5 +62,5 @@ public:
     bool fp16;
 };
 
-}
+}}
 #endif //NETWORK_H

@@ -31,75 +31,75 @@ const char *output_bin = "../tests/yolo_relu/layers/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::dataDim_t dim(1, 3, 608, 608, 1);
-    tkDNN::Network net(dim);
+    tk::dnn::dataDim_t dim(1, 3, 608, 608, 1);
+    tk::dnn::Network net(dim);
 
-    tkDNN::Conv2d     c0 (&net, 32, 3, 3, 1, 1, 1, 1,   c0_bin, true);
-    tkDNN::Activation a0 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Pooling    p1 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c0 (&net, 32, 3, 3, 1, 1, 1, 1,   c0_bin, true);
+    tk::dnn::Activation a0 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Pooling    p1 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c2 (&net, 64, 3, 3, 1, 1, 1, 1,   c2_bin, true);
-    tkDNN::Activation a2 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Pooling    p3 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c2 (&net, 64, 3, 3, 1, 1, 1, 1,   c2_bin, true);
+    tk::dnn::Activation a2 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Pooling    p3 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c4 (&net, 128, 3, 3, 1, 1, 1, 1,  c4_bin, true);
-    tkDNN::Activation a4 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c5 (&net, 64, 1, 1, 1, 1, 0, 0,   c5_bin, true);
-    tkDNN::Activation a5 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
-    tkDNN::Activation a6 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Pooling    p7 (&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c4 (&net, 128, 3, 3, 1, 1, 1, 1,  c4_bin, true);
+    tk::dnn::Activation a4 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c5 (&net, 64, 1, 1, 1, 1, 0, 0,   c5_bin, true);
+    tk::dnn::Activation a5 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
+    tk::dnn::Activation a6 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Pooling    p7 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c8 (&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
-    tkDNN::Activation a8 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c9 (&net, 128, 1, 1, 1, 1, 0, 0,  c9_bin, true);
-    tkDNN::Activation a9 (&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c10(&net, 256, 3, 3, 1, 1, 1, 1,  c10_bin, true);
-    tkDNN::Activation a10(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Pooling    p11(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c8 (&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
+    tk::dnn::Activation a8 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c9 (&net, 128, 1, 1, 1, 1, 0, 0,  c9_bin, true);
+    tk::dnn::Activation a9 (&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c10(&net, 256, 3, 3, 1, 1, 1, 1,  c10_bin, true);
+    tk::dnn::Activation a10(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Pooling    p11(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1,  c12_bin, true);
-    tkDNN::Activation a12(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c13(&net, 256, 1, 1, 1, 1, 0, 0,  c13_bin, true);
-    tkDNN::Activation a13(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c14(&net, 512, 3, 3, 1, 1, 1, 1,  c14_bin, true);
-    tkDNN::Activation a14(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c15(&net, 256, 1, 1, 1, 1, 0, 0,  c15_bin, true);
-    tkDNN::Activation a15(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c16(&net, 512, 3, 3, 1, 1, 1, 1,  c16_bin, true); 
-    tkDNN::Activation a16(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Pooling    p17(&net, 2, 2, 2, 2, tkDNN::POOLING_MAX);
+    tk::dnn::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1,  c12_bin, true);
+    tk::dnn::Activation a12(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c13(&net, 256, 1, 1, 1, 1, 0, 0,  c13_bin, true);
+    tk::dnn::Activation a13(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c14(&net, 512, 3, 3, 1, 1, 1, 1,  c14_bin, true);
+    tk::dnn::Activation a14(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c15(&net, 256, 1, 1, 1, 1, 0, 0,  c15_bin, true);
+    tk::dnn::Activation a15(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c16(&net, 512, 3, 3, 1, 1, 1, 1,  c16_bin, true); 
+    tk::dnn::Activation a16(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Pooling    p17(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
 
-    tkDNN::Conv2d     c18(&net, 1024, 3, 3, 1, 1, 1, 1, c18_bin, true);
-    tkDNN::Activation a18(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c19(&net, 512, 1, 1, 1, 1, 0, 0,  c19_bin, true);
-    tkDNN::Activation a19(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c20(&net, 1024, 3, 3, 1, 1, 1, 1, c20_bin, true);
-    tkDNN::Activation a20(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c21(&net, 512, 1, 1, 1, 1, 0, 0,  c21_bin, true);
-    tkDNN::Activation a21(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c22(&net, 1024, 3, 3, 1, 1, 1, 1, c22_bin, true);
-    tkDNN::Activation a22(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c23(&net, 1024, 3, 3, 1, 1, 1, 1, c23_bin, true);
-    tkDNN::Activation a23(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     c24(&net, 1024, 3, 3, 1, 1, 1, 1, c24_bin, true);
-    tkDNN::Activation a24(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c18(&net, 1024, 3, 3, 1, 1, 1, 1, c18_bin, true);
+    tk::dnn::Activation a18(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c19(&net, 512, 1, 1, 1, 1, 0, 0,  c19_bin, true);
+    tk::dnn::Activation a19(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c20(&net, 1024, 3, 3, 1, 1, 1, 1, c20_bin, true);
+    tk::dnn::Activation a20(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c21(&net, 512, 1, 1, 1, 1, 0, 0,  c21_bin, true);
+    tk::dnn::Activation a21(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c22(&net, 1024, 3, 3, 1, 1, 1, 1, c22_bin, true);
+    tk::dnn::Activation a22(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c23(&net, 1024, 3, 3, 1, 1, 1, 1, c23_bin, true);
+    tk::dnn::Activation a23(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     c24(&net, 1024, 3, 3, 1, 1, 1, 1, c24_bin, true);
+    tk::dnn::Activation a24(&net, CUDNN_ACTIVATION_RELU);
 
-    tkDNN::Layer *m25_layers[1] = { &a16 };
-    tkDNN::Route      m25(&net, m25_layers, 1);
-    tkDNN::Conv2d     c26(&net, 64, 1, 1, 1, 1, 0, 0,   c26_bin, true);
-    tkDNN::Activation a26(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Reorg      r27(&net, 2);
+    tk::dnn::Layer *m25_layers[1] = { &a16 };
+    tk::dnn::Route      m25(&net, m25_layers, 1);
+    tk::dnn::Conv2d     c26(&net, 64, 1, 1, 1, 1, 0, 0,   c26_bin, true);
+    tk::dnn::Activation a26(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Reorg      r27(&net, 2);
 
-    tkDNN::Layer *m28_layers[2] = { &r27, &a24 };
-    tkDNN::Route      m28(&net, m28_layers, 2);
+    tk::dnn::Layer *m28_layers[2] = { &r27, &a24 };
+    tk::dnn::Route      m28(&net, m28_layers, 2);
 
-    tkDNN::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
-    tkDNN::Activation a29(&net, CUDNN_ACTIVATION_RELU);   
-    tkDNN::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
-    tkDNN::Region     g31(&net, 80, 4, 5);
+    tk::dnn::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
+    tk::dnn::Activation a29(&net, CUDNN_ACTIVATION_RELU);   
+    tk::dnn::Conv2d     c30(&net, 425, 1, 1, 1, 1, 0, 0,  c30_bin, false);
+    tk::dnn::Region     g31(&net, 80, 4, 5);
     
-    tkDNN::RegionInterpret rI(dim, g31.output_dim, 80, 4, 5, 0.3f, g31_bin);
+    tk::dnn::RegionInterpret rI(dim, g31.output_dim, 80, 4, 5, 0.3f, g31_bin);
 
     // Load input
     dnnType *data;
@@ -110,11 +110,11 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tkDNN::NetworkRT netRT(&net, "yolo_relu.rt");
+    tk::dnn::NetworkRT netRT(&net, "yolo_relu.rt");
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 
-    tkDNN::dataDim_t dim1 = dim; //input dim
+    tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
         TIMER_START
@@ -123,7 +123,7 @@ int main() {
         dim1.print();   
     }
     
-    tkDNN::dataDim_t dim2 = dim;
+    tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
         TIMER_START

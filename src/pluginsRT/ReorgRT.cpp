@@ -53,10 +53,10 @@ public:
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
-		tkDNN::writeBUF(buf, stride);
-		tkDNN::writeBUF(buf, c);
-		tkDNN::writeBUF(buf, h);
-		tkDNN::writeBUF(buf, w);
+		tk::dnn::writeBUF(buf, stride);
+		tk::dnn::writeBUF(buf, c);
+		tk::dnn::writeBUF(buf, h);
+		tk::dnn::writeBUF(buf, w);
 	}
 
 	int c, h, w, stride;

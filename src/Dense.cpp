@@ -2,7 +2,7 @@
 
 #include "Layer.h"
 
-namespace tkDNN {
+namespace tk { namespace dnn {
 
 Dense::Dense(Network *net, int out_ch, const char* fname_weights) : 
     LayerWgs(net, net->getOutputDim().tot(), out_ch, 1, 1, 1, fname_weights) {
@@ -55,4 +55,4 @@ dnnType* Dense::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-}
+}}

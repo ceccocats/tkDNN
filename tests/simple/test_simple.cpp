@@ -10,15 +10,15 @@ const char *output_bin  = "../tests/simple/output.bin";
 int main() {
 
     // Network layout
-    tkDNN::dataDim_t dim(1, 1, 10, 10, 1);
-    tkDNN::Network net(dim);
-    tkDNN::Conv2d     l0(&net, 2, 4, 4, 2, 2, 0, 0, c0_bin);
-    tkDNN::Activation l1(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Conv2d     l2(&net, 4, 2, 2, 1, 1, 0, 0, c1_bin);
-    tkDNN::Activation l3(&net, CUDNN_ACTIVATION_RELU);
-    tkDNN::Flatten    l4(&net);
-    tkDNN::Dense      l5(&net, 4, d2_bin);
-    tkDNN::Activation l6(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::dataDim_t dim(1, 1, 10, 10, 1);
+    tk::dnn::Network net(dim);
+    tk::dnn::Conv2d     l0(&net, 2, 4, 4, 2, 2, 0, 0, c0_bin);
+    tk::dnn::Activation l1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     l2(&net, 4, 2, 2, 1, 1, 0, 0, c1_bin);
+    tk::dnn::Activation l3(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Flatten    l4(&net);
+    tk::dnn::Dense      l5(&net, 4, d2_bin);
+    tk::dnn::Activation l6(&net, CUDNN_ACTIVATION_RELU);
 
     // Load input
     dnnType *data;
