@@ -1,32 +1,32 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo_berkely/layers/input.bin";
-const char *c0_bin     = "../tests/yolo_berkely/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo_berkely/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo_berkely/layers/c4.bin";
-const char *c5_bin     = "../tests/yolo_berkely/layers/c5.bin";
-const char *c6_bin     = "../tests/yolo_berkely/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo_berkely/layers/c8.bin";
-const char *c9_bin     = "../tests/yolo_berkely/layers/c9.bin";
-const char *c10_bin    = "../tests/yolo_berkely/layers/c10.bin";
-const char *c12_bin    = "../tests/yolo_berkely/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo_berkely/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo_berkely/layers/c14.bin";
-const char *c15_bin    = "../tests/yolo_berkely/layers/c15.bin";
-const char *c16_bin    = "../tests/yolo_berkely/layers/c16.bin";
-const char *c18_bin    = "../tests/yolo_berkely/layers/c18.bin";
-const char *c19_bin    = "../tests/yolo_berkely/layers/c19.bin";
-const char *c20_bin    = "../tests/yolo_berkely/layers/c20.bin";
-const char *c21_bin    = "../tests/yolo_berkely/layers/c21.bin";
-const char *c22_bin    = "../tests/yolo_berkely/layers/c22.bin";
-const char *c23_bin    = "../tests/yolo_berkely/layers/c23.bin";
-const char *c24_bin    = "../tests/yolo_berkely/layers/c24.bin";
-const char *c26_bin    = "../tests/yolo_berkely/layers/c26.bin";
-const char *c29_bin    = "../tests/yolo_berkely/layers/c29.bin";
-const char *c30_bin    = "../tests/yolo_berkely/layers/c30.bin";
-const char *g31_bin    = "../tests/yolo_berkely/layers/g31.bin";
-const char *output_bin = "../tests/yolo_berkely/layers/output.bin";
+const char *input_bin  = "../tests/yolo_berkeley/layers/input.bin";
+const char *c0_bin     = "../tests/yolo_berkeley/layers/c0.bin";
+const char *c2_bin     = "../tests/yolo_berkeley/layers/c2.bin";
+const char *c4_bin     = "../tests/yolo_berkeley/layers/c4.bin";
+const char *c5_bin     = "../tests/yolo_berkeley/layers/c5.bin";
+const char *c6_bin     = "../tests/yolo_berkeley/layers/c6.bin";
+const char *c8_bin     = "../tests/yolo_berkeley/layers/c8.bin";
+const char *c9_bin     = "../tests/yolo_berkeley/layers/c9.bin";
+const char *c10_bin    = "../tests/yolo_berkeley/layers/c10.bin";
+const char *c12_bin    = "../tests/yolo_berkeley/layers/c12.bin";
+const char *c13_bin    = "../tests/yolo_berkeley/layers/c13.bin";
+const char *c14_bin    = "../tests/yolo_berkeley/layers/c14.bin";
+const char *c15_bin    = "../tests/yolo_berkeley/layers/c15.bin";
+const char *c16_bin    = "../tests/yolo_berkeley/layers/c16.bin";
+const char *c18_bin    = "../tests/yolo_berkeley/layers/c18.bin";
+const char *c19_bin    = "../tests/yolo_berkeley/layers/c19.bin";
+const char *c20_bin    = "../tests/yolo_berkeley/layers/c20.bin";
+const char *c21_bin    = "../tests/yolo_berkeley/layers/c21.bin";
+const char *c22_bin    = "../tests/yolo_berkeley/layers/c22.bin";
+const char *c23_bin    = "../tests/yolo_berkeley/layers/c23.bin";
+const char *c24_bin    = "../tests/yolo_berkeley/layers/c24.bin";
+const char *c26_bin    = "../tests/yolo_berkeley/layers/c26.bin";
+const char *c29_bin    = "../tests/yolo_berkeley/layers/c29.bin";
+const char *c30_bin    = "../tests/yolo_berkeley/layers/c30.bin";
+const char *g31_bin    = "../tests/yolo_berkeley/layers/g31.bin";
+const char *output_bin = "../tests/yolo_berkeley/layers/output.bin";
 
 int main() {
 
@@ -97,7 +97,7 @@ int main() {
     tk::dnn::Conv2d     c29(&net, 1024, 3, 3, 1, 1, 1, 1, c29_bin, true);
     tk::dnn::Activation a29(&net, tk::dnn::ACTIVATION_LEAKY);   
     tk::dnn::Conv2d     c30(&net, 75, 1, 1, 1, 1, 0, 0,  c30_bin, false);
-    tk::dnn::Region     g31(&net, 20, 4, 5);
+    tk::dnn::Region     g31(&net, 10, 4, 5);
     
     tk::dnn::RegionInterpret rI(dim, g31.output_dim, 10, 4, 5, 0.3f, g31_bin);
 
@@ -110,7 +110,7 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "yolo_berkely.rt");
+    tk::dnn::NetworkRT netRT(&net, "yolo_berkeley.rt");
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 
