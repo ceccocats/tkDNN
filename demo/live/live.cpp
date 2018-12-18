@@ -7,7 +7,15 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-const char *reg_bias = "../tests/yolo_berkeley/layers/g31.bin";
+#define VOC
+
+#ifdef VOC
+const char *reg_bias = "../tests/yolo_voc/layers/g31.bin";
+#define CLASS 20
+#else
+const char *reg_bias = "../tests/yolo/layers/g31.bin";
+#define CLASS 80
+#endif
 
 int prob_sort(const void *pa, const void *pb) {
     tk::dnn::box a = *(tk::dnn::box *)pa;
@@ -18,22 +26,30 @@ int prob_sort(const void *pa, const void *pb) {
     return 0;
 }
 
-cv::Mat GetSquareImage(const cv::Mat& img, int target_height, int target_width) {
+cv::Mat GetSquareImage(const cv::Mat& img, int target_width) {
     int width = img.cols, height = img.rows;
 
-    cv::Mat square = cv::Mat::zeros( target_height, target_width, img.type() );
+    cv::Mat square = cv::Mat::zeros( target_width, target_width, img.type() );
 
     int max_dim = ( width >= height ) ? width : height;
     float scale = ( ( float ) target_width ) / max_dim;
     cv::Rect roi;
-
+    if ( width >= height )
+    {
         roi.width = target_width;
         roi.x = 0;
-        roi.height = target_height;
+        roi.height = height * scale;
+        roi.y = ( target_width - roi.height ) / 2;
+    }
+    else
+    {
         roi.y = 0;
+        roi.height = target_width;
+        roi.width = width * scale;
+        roi.x = ( target_width - roi.width ) / 2;
+    }
 
-
-    cv::resize( img, square(roi), roi.size() );
+    cv::resize( img, square( roi ), roi.size() );
 
     return square;
 }
@@ -45,7 +61,7 @@ double compute_image( cv::Mat imageORIG,
     TIMER_START
 
     //Resize with padding and convert to float
-    cv::Mat image = GetSquareImage(imageORIG, netRT->input_dim.h, netRT->input_dim.w);
+    cv::Mat image = GetSquareImage(imageORIG, netRT->input_dim.w);
     cv::Mat imageF;
     image.convertTo(imageF, CV_32FC3, 1/255.0); 
 
@@ -93,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     //params
     char *tensor_path = NULL;
-    char *device      = 0;
+    int   device      = 0;
     float thresh = 0.3f;
     bool  show = false;
 
@@ -111,7 +127,7 @@ int main(int argc, char *argv[]) {
 
     if(argc - optind == 2) {
         tensor_path   = argv[optind];
-        device        = argv[optind+1];
+        device        = atoi(argv[optind+1]);
     } else {
         std::cout<<"not enough arguments.\n";
         return print_usage();
@@ -133,7 +149,7 @@ int main(int argc, char *argv[]) {
 
     //convert network to tensorRT
     tk::dnn::NetworkRT netRT(NULL, tensor_path);
-    tk::dnn::RegionInterpret rI(netRT.input_dim, netRT.output_dim, 10, 4, 5, thresh, reg_bias);
+    tk::dnn::RegionInterpret rI(netRT.input_dim, netRT.output_dim, CLASS, 4, 5, thresh, reg_bias);
 
     dnnType *input = new float[netRT.input_dim.tot()];
     dnnType *output = new float[netRT.output_dim.tot()];
@@ -147,7 +163,7 @@ int main(int argc, char *argv[]) {
         //LOAD IMAGE
         cv::Mat img; //= cv::imread("../demo/live/test.jpeg", CV_LOAD_IMAGE_COLOR);
         cap >> img;   
-        //show results
+
 	if(!img.data)                              
             FatalError("Could not open image");
         std::cout<<"Image size: ("<<img.cols<<"x"<<img.rows<<")\n";
