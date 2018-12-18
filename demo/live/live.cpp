@@ -98,7 +98,7 @@ double compute_image( cv::Mat imageORIG,
 
 
 int print_usage() {
-    std::cout<<"usage: ./live net.rt camera_idx\n";
+    std::cout<<"usage: ./live net.rt input_uri\n";
     return 1;
 }
 
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     //params
     char *tensor_path = NULL;
-    int   device      = 0;
+    char *device      = 0;
     float thresh = 0.3f;
     bool  show = false;
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 
     if(argc - optind == 2) {
         tensor_path   = argv[optind];
-        device        = atoi(argv[optind+1]);
+        device        = argv[optind+1];
     } else {
         std::cout<<"not enough arguments.\n";
         return print_usage();
