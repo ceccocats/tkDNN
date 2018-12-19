@@ -18,6 +18,7 @@ enum layerType_t {
     LAYER_ROUTE,
     LAYER_REORG,
     LAYER_SHORTCUT,
+    LAYER_UPSAMPLE,
     LAYER_REGION,
 };
 
@@ -52,6 +53,7 @@ public:
             case LAYER_ROUTE:       return "Route";            
             case LAYER_REORG:       return "Reorg";
             case LAYER_SHORTCUT:    return "Shortcut";
+            case LAYER_UPSAMPLE:    return "Upsample";
             case LAYER_REGION:      return "Region";
             default:                return "unknown";
         }
@@ -301,6 +303,21 @@ public:
     Layer *backLayer;
 };
 
+/**
+    Upsample layer
+    Mantain same dimension but change C*H*W distribution
+*/
+class Upsample : public Layer {
+
+public:
+    Upsample(Network *net, int stride);
+    virtual ~Upsample();
+    virtual layerType_t getLayerType() { return LAYER_UPSAMPLE; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    int stride;
+};
 
 struct box {
     int cl;
