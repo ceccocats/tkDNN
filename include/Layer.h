@@ -17,7 +17,8 @@ enum layerType_t {
     LAYER_SOFTMAX,
     LAYER_ROUTE,
     LAYER_REORG,
-    LAYER_REGION
+    LAYER_SHORTCUT,
+    LAYER_REGION,
 };
 
 /** 
@@ -50,6 +51,7 @@ public:
             case LAYER_SOFTMAX:     return "Softmax";
             case LAYER_ROUTE:       return "Route";            
             case LAYER_REORG:       return "Reorg";
+            case LAYER_SHORTCUT:    return "Shortcut";
             case LAYER_REGION:      return "Region";
             default:                return "unknown";
         }
@@ -280,6 +282,23 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int stride;
+};
+
+/**
+    Shortcut layer
+    sum with stride another layer
+*/
+class Shortcut : public Layer {
+
+public:
+    Shortcut(Network *net, Layer *backLayer, int layers_n); 
+    virtual ~Shortcut();
+    virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+public:
+    Layer *backLayer;
 };
 
 
