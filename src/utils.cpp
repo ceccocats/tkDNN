@@ -70,7 +70,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device)
 int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
 
     dnnType *data_h, *correct_h;
-    const float eps = 0.001f;
+    const float eps = 0.02f;
 
     if(device) {
         data_h = new dnnType[size];
