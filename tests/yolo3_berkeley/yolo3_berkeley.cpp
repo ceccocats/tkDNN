@@ -14,7 +14,21 @@ const char *c10_bin     = "../tests/yolo3_berkeley/layers/c10.bin";
 const char *c12_bin     = "../tests/yolo3_berkeley/layers/c12.bin";
 const char *c13_bin     = "../tests/yolo3_berkeley/layers/c13.bin";
 const char *c14_bin     = "../tests/yolo3_berkeley/layers/c14.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer15_out.bin";
+const char *c16_bin     = "../tests/yolo3_berkeley/layers/c16.bin";
+const char *c17_bin     = "../tests/yolo3_berkeley/layers/c17.bin";
+const char *c19_bin     = "../tests/yolo3_berkeley/layers/c19.bin";
+const char *c20_bin     = "../tests/yolo3_berkeley/layers/c20.bin";
+const char *c22_bin     = "../tests/yolo3_berkeley/layers/c22.bin";
+const char *c23_bin     = "../tests/yolo3_berkeley/layers/c23.bin";
+const char *c25_bin     = "../tests/yolo3_berkeley/layers/c25.bin";
+const char *c26_bin     = "../tests/yolo3_berkeley/layers/c26.bin";
+const char *c28_bin     = "../tests/yolo3_berkeley/layers/c28.bin";
+const char *c29_bin     = "../tests/yolo3_berkeley/layers/c29.bin";
+const char *c31_bin     = "../tests/yolo3_berkeley/layers/c31.bin";
+const char *c32_bin     = "../tests/yolo3_berkeley/layers/c32.bin";
+const char *c34_bin     = "../tests/yolo3_berkeley/layers/c34.bin";
+const char *c35_bin     = "../tests/yolo3_berkeley/layers/c35.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer36_out.bin";
 
 int main() {
 
@@ -50,6 +64,42 @@ int main() {
     tk::dnn::Conv2d     c14  (&net, 256, 3, 3, 1, 1, 1, 1, c14_bin, true);
     tk::dnn::Activation a14  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Shortcut   s15  (&net, &a12);
+
+    tk::dnn::Conv2d     c16  (&net, 128, 1, 1, 1, 1, 0, 0, c16_bin, true);
+    tk::dnn::Activation a16  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c17  (&net, 256, 3, 3, 1, 1, 1, 1, c17_bin, true);
+    tk::dnn::Activation a17  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s18  (&net, &s15);
+    tk::dnn::Conv2d     c19  (&net, 128, 1, 1, 1, 1, 0, 0, c19_bin, true);
+    tk::dnn::Activation a19  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c20  (&net, 256, 3, 3, 1, 1, 1, 1, c20_bin, true);
+    tk::dnn::Activation a20  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s21  (&net, &s18);
+    tk::dnn::Conv2d     c22  (&net, 128, 1, 1, 1, 1, 0, 0, c22_bin, true);
+    tk::dnn::Activation a22  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c23  (&net, 256, 3, 3, 1, 1, 1, 1, c23_bin, true);
+    tk::dnn::Activation a23  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s24  (&net, &s21);
+    tk::dnn::Conv2d     c25  (&net, 128, 1, 1, 1, 1, 0, 0, c25_bin, true);
+    tk::dnn::Activation a25  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c26  (&net, 256, 3, 3, 1, 1, 1, 1, c26_bin, true);
+    tk::dnn::Activation a26  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s27  (&net, &s24);
+    tk::dnn::Conv2d     c28  (&net, 128, 1, 1, 1, 1, 0, 0, c28_bin, true);
+    tk::dnn::Activation a28  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c29  (&net, 256, 3, 3, 1, 1, 1, 1, c29_bin, true);
+    tk::dnn::Activation a29  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s30  (&net, &s27);
+    tk::dnn::Conv2d     c31  (&net, 128, 1, 1, 1, 1, 0, 0, c31_bin, true);
+    tk::dnn::Activation a31  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c32  (&net, 256, 3, 3, 1, 1, 1, 1, c32_bin, true);
+    tk::dnn::Activation a32  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s33  (&net, &s30);
+    tk::dnn::Conv2d     c34  (&net, 128, 1, 1, 1, 1, 0, 0, c34_bin, true);
+    tk::dnn::Activation a34  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c35  (&net, 256, 3, 3, 1, 1, 1, 1, c35_bin, true);
+    tk::dnn::Activation a35  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s36  (&net, &s33);
 
     // Load input
     dnnType *data;
