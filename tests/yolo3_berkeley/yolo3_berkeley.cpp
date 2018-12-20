@@ -45,8 +45,23 @@ const char *c56_bin     = "../tests/yolo3_berkeley/layers/c56.bin";
 const char *c57_bin     = "../tests/yolo3_berkeley/layers/c57.bin";
 const char *c59_bin     = "../tests/yolo3_berkeley/layers/c59.bin";
 const char *c60_bin     = "../tests/yolo3_berkeley/layers/c60.bin";
-
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer61_out.bin";
+const char *c62_bin     = "../tests/yolo3_berkeley/layers/c62.bin";
+const char *c63_bin     = "../tests/yolo3_berkeley/layers/c63.bin";
+const char *c64_bin     = "../tests/yolo3_berkeley/layers/c64.bin";
+const char *c66_bin     = "../tests/yolo3_berkeley/layers/c66.bin";
+const char *c67_bin     = "../tests/yolo3_berkeley/layers/c67.bin";
+const char *c69_bin     = "../tests/yolo3_berkeley/layers/c69.bin";
+const char *c70_bin     = "../tests/yolo3_berkeley/layers/c70.bin";
+const char *c72_bin     = "../tests/yolo3_berkeley/layers/c72.bin";
+const char *c73_bin     = "../tests/yolo3_berkeley/layers/c73.bin";
+const char *c75_bin     = "../tests/yolo3_berkeley/layers/c75.bin";
+const char *c76_bin     = "../tests/yolo3_berkeley/layers/c76.bin";
+const char *c77_bin     = "../tests/yolo3_berkeley/layers/c77.bin";
+const char *c78_bin     = "../tests/yolo3_berkeley/layers/c78.bin";
+const char *c79_bin     = "../tests/yolo3_berkeley/layers/c79.bin";
+const char *c80_bin     = "../tests/yolo3_berkeley/layers/c80.bin";
+const char *c81_bin     = "../tests/yolo3_berkeley/layers/c81.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer81_out.bin";
 
 int main() {
 
@@ -163,6 +178,46 @@ int main() {
     tk::dnn::Conv2d     c60  (&net, 512, 3, 3, 1, 1, 1, 1, c60_bin, true);
     tk::dnn::Activation a60  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Shortcut   s61  (&net, &s58);
+
+    tk::dnn::Conv2d     c62  (&net,1024, 3, 3, 2, 2, 1, 1, c62_bin, true);
+    tk::dnn::Activation a62  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c63  (&net, 512, 1, 1, 1, 1, 0, 0, c63_bin, true);
+    tk::dnn::Activation a63  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c64  (&net,1024, 3, 3, 1, 1, 1, 1, c64_bin, true);
+    tk::dnn::Activation a64  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s65  (&net, &a62);
+
+    tk::dnn::Conv2d     c66  (&net, 512, 1, 1, 1, 1, 0, 0, c66_bin, true);
+    tk::dnn::Activation a66  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c67  (&net,1024, 3, 3, 1, 1, 1, 1, c67_bin, true);
+    tk::dnn::Activation a67  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s68  (&net, &s65);
+
+    tk::dnn::Conv2d     c69  (&net, 512, 1, 1, 1, 1, 0, 0, c69_bin, true);
+    tk::dnn::Activation a69  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c70  (&net,1024, 3, 3, 1, 1, 1, 1, c70_bin, true);
+    tk::dnn::Activation a70  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s71  (&net, &s68);
+
+    tk::dnn::Conv2d     c72  (&net, 512, 1, 1, 1, 1, 0, 0, c72_bin, true);
+    tk::dnn::Activation a72  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c73  (&net,1024, 3, 3, 1, 1, 1, 1, c73_bin, true);
+    tk::dnn::Activation a73  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Shortcut   s74  (&net, &s71);
+
+    tk::dnn::Conv2d     c75  (&net, 512, 1, 1, 1, 1, 0, 0, c75_bin, true);
+    tk::dnn::Activation a75  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c76  (&net,1024, 3, 3, 1, 1, 1, 1, c76_bin, true);
+    tk::dnn::Activation a76  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c77  (&net, 512, 1, 1, 1, 1, 0, 0, c77_bin, true);
+    tk::dnn::Activation a77  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c78  (&net,1024, 3, 3, 1, 1, 1, 1, c78_bin, true);
+    tk::dnn::Activation a78  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c79  (&net, 512, 1, 1, 1, 1, 0, 0, c79_bin, true);
+    tk::dnn::Activation a79  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
+    tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
 
     // Load input
     dnnType *data;
