@@ -42,7 +42,7 @@ dnnType* Route::infer(dataDim_t &dim, dnnType* srcData) {
     int offset = 0;
     for(int i=0; i<layers_n; i++) {
         dnnType *input = layers[i]->dstData;
-        int in_dim = layers[i]->input_dim.tot();
+        int in_dim = layers[i]->output_dim.tot();
         checkCuda( cudaMemcpy(dstData + offset, input, in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
         offset += in_dim;
     }
