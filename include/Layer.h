@@ -319,6 +319,7 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int stride;
+    bool reverse;
 };
 
 struct box {

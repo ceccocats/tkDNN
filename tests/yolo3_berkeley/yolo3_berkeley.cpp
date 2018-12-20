@@ -62,7 +62,7 @@ const char *c79_bin     = "../tests/yolo3_berkeley/layers/c79.bin";
 const char *c80_bin     = "../tests/yolo3_berkeley/layers/c80.bin";
 const char *c81_bin     = "../tests/yolo3_berkeley/layers/c81.bin";
 const char *c84_bin     = "../tests/yolo3_berkeley/layers/c84.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer84_out.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer85_out.bin";
 
 int main() {
 
@@ -225,6 +225,7 @@ int main() {
     tk::dnn::Route      m83  (&net, m83_layers, 1);
     tk::dnn::Conv2d     c84  (&net, 256, 1, 1, 1, 1, 0, 0, c84_bin, true);
     tk::dnn::Activation a84  (&net, tk::dnn::ACTIVATION_LEAKY);
+    tk::dnn::Upsample   u85  (&net, 2);
 
 
     // Load input
