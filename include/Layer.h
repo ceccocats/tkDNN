@@ -293,7 +293,7 @@ public:
 class Shortcut : public Layer {
 
 public:
-    Shortcut(Network *net, Layer *backLayer, int layers_n); 
+    Shortcut(Network *net, Layer *backLayer); 
     virtual ~Shortcut();
     virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
 
