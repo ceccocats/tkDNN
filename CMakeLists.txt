@@ -29,13 +29,9 @@ if(NVINFER STREQUAL "NVINFER-NOTFOUND")
 		     /usr/local/cuda/targets/x86_64-linux/lib/)
 endif()
 
+file(GLOB tkdnn_CUSRC "src/kernels/*.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${NVINFER_INCLUDES})
-cuda_add_library(kernels SHARED src/kernels/activation_elu.cu 
-                                src/kernels/activation_leaky.cu
-                                src/kernels/activation_logistic.cu
-                                src/kernels/reorg.cu
-                                src/kernels/softmax.cu
-                                src/kernels/convert.cu)
+cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 
 file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
