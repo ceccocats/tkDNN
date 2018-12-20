@@ -61,7 +61,8 @@ const char *c78_bin     = "../tests/yolo3_berkeley/layers/c78.bin";
 const char *c79_bin     = "../tests/yolo3_berkeley/layers/c79.bin";
 const char *c80_bin     = "../tests/yolo3_berkeley/layers/c80.bin";
 const char *c81_bin     = "../tests/yolo3_berkeley/layers/c81.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer81_out.bin";
+const char *c84_bin     = "../tests/yolo3_berkeley/layers/c84.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer84_out.bin";
 
 int main() {
 
@@ -218,6 +219,13 @@ int main() {
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
+    tk::dnn::Yolo       g82  (&net,  10, 9);
+
+    tk::dnn::Layer *m83_layers[1] = { &a79 };
+    tk::dnn::Route      m83  (&net, m83_layers, 1);
+    tk::dnn::Conv2d     c84  (&net, 256, 1, 1, 1, 1, 0, 0, c84_bin, true);
+    tk::dnn::Activation a84  (&net, tk::dnn::ACTIVATION_LEAKY);
+
 
     // Load input
     dnnType *data;

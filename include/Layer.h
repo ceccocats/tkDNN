@@ -20,6 +20,7 @@ enum layerType_t {
     LAYER_SHORTCUT,
     LAYER_UPSAMPLE,
     LAYER_REGION,
+    LAYER_YOLO
 };
 
 /** 
@@ -55,6 +56,7 @@ public:
             case LAYER_SHORTCUT:    return "Shortcut";
             case LAYER_UPSAMPLE:    return "Upsample";
             case LAYER_REGION:      return "Region";
+            case LAYER_YOLO:        return "Yolo";
             default:                return "unknown";
         }
     }
@@ -331,8 +333,22 @@ struct sortable_bbox {
 };
 
 /**
+    Yolo3 layer
+*/
+class Yolo : public Layer {
+
+public:
+    Yolo(Network *net, int classes, int num);
+    virtual ~Yolo();
+    virtual layerType_t getLayerType() { return LAYER_YOLO; };
+
+    int classes, num;
+    
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+};
+
+/**
     Region layer
-    Mantain same dimension but change C*H*W distribution
 */
 class Region : public Layer {
 
