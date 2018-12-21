@@ -14,6 +14,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.cpp"
 #include "pluginsRT/ReorgRT.cpp"
 #include "pluginsRT/RegionRT.cpp"
+#include "pluginsRT/ShortcutRT.cpp"
 #include "pluginsRT/Int8Calibrator.cpp"
 
 // Logger for info/warning/errors
@@ -167,6 +168,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Reorg*) l);
     if(type == LAYER_REGION)
         return convert_layer(input, (Region*) l);
+    if(type == LAYER_SHORTCUT)
+        return convert_layer(input, (Shortcut*) l);
 
     FatalError("Layer not implemented in tensorRT");
     return NULL;
@@ -320,6 +323,18 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Region *l) {
     checkNULL(lRT);
     return lRT;
 }
+
+ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
+    //std::cout<<"convert Shortcut\n";
+
+    //std::cout<<"New plugin Shortcut\n";
+    ITensor *tens = tensors[l->backLayer];
+    IPlugin *plugin = new ShortcutRT(tens);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
+
 
 bool NetworkRT::serialize(const char *filename) {
 

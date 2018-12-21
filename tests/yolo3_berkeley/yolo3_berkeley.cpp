@@ -77,7 +77,7 @@ const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
 const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
 const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
 const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer106_out.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer11_out.bin";
 
 int main() {
 
@@ -93,6 +93,7 @@ int main() {
     tk::dnn::Activation a2   (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c3   (&net,  64, 3, 3, 1, 1, 1, 1,  c3_bin, true);
     tk::dnn::Activation a3   (&net, tk::dnn::ACTIVATION_LEAKY);
+/*
     tk::dnn::Shortcut   s4   (&net, &a1);
     tk::dnn::Conv2d     c5   (&net, 128, 3, 3, 2, 2, 1, 1,  c5_bin, true);
     tk::dnn::Activation a5   (&net, tk::dnn::ACTIVATION_LEAKY);
@@ -283,7 +284,7 @@ int main() {
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
     tk::dnn::Yolo       g106 (&net,  10, 3);
-
+*/
     // Load input
     dnnType *data;
     dnnType *input_h;
@@ -292,8 +293,10 @@ int main() {
     //print network model
     net.print();
 
+    //convert network to tensorRT
+    tk::dnn::NetworkRT netRT(&net, "yolo3_berkeley.rt");
 
-    dnnType *out_data;  // cudnn output
+    dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
@@ -303,11 +306,22 @@ int main() {
         TIMER_STOP
         dim1.print();   
     }
+    
+    tk::dnn::dataDim_t dim2 = dim;
+    printCenteredTitle(" TENSORRT inference ", '=', 30); {
+        dim2.print();
+        TIMER_START
+        out_data2 = netRT.infer(dim2, data);
+        TIMER_STOP
+        dim2.print();
+    }
 
     printCenteredTitle(" CHECK RESULTS ", '=', 30);
     dnnType *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
+    std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
+    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
     return 0;
 }
