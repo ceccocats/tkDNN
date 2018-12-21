@@ -328,9 +328,11 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"convert Shortcut\n";
 
     //std::cout<<"New plugin Shortcut\n";
-    ITensor *tens = tensors[l->backLayer];
-    IPlugin *plugin = new ShortcutRT(tens);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    ITensor *back_tens = tensors[l->backLayer];
+    IPlugin *plugin = new ShortcutRT();
+
+    ITensor *inputs[2] = { input, back_tens }; 
+    IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
     return lRT;
 }

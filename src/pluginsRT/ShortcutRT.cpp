@@ -4,8 +4,7 @@
 class ShortcutRT : public IPlugin {
 
 public:
-	ShortcutRT(ITensor *tens) {
-		this->back_layer = tens;
+	ShortcutRT() {
 	}
 
 	~ShortcutRT(){
@@ -41,9 +40,12 @@ public:
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+		dnnType *srcDataBack = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
 		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+		shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, c, h, w, 1);
+
 		return 0;
 	}
 
@@ -60,5 +62,4 @@ public:
 	}
 
 	int c, h, w;
-	ITensor *back_layer;
 };
