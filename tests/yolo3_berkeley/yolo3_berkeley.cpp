@@ -93,7 +93,6 @@ int main() {
     tk::dnn::Activation a2   (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c3   (&net,  64, 3, 3, 1, 1, 1, 1,  c3_bin, true);
     tk::dnn::Activation a3   (&net, tk::dnn::ACTIVATION_LEAKY);
-/*
     tk::dnn::Shortcut   s4   (&net, &a1);
     tk::dnn::Conv2d     c5   (&net, 128, 3, 3, 2, 2, 1, 1,  c5_bin, true);
     tk::dnn::Activation a5   (&net, tk::dnn::ACTIVATION_LEAKY);
@@ -107,7 +106,7 @@ int main() {
     tk::dnn::Conv2d     c10  (&net, 128, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Shortcut   s11  (&net, &s8);
-
+/*
     tk::dnn::Conv2d     c12  (&net, 256, 3, 3, 2, 2, 1, 1, c12_bin, true);
     tk::dnn::Activation a12  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c13  (&net, 128, 1, 1, 1, 1, 0, 0, c13_bin, true);
