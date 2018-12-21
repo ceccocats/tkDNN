@@ -25,7 +25,7 @@ Region::Region(Network *net, int classes, int coords, int num) :
     output_dim.w = input_dim.w;
     output_dim.l = input_dim.l;
 
-    checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }
 
 Region::~Region() {
