@@ -77,9 +77,7 @@ const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
 const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
 const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
 const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-
-
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer96_out.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer105_out.bin";
 
 int main() {
 
@@ -236,7 +234,7 @@ int main() {
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
-    tk::dnn::Yolo       g82  (&net,  10, 9);
+//    tk::dnn::Yolo       g82  (&net,  10, 9);
 
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
@@ -259,13 +257,13 @@ int main() {
     tk::dnn::Conv2d     c92  (&net, 512, 3, 3, 1, 1, 1, 1, c92_bin, true);
     tk::dnn::Activation a92  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c93  (&net,  45, 1, 1, 1, 1, 0, 0, c93_bin, false);
-    tk::dnn::Yolo       g94  (&net,  10, 9);
+//    tk::dnn::Yolo       g94  (&net,  10, 9);
 
     tk::dnn::Layer *m95_layers[1] = { &a91 };
     tk::dnn::Route      m95  (&net, m95_layers, 1);
     tk::dnn::Conv2d     c96  (&net, 128, 1, 1, 1, 1, 0, 0, c96_bin, true);
     tk::dnn::Activation a96  (&net, tk::dnn::ACTIVATION_LEAKY);
-/*
+
     tk::dnn::Upsample   u97  (&net, 2);
     tk::dnn::Layer *m98_layers[2] = { &u97, &s36 };
     tk::dnn::Route      m98  (&net, m98_layers, 2);
@@ -280,11 +278,12 @@ int main() {
     tk::dnn::Activation a102 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c103 (&net, 128, 1, 1, 1, 1, 0, 0, c103_bin, true);
     tk::dnn::Activation a103 (&net, tk::dnn::ACTIVATION_LEAKY);
+
     tk::dnn::Conv2d     c104 (&net, 256, 3, 3, 1, 1, 1, 1, c104_bin, true);
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
-    tk::dnn::Yolo       g106 (&net,  10, 9);
-*/
+//    tk::dnn::Yolo       g106 (&net,  10, 9);
+
     // Load input
     dnnType *data;
     dnnType *input_h;
