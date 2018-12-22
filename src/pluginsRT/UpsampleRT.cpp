@@ -1,16 +1,14 @@
 #include<cassert>
 #include "kernels.h"
 
-class YoloRT : public IPlugin {
+class UpsampleRT : public IPlugin {
 
 public:
-	YoloRT(int classes, int num) {
-
-		this->classes = classes;
-		this->num = num;
+	UpsampleRT(int stride) {
+		this->stride = stride;
 	}
 
-	~YoloRT(){
+	~UpsampleRT(){
 
 	}
 
@@ -19,7 +17,7 @@ public:
 	}
 
 	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
-		return inputs[0];
+		return DimsCHW(inputs[0].d[0], inputs[0].d[1]*stride, inputs[0].d[2]*stride);
 	}
 
 	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
@@ -44,44 +42,24 @@ public:
 
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
-
-		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
-
-		for (int b = 0; b < batchSize; ++b){
-			for(int n = 0; n < num; ++n){
-				int index = entry_index(b, n*w*h, 0, batchSize);
-				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
-				
-				index = entry_index(b, n*w*h, 4, batchSize);
-				activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*w*h, stream);
-			}
-		}
-
-		std::cout<<"YOLO END\n";
+	    
+		fill(dstData, batchSize*c*h*w, 0.0);
+    	upsampleForward(srcData, dstData, batchSize, c, h, w, stride, 1, 1);
 		return 0;
 	}
 
 
 	virtual size_t getSerializationSize() override {
-		return 5*sizeof(int);
+		return 4*sizeof(int);
 	}
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
-		tk::dnn::writeBUF(buf, classes);
-		tk::dnn::writeBUF(buf, num);
+		tk::dnn::writeBUF(buf, stride);
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
 	}
 
-	int c, h, w;
-    int classes, num;
-
-	int entry_index(int batch, int location, int entry, int batchSize) {
-		int n =   location / (w*h);
-		int loc = location % (w*h);
-		return batch*c*h*w*batchSize + n*w*h*(4+classes+1) + entry*w*h + loc;
-	}
-
+	int c, h, w, stride;
 };

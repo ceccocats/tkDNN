@@ -16,6 +16,7 @@ using namespace nvinfer1;
 #include "pluginsRT/RegionRT.cpp"
 #include "pluginsRT/ShortcutRT.cpp"
 #include "pluginsRT/YoloRT.cpp"
+#include "pluginsRT/UpsampleRT.cpp"
 #include "pluginsRT/Int8Calibrator.cpp"
 
 // Logger for info/warning/errors
@@ -173,6 +174,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Shortcut*) l);
     if(type == LAYER_YOLO)
         return convert_layer(input, (Yolo*) l);
+    if(type == LAYER_UPSAMPLE)
+        return convert_layer(input, (Upsample*) l);
 
     FatalError("Layer not implemented in tensorRT");
     return NULL;
@@ -350,6 +353,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     return lRT;
 }
 
+ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
+    //std::cout<<"convert Upsample\n";
+
+    //std::cout<<"New plugin UPSAMPLE\n";
+    IPlugin *plugin = new UpsampleRT(l->stride);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
 
 bool NetworkRT::serialize(const char *filename) {
 
@@ -412,6 +424,14 @@ public:
         if(name.find("Yolo") == 0) {
             YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
                                    readBUF<int>(buf));   //num
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
+        } 
+
+        if(name.find("Upsample") == 0) {
+            UpsampleRT *r = new UpsampleRT(readBUF<int>(buf)); //stride
         	r->c = readBUF<int>(buf);
 		    r->h = readBUF<int>(buf);
 		    r->w = readBUF<int>(buf);

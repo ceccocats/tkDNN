@@ -45,6 +45,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Yolo *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
 
     bool serialize(const char *filename);
     bool deserialize(const char *filename);

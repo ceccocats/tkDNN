@@ -69,7 +69,7 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 6*sizeof(int) + 1*sizeof(float);
+		return 6*sizeof(int);
 	}
 
 	virtual void serialize(void* buffer) override {
