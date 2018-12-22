@@ -77,7 +77,7 @@ const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
 const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
 const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
 const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer11_out.bin";
+const char *output_bin = "../tests/yolo3_berkeley/debug/layer82_out.bin";
 
 int main() {
 
@@ -106,7 +106,7 @@ int main() {
     tk::dnn::Conv2d     c10  (&net, 128, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Shortcut   s11  (&net, &s8);
-/*
+
     tk::dnn::Conv2d     c12  (&net, 256, 3, 3, 2, 2, 1, 1, c12_bin, true);
     tk::dnn::Activation a12  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c13  (&net, 128, 1, 1, 1, 1, 0, 0, c13_bin, true);
@@ -235,7 +235,7 @@ int main() {
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
     tk::dnn::Yolo       g82  (&net,  10, 3);
-
+/*
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
     tk::dnn::Conv2d     c84  (&net, 256, 1, 1, 1, 1, 0, 0, c84_bin, true);

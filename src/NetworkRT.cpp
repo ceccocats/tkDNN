@@ -15,6 +15,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ReorgRT.cpp"
 #include "pluginsRT/RegionRT.cpp"
 #include "pluginsRT/ShortcutRT.cpp"
+#include "pluginsRT/YoloRT.cpp"
 #include "pluginsRT/Int8Calibrator.cpp"
 
 // Logger for info/warning/errors
@@ -170,6 +171,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Region*) l);
     if(type == LAYER_SHORTCUT)
         return convert_layer(input, (Shortcut*) l);
+    if(type == LAYER_YOLO)
+        return convert_layer(input, (Yolo*) l);
 
     FatalError("Layer not implemented in tensorRT");
     return NULL;
@@ -337,6 +340,16 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     return lRT;
 }
 
+ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
+    //std::cout<<"convert Yolo\n";
+
+    //std::cout<<"New plugin YOLO\n";
+    IPlugin *plugin = new YoloRT(l->classes, l->num);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
+
 
 bool NetworkRT::serialize(const char *filename) {
 
@@ -382,6 +395,23 @@ public:
 
         if(name.find("Reorg") == 0) {
             ReorgRT *r = new ReorgRT(readBUF<int>(buf)); //stride
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
+        } 
+
+        if(name.find("Shortcut") == 0) {
+            ShortcutRT *r = new ShortcutRT();
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
+        } 
+
+        if(name.find("Yolo") == 0) {
+            YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
+                                   readBUF<int>(buf));   //num
         	r->c = readBUF<int>(buf);
 		    r->h = readBUF<int>(buf);
 		    r->w = readBUF<int>(buf);
