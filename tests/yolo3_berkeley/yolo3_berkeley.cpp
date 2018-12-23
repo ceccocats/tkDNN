@@ -231,7 +231,6 @@ int main() {
     tk::dnn::Activation a78  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c79  (&net, 512, 1, 1, 1, 1, 0, 0, c79_bin, true);
     tk::dnn::Activation a79  (&net, tk::dnn::ACTIVATION_LEAKY);
-/*
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
@@ -239,13 +238,12 @@ int main() {
 
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
-*/
     tk::dnn::Conv2d     c84  (&net, 256, 1, 1, 1, 1, 0, 0, c84_bin, true);
     tk::dnn::Activation a84  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Upsample   u85  (&net, 2);
 
-//    tk::dnn::Layer *m86_layers[2] = { &u85, &s61 };
-//    tk::dnn::Route      m86  (&net, m86_layers, 2);
+    tk::dnn::Layer *m86_layers[2] = { &u85, &s61 };
+    tk::dnn::Route      m86  (&net, m86_layers, 1); // ROUTE ERROR IN RT INFERENCE 
     tk::dnn::Conv2d     c87  (&net, 256, 1, 1, 1, 1, 0, 0, c87_bin, true);
     tk::dnn::Activation a87  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c88  (&net, 512, 3, 3, 1, 1, 1, 1, c88_bin, true);
@@ -256,7 +254,6 @@ int main() {
     tk::dnn::Activation a90  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c91  (&net, 256, 1, 1, 1, 1, 0, 0, c91_bin, true);
     tk::dnn::Activation a91  (&net, tk::dnn::ACTIVATION_LEAKY);
-/*
     tk::dnn::Conv2d     c92  (&net, 512, 3, 3, 1, 1, 1, 1, c92_bin, true);
     tk::dnn::Activation a92  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c93  (&net,  45, 1, 1, 1, 1, 0, 0, c93_bin, false);
@@ -264,14 +261,12 @@ int main() {
 
     tk::dnn::Layer *m95_layers[1] = { &a91 };
     tk::dnn::Route      m95  (&net, m95_layers, 1);
-*/
     tk::dnn::Conv2d     c96  (&net, 128, 1, 1, 1, 1, 0, 0, c96_bin, true);
     tk::dnn::Activation a96  (&net, tk::dnn::ACTIVATION_LEAKY);
-
     tk::dnn::Upsample   u97  (&net, 2);
-//    tk::dnn::Layer *m98_layers[2] = { &u97, &s36 };
-//    tk::dnn::Route      m98  (&net, m98_layers, 2);
 
+    tk::dnn::Layer *m98_layers[2] = { &u97, &s36 };
+    tk::dnn::Route      m98  (&net, m98_layers, 2);
     tk::dnn::Conv2d     c99  (&net, 128, 1, 1, 1, 1, 0, 0, c99_bin, true);
     tk::dnn::Activation a99  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c100 (&net, 256, 3, 3, 1, 1, 1, 1, c100_bin, true);
@@ -287,11 +282,6 @@ int main() {
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
     tk::dnn::Yolo       y106 (&net,  10, 3);
-
-    // merge all yolos
-//    tk::dnn::Layer *m107_layers[2] = { &y82, &y94, &y106 };
-//    tk::dnn::Route      m107 (&net, m107_layers, 3);
-
 
     // Load input
     dnnType *data;

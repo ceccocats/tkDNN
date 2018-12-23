@@ -77,6 +77,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
             
             input = Ilay->getOutput(0);
+            if(l->getLayerType() == LAYER_YOLO)
+                networkRT->markOutput(*input);
+
             tensors[l] = input;
         }
         if(input == NULL)
@@ -99,9 +102,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 	contextRT = engineRT->createExecutionContext();
 
 	// input and output buffer pointers that we pass to the engine - the engine requires exactly IEngine::getNbBindings(),
-	// of these, but in this case we know that there is exactly one input and one output.
-	if(engineRT->getNbBindings() != 2)
-        FatalError("Incorrect buffers number");
+	std::cout<<"Input/outputs numbers: "<<engineRT->getNbBindings()<<"\n";
+    if(engineRT->getNbBindings() > MAX_BUFFERS_RT)
+        FatalError("over RT buffer array size");
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
@@ -122,10 +125,13 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     output_dim.c = oDim.d[0];
     output_dim.h = oDim.d[1];
     output_dim.w = oDim.d[2];
+    output_dim.print();
 	
     // create GPU buffers and a stream
-    checkCuda(cudaMalloc(&buffersRT[buf_input_idx],  input_dim.tot()*sizeof(dnnType)));
-    checkCuda(cudaMalloc(&buffersRT[buf_output_idx], output_dim.tot()*sizeof(dnnType)));
+    for(int i=0; i<engineRT->getNbBindings(); i++) {
+        Dims dim = engineRT->getBindingDimensions(i);
+        checkCuda(cudaMalloc(&buffersRT[i], dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
+    }
     checkCuda(cudaMalloc(&output, output_dim.tot()*sizeof(dnnType)));
 	checkCuda(cudaStreamCreate(&stream));
 }
@@ -136,9 +142,9 @@ NetworkRT::~NetworkRT() {
 
 dnnType* NetworkRT::infer(dataDim_t &dim, dnnType* data) {
 
-    checkCuda(cudaMemcpyAsync(buffersRT[buf_input_idx], data, input_dim.tot()*sizeof(float), cudaMemcpyDeviceToDevice, stream));
+    checkCuda(cudaMemcpyAsync(buffersRT[buf_input_idx], data, input_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
     contextRT->enqueue(1, buffersRT, stream, nullptr);
-    checkCuda(cudaMemcpyAsync(output, buffersRT[buf_output_idx], output_dim.tot()*sizeof(float), cudaMemcpyDeviceToDevice, stream));
+    checkCuda(cudaMemcpyAsync(output, buffersRT[buf_output_idx], output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
     cudaStreamSynchronize(stream);
 
     dim = output_dim;
@@ -301,7 +307,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     //std::cout<<"convert route\n";
 
-    ITensor *tens[256];
+    ITensor **tens = new ITensor*[l->layers_n];
     for(int i=0; i<l->layers_n; i++)
         tens[i] = tensors[l->layers[i]];
     IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
@@ -337,7 +343,9 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     ITensor *back_tens = tensors[l->backLayer];
     IPlugin *plugin = new ShortcutRT();
 
-    ITensor *inputs[2] = { input, back_tens }; 
+    ITensor **inputs = new ITensor*[2];
+    inputs[0] = input;
+    inputs[1] = back_tens; 
     IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
     return lRT;

@@ -18,7 +18,9 @@ public:
     
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
-    void* buffersRT[2];
+
+    const static int MAX_BUFFERS_RT = 10;
+    void* buffersRT[MAX_BUFFERS_RT];
     int buf_input_idx, buf_output_idx;
 
     dataDim_t input_dim, output_dim;
