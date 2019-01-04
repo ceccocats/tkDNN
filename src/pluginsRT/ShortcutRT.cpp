@@ -44,7 +44,7 @@ public:
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
 		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
-		shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, c, h, w, 1);
+		shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, c, h, w, 1, stream);
 
 		return 0;
 	}

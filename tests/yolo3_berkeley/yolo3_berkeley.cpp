@@ -77,7 +77,11 @@ const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
 const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
 const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
 const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-const char *output_bin = "../tests/yolo3_berkeley/debug/layer93_out.bin";
+const char *output_bins[3] = {
+    "../tests/yolo3_berkeley/debug/layer82_out.bin",
+    "../tests/yolo3_berkeley/debug/layer94_out.bin",
+    "../tests/yolo3_berkeley/debug/layer106_out.bin"
+};
 
 int main() {
 
@@ -234,7 +238,7 @@ int main() {
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
-    tk::dnn::Yolo       y82  (&net,  10, 3);
+    tk::dnn::Yolo     yolo0  (&net,  10, 3);
 
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
@@ -243,7 +247,7 @@ int main() {
     tk::dnn::Upsample   u85  (&net, 2);
 
     tk::dnn::Layer *m86_layers[2] = { &u85, &s61 };
-    tk::dnn::Route      m86  (&net, m86_layers, 1); // ROUTE ERROR IN RT INFERENCE 
+    tk::dnn::Route      m86  (&net, m86_layers, 2);
     tk::dnn::Conv2d     c87  (&net, 256, 1, 1, 1, 1, 0, 0, c87_bin, true);
     tk::dnn::Activation a87  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c88  (&net, 512, 3, 3, 1, 1, 1, 1, c88_bin, true);
@@ -254,10 +258,11 @@ int main() {
     tk::dnn::Activation a90  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c91  (&net, 256, 1, 1, 1, 1, 0, 0, c91_bin, true);
     tk::dnn::Activation a91  (&net, tk::dnn::ACTIVATION_LEAKY);
+
     tk::dnn::Conv2d     c92  (&net, 512, 3, 3, 1, 1, 1, 1, c92_bin, true);
     tk::dnn::Activation a92  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c93  (&net,  45, 1, 1, 1, 1, 0, 0, c93_bin, false);
-    tk::dnn::Yolo       y94  (&net,  10, 3);
+    tk::dnn::Yolo     yolo1  (&net,  10, 3);
 
     tk::dnn::Layer *m95_layers[1] = { &a91 };
     tk::dnn::Route      m95  (&net, m95_layers, 1);
@@ -281,7 +286,7 @@ int main() {
     tk::dnn::Conv2d     c104 (&net, 256, 3, 3, 1, 1, 1, 1, c104_bin, true);
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
-    tk::dnn::Yolo       y106 (&net,  10, 3);
+    tk::dnn::Yolo      yolo2 (&net,  10, 3);
 
     // Load input
     dnnType *data;
@@ -294,32 +299,45 @@ int main() {
     //convert network to tensorRT
     tk::dnn::NetworkRT netRT(&net, "yolo3_berkeley.rt");
 
-    dnnType *out_data, *out_data2; // cudnn output, tensorRT output
+    // the network have 3 outputs
+    tk::dnn::dataDim_t out_dim[3];
+    out_dim[0] = yolo0.output_dim; 
+    out_dim[1] = yolo1.output_dim; 
+    out_dim[2] = yolo2.output_dim;
+    dnnType *cudnn_out[3], *rt_out[3]; 
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
         TIMER_START
-        out_data = net.infer(dim1, data);    
+        net.infer(dim1, data);    
         TIMER_STOP
         dim1.print();   
     }
+    cudnn_out[0] = yolo0.dstData;
+    cudnn_out[1] = yolo1.dstData;
+    cudnn_out[2] = yolo2.dstData;
     
     tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
         TIMER_START
-        out_data2 = netRT.infer(dim2, data);
+        netRT.infer(dim2, data);
         TIMER_STOP
         dim2.print();
     }
+    rt_out[0] = (dnnType*)netRT.buffersRT[1];
+    rt_out[1] = (dnnType*)netRT.buffersRT[2];
+    rt_out[2] = (dnnType*)netRT.buffersRT[3];
 
-    printCenteredTitle(" CHECK RESULTS ", '=', 30);
-    dnnType *out, *out_h;
-    int out_dim = net.getOutputDim().tot();
-    //readBinaryFile(output_bin, out_dim, &out_h, &out);
-    //std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
-    //std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
-    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
+    for(int i=0; i<3; i++) {
+        printCenteredTitle((std::string(" YOLO ") + std::to_string(i) + " CHECK RESULTS ").c_str(), '=', 30);
+        dnnType *out, *out_h;
+        int odim = out_dim[i].tot();
+        readBinaryFile(output_bins[i], odim, &out_h, &out);
+        std::cout<<"CUDNN vs correct"; checkResult(odim, cudnn_out[i], out);
+        std::cout<<"TRT   vs correct"; checkResult(odim, rt_out[i], out);
+        std::cout<<"CUDNN vs TRT    "; checkResult(odim, cudnn_out[i], rt_out[i]);
+    }
     return 0;
 }

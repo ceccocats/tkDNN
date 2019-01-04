@@ -14,6 +14,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.cpp"
 #include "pluginsRT/ReorgRT.cpp"
 #include "pluginsRT/RegionRT.cpp"
+//#include "pluginsRT/RouteRT.cpp"
 #include "pluginsRT/ShortcutRT.cpp"
 #include "pluginsRT/YoloRT.cpp"
 #include "pluginsRT/UpsampleRT.cpp"
@@ -77,9 +78,10 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
             
             input = Ilay->getOutput(0);
+            input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
+            
             if(l->getLayerType() == LAYER_YOLO)
                 networkRT->markOutput(*input);
-
             tensors[l] = input;
         }
         if(input == NULL)
@@ -308,9 +310,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     //std::cout<<"convert route\n";
 
     ITensor **tens = new ITensor*[l->layers_n];
-    for(int i=0; i<l->layers_n; i++)
+    for(int i=0; i<l->layers_n; i++) {
         tens[i] = tensors[l->layers[i]];
+    }
     IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
+    //IPlugin *plugin = new RouteRT();
+    //IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
     checkNULL(lRT);
 
     return lRT;
@@ -445,7 +450,18 @@ public:
 		    r->w = readBUF<int>(buf);
             return r;
         } 
-
+/*
+        if(name.find("Route") == 0) {
+            RouteRT *r = new RouteRT();
+            r->in = readBUF<int>(buf);
+            for(int i=0; i<RouteRT::MAX_INPUTS; i++)
+                r->c_in[i] = readBUF<int>(buf);
+        	r->c = readBUF<int>(buf);
+		    r->h = readBUF<int>(buf);
+		    r->w = readBUF<int>(buf);
+            return r;
+        } 
+*/
         FatalError("Cant deserialize Plugin");
         return NULL;
     }

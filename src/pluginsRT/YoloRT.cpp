@@ -57,7 +57,7 @@ public:
 			}
 		}
 
-		std::cout<<"YOLO END\n";
+		//std::cout<<"YOLO END\n";
 		return 0;
 	}
 

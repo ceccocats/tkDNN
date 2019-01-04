@@ -47,7 +47,7 @@ dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
 
     if(act_mode == ACTIVATION_LEAKY) {
         activationLEAKYForward(srcData, dstData, dim.tot());
-    
+
     } else {
         dnnType alpha = dnnType(1);
         dnnType beta  = dnnType(0);
