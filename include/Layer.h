@@ -339,13 +339,33 @@ struct sortable_bbox {
 class Yolo : public Layer {
 
 public:
-    Yolo(Network *net, int classes, int num);
+    struct box {
+        float x, y, w, h;
+    };
+
+    typedef struct detection{
+        Yolo::box bbox;
+        int classes;
+        float *prob;
+        float *mask;
+        float objectness;
+        int sort_class;
+    };
+
+    Yolo(Network *net, int classes, int num, const char* fname_weights);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
     int classes, num;
-    
+    dnnType *mask_h, *mask_d; //anchors
+    dnnType *bias_h, *bias_d; //anchors
+
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    int computeDetections(int w, int h, float thresh);
+
+    const int MAX_DETECTIONS = 256;
+    Yolo::detection *dets;
+    int detected;
 };
 
 /**
