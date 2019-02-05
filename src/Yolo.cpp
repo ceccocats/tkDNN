@@ -23,15 +23,18 @@ Yolo::detection *make_network_boxes(int nboxes, int classes) {
 
 Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) : 
     Layer(net) {
-
+    
     this->classes = classes;
     this->num = num;
 
     // load anchors
     int seek = 0;
-    readBinaryFile(fname_weights, num, &mask_h, &mask_d);
+    readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
     seek += num;
-    readBinaryFile(fname_weights, 3*num, &bias_h, &bias_d);
+    readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
+
+    printDeviceVector(num, mask_h, false);
+    printDeviceVector(3*num*2, bias_h, false);
 
     // same
     output_dim.n = input_dim.n;
@@ -40,7 +43,12 @@ Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) :
     output_dim.w = input_dim.w;
     output_dim.l = input_dim.l;
 
+    std::cout<<"YOLO INPUT: ";
+    input_dim.print();
+    std::cout<<"\n";
+
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
+    predictions = nullptr;
 
     dets = make_network_boxes(MAX_DETECTIONS, classes);
     detected = 0;
@@ -114,17 +122,16 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-int Yolo::computeDetections(int w, int h, float thresh) {
+int Yolo::computeDetections(int w, int h, int netw, int neth, float thresh) {
 
-    dnnType *predictions = new dnnType[output_dim.tot()];
+    if(predictions == nullptr)
+        predictions = new dnnType[output_dim.tot()];
     checkCuda( cudaMemcpy(predictions, dstData, output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost));
 
-    int relative = 1;
+    int relative = 0;
 
     int lw = output_dim.w;
     int lh = output_dim.h;
-    int netw = net->input_dim.w;
-    int neth = net->input_dim.h;
 
     if (output_dim.n == 2) {
         FatalError("BATCH of 2 not supported"); 

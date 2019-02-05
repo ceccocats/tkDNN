@@ -61,7 +61,7 @@ const char *c78_bin   = "../tests/yolo3_berkeley/layers/c78.bin";
 const char *c79_bin   = "../tests/yolo3_berkeley/layers/c79.bin";
 const char *c80_bin   = "../tests/yolo3_berkeley/layers/c80.bin";
 const char *c81_bin   = "../tests/yolo3_berkeley/layers/c81.bin";
-const char *c82_bin  = "../tests/yolo3_berkeley/layers/g82.bin";
+const char *g82_bin  = "../tests/yolo3_berkeley/layers/g82.bin";
 const char *c84_bin   = "../tests/yolo3_berkeley/layers/c84.bin";
 const char *c87_bin   = "../tests/yolo3_berkeley/layers/c87.bin";
 const char *c88_bin   = "../tests/yolo3_berkeley/layers/c88.bin";
@@ -70,7 +70,7 @@ const char *c90_bin   = "../tests/yolo3_berkeley/layers/c90.bin";
 const char *c91_bin   = "../tests/yolo3_berkeley/layers/c91.bin";
 const char *c92_bin   = "../tests/yolo3_berkeley/layers/c92.bin";
 const char *c93_bin   = "../tests/yolo3_berkeley/layers/c93.bin";
-const char *c94_bin  = "../tests/yolo3_berkeley/layers/g94.bin";
+const char *g94_bin  = "../tests/yolo3_berkeley/layers/g94.bin";
 const char *c96_bin   = "../tests/yolo3_berkeley/layers/c96.bin";
 const char *c99_bin   = "../tests/yolo3_berkeley/layers/c99.bin";
 const char *c100_bin  = "../tests/yolo3_berkeley/layers/c100.bin";
@@ -79,7 +79,7 @@ const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
 const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
 const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
 const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-const char *c106_bin  = "../tests/yolo3_berkeley/layers/g106.bin";
+const char *g106_bin  = "../tests/yolo3_berkeley/layers/g106.bin";
 const char *output_bins[3] = {
     "../tests/yolo3_berkeley/debug/layer82_out.bin",
     "../tests/yolo3_berkeley/debug/layer94_out.bin",
@@ -241,7 +241,7 @@ int main() {
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
-    tk::dnn::Yolo     yolo0  (&net,  10, 3, c84_bin);
+    tk::dnn::Yolo     yolo0  (&net,  10, 3, g82_bin);
 
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
@@ -265,7 +265,7 @@ int main() {
     tk::dnn::Conv2d     c92  (&net, 512, 3, 3, 1, 1, 1, 1, c92_bin, true);
     tk::dnn::Activation a92  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c93  (&net,  45, 1, 1, 1, 1, 0, 0, c93_bin, false);
-    tk::dnn::Yolo     yolo1  (&net,  10, 3, c94_bin);
+    tk::dnn::Yolo     yolo1  (&net,  10, 3, g94_bin);
 
     tk::dnn::Layer *m95_layers[1] = { &a91 };
     tk::dnn::Route      m95  (&net, m95_layers, 1);
@@ -289,7 +289,7 @@ int main() {
     tk::dnn::Conv2d     c104 (&net, 256, 3, 3, 1, 1, 1, 1, c104_bin, true);
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
-    tk::dnn::Yolo      yolo2 (&net,  10, 3, c106_bin);
+    tk::dnn::Yolo      yolo2 (&net,  10, 3, g106_bin);
 
     // Load input
     dnnType *data;
@@ -323,9 +323,25 @@ int main() {
 
     printCenteredTitle(" compute detections ", '=', 30);
     TIMER_START
-    yolo0.computeDetections(640, 480, 0.5);
-    yolo1.computeDetections(640, 480, 0.5);
-    yolo2.computeDetections(640, 480, 0.5);
+    yolo0.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo1.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo2.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+
+    for(int j=0; j<yolo1.detected; j++) {
+        tk::dnn::Yolo::box b = yolo1.dets[j].bbox;
+        int x0   = (b.x-b.w/2.);
+        int x1   = (b.x+b.w/2.);
+        int y0   = (b.y-b.h/2.);
+        int y1   = (b.y+b.h/2.);
+
+        int cl = 0;
+        for(int c = 0; c < yolo1.classes; ++c){
+            float prob = yolo1.dets[j].prob[c];
+            if(prob > 0)
+                cl = c;
+        }
+        std::cout<<cl<<": "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
+    }
     TIMER_STOP
     
     tk::dnn::dataDim_t dim2 = dim;

@@ -361,9 +361,10 @@ public:
     dnnType *bias_h, *bias_d; //anchors
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(int w, int h, float thresh);
+    int computeDetections(int w, int h, int netw, int neth, float thresh);
 
     const int MAX_DETECTIONS = 256;
+    dnnType *predictions;
     Yolo::detection *dets;
     int detected;
 };
