@@ -11,16 +11,6 @@
 
 namespace tk { namespace dnn {
 
-Yolo::detection *make_network_boxes(int nboxes, int classes) {
-    
-    int i;
-    Yolo::detection *dets = (Yolo::detection*) calloc(nboxes, sizeof(Yolo::detection));
-    for(i = 0; i < nboxes; ++i){
-        dets[i].prob = (float*) calloc(classes, sizeof(float));
-    }
-    return dets;
-}
-
 Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) : 
     Layer(net) {
     
@@ -49,9 +39,6 @@ Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) :
 
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
     predictions = nullptr;
-
-    dets = make_network_boxes(MAX_DETECTIONS, classes);
-    detected = 0;
 }
 
 Yolo::~Yolo() {
@@ -122,7 +109,7 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-int Yolo::computeDetections(int w, int h, int netw, int neth, float thresh) {
+int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int w, int h, int netw, int neth, float thresh) {
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
@@ -138,7 +125,7 @@ int Yolo::computeDetections(int w, int h, int netw, int neth, float thresh) {
         //avg_flipped_yolo(l);
     }
     int i,j,n;
-    int count = 0;
+    int count = ndets;
     for (i = 0; i < lw*lh; ++i){
         int row = i / lw;
         int col = i % lw;
@@ -162,11 +149,105 @@ int Yolo::computeDetections(int w, int h, int netw, int neth, float thresh) {
                 FatalError("reach max boxes");
         }
     }
-    correct_yolo_boxes(dets, count, w, h, netw, neth, relative);
 
-    std::cout<<"DETECTED: "<<count<<"\n";
-    detected = count;
+    correct_yolo_boxes(dets + ndets, count, w, h, netw, neth, relative);
+    ndets = count;
     return count;
+}
+
+//////////////////////////////////////////////////////////////////
+float yolo_overlap(float x1, float w1, float x2, float w2)
+{
+    float l1 = x1 - w1/2;
+    float l2 = x2 - w2/2;
+    float left = l1 > l2 ? l1 : l2;
+    float r1 = x1 + w1/2;
+    float r2 = x2 + w2/2;
+    float right = r1 < r2 ? r1 : r2;
+    return right - left;
+}
+
+float yolo_box_intersection(Yolo::box a, Yolo::box b)
+{
+    float w = yolo_overlap(a.x, a.w, b.x, b.w);
+    float h = yolo_overlap(a.y, a.h, b.y, b.h);
+    if(w < 0 || h < 0) return 0;
+    float area = w*h;
+    return area;
+}
+
+float yolo_box_union(Yolo::box a, Yolo::box b)
+{
+    float i = yolo_box_intersection(a, b);
+    float u = a.w*a.h + b.w*b.h - i;
+    return u;
+}
+
+float yolo_box_iou(Yolo::box a, Yolo::box b)
+{
+    return yolo_box_intersection(a, b)/yolo_box_union(a, b);
+}
+
+int yolo_nms_comparator(const void *pa, const void *pb)
+{
+    Yolo::detection a = *(Yolo::detection *)pa;
+    Yolo::detection b = *(Yolo::detection *)pb;
+    float diff = 0;
+    if(b.sort_class >= 0){
+        diff = a.prob[b.sort_class] - b.prob[b.sort_class];
+    } else {
+        diff = a.objectness - b.objectness;
+    }
+    if(diff < 0) return 1;
+    else if(diff > 0) return -1;
+    return 0;
+}
+//////////////////////////////////////////////////////////////////7
+
+Yolo::detection *Yolo::allocateDetections(int nboxes, int classes) {
+    
+    int i;
+    Yolo::detection *dets = (Yolo::detection*) calloc(nboxes, sizeof(Yolo::detection));
+    for(i = 0; i < nboxes; ++i){
+        dets[i].prob = (float*) calloc(classes, sizeof(float));
+    }
+    return dets;
+}
+
+void Yolo::mergeDetections(Yolo::detection *dets, int ndets, int classes) {
+    double nms_thresh = 0.45;
+    int total = ndets;
+
+    int i, j, k;
+    k = total-1;
+    for(i = 0; i <= k; ++i){
+        if(dets[i].objectness == 0){
+            detection swap = dets[i];
+            dets[i] = dets[k];
+            dets[k] = swap;
+            --k;
+            --i;
+        }
+    }
+    total = k+1;
+
+    for(k = 0; k < classes; ++k){
+        for(i = 0; i < total; ++i){
+            dets[i].sort_class = k;
+        }
+        qsort(dets, total, sizeof(detection), yolo_nms_comparator);
+        for(i = 0; i < total; ++i){
+            if(dets[i].prob[k] == 0) continue;
+            box a = dets[i].bbox;
+            for(j = i+1; j < total; ++j){
+                box b = dets[j].bbox;
+                if (yolo_box_iou(a, b) > nms_thresh){
+                    dets[j].prob[k] = 0;
+                }
+            }
+        }
+    }
+
 }
 
 }}

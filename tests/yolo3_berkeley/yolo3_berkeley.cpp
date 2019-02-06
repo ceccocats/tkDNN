@@ -323,20 +323,24 @@ int main() {
 
     printCenteredTitle(" compute detections ", '=', 30);
     TIMER_START
-    yolo0.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
-    yolo1.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
-    yolo2.computeDetections(dim.w, dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    int ndets = 0;
+    int classes = yolo0.classes;
+    tk::dnn::Yolo::detection *dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
+    yolo0.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo1.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo2.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
 
-    for(int j=0; j<yolo1.detected; j++) {
-        tk::dnn::Yolo::box b = yolo1.dets[j].bbox;
+    for(int j=0; j<ndets; j++) {
+        tk::dnn::Yolo::box b = dets[j].bbox;
         int x0   = (b.x-b.w/2.);
         int x1   = (b.x+b.w/2.);
         int y0   = (b.y-b.h/2.);
         int y1   = (b.y+b.h/2.);
 
         int cl = 0;
-        for(int c = 0; c < yolo1.classes; ++c){
-            float prob = yolo1.dets[j].prob[c];
+        for(int c = 0; c < classes; ++c){
+            float prob = dets[j].prob[c];
             if(prob > 0)
                 cl = c;
         }
