@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     std::cout<<"detection\n";
     signal(SIGINT, sig_handler);
 
-    Yolo3Detection yolo;
+    tk::dnn::Yolo3Detection yolo;
     yolo.init("./");
 
     gRun = true;
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
         std::cout<<"camera started\n";
 
     cv::Mat frame;
+    cv::Mat dnn_input;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
     cv::resizeWindow("detection", 544*1.2, 320*1.2);
     
@@ -48,7 +49,8 @@ int main(int argc, char *argv[]) {
             continue;
         }  
  
-        yolo.update(frame);
+        dnn_input = frame.clone();
+        yolo.update(dnn_input);
 
         // draw dets
         for(int i=0; i<yolo.detected.size(); i++) {
@@ -64,7 +66,6 @@ int main(int argc, char *argv[]) {
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);                
         }
     
-        
         cv::imshow("detection", frame);
         cv::waitKey(1);
     }

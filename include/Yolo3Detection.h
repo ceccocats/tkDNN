@@ -11,6 +11,8 @@
 
 #include <tkDNN/tkdnn.h>
 
+namespace tk { namespace dnn {
+
 /**
  * 
  * @author Francesco Gatti
@@ -51,3 +53,5 @@ class Yolo3Detection {
         void update(cv::Mat &frame);
 
 };
+
+}}

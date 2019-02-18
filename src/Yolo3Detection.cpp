@@ -1,5 +1,7 @@
 #include "Yolo3Detection.h"
 
+namespace tk { namespace dnn {
+
 bool Yolo3Detection::init(std::string tensor_folder) {
 
     //const char *tensor_path = "../data/yolo3/yolo3_berkeley.rt";
@@ -43,7 +45,9 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     if(!imageORIG.data) {
         std::cout<<"YOLO: NO IMAGE DATA\n";
         return;
-    }      
+    }     
+    float xRatio =  float(imageORIG.cols) / float(netRT->input_dim.w);
+    float yRatio =  float(imageORIG.rows) / float(netRT->input_dim.h);
 
     resize(imageORIG, imageORIG, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
     imageORIG.convertTo(imageF, CV_32FC3, 1/255.0); 
@@ -82,10 +86,6 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     }
     tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
     TIMER_STOP
-
-
-    float xRatio =  float(imageORIG.cols) / float(netRT->input_dim.w);
-    float yRatio =  float(imageORIG.rows) / float(netRT->input_dim.h);
 
     // fill detected
     detected.clear();
@@ -126,3 +126,5 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     }
 
 }
+
+}}
