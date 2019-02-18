@@ -3,11 +3,20 @@
 
 class YoloRT : public IPlugin {
 
+
+
 public:
-	YoloRT(int classes, int num) {
+	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr) {
 
 		this->classes = classes;
 		this->num = num;
+
+        mask = new dnnType[num];
+        bias = new dnnType[num*3*2];
+        if(yolo != nullptr) {
+            memcpy(mask, yolo->mask_h, sizeof(dnnType)*num);
+            memcpy(bias, yolo->bias_h, sizeof(dnnType)*num*3*2);
+        }
 	}
 
 	~YoloRT(){
@@ -63,7 +72,7 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 5*sizeof(int);
+		return 5*sizeof(int) + num*sizeof(dnnType) + num*3*2*sizeof(dnnType);
 	}
 
 	virtual void serialize(void* buffer) override {
@@ -73,10 +82,17 @@ public:
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
+        for(int i=0; i<num; i++)
+    		tk::dnn::writeBUF(buf, mask[i]);
+        for(int i=0; i<3*2*num; i++)
+    		tk::dnn::writeBUF(buf, bias[i]);
 	}
 
 	int c, h, w;
     int classes, num;
+
+    dnnType *mask;
+    dnnType *bias;
 
 	int entry_index(int batch, int location, int entry, int batchSize) {
 		int n =   location / (w*h);

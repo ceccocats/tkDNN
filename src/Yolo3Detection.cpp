@@ -21,14 +21,14 @@ bool Yolo3Detection::init(std::string tensor_folder) {
     }
 
     //convert network to tensorRT
-    std::cout<<(tensor_folder + "/yolo3_berkeley.rt").c_str()<<"\n";
-    netRT = new tk::dnn::NetworkRT(NULL, (tensor_folder + "/yolo3_berkeley.rt").c_str() );
+    std::cout<<(tensor_folder + ".rt").c_str()<<"\n";
+    netRT = new tk::dnn::NetworkRT(NULL, (tensor_folder + ".rt").c_str() );
 
-    yolo[0] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "/yolo3_0.bin").c_str() ); // yolo without input and bias
+    yolo[0] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_0.bin").c_str() ); // yolo without input and bias
     yolo[0]->input_dim = yolo[0]->output_dim = tk::dnn::dataDim_t(1, 45, 10, 17);
-    yolo[1] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "/yolo3_1.bin").c_str() ); // yolo without input and bias
+    yolo[1] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_1.bin").c_str() ); // yolo without input and bias
     yolo[1]->input_dim = yolo[1]->output_dim = tk::dnn::dataDim_t(1, 45, 20, 34);
-    yolo[2] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "/yolo3_2.bin").c_str() ); // yolo without input and bias
+    yolo[2] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_2.bin").c_str() ); // yolo without input and bias
     yolo[2]->input_dim = yolo[2]->output_dim = tk::dnn::dataDim_t(1, 45, 40, 68);
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);

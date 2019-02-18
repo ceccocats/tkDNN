@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sig_handler);
 
     tk::dnn::Yolo3Detection yolo;
-    yolo.init("./");
+    yolo.init("yolo3_berkeley");
 
     gRun = true;
 

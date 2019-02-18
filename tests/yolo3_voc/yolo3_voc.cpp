@@ -1,95 +1,95 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin = "../tests/yolo3_berkeley/layers/input.bin";
-const char *c0_bin    = "../tests/yolo3_berkeley/layers/c0.bin";
-const char *c1_bin    = "../tests/yolo3_berkeley/layers/c1.bin";
-const char *c2_bin    = "../tests/yolo3_berkeley/layers/c2.bin";
-const char *c3_bin    = "../tests/yolo3_berkeley/layers/c3.bin";
-const char *c5_bin    = "../tests/yolo3_berkeley/layers/c5.bin";
-const char *c6_bin    = "../tests/yolo3_berkeley/layers/c6.bin";
-const char *c7_bin    = "../tests/yolo3_berkeley/layers/c7.bin";
-const char *c9_bin    = "../tests/yolo3_berkeley/layers/c9.bin";
-const char *c10_bin   = "../tests/yolo3_berkeley/layers/c10.bin";
-const char *c12_bin   = "../tests/yolo3_berkeley/layers/c12.bin";
-const char *c13_bin   = "../tests/yolo3_berkeley/layers/c13.bin";
-const char *c14_bin   = "../tests/yolo3_berkeley/layers/c14.bin";
-const char *c16_bin   = "../tests/yolo3_berkeley/layers/c16.bin";
-const char *c17_bin   = "../tests/yolo3_berkeley/layers/c17.bin";
-const char *c19_bin   = "../tests/yolo3_berkeley/layers/c19.bin";
-const char *c20_bin   = "../tests/yolo3_berkeley/layers/c20.bin";
-const char *c22_bin   = "../tests/yolo3_berkeley/layers/c22.bin";
-const char *c23_bin   = "../tests/yolo3_berkeley/layers/c23.bin";
-const char *c25_bin   = "../tests/yolo3_berkeley/layers/c25.bin";
-const char *c26_bin   = "../tests/yolo3_berkeley/layers/c26.bin";
-const char *c28_bin   = "../tests/yolo3_berkeley/layers/c28.bin";
-const char *c29_bin   = "../tests/yolo3_berkeley/layers/c29.bin";
-const char *c31_bin   = "../tests/yolo3_berkeley/layers/c31.bin";
-const char *c32_bin   = "../tests/yolo3_berkeley/layers/c32.bin";
-const char *c34_bin   = "../tests/yolo3_berkeley/layers/c34.bin";
-const char *c35_bin   = "../tests/yolo3_berkeley/layers/c35.bin";
-const char *c37_bin   = "../tests/yolo3_berkeley/layers/c37.bin";
-const char *c38_bin   = "../tests/yolo3_berkeley/layers/c38.bin";
-const char *c39_bin   = "../tests/yolo3_berkeley/layers/c39.bin";
-const char *c41_bin   = "../tests/yolo3_berkeley/layers/c41.bin";
-const char *c42_bin   = "../tests/yolo3_berkeley/layers/c42.bin";
-const char *c44_bin   = "../tests/yolo3_berkeley/layers/c44.bin";
-const char *c45_bin   = "../tests/yolo3_berkeley/layers/c45.bin";
-const char *c47_bin   = "../tests/yolo3_berkeley/layers/c47.bin";
-const char *c48_bin   = "../tests/yolo3_berkeley/layers/c48.bin";
-const char *c50_bin   = "../tests/yolo3_berkeley/layers/c50.bin";
-const char *c51_bin   = "../tests/yolo3_berkeley/layers/c51.bin";
-const char *c53_bin   = "../tests/yolo3_berkeley/layers/c53.bin";
-const char *c54_bin   = "../tests/yolo3_berkeley/layers/c54.bin";
-const char *c56_bin   = "../tests/yolo3_berkeley/layers/c56.bin";
-const char *c57_bin   = "../tests/yolo3_berkeley/layers/c57.bin";
-const char *c59_bin   = "../tests/yolo3_berkeley/layers/c59.bin";
-const char *c60_bin   = "../tests/yolo3_berkeley/layers/c60.bin";
-const char *c62_bin   = "../tests/yolo3_berkeley/layers/c62.bin";
-const char *c63_bin   = "../tests/yolo3_berkeley/layers/c63.bin";
-const char *c64_bin   = "../tests/yolo3_berkeley/layers/c64.bin";
-const char *c66_bin   = "../tests/yolo3_berkeley/layers/c66.bin";
-const char *c67_bin   = "../tests/yolo3_berkeley/layers/c67.bin";
-const char *c69_bin   = "../tests/yolo3_berkeley/layers/c69.bin";
-const char *c70_bin   = "../tests/yolo3_berkeley/layers/c70.bin";
-const char *c72_bin   = "../tests/yolo3_berkeley/layers/c72.bin";
-const char *c73_bin   = "../tests/yolo3_berkeley/layers/c73.bin";
-const char *c75_bin   = "../tests/yolo3_berkeley/layers/c75.bin";
-const char *c76_bin   = "../tests/yolo3_berkeley/layers/c76.bin";
-const char *c77_bin   = "../tests/yolo3_berkeley/layers/c77.bin";
-const char *c78_bin   = "../tests/yolo3_berkeley/layers/c78.bin";
-const char *c79_bin   = "../tests/yolo3_berkeley/layers/c79.bin";
-const char *c80_bin   = "../tests/yolo3_berkeley/layers/c80.bin";
-const char *c81_bin   = "../tests/yolo3_berkeley/layers/c81.bin";
-const char *g82_bin  = "../tests/yolo3_berkeley/layers/g82.bin";
-const char *c84_bin   = "../tests/yolo3_berkeley/layers/c84.bin";
-const char *c87_bin   = "../tests/yolo3_berkeley/layers/c87.bin";
-const char *c88_bin   = "../tests/yolo3_berkeley/layers/c88.bin";
-const char *c89_bin   = "../tests/yolo3_berkeley/layers/c89.bin";
-const char *c90_bin   = "../tests/yolo3_berkeley/layers/c90.bin";
-const char *c91_bin   = "../tests/yolo3_berkeley/layers/c91.bin";
-const char *c92_bin   = "../tests/yolo3_berkeley/layers/c92.bin";
-const char *c93_bin   = "../tests/yolo3_berkeley/layers/c93.bin";
-const char *g94_bin  = "../tests/yolo3_berkeley/layers/g94.bin";
-const char *c96_bin   = "../tests/yolo3_berkeley/layers/c96.bin";
-const char *c99_bin   = "../tests/yolo3_berkeley/layers/c99.bin";
-const char *c100_bin  = "../tests/yolo3_berkeley/layers/c100.bin";
-const char *c101_bin  = "../tests/yolo3_berkeley/layers/c101.bin";
-const char *c102_bin  = "../tests/yolo3_berkeley/layers/c102.bin";
-const char *c103_bin  = "../tests/yolo3_berkeley/layers/c103.bin";
-const char *c104_bin  = "../tests/yolo3_berkeley/layers/c104.bin";
-const char *c105_bin  = "../tests/yolo3_berkeley/layers/c105.bin";
-const char *g106_bin  = "../tests/yolo3_berkeley/layers/g106.bin";
+const char *input_bin = "../tests/yolo3_voc/layers/input.bin";
+const char *c0_bin    = "../tests/yolo3_voc/layers/c0.bin";
+const char *c1_bin    = "../tests/yolo3_voc/layers/c1.bin";
+const char *c2_bin    = "../tests/yolo3_voc/layers/c2.bin";
+const char *c3_bin    = "../tests/yolo3_voc/layers/c3.bin";
+const char *c5_bin    = "../tests/yolo3_voc/layers/c5.bin";
+const char *c6_bin    = "../tests/yolo3_voc/layers/c6.bin";
+const char *c7_bin    = "../tests/yolo3_voc/layers/c7.bin";
+const char *c9_bin    = "../tests/yolo3_voc/layers/c9.bin";
+const char *c10_bin   = "../tests/yolo3_voc/layers/c10.bin";
+const char *c12_bin   = "../tests/yolo3_voc/layers/c12.bin";
+const char *c13_bin   = "../tests/yolo3_voc/layers/c13.bin";
+const char *c14_bin   = "../tests/yolo3_voc/layers/c14.bin";
+const char *c16_bin   = "../tests/yolo3_voc/layers/c16.bin";
+const char *c17_bin   = "../tests/yolo3_voc/layers/c17.bin";
+const char *c19_bin   = "../tests/yolo3_voc/layers/c19.bin";
+const char *c20_bin   = "../tests/yolo3_voc/layers/c20.bin";
+const char *c22_bin   = "../tests/yolo3_voc/layers/c22.bin";
+const char *c23_bin   = "../tests/yolo3_voc/layers/c23.bin";
+const char *c25_bin   = "../tests/yolo3_voc/layers/c25.bin";
+const char *c26_bin   = "../tests/yolo3_voc/layers/c26.bin";
+const char *c28_bin   = "../tests/yolo3_voc/layers/c28.bin";
+const char *c29_bin   = "../tests/yolo3_voc/layers/c29.bin";
+const char *c31_bin   = "../tests/yolo3_voc/layers/c31.bin";
+const char *c32_bin   = "../tests/yolo3_voc/layers/c32.bin";
+const char *c34_bin   = "../tests/yolo3_voc/layers/c34.bin";
+const char *c35_bin   = "../tests/yolo3_voc/layers/c35.bin";
+const char *c37_bin   = "../tests/yolo3_voc/layers/c37.bin";
+const char *c38_bin   = "../tests/yolo3_voc/layers/c38.bin";
+const char *c39_bin   = "../tests/yolo3_voc/layers/c39.bin";
+const char *c41_bin   = "../tests/yolo3_voc/layers/c41.bin";
+const char *c42_bin   = "../tests/yolo3_voc/layers/c42.bin";
+const char *c44_bin   = "../tests/yolo3_voc/layers/c44.bin";
+const char *c45_bin   = "../tests/yolo3_voc/layers/c45.bin";
+const char *c47_bin   = "../tests/yolo3_voc/layers/c47.bin";
+const char *c48_bin   = "../tests/yolo3_voc/layers/c48.bin";
+const char *c50_bin   = "../tests/yolo3_voc/layers/c50.bin";
+const char *c51_bin   = "../tests/yolo3_voc/layers/c51.bin";
+const char *c53_bin   = "../tests/yolo3_voc/layers/c53.bin";
+const char *c54_bin   = "../tests/yolo3_voc/layers/c54.bin";
+const char *c56_bin   = "../tests/yolo3_voc/layers/c56.bin";
+const char *c57_bin   = "../tests/yolo3_voc/layers/c57.bin";
+const char *c59_bin   = "../tests/yolo3_voc/layers/c59.bin";
+const char *c60_bin   = "../tests/yolo3_voc/layers/c60.bin";
+const char *c62_bin   = "../tests/yolo3_voc/layers/c62.bin";
+const char *c63_bin   = "../tests/yolo3_voc/layers/c63.bin";
+const char *c64_bin   = "../tests/yolo3_voc/layers/c64.bin";
+const char *c66_bin   = "../tests/yolo3_voc/layers/c66.bin";
+const char *c67_bin   = "../tests/yolo3_voc/layers/c67.bin";
+const char *c69_bin   = "../tests/yolo3_voc/layers/c69.bin";
+const char *c70_bin   = "../tests/yolo3_voc/layers/c70.bin";
+const char *c72_bin   = "../tests/yolo3_voc/layers/c72.bin";
+const char *c73_bin   = "../tests/yolo3_voc/layers/c73.bin";
+const char *c75_bin   = "../tests/yolo3_voc/layers/c75.bin";
+const char *c76_bin   = "../tests/yolo3_voc/layers/c76.bin";
+const char *c77_bin   = "../tests/yolo3_voc/layers/c77.bin";
+const char *c78_bin   = "../tests/yolo3_voc/layers/c78.bin";
+const char *c79_bin   = "../tests/yolo3_voc/layers/c79.bin";
+const char *c80_bin   = "../tests/yolo3_voc/layers/c80.bin";
+const char *c81_bin   = "../tests/yolo3_voc/layers/c81.bin";
+const char *g82_bin  = "../tests/yolo3_voc/layers/g82.bin";
+const char *c84_bin   = "../tests/yolo3_voc/layers/c84.bin";
+const char *c87_bin   = "../tests/yolo3_voc/layers/c87.bin";
+const char *c88_bin   = "../tests/yolo3_voc/layers/c88.bin";
+const char *c89_bin   = "../tests/yolo3_voc/layers/c89.bin";
+const char *c90_bin   = "../tests/yolo3_voc/layers/c90.bin";
+const char *c91_bin   = "../tests/yolo3_voc/layers/c91.bin";
+const char *c92_bin   = "../tests/yolo3_voc/layers/c92.bin";
+const char *c93_bin   = "../tests/yolo3_voc/layers/c93.bin";
+const char *g94_bin  = "../tests/yolo3_voc/layers/g94.bin";
+const char *c96_bin   = "../tests/yolo3_voc/layers/c96.bin";
+const char *c99_bin   = "../tests/yolo3_voc/layers/c99.bin";
+const char *c100_bin  = "../tests/yolo3_voc/layers/c100.bin";
+const char *c101_bin  = "../tests/yolo3_voc/layers/c101.bin";
+const char *c102_bin  = "../tests/yolo3_voc/layers/c102.bin";
+const char *c103_bin  = "../tests/yolo3_voc/layers/c103.bin";
+const char *c104_bin  = "../tests/yolo3_voc/layers/c104.bin";
+const char *c105_bin  = "../tests/yolo3_voc/layers/c105.bin";
+const char *g106_bin  = "../tests/yolo3_voc/layers/g106.bin";
 const char *output_bins[3] = {
-    "../tests/yolo3_berkeley/debug/layer82_out.bin",
-    "../tests/yolo3_berkeley/debug/layer94_out.bin",
-    "../tests/yolo3_berkeley/debug/layer106_out.bin"
+    "../tests/yolo3_voc/debug/layer82_out.bin",
+    "../tests/yolo3_voc/debug/layer94_out.bin",
+    "../tests/yolo3_voc/debug/layer106_out.bin"
 };
 
 int main() {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 320, 544, 1);
+    tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
     tk::dnn::Network net(dim);
 
     tk::dnn::Conv2d     c0   (&net,  32, 3, 3, 1, 1, 1, 1,  c0_bin, true);
@@ -240,8 +240,8 @@ int main() {
     tk::dnn::Activation a79  (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c80  (&net,1024, 3, 3, 1, 1, 1, 1, c80_bin, true);
     tk::dnn::Activation a80  (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c81  (&net,  45, 1, 1, 1, 1, 0, 0, c81_bin, false);
-    tk::dnn::Yolo     yolo0  (&net,  10, 3, g82_bin);
+    tk::dnn::Conv2d     c81  (&net,  75, 1, 1, 1, 1, 0, 0, c81_bin, false);
+    tk::dnn::Yolo     yolo0  (&net,  20, 3, g82_bin);
 
     tk::dnn::Layer *m83_layers[1] = { &a79 };
     tk::dnn::Route      m83  (&net, m83_layers, 1);
@@ -264,8 +264,8 @@ int main() {
 
     tk::dnn::Conv2d     c92  (&net, 512, 3, 3, 1, 1, 1, 1, c92_bin, true);
     tk::dnn::Activation a92  (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c93  (&net,  45, 1, 1, 1, 1, 0, 0, c93_bin, false);
-    tk::dnn::Yolo     yolo1  (&net,  10, 3, g94_bin);
+    tk::dnn::Conv2d     c93  (&net,  75, 1, 1, 1, 1, 0, 0, c93_bin, false);
+    tk::dnn::Yolo     yolo1  (&net,  20, 3, g94_bin);
 
     tk::dnn::Layer *m95_layers[1] = { &a91 };
     tk::dnn::Route      m95  (&net, m95_layers, 1);
@@ -288,8 +288,8 @@ int main() {
 
     tk::dnn::Conv2d     c104 (&net, 256, 3, 3, 1, 1, 1, 1, c104_bin, true);
     tk::dnn::Activation a104 (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c105 (&net,  45, 1, 1, 1, 1, 0, 0, c105_bin, false);
-    tk::dnn::Yolo      yolo2 (&net,  10, 3, g106_bin);
+    tk::dnn::Conv2d     c105 (&net,  75, 1, 1, 1, 1, 0, 0, c105_bin, false);
+    tk::dnn::Yolo      yolo2 (&net,  20, 3, g106_bin);
 
     // Load input
     dnnType *data;
@@ -300,7 +300,7 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "yolo3_berkeley.rt");
+    tk::dnn::NetworkRT netRT(&net, "yolo3_voc.rt");
 
     // the network have 3 outputs
     tk::dnn::dataDim_t out_dim[3];
@@ -372,11 +372,11 @@ int main() {
 
     std::cout<<"copyng layer config to this folder\n";
     std::string cmd;
-    cmd = "cp " + std::string(g82_bin) + " yolo3_berkeley_0.bin";  
+    cmd = "cp " + std::string(g82_bin) + " yolo3_voc_0.bin";  
     std::cout<<cmd<<"\n"; system(cmd.c_str());
-    cmd = "cp " + std::string(g94_bin) + " yolo3_berkeley_1.bin";  
+    cmd = "cp " + std::string(g94_bin) + " yolo3_voc_1.bin";  
     std::cout<<cmd<<"\n"; system(cmd.c_str());
-    cmd = "cp " + std::string(g106_bin) + " yolo3_berkeley_2.bin";  
+    cmd = "cp " + std::string(g106_bin) + " yolo3_voc_2.bin";  
     std::cout<<cmd<<"\n"; system(cmd.c_str());
     return 0;
 }

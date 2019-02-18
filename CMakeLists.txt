@@ -74,6 +74,9 @@ target_link_libraries(test_yolo_224 tkDNN)
 add_executable(test_yolo_berkeley tests/yolo_berkeley/yolo_berkeley.cpp)
 target_link_libraries(test_yolo_berkeley tkDNN)
 
+add_executable(test_yolo3_voc tests/yolo3_voc/yolo3_voc.cpp)
+target_link_libraries(test_yolo3_voc tkDNN)
+
 add_executable(test_yolo3_berkeley tests/yolo3_berkeley/yolo3_berkeley.cpp)
 target_link_libraries(test_yolo3_berkeley tkDNN)
 ################################################################################

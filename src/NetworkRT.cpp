@@ -360,7 +360,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
     //std::cout<<"New plugin YOLO\n";
-    IPlugin *plugin = new YoloRT(l->classes, l->num);
+    IPlugin *plugin = new YoloRT(l->classes, l->num, l);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
@@ -396,6 +396,7 @@ bool NetworkRT::serialize(const char *filename) {
 class PluginFactory : IPluginFactory
 {
 public:
+
 	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
         const char * buf = reinterpret_cast<const char*>(serialData);
         
@@ -440,6 +441,12 @@ public:
         	r->c = readBUF<int>(buf);
 		    r->h = readBUF<int>(buf);
 		    r->w = readBUF<int>(buf);
+            for(int i=0; i<r->num; i++)
+        		r->mask[i] = readBUF<dnnType>(buf);
+            for(int i=0; i<3*2*r->num; i++)
+        		r->bias[i] = readBUF<dnnType>(buf);
+
+            std::cout<<"YOLO: "<<r->c<<" "<<r->h<<" "<<r->w<<"\n";
             return r;
         } 
 

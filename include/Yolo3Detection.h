@@ -9,7 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <tkDNN/tkdnn.h>
+#include "tkdnn.h"
 
 namespace tk { namespace dnn {
 
@@ -31,10 +31,10 @@ class Yolo3Detection {
         cv::Mat bgr[3]; 
 
     public:
-        static const int classes = 10;
-        static const int num = 3;
+        int classes = 10;
+        int num = 3;
         float thresh = 0.3;
-        cv::Scalar colors[classes];
+        cv::Scalar colors[256];
 
         // this is filled with results
         std::vector<tk::dnn::box> detected;
