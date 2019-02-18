@@ -343,7 +343,7 @@ public:
         float x, y, w, h;
     };
 
-    typedef struct detection{
+    struct detection{
         Yolo::box bbox;
         int classes;
         float *prob;
@@ -361,7 +361,7 @@ public:
     dnnType *bias_h, *bias_d; //anchors
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int w, int h, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
 
     dnnType *predictions;
 

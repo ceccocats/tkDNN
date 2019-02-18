@@ -11,14 +11,6 @@
 #include "NetworkRT.h"
 
 using namespace nvinfer1;
-#include "pluginsRT/ActivationLeakyRT.cpp"
-#include "pluginsRT/ReorgRT.cpp"
-#include "pluginsRT/RegionRT.cpp"
-//#include "pluginsRT/RouteRT.cpp"
-#include "pluginsRT/ShortcutRT.cpp"
-#include "pluginsRT/YoloRT.cpp"
-#include "pluginsRT/UpsampleRT.cpp"
-#include "pluginsRT/Int8Calibrator.cpp"
 
 // Logger for info/warning/errors
 class Logger : public ILogger {
@@ -54,14 +46,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         builderRT->setMaxBatchSize(1);
         builderRT->setMaxWorkspaceSize(1 << 30);
 
-        //change datatype based on system specs
-        if(builderRT->platformHasFastInt8()) {
-            BatchStream bstream({32,dim.c, dim.h, dim.w}, 32, 1);
-            Int8EntropyCalibrator calib(bstream, 0, false);
-            builderRT->setInt8Mode(true);
-            builderRT->setInt8Calibrator(&calib);
-
-        } else if(net->fp16 && builderRT->platformHasFastFp16()) {
+        if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
@@ -393,87 +378,6 @@ bool NetworkRT::serialize(const char *filename) {
     return true;
 }
 
-class PluginFactory : IPluginFactory
-{
-public:
-
-	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
-        const char * buf = reinterpret_cast<const char*>(serialData);
-        
-        std::string name(layerName);
-
-        if(name.find("Activation") == 0) {
-            ActivationLeakyRT *a = new ActivationLeakyRT();
-            a->size = readBUF<int>(buf);
-            return a;
-        }
-
-        if(name.find("Region") == 0) {
-            RegionRT *r = new RegionRT(readBUF<int>(buf),    //classes
-                                       readBUF<int>(buf),    //coords
-                                       readBUF<int>(buf));   //num
-
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            return r;
-        } 
-
-        if(name.find("Reorg") == 0) {
-            ReorgRT *r = new ReorgRT(readBUF<int>(buf)); //stride
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            return r;
-        } 
-
-        if(name.find("Shortcut") == 0) {
-            ShortcutRT *r = new ShortcutRT();
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            return r;
-        } 
-
-        if(name.find("Yolo") == 0) {
-            YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
-                                   readBUF<int>(buf));   //num
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            for(int i=0; i<r->num; i++)
-        		r->mask[i] = readBUF<dnnType>(buf);
-            for(int i=0; i<3*2*r->num; i++)
-        		r->bias[i] = readBUF<dnnType>(buf);
-
-            std::cout<<"YOLO: "<<r->c<<" "<<r->h<<" "<<r->w<<"\n";
-            return r;
-        } 
-
-        if(name.find("Upsample") == 0) {
-            UpsampleRT *r = new UpsampleRT(readBUF<int>(buf)); //stride
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            return r;
-        } 
-/*
-        if(name.find("Route") == 0) {
-            RouteRT *r = new RouteRT();
-            r->in = readBUF<int>(buf);
-            for(int i=0; i<RouteRT::MAX_INPUTS; i++)
-                r->c_in[i] = readBUF<int>(buf);
-        	r->c = readBUF<int>(buf);
-		    r->h = readBUF<int>(buf);
-		    r->w = readBUF<int>(buf);
-            return r;
-        } 
-*/
-        FatalError("Cant deserialize Plugin");
-        return NULL;
-    }
-};
-
 bool NetworkRT::deserialize(const char *filename) {
 
     char *gieModelStream{nullptr};
@@ -488,13 +392,89 @@ bool NetworkRT::deserialize(const char *filename) {
         file.close();
     }
 
-    PluginFactory plfact;
-
     runtimeRT = createInferRuntime(loggerRT);
-    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) &plfact);
+    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
     //if (gieModelStream) delete [] gieModelStream;
 
     return true;
+}
+
+
+
+IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
+    const char * buf = reinterpret_cast<const char*>(serialData);
+    
+    std::string name(layerName);
+
+    if(name.find("Activation") == 0) {
+        ActivationLeakyRT *a = new ActivationLeakyRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
+
+    if(name.find("Region") == 0) {
+        RegionRT *r = new RegionRT(readBUF<int>(buf),    //classes
+                                    readBUF<int>(buf),    //coords
+                                    readBUF<int>(buf));   //num
+
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Reorg") == 0) {
+        ReorgRT *r = new ReorgRT(readBUF<int>(buf)); //stride
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Shortcut") == 0) {
+        ShortcutRT *r = new ShortcutRT();
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Yolo") == 0) {
+        YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
+                                readBUF<int>(buf));   //num
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        for(int i=0; i<r->num; i++)
+            r->mask[i] = readBUF<dnnType>(buf);
+        for(int i=0; i<3*2*r->num; i++)
+            r->bias[i] = readBUF<dnnType>(buf);
+
+        yolos[n_yolos++] = r;
+        return r;
+    } 
+
+    if(name.find("Upsample") == 0) {
+        UpsampleRT *r = new UpsampleRT(readBUF<int>(buf)); //stride
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+/*
+    if(name.find("Route") == 0) {
+        RouteRT *r = new RouteRT();
+        r->in = readBUF<int>(buf);
+        for(int i=0; i<RouteRT::MAX_INPUTS; i++)
+            r->c_in[i] = readBUF<int>(buf);
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+*/
+    FatalError("Cant deserialize Plugin");
+    return NULL;
 }
 
 }}

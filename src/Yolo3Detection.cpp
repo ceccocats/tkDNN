@@ -2,9 +2,35 @@
 
 namespace tk { namespace dnn {
 
-bool Yolo3Detection::init(std::string tensor_folder) {
+bool Yolo3Detection::init(std::string tensor_path) {
 
     //const char *tensor_path = "../data/yolo3/yolo3_berkeley.rt";
+
+    //convert network to tensorRT
+    std::cout<<(tensor_path).c_str()<<"\n";
+    netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
+
+    if(netRT->pluginFactory->n_yolos != 3) {
+        FatalError("this is not yolo3");
+    }
+
+    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
+        YoloRT *yRT = netRT->pluginFactory->yolos[i];
+        classes = yRT->classes;
+        num = yRT->num;
+
+        // make a yolo layer for interpret predictions
+        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, nullptr); // yolo without input and bias
+        memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);
+        memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*3*2);
+        yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
+    }
+
+    dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
+    
+    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
+    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
+
 
     // class colors precompute    
     for(int c=0; c<classes; c++) {
@@ -19,23 +45,6 @@ bool Yolo3Detection::init(std::string tensor_folder) {
         //std::cout<<r<<" "<<g<<" "<<b<<"\n";
         colors[c] = cv::Scalar(int(255.0*b), int(255.0*g), int(255.0*r));
     }
-
-    //convert network to tensorRT
-    std::cout<<(tensor_folder + ".rt").c_str()<<"\n";
-    netRT = new tk::dnn::NetworkRT(NULL, (tensor_folder + ".rt").c_str() );
-
-    yolo[0] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_0.bin").c_str() ); // yolo without input and bias
-    yolo[0]->input_dim = yolo[0]->output_dim = tk::dnn::dataDim_t(1, 45, 10, 17);
-    yolo[1] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_1.bin").c_str() ); // yolo without input and bias
-    yolo[1]->input_dim = yolo[1]->output_dim = tk::dnn::dataDim_t(1, 45, 20, 34);
-    yolo[2] = new tk::dnn::Yolo(nullptr, classes, num, (tensor_folder + "_2.bin").c_str() ); // yolo without input and bias
-    yolo[2]->input_dim = yolo[2]->output_dim = tk::dnn::dataDim_t(1, 45, 40, 68);
-
-    dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
-    
-    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
-    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
-
     return true;
 } 
 
@@ -82,7 +91,7 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     for(int i=0; i<3; i++) {
         rt_out[i] = (dnnType*)netRT->buffersRT[i+1];
         yolo[i]->dstData = rt_out[i];
-        yolo[i]->computeDetections(dets, ndets, netRT->input_dim.w, netRT->input_dim.h, netRT->input_dim.w, netRT->input_dim.h, thresh);
+        yolo[i]->computeDetections(dets, ndets, netRT->input_dim.w, netRT->input_dim.h, thresh);
     }
     tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
     TIMER_STOP

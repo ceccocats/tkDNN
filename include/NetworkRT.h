@@ -1,12 +1,47 @@
 #ifndef NETWORKRT_H
 #define NETWORKRT_H
 
+#include <string.h> // memcpy
 #include "utils.h"
 #include "Network.h"
 #include "Layer.h"
 #include "NvInfer.h"
 
 namespace tk { namespace dnn {
+
+template<typename T> void writeBUF(char*& buffer, const T& val)
+{
+    *reinterpret_cast<T*>(buffer) = val;
+    buffer += sizeof(T);
+}
+
+template<typename T> T readBUF(const char*& buffer)
+{
+    T val = *reinterpret_cast<const T*>(buffer);
+    buffer += sizeof(T);
+    return val;
+}
+
+using namespace nvinfer1;
+#include "pluginsRT/ActivationLeakyRT.h"
+#include "pluginsRT/ReorgRT.h"
+#include "pluginsRT/RegionRT.h"
+//#include "pluginsRT/RouteRT.h"
+#include "pluginsRT/ShortcutRT.h"
+#include "pluginsRT/YoloRT.h"
+#include "pluginsRT/UpsampleRT.h"
+//#include "pluginsRT/Int8Calibrator.h"
+
+class PluginFactory : IPluginFactory
+{
+public:
+    YoloRT *yolos[16];
+    int n_yolos;
+
+	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength);
+};
+
+
 
 class NetworkRT {
 
@@ -26,6 +61,8 @@ public:
     dataDim_t input_dim, output_dim;
     dnnType *output;
     cudaStream_t stream;
+
+    PluginFactory *pluginFactory;
 
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();
@@ -52,20 +89,6 @@ public:
     bool serialize(const char *filename);
     bool deserialize(const char *filename);
 };
-
-
-template<typename T> void writeBUF(char*& buffer, const T& val)
-{
-    *reinterpret_cast<T*>(buffer) = val;
-    buffer += sizeof(T);
-}
-
-template<typename T> T readBUF(const char*& buffer)
-{
-    T val = *reinterpret_cast<const T*>(buffer);
-    buffer += sizeof(T);
-    return val;
-}
 
 }}
 #endif //NETWORKRT_H

@@ -18,13 +18,12 @@ Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) :
     this->num = num;
 
     // load anchors
-    int seek = 0;
-    readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
-    seek += num;
-    readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
-
-    printDeviceVector(num, mask_h, false);
-    printDeviceVector(3*num*2, bias_h, false);
+    if(fname_weights != nullptr) {
+        int seek = 0;
+        readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
+        seek += num;
+        readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
+    }
 
     // same
     output_dim.n = input_dim.n;
@@ -32,10 +31,6 @@ Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) :
     output_dim.h = input_dim.h;
     output_dim.w = input_dim.w;
     output_dim.l = input_dim.l;
-
-    std::cout<<"YOLO INPUT: ";
-    input_dim.print();
-    std::cout<<"\n";
 
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
     predictions = nullptr;
@@ -62,35 +57,6 @@ Yolo::box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, 
     return b;
 }
 
-void correct_yolo_boxes(Yolo::detection *dets, int n, int w, int h, int netw, int neth, int relative)
-{
-    int i;
-    int new_w=0;
-    int new_h=0;
-    if (((float)netw/w) < ((float)neth/h)) {
-        new_w = netw;
-        new_h = (h * netw)/w;
-    } else {
-        new_h = neth;
-        new_w = (w * neth)/h;
-    }
-    for (i = 0; i < n; ++i){
-        Yolo::box b = dets[i].bbox;
-        b.x =  (b.x - (netw - new_w)/2./netw) / ((float)new_w/netw); 
-        b.y =  (b.y - (neth - new_h)/2./neth) / ((float)new_h/neth); 
-        b.w *= (float)netw/new_w;
-        b.h *= (float)neth/new_h;
-        if(!relative){
-            b.x *= w;
-            b.w *= w;
-            b.y *= h;
-            b.h *= h;
-        }
-        dets[i].bbox = b;
-    }
-}
-
-
 dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
 
     checkCuda( cudaMemcpy(dstData, srcData, dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
@@ -109,13 +75,11 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
-int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int w, int h, int netw, int neth, float thresh) {
+int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh) {
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
     checkCuda( cudaMemcpy(predictions, dstData, output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost));
-
-    int relative = 0;
 
     int lw = output_dim.w;
     int lh = output_dim.h;
@@ -150,7 +114,6 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int w, int h, int
         }
     }
 
-    correct_yolo_boxes(dets + ndets, count, w, h, netw, neth, relative);
     ndets = count;
     return count;
 }

@@ -326,9 +326,9 @@ int main() {
     int ndets = 0;
     int classes = yolo0.classes;
     tk::dnn::Yolo::detection *dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
-    yolo0.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
-    yolo1.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
-    yolo2.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo0.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo1.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, 0.5);
+    yolo2.computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, 0.5);
     tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
 
     for(int j=0; j<ndets; j++) {
@@ -369,14 +369,5 @@ int main() {
         std::cout<<"TRT   vs correct"; checkResult(odim, rt_out[i], out);
         std::cout<<"CUDNN vs TRT    "; checkResult(odim, cudnn_out[i], rt_out[i]);
     }
-
-    std::cout<<"copyng layer config to this folder\n";
-    std::string cmd;
-    cmd = "cp " + std::string(g82_bin) + " yolo3_berkeley_0.bin";  
-    std::cout<<cmd<<"\n"; system(cmd.c_str());
-    cmd = "cp " + std::string(g94_bin) + " yolo3_berkeley_1.bin";  
-    std::cout<<cmd<<"\n"; system(cmd.c_str());
-    cmd = "cp " + std::string(g106_bin) + " yolo3_berkeley_2.bin";  
-    std::cout<<cmd<<"\n"; system(cmd.c_str());
     return 0;
 }
