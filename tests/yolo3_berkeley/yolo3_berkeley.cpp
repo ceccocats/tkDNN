@@ -369,5 +369,14 @@ int main() {
         std::cout<<"TRT   vs correct"; checkResult(odim, rt_out[i], out);
         std::cout<<"CUDNN vs TRT    "; checkResult(odim, cudnn_out[i], rt_out[i]);
     }
+
+    std::cout<<"copyng layer config to this folder\n";
+    std::string cmd;
+    cmd = "cp " + std::string(g82_bin) + " yolo3_0.bin";  
+    std::cout<<cmd<<"\n"; system(cmd.c_str());
+    cmd = "cp " + std::string(g94_bin) + " yolo3_1.bin";  
+    std::cout<<cmd<<"\n"; system(cmd.c_str());
+    cmd = "cp " + std::string(g106_bin) + " yolo3_2.bin";  
+    std::cout<<cmd<<"\n"; system(cmd.c_str());
     return 0;
 }

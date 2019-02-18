@@ -82,11 +82,8 @@ target_link_libraries(test_yolo3_berkeley tkDNN)
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
 
-add_executable(detection demo/detection/detection.cpp)
-target_link_libraries(detection tkDNN)
-
-add_executable(live demo/live/live.cpp)
-target_link_libraries(live tkDNN)
+add_executable(yolo3_demo demo/demo/demo.cpp)
+target_link_libraries(yolo3_demo tkDNN)
 
 #install
 #if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
