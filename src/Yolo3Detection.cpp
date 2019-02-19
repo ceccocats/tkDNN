@@ -2,6 +2,18 @@
 
 namespace tk { namespace dnn {
 
+float _colors[6][3] = { {1,0,1}, {0,0,1},{0,1,1},{0,1,0},{1,1,0},{1,0,0} };
+float get_color(int c, int x, int max)
+{
+    float ratio = ((float)x/max)*5;
+    int i = floor(ratio);
+    int j = ceil(ratio);
+    ratio -= i;
+    float r = (1-ratio) * _colors[i][c] + ratio*_colors[j][c];
+    //printf("%f\n", r);
+    return r;
+}
+
 bool Yolo3Detection::init(std::string tensor_path) {
 
     //const char *tensor_path = "../data/yolo3/yolo3_berkeley.rt";
@@ -34,15 +46,10 @@ bool Yolo3Detection::init(std::string tensor_path) {
 
     // class colors precompute    
     for(int c=0; c<classes; c++) {
-        int cc = c+1;
-        double d = 1.0*( (cc%16)/8 );
-        double r = 1.0*( (cc%8)/4 ) + (0.5*d);
-        double g = 1.0*( (cc%4)/2 ) + (0.5*d);
-        double b = 1.0*( (cc%2)/1 ) + (0.5*d);
-        if(r > 1) r = 1;
-        if(g > 1) g = 1;
-        if(b > 1) b = 1;
-        //std::cout<<r<<" "<<g<<" "<<b<<"\n";
+        int offset = c*123457 % classes;
+        float r = get_color(2, offset, classes);
+        float g = get_color(1, offset, classes);
+        float b = get_color(0, offset, classes);
         colors[c] = cv::Scalar(int(255.0*b), int(255.0*g), int(255.0*r));
     }
     return true;

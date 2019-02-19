@@ -75,6 +75,34 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     return dstData;
 }
 
+void correct_yolo_boxes(Yolo::detection *dets, int n, int w, int h, int netw, int neth, int relative)
+{
+    int i;
+    int new_w=0;
+    int new_h=0;
+    if (((float)netw/w) < ((float)neth/h)) {
+        new_w = netw;
+        new_h = (h * netw)/w;
+    } else {
+        new_h = neth;
+        new_w = (w * neth)/h;
+    }
+    for (i = 0; i < n; ++i){
+        Yolo::box b = dets[i].bbox;
+        b.x =  (b.x - (netw - new_w)/2./netw) / ((float)new_w/netw); 
+        b.y =  (b.y - (neth - new_h)/2./neth) / ((float)new_h/neth); 
+        b.w *= (float)netw/new_w;
+        b.h *= (float)neth/new_h;
+        if(!relative){
+            b.x *= w;
+            b.w *= w;
+            b.y *= h;
+            b.h *= h;
+        }
+        dets[i].bbox = b;
+    }
+}
+
 int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh) {
 
     if(predictions == nullptr)
@@ -114,6 +142,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
         }
     }
 
+    correct_yolo_boxes(dets + ndets, count, netw, neth, netw, neth, 0);
     ndets = count;
     return count;
 }

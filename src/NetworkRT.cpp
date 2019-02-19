@@ -392,6 +392,7 @@ bool NetworkRT::deserialize(const char *filename) {
         file.close();
     }
 
+    pluginFactory = new PluginFactory();
     runtimeRT = createInferRuntime(loggerRT);
     engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
     //if (gieModelStream) delete [] gieModelStream;

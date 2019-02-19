@@ -15,7 +15,7 @@ namespace tk { namespace dnn {
 */
 struct dataDim_t {
 
-    int n = 0, c = 0, h = 0, w = 0, l = 0;
+    int n, c, h, w, l;
 
     dataDim_t() : n(1), c(1), h(1), w(1), l(1) {};
 
