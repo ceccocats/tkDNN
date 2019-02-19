@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         net = argv[1]; 
     char *input = "../demo/yolo_test.mp4";
     if(argc > 2)
-        input = argv[1]; 
+        input = argv[2]; 
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
