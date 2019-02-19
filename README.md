@@ -44,8 +44,8 @@ rm yolo3_berkeley.rt		 # be sure to delete(or move) old tensorRT files
 ```
 this will genereate a yolo3_berkeley.rt file that can be used for live detection:
 ```
-./demo             # launch detection on a demo video
-./demo /dev/video0 # launch detection on device 0
+./yolo3_demo                               # launch detection on a demo video
+./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
 
 

@@ -23,14 +23,18 @@ int main(int argc, char *argv[]) {
     std::cout<<"detection\n";
     signal(SIGINT, sig_handler);
 
+
+    char *net = "yolo3_berkeley.rt";
+    if(argc > 1)
+        net = argv[1]; 
+    char *input = "../demo/yolo_test.mp4";
+    if(argc > 2)
+        input = argv[1]; 
+
     tk::dnn::Yolo3Detection yolo;
-    yolo.init("yolo3_berkeley.rt");
+    yolo.init(net);
 
     gRun = true;
-
-    char *input = "../demo/yolo_test.mp4";
-    if(argc > 1)
-        input = argv[1]; 
 
     cv::VideoCapture cap(input);
     if(!cap.isOpened())
@@ -41,7 +45,6 @@ int main(int argc, char *argv[]) {
     cv::Mat frame;
     cv::Mat dnn_input;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
-    cv::resizeWindow("detection", 544*1.2, 320*1.2);
     
     while(gRun) {
         cap >> frame; 
@@ -49,7 +52,9 @@ int main(int argc, char *argv[]) {
             continue;
         }  
  
+        // this will be resized to the net format
         dnn_input = frame.clone();
+        // TODO: async infer
         yolo.update(dnn_input);
 
         // draw dets
