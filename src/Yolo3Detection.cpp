@@ -9,7 +9,7 @@ float get_color(int c, int x, int max)
     int i = floor(ratio);
     int j = ceil(ratio);
     ratio -= i;
-    float r = (1-ratio) * _colors[i][c] + ratio*_colors[j][c];
+    float r = (1-ratio) * _colors[i % 6][c % 3] + ratio*_colors[j % 6][c % 3];
     //printf("%f\n", r);
     return r;
 }
@@ -33,6 +33,8 @@ bool Yolo3Detection::init(std::string tensor_path) {
 
         // make a yolo layer for interpret predictions
         yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, nullptr); // yolo without input and bias
+        yolo[i]->mask_h = new dnnType[num];
+        yolo[i]->bias_h = new dnnType[num*3*2];
         memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);
         memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*3*2);
         yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
