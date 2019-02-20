@@ -57,6 +57,60 @@ bool Yolo3Detection::init(std::string tensor_path) {
     return true;
 } 
 
+void Yolo3Detection::addBorders(cv::Mat &imageORIG, cv::Mat &imageWBorders, int &top, int &left)
+{
+    float net_ratio = float(netRT->input_dim.w)/float(netRT->input_dim.h);
+    float img_ratio = float(imageORIG.cols)/float(imageORIG.rows);
+    int bottom=0, right=0, diff= 0;
+    top=0, left=0;
+
+    //printf("%f %f\n", net_ratio, img_ratio);
+
+    if(net_ratio != img_ratio)
+    {
+        if(netRT->input_dim.w> netRT->input_dim.h)
+        {	
+            if(img_ratio > net_ratio)
+            {
+                diff = std::abs((imageORIG.cols - net_ratio*imageORIG.rows)/net_ratio);
+                top = diff/2;
+                bottom = diff/2 + diff%2;
+            }
+            else	
+            {
+                diff = std::abs(net_ratio*float(imageORIG.rows) - float(imageORIG.cols));
+                left = diff/2;
+                right = diff/2 + diff%2;
+            }	
+        }
+        else
+        {
+            if(img_ratio < net_ratio)
+            {
+                diff = std::abs((imageORIG.cols - net_ratio*imageORIG.rows)/net_ratio);
+                left = diff/2;
+                right = diff/2 + diff%2;
+            }
+            else	
+            {
+                diff = std::abs(net_ratio*float(imageORIG.rows) - float(imageORIG.cols));
+                top = diff/2;
+                bottom = diff/2 + diff%2;
+            }
+        }
+    
+    }
+
+    //printf("%d %d %d %d %d \n", diff, top, bottom, left, right);
+    imageWBorders = imageORIG;
+    copyMakeBorder( imageORIG, imageWBorders, top, bottom, left, right, cv::BORDER_CONSTANT, (0,0,0) );
+    //printf("%d %d\n", imageWBorders.cols, imageWBorders.rows);
+    //const char* window_name = "borders";
+    //cv::namedWindow( window_name, cv::WINDOW_AUTOSIZE );
+    //imshow( window_name, imageWBorders );
+    //cv::waitKey(0);
+}
+
 
 void Yolo3Detection::update(cv::Mat &imageORIG) {
 
@@ -64,11 +118,20 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
         std::cout<<"YOLO: NO IMAGE DATA\n";
         return;
     }     
-    float xRatio =  float(imageORIG.cols) / float(netRT->input_dim.w);
-    float yRatio =  float(imageORIG.rows) / float(netRT->input_dim.h);
+    
+    int top, left;
+    cv::Mat imageWBorders;
+    addBorders(imageORIG, imageWBorders, top, left);
 
-    resize(imageORIG, imageORIG, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+    float xRatio =  float(imageWBorders.cols) / float(netRT->input_dim.w);
+    float yRatio =  float(imageWBorders.rows) / float(netRT->input_dim.h);
+
+    resize(imageWBorders, imageORIG, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
     imageORIG.convertTo(imageF, CV_32FC3, 1/255.0); 
+
+    //const char* window_name = "resize";
+    //cv::namedWindow( window_name, cv::WINDOW_AUTOSIZE );
+    ///imshow( window_name, imageORIG );
 
     //split channels
     cv::split(imageF,bgr);//split source
@@ -127,10 +190,10 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
             //cv::rectangle(image, cv::Point(x0, y0), cv::Point(x1, y1), colors[obj_class], 2);
             
             // convert to image coords
-            x0 = xRatio*x0;
-            x1 = xRatio*x1;
-            y0 = yRatio*y0;
-            y1 = yRatio*y1;
+            x0 = xRatio*x0 - left;
+            x1 = xRatio*x1 - left;
+            y0 = yRatio*y0 - top;
+            y1 = yRatio*y1 - top;
               
             tk::dnn::box res;
             res.cl = obj_class;

@@ -30,6 +30,8 @@ class Yolo3Detection {
         cv::Mat imageF;
         cv::Mat bgr[3]; 
 
+        
+
     public:
         int classes = 0;
         int num = 0;
@@ -49,7 +51,7 @@ class Yolo3Detection {
          * @return Success of the initialization
          */
         bool init(std::string tensor_path);
-
+        void addBorders(cv::Mat &imageORIG, cv::Mat &imageWBorders, int &top, int &left);
         void update(cv::Mat &frame);
 
 };
