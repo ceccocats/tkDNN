@@ -12,6 +12,10 @@
 #include "Yolo3Detection.h"
 #include "send.h"
 
+#define MAX_DETECT_SIZE 100
+
+
+
 bool gRun;
 
 void sig_handler(int signo) {
@@ -31,6 +35,16 @@ int main(int argc, char *argv[]) {
     char *input = "../demo/yolo_test.mp4";
     if(argc > 2)
         input = argv[2]; 
+    char *pmatrix = "/home/classfog1/repos/MASA_server/pmatrix/proj_matrix_20937.txt";
+    if(argc > 3)
+        pmatrix = argv[3];
+    /*CAMID*/
+    int CAM_IDX = 0;
+    if(argc > 4)
+        CAM_IDX = atoi(argv[4]);
+    bool to_show = true;
+    if(argc > 5)
+        to_show = atoi(argv[5]);
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
@@ -46,10 +60,7 @@ int main(int argc, char *argv[]) {
 
     cv::Mat frame;
     cv::Mat dnn_input;
-    cv::namedWindow("detection", cv::WINDOW_NORMAL);
-
-    /*CAMID*/
-    const int CAM_IDX = 0;
+    cv::namedWindow("detection", cv::WINDOW_NORMAL);    
 
     /*projection matrix*/
     float* proj_matrix = (float*) malloc(9*sizeof(float));
@@ -59,6 +70,8 @@ int main(int argc, char *argv[]) {
     int sock;
     int socket_opened = 0;
     
+    struct obj_coords *coords = (struct obj_coords*)malloc(MAX_DETECT_SIZE*sizeof(struct obj_coords));
+
     while(gRun) {
 
 
@@ -73,16 +86,19 @@ int main(int argc, char *argv[]) {
         yolo.update(dnn_input);
 
         int coord_i = 0;
-        struct obj_coords *coords = (struct obj_coords*)malloc(yolo.detected.size()*sizeof(struct obj_coords));
+        int num_detected = yolo.detected.size();
+        if (num_detected > MAX_DETECT_SIZE)
+            num_detected = MAX_DETECT_SIZE;
+
         if(proj_matrix_read == 0)
-            read_projection_matrix(proj_matrix, proj_matrix_read);
+            read_projection_matrix(proj_matrix, proj_matrix_read, pmatrix);
         
         /*printf("%f %f %f \n%f %f %f\n %f %f %f\n\n", proj_matrix[0],proj_matrix[1],
             proj_matrix[2],proj_matrix[3],proj_matrix[4],proj_matrix[5],
             proj_matrix[6],proj_matrix[7],proj_matrix[8]);*/
 
         // draw dets
-        for(int i=0; i<yolo.detected.size(); i++) {
+        for(int i=0; i<num_detected; i++) {
             tk::dnn::box b = yolo.detected[i];
             int x0   = b.x;
             int x1   = b.x + b.w;
@@ -105,11 +121,16 @@ int main(int argc, char *argv[]) {
         }
 
         send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
-        free(coords);
     
+        if (to_show)
+       {
         cv::imshow("detection", frame);
         cv::waitKey(1);
+       } 
     }
+
+    free(coords);
+    free(proj_matrix);
 
     std::cout<<"detection end\n";   
     return 0;

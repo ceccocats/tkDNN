@@ -99,21 +99,21 @@ void convert_coords(struct obj_coords *coords, int i, int x, int y, int detected
     {
         coords[i].LAT = coords[i].LAT / tmp_z;
         coords[i].LONG = coords[i].LONG / tmp_z;
-        printf("lat: %f, long %f\n", coords[i].LAT, coords[i].LONG);
+        //printf("lat: %f, long %f\n", coords[i].LAT, coords[i].LONG);
     }
     else
         printf("Division by 0 (tmp_z)\n");
     coords[i].cl = map_class_coco_to_voc(detected_class);
 }
 
-void read_projection_matrix(float * proj_matrix, int &proj_matrix_read)
+void read_projection_matrix(float * proj_matrix, int &proj_matrix_read, char* path)
 {
     FILE *fp;
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
 
-    fp = fopen("/home/classfog1/repos/MASA_server/pmatrix/proj_matrix_20937.txt", "r");
+    fp = fopen(path, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
