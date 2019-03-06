@@ -89,7 +89,7 @@ const char *output_bins[3] = {
 int main() {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 544, 320, 1);
+    tk::dnn::dataDim_t dim(1, 3, 320, 544, 1);
     tk::dnn::Network net(dim);
 
     tk::dnn::Conv2d     c0   (&net,  32, 3, 3, 1, 1, 1, 1,  c0_bin, true);
