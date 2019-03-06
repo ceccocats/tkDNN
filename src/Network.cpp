@@ -24,12 +24,20 @@ Network::Network(dataDim_t input_dim) {
     num_layers = 0;
 
     fp16 = false;
-    if(const char* env_p = std::getenv("TKDNN_MODE"))
+    dla = false;
+    if(const char* env_p = std::getenv("TKDNN_MODE")) {
         if(strcmp(env_p, "FP16") == 0)
             fp16 = true;
+	else if(strcmp(env_p, "DLA") == 0) {
+    	    dla = true;
+	    fp16 = true;	
+	}
+    }
    
     if(fp16)
         std::cout<<COL_REDB<<"!! FP16 INERENCE ENABLED !!"<<COL_END<<"\n";
+    if(dla)
+        std::cout<<COL_GREENB<<"!! DLA INERENCE ENABLED !!"<<COL_END<<"\n";
 }
 
 Network::~Network() {
