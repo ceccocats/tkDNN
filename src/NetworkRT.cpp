@@ -35,7 +35,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
-    std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
+    //std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
     networkRT = builderRT->createNetwork();
 
     if(!fileExist(name)) {
@@ -51,14 +51,16 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
-	if(net->dla && builderRT->getNbDLACores() > 0) {
+        /*
+        if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
-	    builderRT->setFp16Mode(true);
-	    builderRT->allowGPUFallback(true);
+            builderRT->setFp16Mode(true);
+            builderRT->allowGPUFallback(true);
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
-	    builderRT->setDLACore(0);
-	}
-
+            builderRT->setDLACore(0);
+        }
+        */
+       
         //add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
