@@ -35,7 +35,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
-    std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
+    //std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
     networkRT = builderRT->createNetwork();
 
     if(!fileExist(name)) {
