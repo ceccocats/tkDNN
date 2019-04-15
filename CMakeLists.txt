@@ -37,7 +37,7 @@ file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES} "~/repos/cereal/include")
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
 
@@ -87,6 +87,10 @@ target_link_libraries(test_rtinference tkDNN)
 
 add_executable(yolo3_demo demo/demo/demo.cpp)
 target_link_libraries(yolo3_demo tkDNN)
+
+add_executable(class_server demo/server/server_less_dummy.cpp)
+target_link_libraries(class_server pthread tkDNN )
+
 
 #install
 #if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
