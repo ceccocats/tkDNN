@@ -12,6 +12,7 @@
 #include "Yolo3Detection.h"
 #include "send.h"
 
+
 #define MAX_DETECT_SIZE 100
 
 
@@ -38,13 +39,16 @@ int main(int argc, char *argv[]) {
     char *pmatrix = "/home/classfog1/repos/MASA_server/pmatrix/proj_matrix_20937.txt";
     if(argc > 3)
         pmatrix = argv[3];
+    char *tiffile = "/home/davide/repos/projection_tool/img/map_b.tif";
+    if(argc > 4)
+        tiffile = argv[4];
     /*CAMID*/
     int CAM_IDX = 0;
-    if(argc > 4)
-        CAM_IDX = atoi(argv[4]);
-    bool to_show = true;
     if(argc > 5)
-        to_show = atoi(argv[5]);
+        CAM_IDX = atoi(argv[5]);
+    bool to_show = true;
+    if(argc > 6)
+        to_show = atoi(argv[6]);
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
@@ -63,8 +67,14 @@ int main(int argc, char *argv[]) {
     cv::namedWindow("detection", cv::WINDOW_NORMAL);    
 
     /*projection matrix*/
-    float* proj_matrix = (float*) malloc(9*sizeof(float));
+    
     int proj_matrix_read = 0;
+    cv::Mat H(cv::Size(3,3),CV_64FC1);
+
+    /*GPS information*/
+    double *adfGeoTransform = (double*)malloc(6*sizeof(double));
+    readTiff(tiffile, adfGeoTransform);
+    
 
     /*socket*/
     int sock;
@@ -72,6 +82,7 @@ int main(int argc, char *argv[]) {
     
     struct obj_coords *coords = (struct obj_coords*)malloc(MAX_DETECT_SIZE*sizeof(struct obj_coords));
 
+    int frame_nbr = 0;
     while(gRun) {
 
 
@@ -86,12 +97,13 @@ int main(int argc, char *argv[]) {
         yolo.update(dnn_input);
 
         int coord_i = 0;
+        
         int num_detected = yolo.detected.size();
         if (num_detected > MAX_DETECT_SIZE)
             num_detected = MAX_DETECT_SIZE;
 
         if(proj_matrix_read == 0)
-            read_projection_matrix(proj_matrix, proj_matrix_read, pmatrix);
+            read_projection_matrix(H, proj_matrix_read, pmatrix);
         
         /*printf("%f %f %f \n%f %f %f\n %f %f %f\n\n", proj_matrix[0],proj_matrix[1],
             proj_matrix[2],proj_matrix[3],proj_matrix[4],proj_matrix[5],
@@ -110,7 +122,7 @@ int main(int argc, char *argv[]) {
             if(obj_class == 0 /*person*/ || obj_class == 1/*bicycle*/ || obj_class == 2/*car*/ 
                 || obj_class == 3/*motorbike*/ || obj_class == 5/*bus*/)
             {
-                convert_coords(coords, coord_i,x0+b.w/2, y1,obj_class, proj_matrix);
+                convert_coords(coords, coord_i,x0+b.w/2, y1,obj_class, H, adfGeoTransform, frame_nbr);
                 coord_i++;
             }
 
@@ -119,6 +131,8 @@ int main(int argc, char *argv[]) {
             std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);                
         }
+
+        frame_nbr++;
 
         send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
     
@@ -130,7 +144,7 @@ int main(int argc, char *argv[]) {
     }
 
     free(coords);
-    free(proj_matrix);
+    free(adfGeoTransform);
 
     std::cout<<"detection end\n";   
     return 0;
