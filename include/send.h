@@ -18,6 +18,7 @@
 #include "gdal/cpl_conv.h"
 
 
+#include "serialize.hpp"
 
 struct obj_coords
 {
@@ -68,49 +69,58 @@ void fillMatrix(cv::Mat &H, float *matrix, bool show=false)
 		std::cout<<H<<"\n";
 }
 
-char *serialize_coords(struct obj_coords *c, int obj_n, int CAM_IDX)
-{
 
-    char *buffer = (char *)malloc(100000 * sizeof(char));
+void serialize_coords(struct obj_coords *c, int obj_n, int CAM_IDX, std::stringbuf* buf)
+{
+    
+    std::ostream os(buf);
+    cereal::PortableBinaryOutputArchive archive(os);
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
     unsigned long long t_stamp_ms = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
+    
+    std::vector<Road_User> ruv;
 
-    sprintf(buffer, "m %lld %d %d ", t_stamp_ms, CAM_IDX, obj_n);
     int i;
     for (i = 0; i < obj_n; i++)
-        sprintf(buffer + strlen(buffer), "%.9f %.9f %.0f ", c[i].LAT, c[i].LONG, c[i].cl);
+    {
+        Road_User r{c[i].LAT,c[i].LONG,0,0,(int)c[i].cl};
+        ruv.push_back(r);
+    }
 
-    //printf("%s\n", buffer);
+    Message m{CAM_IDX,t_stamp_ms,ruv.size(),ruv};
+    archive(m);
 
-    return buffer;
+
+    //std::cout<<buf->str()<<std::endl;
+
+    //return buf;
 }
 
 struct obj_coords *deserialize_coords(char *buffer, int *obj_n)
 {
 
-    int cam_id;
-    unsigned long long t_stamp_ms;
-    char type_of_m;
+    std::stringbuf buf(buffer);
+    std::istream is(&buf);
+    cereal::PortableBinaryInputArchive retrieve(is);
+    Message m;
+    retrieve(m);
 
-    int consumed_chars = 0;
-    char shifted_chars[100000];
-
-    sscanf(buffer, "%c %lld %d %d ", &type_of_m, &t_stamp_ms, &cam_id, obj_n);
-    sprintf(shifted_chars, "%c %lld %d %d ", type_of_m, t_stamp_ms, cam_id, *obj_n);
-    consumed_chars += strlen(shifted_chars);
-    //printf("%c %lld %d %d\n", type_of_m, t_stamp_ms, cam_id, *obj_n);
+    int cam_id = m.cam_idx;
+    unsigned long long t_stamp_ms = m.t_stamp_ms;
+    *obj_n = m.num_objects;
 
     struct obj_coords *c = (struct obj_coords *)malloc(*obj_n * sizeof(struct obj_coords));
 
     int i;
     for (i = 0; i < *obj_n; i++)
     {
-        sscanf(buffer + consumed_chars, "%f %f %f ", &c[i].LAT, &c[i].LONG, &c[i].cl);
-        sprintf(shifted_chars, "%.9f %.9f %.0f ", c[i].LAT, c[i].LONG, c[i].cl);
-        consumed_chars += strlen(shifted_chars);
-        //printf("%Lf %f %f \n", c[i].LAT, c[i].LONG, c[i].cl);
+        c[i].LAT = m.objects.at(i).latitude;
+        c[i].LONG = m.objects.at(i).longitude;
+        c[i].cl = m.objects.at(i).category;
+        //m.objects.at(i).speed;
+        //m.objects.at(i).orientation;
     }
 
     return c;
@@ -223,7 +233,11 @@ int open_socket(char *ip, int &sock, int &socket_opened)
 int send_client_dummy(struct obj_coords *coords, int n_coords, int &sock, int &socket_opened, int CAM_IDX)
 {
     /*serialize coords*/
-    char *message = serialize_coords(coords, n_coords, CAM_IDX);
+    std::stringbuf *message = new std::stringbuf();
+    serialize_coords(coords, n_coords, CAM_IDX, message);
+
+
+    std::cout<<message->str().length()<<std::endl;
 
     /*open socket if not already opened*/
     if (socket_opened == 0)
@@ -238,14 +252,17 @@ int send_client_dummy(struct obj_coords *coords, int n_coords, int &sock, int &s
         }
     }
 
+    
+
     /*send message to server*/
-    if (send(sock, message, strlen(message), 0) < 0)
+    if (send(sock, message->str().data(), message->str().length(), 0) < 0)
     {
         puts("Send failed");
         socket_opened = 0;
     }
 
-    free(message);
+    delete message;
+    //free(message);
     //close(sock);
     return 1;
 }

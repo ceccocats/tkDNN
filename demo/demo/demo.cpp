@@ -88,7 +88,11 @@ int main(int argc, char *argv[]) {
 
         cap >> frame; 
         if(!frame.data) {
+            usleep(1000000);
+            cap.open(input);
+            printf("cap reinitialize\n");
             continue;
+
         }  
  
         // this will be resized to the net format
