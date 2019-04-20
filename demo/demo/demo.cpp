@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     char *input = "../demo/yolo_test.mp4";
     if(argc > 2)
         input = argv[2]; 
-    char *pmatrix = "/home/classfog1/repos/MASA_server/pmatrix/proj_matrix_20937.txt";
+    char *pmatrix = "/home/davide/repos/projection_tool/pmat/proj_matrix_map_b.txt";
     if(argc > 3)
         pmatrix = argv[3];
     char *tiffile = "/home/davide/repos/projection_tool/img/map_b.tif";
