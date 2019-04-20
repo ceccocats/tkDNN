@@ -68,6 +68,10 @@ int main(int argc, char *argv[])
     cv::Mat frame;
     cv::Mat dnn_input;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
+    cv::namedWindow("topview", cv::WINDOW_NORMAL);
+
+    cv::Mat frame_top;
+    frame_top = cv::imread("../demo/demo/data/map_b.jpg");
 
     /*projection matrix*/
 
@@ -93,7 +97,7 @@ int main(int argc, char *argv[])
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
     int initial_age = -5;
-    int age_threshold = -20;
+    int age_threshold = -8;
     int n_states = 5;
     float dt = 0.03;
 
@@ -103,6 +107,7 @@ int main(int argc, char *argv[])
     while (gRun)
     {
 
+        
         cap >> frame;
         if (!frame.data)
         {
@@ -154,7 +159,10 @@ int main(int argc, char *argv[])
 
             //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);
+        
         }
+
+        TIMER_START
 
         cur_frame.clear();
         for (int i = 0; i < coord_i; i++)
@@ -177,6 +185,8 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
+
+        TIMER_STOP
         //std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
         for (auto t : trackers)
@@ -188,7 +198,10 @@ int main(int argc, char *argv[])
                 //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
                 int pix_x, pix_y;
                 coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+                
                 //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
+                if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                    cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
                 std::vector<cv::Point2f> map_p, camera_p;
                 map_p.push_back(cv::Point2f(pix_x, pix_y));
@@ -206,11 +219,16 @@ int main(int argc, char *argv[])
 
         send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
 
+        
+
         if (to_show)
         {
             cv::imshow("detection", frame);
+            cv::imshow("topview", frame_top);
             cv::waitKey(1);
         }
+
+
     }
 
     /*     for (size_t i = 0; i < trackers.size(); i++)
