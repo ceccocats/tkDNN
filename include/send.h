@@ -18,12 +18,13 @@
 #include "gdal/cpl_conv.h"
 
 
+
 #include "serialize.hpp"
 
 struct obj_coords
 {
-    float LAT;
-    float LONG;
+    double LAT;
+    double LONG;
     float cl;
 };
 
@@ -43,7 +44,7 @@ void readTiff(char*filename, double *adfGeoTransform)
 
 void pixel2coord(int x, int y, double &lat, double &lon, double *adfGeoTransform)
 {
-	
+	//Returns global coordinates from pixel x, y coordinates
 	double xoff, a, b, yoff, d, e;
 	xoff = adfGeoTransform[0];
 	a = adfGeoTransform[1];
@@ -58,6 +59,12 @@ void pixel2coord(int x, int y, double &lat, double &lon, double *adfGeoTransform
     lat = d * x + e * y + yoff;
 
 }
+void coord2pixel(double lat, double lon, int &x, int &y,  double *adfGeoTransform)
+{
+    x = int(round((lon-adfGeoTransform[0])/adfGeoTransform[1]));
+    y = int(round((lat-adfGeoTransform[3])/adfGeoTransform[5]));
+}
+
 
 void fillMatrix(cv::Mat &H, float *matrix, bool show=false)
 {
@@ -156,7 +163,7 @@ void convert_coords(struct obj_coords *coords, int i, int x, int y, int detected
     cv::perspectiveTransform( x_y, ll, H);
     //tranform to map pixel to map gps
     pixel2coord(ll[0].x, ll[0].y, latitude,longitude, adfGeoTransform);
-    printf("lat: %f, long:%f \n", latitude, longitude);
+    //printf("lat: %f, long:%f \n", latitude, longitude);
     coords[i].LAT = latitude;
     coords[i].LONG = longitude;
     coords[i].cl = map_class_coco_to_voc(detected_class);
@@ -237,7 +244,7 @@ int send_client_dummy(struct obj_coords *coords, int n_coords, int &sock, int &s
     serialize_coords(coords, n_coords, CAM_IDX, message);
 
 
-    std::cout<<message->str().length()<<std::endl;
+    //std::cout<<message->str().length()<<std::endl;
 
     /*open socket if not already opened*/
     if (socket_opened == 0)

@@ -11,6 +11,10 @@
 
 #include "Yolo3Detection.h"
 #include "send.h"
+#include "ekf.h"
+#include "trackutils.h"
+#include "plot.h"
+#include "tracker.h"
 
 
 #define MAX_DETECT_SIZE 100
@@ -79,8 +83,23 @@ int main(int argc, char *argv[]) {
     /*socket*/
     int sock;
     int socket_opened = 0;
-    
+
+    /*Conversion for tracker, from gps to meters and viceversa*/
+    geodetic_converter::GeodeticConverter gc;
+    gc.initialiseReference(44.655540,10.934315, 0);
+    double east, north, up;
+    double lat, lon, alt;
+
+    /*tracker infos*/
+    std::vector<Tracker> trackers;
+    std::vector<Data> cur_frame;
+    int initial_age = -5;
+    int age_threshold = -10;
+    int n_states = 5;
+    float dt = 0.03;
+
     struct obj_coords *coords = (struct obj_coords*)malloc(MAX_DETECT_SIZE*sizeof(struct obj_coords));
+    
 
     int frame_nbr = 0;
     while(gRun) {
@@ -115,6 +134,9 @@ int main(int argc, char *argv[]) {
 
         // draw dets
         for(int i=0; i<num_detected; i++) {
+
+            
+
             tk::dnn::box b = yolo.detected[i];
             int x0   = b.x;
             int x1   = b.x + b.w;
@@ -132,8 +154,42 @@ int main(int argc, char *argv[]) {
 
             float prob = b.prob;
 
-            std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
+            //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);                
+        }
+
+
+        cur_frame.clear();
+        for(int i=0; i<coord_i; i++)
+        {
+            std::cout<<"lat orig: "<<coords[i].LAT<<" lon orig: "<<coords[i].LONG<<std::endl;
+            gc.geodetic2Enu(coords[i].LAT, coords[i].LONG, 0, &east, &north, &up);
+            std::cout<<"east: "<<east<<" north: "<<north<<std::endl;
+            cur_frame.push_back(Data(east,north, frame_nbr));
+        }
+
+        if(frame_nbr == 0)
+        {
+            for(auto f:cur_frame)
+                trackers.push_back(Tracker(f, initial_age, dt, n_states));
+        }
+        else
+        {
+            Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
+        }
+
+        std::cout<<"There are "<<trackers.size()<<" trackers"<<std::endl;
+
+        for(auto t:trackers)
+        {
+            State s = t.ekf_.getEstimatedState();
+            gc.enu2Geodetic(s.x_, s.y_, 0, &lat, &lon, &alt);
+            std::cout<<"lat: "<<lat<<" lon: "<<lon<<std::endl;
+            int pix_x, pix_y;
+            coord2pixel(lat, lon, pix_x, pix_y,  adfGeoTransform);
+            std::cout<<"pix_x: "<<pix_x<<" pix_y: "<<pix_y<<std::endl;
+            //if(t.age_ > 0)
+                cv::circle( frame, cv::Point( pix_x, pix_y ), 10.0, cv::Scalar( 255, 0, 0 ), CV_FILLED, 8, 0);
         }
 
         frame_nbr++;
@@ -146,6 +202,11 @@ int main(int argc, char *argv[]) {
         cv::waitKey(1);
        } 
     }
+
+
+/*     for (size_t i = 0; i < trackers.size(); i++)
+        if (trackers[i].z_list_.size() > 10)
+            plotTruthvsPred(trackers[i].z_list_, trackers[i].pred_list_); */
 
     free(coords);
     free(adfGeoTransform);
