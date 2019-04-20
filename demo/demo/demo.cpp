@@ -3,6 +3,7 @@
 #include <stdlib.h> /* srand, rand */
 #include <unistd.h>
 #include <mutex>
+#include <ctime>  
 #include "utils.h"
 
 #include <opencv2/core/core.hpp>
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
     double lat, lon, alt;
 
     /*tracker infos*/
+    srand (time(NULL));
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
     int initial_age = -5;
@@ -195,7 +197,7 @@ int main(int argc, char *argv[])
                 cv::perspectiveTransform(map_p, camera_p, H.inv());
                 //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
 
-                cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(255, 0, 0), CV_FILLED, 8, 0);
+                cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
             }
         }
