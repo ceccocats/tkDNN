@@ -34,16 +34,16 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sig_handler);
 
 
-    char *net = "yolo3_berkeley.rt";
+    char *net = "yolo3_coco4.rt";
     if(argc > 1)
         net = argv[1]; 
-    char *input = "../demo/yolo_test.mp4";
+    char *input = "../demo/demo/data/single_ped_2.mp4";
     if(argc > 2)
         input = argv[2]; 
-    char *pmatrix = "/home/davide/repos/projection_tool/pmat/proj_matrix_map_b.txt";
+    char *pmatrix = "../demo/demo/data/proj_matrix_map_b.txt";
     if(argc > 3)
         pmatrix = argv[3];
-    char *tiffile = "/home/davide/repos/projection_tool/img/map_b.tif";
+    char *tiffile = "../demo/demo/data/map_b.tif";
     if(argc > 4)
         tiffile = argv[4];
     /*CAMID*/
