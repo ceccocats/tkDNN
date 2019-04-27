@@ -3,8 +3,7 @@
 #include <stdlib.h> /* srand, rand */
 #include <unistd.h>
 #include <mutex>
-#include <ctime>
-#include <pthread.h>
+#include <ctime>  
 #include "utils.h"
 
 #include <opencv2/core/core.hpp>
@@ -21,27 +20,11 @@
 #define MAX_DETECT_SIZE 100
 
 bool gRun;
-cv::Mat frame_v;
-cv::Mat frame_top_v;
-std::mutex sem;
 
 void sig_handler(int signo)
 {
     std::cout << "request gateway stop\n";
     gRun = false;
-}
-
-void *showImages(void *x_void_ptr)
-{
-
-    while (gRun)
-    {
-        sem.lock();
-        cv::imshow("detection", frame_v);
-        cv::imshow("topview", frame_top_v);
-        sem.unlock();
-        cv::waitKey(30);
-    }
 }
 
 int main(int argc, char *argv[])
@@ -66,7 +49,7 @@ int main(int argc, char *argv[])
     int CAM_IDX = 0;
     if (argc > 5)
         CAM_IDX = atoi(argv[5]);
-    bool to_show = false;
+    bool to_show = true;
     if (argc > 6)
         to_show = atoi(argv[6]);
 
@@ -83,15 +66,12 @@ int main(int argc, char *argv[])
         std::cout << "camera started\n";
 
     cv::Mat frame;
-    cv::Mat frame_top;
-
     cv::Mat dnn_input;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
     cv::namedWindow("topview", cv::WINDOW_NORMAL);
 
+    cv::Mat frame_top;
     frame_top = cv::imread("../demo/demo/data/map_b.jpg");
-
-    pthread_t visual;
 
     /*projection matrix*/
 
@@ -113,7 +93,7 @@ int main(int argc, char *argv[])
     double lat, lon, alt;
 
     /*tracker infos*/
-    srand(time(NULL));
+    srand (time(NULL));
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
     int initial_age = -5;
@@ -127,6 +107,7 @@ int main(int argc, char *argv[])
     while (gRun)
     {
 
+        
         cap >> frame;
         if (!frame.data)
         {
@@ -178,9 +159,10 @@ int main(int argc, char *argv[])
 
             //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);
+        
         }
 
-        //TIMER_START
+        TIMER_START
 
         cur_frame.clear();
         for (int i = 0; i < coord_i; i++)
@@ -190,6 +172,8 @@ int main(int argc, char *argv[])
             //std::cout << "east: " << east << " north: " << north << std::endl;
             cur_frame.push_back(Data(east, north, frame_nbr));
         }
+
+        
 
         if (frame_nbr == 0)
         {
@@ -201,23 +185,23 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
-        //TIMER_STOP
+
+        TIMER_STOP
         //std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
-        
         for (auto t : trackers)
         {
-            for (auto pred_pos : t.pred_list_)
+            for(auto pred_pos: t.pred_list_ )
             {
-
+                
                 gc.enu2Geodetic(pred_pos.x_, pred_pos.y_, 0, &lat, &lon, &alt);
                 //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
                 int pix_x, pix_y;
                 coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-
+                
                 //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
-                if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                    cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
                 std::vector<cv::Point2f> map_p, camera_p;
                 map_p.push_back(cv::Point2f(pix_x, pix_y));
@@ -227,25 +211,7 @@ int main(int argc, char *argv[])
                 //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
 
                 cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
-            }
-        }
 
-
-        TIMER_START
-        sem.lock();
-        frame_v = frame.clone();
-        frame_top_v = frame_top.clone();
-        sem.unlock();
-
-        TIMER_STOP
-
-        if (frame_nbr == 0)
-        {
-
-            if (pthread_create(&visual, NULL, showImages, NULL))
-            {
-                fprintf(stderr, "Error creating thread\n");
-                return 1;
             }
         }
 
@@ -254,6 +220,15 @@ int main(int argc, char *argv[])
         send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
 
         
+
+        if (to_show)
+        {
+            cv::imshow("detection", frame);
+            cv::imshow("topview", frame_top);
+            cv::waitKey(1);
+        }
+
+
     }
 
     /*     for (size_t i = 0; i < trackers.size(); i++)
