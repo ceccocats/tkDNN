@@ -27,6 +27,19 @@ void sig_handler(int signo)
     gRun = false;
 }
 
+
+
+void draw_arrow(float angleRad, float vel,  cv::Scalar color, cv::Point center, cv::Mat &frame)
+{
+    int angle =  angleRad*180.0/CV_PI;
+    auto length = 10*vel;
+    auto direction = cv::Point(length * cos(angleRad), length * sin(angleRad)); // calculate direction
+    double tipLength = .2 + 0.4 * ( angle%180) / 360;
+    int lineType = 8;
+    int thickness = 2;
+    cv::arrowedLine(frame, center, center + direction, color, thickness, lineType, 0, tipLength); // draw arrow!
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -71,7 +84,9 @@ int main(int argc, char *argv[])
     cv::namedWindow("topview", cv::WINDOW_NORMAL);
 
     cv::Mat frame_top;
+    cv::Mat original_frame_top;
     frame_top = cv::imread("../demo/demo/data/map_b.jpg");
+    original_frame_top = frame_top.clone();
 
     /*projection matrix*/
 
@@ -187,31 +202,48 @@ int main(int argc, char *argv[])
 
 
         TIMER_STOP
-        //std::cout << "There are " << trackers.size() << " trackers" << std::endl;
+        std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
-        for (auto t : trackers)
+        if(to_show)
         {
-            for(auto pred_pos: t.pred_list_ )
+            frame_top = original_frame_top.clone();
+            for (auto t : trackers)
             {
-                
-                gc.enu2Geodetic(pred_pos.x_, pred_pos.y_, 0, &lat, &lon, &alt);
-                //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
-                int pix_x, pix_y;
-                coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-                
-                //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
-                if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                    cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                for(size_t p=1; p<t.pred_list_.size(); p++ )
+                {
+                    
+                    gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
+                    //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
+                    int pix_x, pix_y;
+                    coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+                    
+                    //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
+                    if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                        cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
-                std::vector<cv::Point2f> map_p, camera_p;
-                map_p.push_back(cv::Point2f(pix_x, pix_y));
+                    std::vector<cv::Point2f> map_p, camera_p;
+                    map_p.push_back(cv::Point2f(pix_x, pix_y));
 
-                //transform camera pixel to map pixel
-                cv::perspectiveTransform(map_p, camera_p, H.inv());
-                //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
+                    //transform camera pixel to map pixel
+                    cv::perspectiveTransform(map_p, camera_p, H.inv());
+                    //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
 
-                cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                    cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
+                    if(p == t.pred_list_.size()-1)
+                    {
+
+                        auto center = cv::Point(camera_p[0].x, camera_p[0].y);
+                        auto color = cv::Scalar(t.r_, t.g_, t.b_);
+                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame);
+
+                        center = cv::Point(pix_x,pix_y);
+                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame_top);
+
+                       
+                    }
+
+                }
             }
         }
 
