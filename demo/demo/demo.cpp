@@ -11,7 +11,9 @@
 
 #include "Yolo3Detection.h"
 
-bool gRun;
+bool 			gRun;
+std::string   	obj_class[10] {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
+
 
 void sig_handler(int signo) {
     std::cout<<"request gateway stop\n";
@@ -60,15 +62,24 @@ int main(int argc, char *argv[]) {
         // draw dets
         for(int i=0; i<yolo.detected.size(); i++) {
             tk::dnn::box b = yolo.detected[i];
-            int x0   = b.x;
-            int x1   = b.x + b.w;
-            int y0   = b.y;
-            int y1   = b.y + b.h;
-            int obj_class = b.cl;
-            float prob = b.prob;
+            int x0   				= b.x;
+            int x1   				= b.x + b.w;
+            int y0   				= b.y;
+            int y1   				= b.y + b.h;
+            std::string det_class 	= obj_class[b.cl];
+            float prob 				= b.prob;
 
-            std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
-            cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);                
+            std::cout<<det_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
+			// draw rectangle
+            cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[b.cl], 2); 
+
+	        // draw label
+            int baseline = 0;
+            float fontScale = 0.5;
+            int thickness = 2;
+            cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
+            cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), yolo.colors[b.cl], -1);                      
+            cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
         }
     
         cv::imshow("detection", frame);
