@@ -3,7 +3,7 @@
 #include <stdlib.h> /* srand, rand */
 #include <unistd.h>
 #include <mutex>
-#include <ctime>
+#include <ctime>  
 #include <pthread.h>
 #include "utils.h"
 
@@ -21,6 +21,8 @@
 #define MAX_DETECT_SIZE 100
 
 bool gRun;
+
+
 cv::Mat frame_v;
 cv::Mat frame_top_v;
 std::mutex sem;
@@ -33,7 +35,6 @@ void sig_handler(int signo)
 
 void *showImages(void *x_void_ptr)
 {
-
     while (gRun)
     {
         sem.lock();
@@ -42,6 +43,18 @@ void *showImages(void *x_void_ptr)
         sem.unlock();
         cv::waitKey(30);
     }
+}
+
+
+void draw_arrow(float angleRad, float vel,  cv::Scalar color, cv::Point center, cv::Mat &frame)
+{
+    int angle =  angleRad*180.0/CV_PI;
+    auto length = 10*vel;
+    auto direction = cv::Point(length * cos(angleRad), length * sin(angleRad)); // calculate direction
+    double tipLength = .2 + 0.4 * ( angle%180) / 360;
+    int lineType = 8;
+    int thickness = 2;
+    cv::arrowedLine(frame, center, center + direction, color, thickness, lineType, 0, tipLength); // draw arrow!
 }
 
 int main(int argc, char *argv[])
@@ -62,7 +75,6 @@ int main(int argc, char *argv[])
     char *tiffile = "../demo/demo/data/map_b.tif";
     if (argc > 4)
         tiffile = argv[4];
-    /*CAMID*/
     int CAM_IDX = 0;
     if (argc > 5)
         CAM_IDX = atoi(argv[5]);
@@ -70,6 +82,8 @@ int main(int argc, char *argv[])
     if (argc > 6)
         to_show = atoi(argv[6]);
 
+    
+    
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
     yolo.thresh = 0.25;
@@ -80,27 +94,31 @@ int main(int argc, char *argv[])
     if (!cap.isOpened())
         gRun = false;
     else
-        std::cout << "camera started\n";
+        std::cout <<"camera started\n";
 
     cv::Mat frame;
     cv::Mat frame_top;
-
     cv::Mat dnn_input;
-    cv::namedWindow("detection", cv::WINDOW_NORMAL);
-    cv::namedWindow("topview", cv::WINDOW_NORMAL);
-
-    frame_top = cv::imread("../demo/demo/data/map_b.jpg");
-
+    cv::Mat original_frame_top;
+    
     pthread_t visual;
+    
+    if(to_show)
+    {
+        cv::namedWindow("detection", cv::WINDOW_NORMAL);
+        cv::namedWindow("topview", cv::WINDOW_NORMAL);
+        frame_top = cv::imread("../demo/demo/data/map_b.jpg");
+        original_frame_top = frame_top.clone();
+    }
 
     /*projection matrix*/
-
     int proj_matrix_read = 0;
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
 
     /*GPS information*/
     double *adfGeoTransform = (double *)malloc(6 * sizeof(double));
     readTiff(tiffile, adfGeoTransform);
+    struct obj_coords *coords = (struct obj_coords *)malloc(MAX_DETECT_SIZE * sizeof(struct obj_coords));
 
     /*socket*/
     int sock;
@@ -113,7 +131,7 @@ int main(int argc, char *argv[])
     double lat, lon, alt;
 
     /*tracker infos*/
-    srand(time(NULL));
+    srand (time(NULL));
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
     int initial_age = -5;
@@ -121,12 +139,9 @@ int main(int argc, char *argv[])
     int n_states = 5;
     float dt = 0.03;
 
-    struct obj_coords *coords = (struct obj_coords *)malloc(MAX_DETECT_SIZE * sizeof(struct obj_coords));
-
     int frame_nbr = 0;
     while (gRun)
     {
-
         cap >> frame;
         if (!frame.data)
         {
@@ -148,13 +163,7 @@ int main(int argc, char *argv[])
             num_detected = MAX_DETECT_SIZE;
 
         if (proj_matrix_read == 0)
-        {
             read_projection_matrix(H, proj_matrix_read, pmatrix);
-        }
-
-        /*printf("%f %f %f \n%f %f %f\n %f %f %f\n\n", proj_matrix[0],proj_matrix[1],
-            proj_matrix[2],proj_matrix[3],proj_matrix[4],proj_matrix[5],
-            proj_matrix[6],proj_matrix[7],proj_matrix[8]);*/
 
         // draw dets
         for (int i = 0; i < num_detected; i++)
@@ -178,16 +187,16 @@ int main(int argc, char *argv[])
 
             //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
             cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);
+        
         }
 
-        //TIMER_START
+        TIMER_START
 
+        //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
         for (int i = 0; i < coord_i; i++)
         {
-            //std::cout << "lat orig: " << coords[i].LAT << " lon orig: " << coords[i].LONG << std::endl;
             gc.geodetic2Enu(coords[i].LAT, coords[i].LONG, 0, &east, &north, &up);
-            //std::cout << "east: " << east << " north: " << north << std::endl;
             cur_frame.push_back(Data(east, north, frame_nbr));
         }
 
@@ -201,47 +210,58 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
-        //TIMER_STOP
-        //std::cout << "There are " << trackers.size() << " trackers" << std::endl;
+        TIMER_STOP
+        std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
-        
-        for (auto t : trackers)
+        if(to_show)
         {
-            for (auto pred_pos : t.pred_list_)
+            frame_top = original_frame_top.clone();
+            for (auto t : trackers)
             {
+                for(size_t p=1; p<t.pred_list_.size(); p++ )
+                {
+                    
+                    gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
+                    //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
+                    int pix_x, pix_y;
+                    coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+                    
+                    //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
+                    if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                        cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
-                gc.enu2Geodetic(pred_pos.x_, pred_pos.y_, 0, &lat, &lon, &alt);
-                //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
-                int pix_x, pix_y;
-                coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+                    std::vector<cv::Point2f> map_p, camera_p;
+                    map_p.push_back(cv::Point2f(pix_x, pix_y));
 
-                //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
-                if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                    //transform camera pixel to map pixel
+                    cv::perspectiveTransform(map_p, camera_p, H.inv());
+                    //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
 
-                std::vector<cv::Point2f> map_p, camera_p;
-                map_p.push_back(cv::Point2f(pix_x, pix_y));
+                    cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
-                //transform camera pixel to map pixel
-                cv::perspectiveTransform(map_p, camera_p, H.inv());
-                //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
+                    if(p == t.pred_list_.size()-1)
+                    {
+                        auto center = cv::Point(camera_p[0].x, camera_p[0].y);
+                        auto color = cv::Scalar(t.r_, t.g_, t.b_);
+                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame);
 
-                cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                        center = cv::Point(pix_x,pix_y);
+                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame_top);
+                    }
+                }
             }
         }
 
-
-        TIMER_START
-        sem.lock();
-        frame_v = frame.clone();
-        frame_top_v = frame_top.clone();
-        sem.unlock();
-
-        TIMER_STOP
-
-        if (frame_nbr == 0)
+        if(to_show)
         {
+            sem.lock();
+            frame_v = frame.clone();
+            frame_top_v = frame_top.clone();
+            sem.unlock();
+        }
 
+        if (frame_nbr == 0 && to_show)
+        {
             if (pthread_create(&visual, NULL, showImages, NULL))
             {
                 fprintf(stderr, "Error creating thread\n");
@@ -250,15 +270,8 @@ int main(int argc, char *argv[])
         }
 
         frame_nbr++;
-
         send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
-
-        
     }
-
-    /*     for (size_t i = 0; i < trackers.size(); i++)
-        if (trackers[i].z_list_.size() > 10)
-            plotTruthvsPred(trackers[i].z_list_, trackers[i].pred_list_); */
 
     free(coords);
     free(adfGeoTransform);
