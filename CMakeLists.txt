@@ -88,6 +88,9 @@ target_link_libraries(test_yolo3_tetrapack tkDNN)
 
 add_executable(test_yolo3_tetrapack_resize tests/yolo3_tetrapack_resize/yolo3_tetrapack_resize.cpp)
 target_link_libraries(test_yolo3_tetrapack_resize tkDNN)
+
+add_executable(test_yolo3_BCDS6 tests/yolo3_BCDS6/yolo3_BCDS6.cpp)
+target_link_libraries(test_yolo3_BCDS6 tkDNN)
 ################################################################################
 
 
