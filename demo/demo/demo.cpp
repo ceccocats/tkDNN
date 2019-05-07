@@ -3,7 +3,7 @@
 #include <stdlib.h> /* srand, rand */
 #include <unistd.h>
 #include <mutex>
-#include <ctime>  
+#include <ctime>
 #include <pthread.h>
 #include "utils.h"
 
@@ -21,7 +21,6 @@
 #define MAX_DETECT_SIZE 100
 
 bool gRun;
-
 
 cv::Mat frame_v;
 cv::Mat frame_top_v;
@@ -45,13 +44,12 @@ void *showImages(void *x_void_ptr)
     }
 }
 
-
-void draw_arrow(float angleRad, float vel,  cv::Scalar color, cv::Point center, cv::Mat &frame)
+void draw_arrow(float angleRad, float vel, cv::Scalar color, cv::Point center, cv::Mat &frame)
 {
-    int angle =  angleRad*180.0/CV_PI;
-    auto length = 10*vel;
+    int angle = angleRad * 180.0 / CV_PI;
+    auto length = 10 * vel;
     auto direction = cv::Point(length * cos(angleRad), length * sin(angleRad)); // calculate direction
-    double tipLength = .2 + 0.4 * ( angle%180) / 360;
+    double tipLength = .2 + 0.4 * (angle % 180) / 360;
     int lineType = 8;
     int thickness = 2;
     cv::arrowedLine(frame, center, center + direction, color, thickness, lineType, 0, tipLength); // draw arrow!
@@ -78,12 +76,13 @@ int main(int argc, char *argv[])
     int CAM_IDX = 0;
     if (argc > 5)
         CAM_IDX = atoi(argv[5]);
-    bool to_show = false;
+    bool to_show = true;
     if (argc > 6)
         to_show = atoi(argv[6]);
+    char *maskfile = "../demo/demo/data/mask36.jpg";
+    if (argc > 7)
+        maskfile = argv[7];
 
-    
-    
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
     yolo.thresh = 0.25;
@@ -94,16 +93,16 @@ int main(int argc, char *argv[])
     if (!cap.isOpened())
         gRun = false;
     else
-        std::cout <<"camera started\n";
+        std::cout << "camera started\n";
 
     cv::Mat frame;
     cv::Mat frame_top;
     cv::Mat dnn_input;
     cv::Mat original_frame_top;
-    
+
     pthread_t visual;
-    
-    if(to_show)
+
+    if (to_show)
     {
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
         cv::namedWindow("topview", cv::WINDOW_NORMAL);
@@ -130,8 +129,12 @@ int main(int argc, char *argv[])
     double east, north, up;
     double lat, lon, alt;
 
+    /*Mask info*/
+    cv::Mat mask;
+    mask = cv::imread(maskfile, cv::IMREAD_GRAYSCALE);
+
     /*tracker infos*/
-    srand (time(NULL));
+    srand(time(NULL));
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
     int initial_age = -5;
@@ -142,6 +145,7 @@ int main(int argc, char *argv[])
     int frame_nbr = 0;
     while (gRun)
     {
+
         cap >> frame;
         if (!frame.data)
         {
@@ -176,18 +180,23 @@ int main(int argc, char *argv[])
             int y1 = b.y + b.h;
             int obj_class = b.cl;
 
-            if (obj_class == 0 /*person*/ || obj_class == 1 /*bicycle*/ || obj_class == 2 /*car*/
-                || obj_class == 3 /*motorbike*/ || obj_class == 5 /*bus*/)
+            cv::Scalar intensity = mask.at<uchar>(cv::Point(int(x0 + b.w / 2), y1));
+
+            if (intensity[0])
             {
-                convert_coords(coords, coord_i, x0 + b.w / 2, y1, obj_class, H, adfGeoTransform, frame_nbr);
-                coord_i++;
+
+                if (obj_class == 0 /*person*/ || obj_class == 1 /*bicycle*/ || obj_class == 2 /*car*/
+                    || obj_class == 3 /*motorbike*/ || obj_class == 5 /*bus*/)
+                {
+                    convert_coords(coords, coord_i, x0 + b.w / 2, y1, obj_class, H, adfGeoTransform, frame_nbr);
+                    coord_i++;
+                }
+
+                float prob = b.prob;
+
+                //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
+                cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);
             }
-
-            float prob = b.prob;
-
-            //std::cout<<obj_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
-            cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[obj_class], 2);
-        
         }
 
         TIMER_START
@@ -213,22 +222,22 @@ int main(int argc, char *argv[])
         TIMER_STOP
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
-        if(to_show)
+        if (to_show)
         {
             frame_top = original_frame_top.clone();
             for (auto t : trackers)
             {
-                for(size_t p=1; p<t.pred_list_.size(); p++ )
+                for (size_t p = 1; p < t.pred_list_.size(); p++)
                 {
-                    
+
                     gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
                     //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
                     int pix_x, pix_y;
                     coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-                    
+
                     //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
-                    if(pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                        cv::circle(frame_top, cv::Point(pix_x,pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                    if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                        cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
                     std::vector<cv::Point2f> map_p, camera_p;
                     map_p.push_back(cv::Point2f(pix_x, pix_y));
@@ -239,7 +248,7 @@ int main(int argc, char *argv[])
 
                     cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
 
-                    if(p == t.pred_list_.size()-1)
+                    /*if(p == t.pred_list_.size()-1)
                     {
                         auto center = cv::Point(camera_p[0].x, camera_p[0].y);
                         auto color = cv::Scalar(t.r_, t.g_, t.b_);
@@ -247,12 +256,12 @@ int main(int argc, char *argv[])
 
                         center = cv::Point(pix_x,pix_y);
                         draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame_top);
-                    }
+                    }*/
                 }
             }
         }
 
-        if(to_show)
+        if (to_show)
         {
             sem.lock();
             frame_v = frame.clone();
