@@ -84,6 +84,9 @@ int main(int argc, char *argv[])
     char *maskfile = "../demo/demo/data/mask36.jpg";
     if (argc > 7)
         maskfile = argv[7];
+    char *cameraCalib = "../demo/demo/data/calib36.params";
+    if (argc > 8)
+        cameraCalib = argv[7];
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
@@ -112,25 +115,26 @@ int main(int argc, char *argv[])
         original_frame_top = frame_top.clone();
     }
 
-    /*projection matrix*/
+    /*projection matrix from camera to map*/
     int proj_matrix_read = 0;
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
 
     /*Camera calibration*/
-    float data[9] = {1.6158690952190570e+03, 0., 9.4702812371722337e+02, 0., 1.6123979985757153e+03, 5.1995630055718266e+02, 0., 0., 1.};
-    cv::Mat camera_matrix = cv::Mat(3, 3, CV_32F, data);
-    std::cout << camera_matrix << std::endl;
-    float data_dc[5] = {-4.0971199964304100e-01, 1.8755404192050384e-01, -5.3059322427743867e-03, -1.0380603625304912e-03, 0.};
-    cv::Mat distortion_coefficients = cv::Mat(5, 1, CV_32F, data_dc);
-    std::cout << distortion_coefficients << std::endl;
-
-    YAML::Node config = YAML::LoadFile("/home/classfog1/repos/tkDNN/demo/demo/data/calib36.params");
+    YAML::Node config = YAML::LoadFile(cameraCalib);
     const YAML::Node &node_test1 = config["camera_matrix"];
-    for (std::size_t i = 0; i < node_test1.size(); i++)
-    {
-        const YAML::Node &node_test2 = node_test1[i];
-        //std::cout << "Id: " << node_test2["data"].as<std::string>() << std::endl;
-    }
+
+    float data_cm[9];
+    for (std::size_t i = 0; i < node_test1["data"].size(); i++)
+        data_cm[i] = node_test1["data"][i].as<float>();
+    cv::Mat cameraMat = cv::Mat(3, 3, CV_32F, data_cm);
+    std::cout << cameraMat << std::endl;
+    const YAML::Node &node_test2 = config["distortion_coefficients"];
+
+    float data_dc[5];
+    for (std::size_t i = 0; i < node_test2["data"].size(); i++)
+        data_dc[i] = node_test2["data"][i].as<float>();
+    cv::Mat distCoeff = cv::Mat(5, 1, CV_32F, data_dc);
+    std::cout << distCoeff << std::endl;
 
     /*GPS information*/
     double *adfGeoTransform = (double *)malloc(6 * sizeof(double));
@@ -163,12 +167,11 @@ int main(int argc, char *argv[])
     int frame_nbr = 0;
     while (gRun)
     {
-        break;
 
         cap >> frame;
 
         cv::Mat temp = frame.clone();
-        undistort(temp, frame, camera_matrix, distortion_coefficients);
+        undistort(temp, frame, cameraMat, distCoeff);
         //cv::imwrite("undistorted.jpg", frame);
 
         if (!frame.data)
