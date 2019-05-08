@@ -1,3 +1,6 @@
 [submodule "tracker_CLASS"]
 	path = tracker_CLASS
 	url = https://github.com/mive93/tracker_CLASS.git
+[submodule "masa_protocol"]
+	path = masa_protocol
+	url = https://git.hipert.unimore.it/rcavicchioli/masa_protocol.git

@@ -14,7 +14,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "Yolo3Detection.h"
-#include "send.h"
+#include "classutils.h"
+#include "../masa_protocol/include/send.hpp"
+#include "../masa_protocol/include/serialize.hpp"
+
 #include "ekf.h"
 #include "trackutils.h"
 #include "plot.h"
@@ -58,6 +61,52 @@ void draw_arrow(float angleRad, float vel, cv::Scalar color, cv::Point center, c
     cv::arrowedLine(frame, center, center + direction, color, thickness, lineType, 0, tipLength); // draw arrow!
 }
 
+unsigned long long time_in_ms()
+{    
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long long t_stamp_ms = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
+    return t_stamp_ms;
+}
+
+void prepare_message(Message *m, struct obj_coords *coords, int n_coords, int idx)
+{
+    m->cam_idx = idx;
+    m->t_stamp_ms = time_in_ms();
+    m->num_objects = n_coords;
+
+    m->objects.clear();
+    for (int i = 0; i < n_coords ; i++)
+    {
+        Categories cat;
+        switch (static_cast<int>(coords[i].cl))
+        {
+        case 0:
+            cat = Categories::C_person;
+            break;
+        case 1:
+            cat = Categories::C_car;
+            break;
+        case 2:
+            cat = Categories::C_car;
+            break;
+        case 3:
+            cat = Categories::C_bus;
+            break;
+        case 4:
+            cat = Categories::C_motorbike;
+            break;
+        case 5:
+            cat = Categories::C_bycicle;
+            break;
+        }
+        RoadUser r{coords[i].LAT, coords[i].LONG, 0, 1, C_car};
+        m->objects.push_back(r);
+    }
+
+    m->lights.clear();
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -76,7 +125,7 @@ int main(int argc, char *argv[])
     char *tiffile = "../demo/demo/data/map_b.tif";
     if (argc > 4)
         tiffile = argv[4];
-    int CAM_IDX = 0;
+    int CAM_IDX = 20936;
     if (argc > 5)
         CAM_IDX = atoi(argv[5]);
     bool to_show = true;
@@ -143,8 +192,10 @@ int main(int argc, char *argv[])
     struct obj_coords *coords = (struct obj_coords *)malloc(MAX_DETECT_SIZE * sizeof(struct obj_coords));
 
     /*socket*/
-    int sock;
-    int socket_opened = 0;
+
+    Communicator Comm(SOCK_DGRAM);
+    Comm.open_client_socket("127.0.0.1", 8888);
+    Message *m = new Message;
 
     /*Conversion for tracker, from gps to meters and viceversa*/
     geodetic_converter::GeodeticConverter gc;
@@ -313,7 +364,15 @@ int main(int argc, char *argv[])
         }
 
         frame_nbr++;
-        send_client_dummy(coords, coord_i, sock, socket_opened, CAM_IDX);
+        prepare_message(m,coords, coord_i,CAM_IDX);
+        std::stringbuf s;
+        Comm.serialize_coords(m,&s);
+        
+        //std::cout<<s.str()<<std::endl;
+        //std::cout<<s.str().length()<<std::endl;
+        
+        Comm.send_message(m);
+        
     }
 
     free(coords);

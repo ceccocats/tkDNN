@@ -107,8 +107,6 @@ add_executable(yolo3_demo demo/demo/demo.cpp
 target_link_libraries(yolo3_demo tkDNN)
 target_link_libraries(yolo3_demo python2.7 yaml-cpp)
 
-add_executable(class_server demo/server/server_less_dummy.cpp)
-target_link_libraries(class_server pthread tkDNN )
 
 
 #install
