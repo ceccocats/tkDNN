@@ -51,7 +51,16 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
-
+        /*
+        if(net->dla && builderRT->getNbDLACores() > 0) {
+            dtRT = DataType::kHALF;
+            builderRT->setFp16Mode(true);
+            builderRT->allowGPUFallback(true);
+            builderRT->setDefaultDeviceType(DeviceType::kDLA);
+            builderRT->setDLACore(0);
+        }
+        */
+       
         //add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});

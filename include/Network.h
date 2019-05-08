@@ -59,7 +59,7 @@ public:
     dataDim_t input_dim;
     dataDim_t getOutputDim();
 
-    bool fp16;
+    bool fp16, dla;
 };
 
 }}
