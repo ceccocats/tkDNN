@@ -6,7 +6,6 @@
 #include <ctime>
 #include <pthread.h>
 
-#include <yaml-cpp/yaml.h>
 #include "utils.h"
 
 #include <opencv2/core/core.hpp>
@@ -48,63 +47,6 @@ void *showImages(void *x_void_ptr)
         sem.unlock();
         cv::waitKey(30);
     }
-}
-
-void draw_arrow(float angleRad, float vel, cv::Scalar color, cv::Point center, cv::Mat &frame)
-{
-    int angle = angleRad * 180.0 / CV_PI;
-    auto length = 10 * vel;
-    auto direction = cv::Point(length * cos(angleRad), length * sin(angleRad)); // calculate direction
-    double tipLength = .2 + 0.4 * (angle % 180) / 360;
-    int lineType = 8;
-    int thickness = 2;
-    cv::arrowedLine(frame, center, center + direction, color, thickness, lineType, 0, tipLength); // draw arrow!
-}
-
-unsigned long long time_in_ms()
-{    
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    unsigned long long t_stamp_ms = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-    return t_stamp_ms;
-}
-
-void prepare_message(Message *m, struct obj_coords *coords, int n_coords, int idx)
-{
-    m->cam_idx = idx;
-    m->t_stamp_ms = time_in_ms();
-    m->num_objects = n_coords;
-
-    m->objects.clear();
-    for (int i = 0; i < n_coords ; i++)
-    {
-        Categories cat;
-        switch (static_cast<int>(coords[i].cl))
-        {
-        case 0:
-            cat = Categories::C_person;
-            break;
-        case 1:
-            cat = Categories::C_car;
-            break;
-        case 2:
-            cat = Categories::C_car;
-            break;
-        case 3:
-            cat = Categories::C_bus;
-            break;
-        case 4:
-            cat = Categories::C_motorbike;
-            break;
-        case 5:
-            cat = Categories::C_bycicle;
-            break;
-        }
-        RoadUser r{coords[i].LAT, coords[i].LONG, 0, 1, C_car};
-        m->objects.push_back(r);
-    }
-
-    m->lights.clear();
 }
 
 int main(int argc, char *argv[])
@@ -166,33 +108,21 @@ int main(int argc, char *argv[])
     }
 
     /*projection matrix from camera to map*/
-    int proj_matrix_read = 0;
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
+    read_projection_matrix(H, pmatrix);
 
     /*Camera calibration*/
-    YAML::Node config = YAML::LoadFile(cameraCalib);
-    const YAML::Node &node_test1 = config["camera_matrix"];
-
-    float data_cm[9];
-    for (std::size_t i = 0; i < node_test1["data"].size(); i++)
-        data_cm[i] = node_test1["data"][i].as<float>();
-    cv::Mat cameraMat = cv::Mat(3, 3, CV_32F, data_cm);
+    cv::Mat cameraMat, distCoeff;
+    readCameraCalibrationYaml(cameraCalib, cameraMat, distCoeff);
     std::cout << cameraMat << std::endl;
-    const YAML::Node &node_test2 = config["distortion_coefficients"];
-
-    float data_dc[5];
-    for (std::size_t i = 0; i < node_test2["data"].size(); i++)
-        data_dc[i] = node_test2["data"][i].as<float>();
-    cv::Mat distCoeff = cv::Mat(5, 1, CV_32F, data_dc);
     std::cout << distCoeff << std::endl;
 
     /*GPS information*/
     double *adfGeoTransform = (double *)malloc(6 * sizeof(double));
     readTiff(tiffile, adfGeoTransform);
-    struct obj_coords *coords = (struct obj_coords *)malloc(MAX_DETECT_SIZE * sizeof(struct obj_coords));
+    std::vector<ObjCoords> coords;
 
     /*socket*/
-
     Communicator Comm(SOCK_DGRAM);
     Comm.open_client_socket("127.0.0.1", 8888);
     Message *m = new Message;
@@ -204,8 +134,7 @@ int main(int argc, char *argv[])
     double lat, lon, alt;
 
     /*Mask info*/
-    cv::Mat mask;
-    mask = cv::imread(maskfile, cv::IMREAD_GRAYSCALE);
+    cv::Mat mask = cv::imread(maskfile, cv::IMREAD_GRAYSCALE);
 
     /*tracker infos*/
     srand(time(NULL));
@@ -217,6 +146,7 @@ int main(int argc, char *argv[])
     float dt = 0.03;
 
     int frame_nbr = 0;
+
     while (gRun)
     {
 
@@ -239,14 +169,11 @@ int main(int argc, char *argv[])
         // TODO: async infer
         yolo.update(dnn_input);
 
-        int coord_i = 0;
-
         int num_detected = yolo.detected.size();
         if (num_detected > MAX_DETECT_SIZE)
             num_detected = MAX_DETECT_SIZE;
 
-        if (proj_matrix_read == 0)
-            read_projection_matrix(H, proj_matrix_read, pmatrix);
+        coords.clear();
 
         // draw dets
         for (int i = 0; i < num_detected; i++)
@@ -268,8 +195,7 @@ int main(int argc, char *argv[])
 
                 if (objClass < 6)
                 {
-                    convert_coords(coords, coord_i, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
-                    coord_i++;
+                    convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
 
                     //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
                     cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[objClass], 2);
@@ -284,16 +210,13 @@ int main(int argc, char *argv[])
             }
         }
 
-        TIMER_START
-
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
-        for (int i = 0; i < coord_i; i++)
+        for (size_t i = 0; i < coords.size(); i++)
         {
-            gc.geodetic2Enu(coords[i].LAT, coords[i].LONG, 0, &east, &north, &up);
+            gc.geodetic2Enu(coords[i].lat_, coords[i].long_, 0, &east, &north, &up);
             cur_frame.push_back(Data(east, north, frame_nbr));
         }
-
         if (frame_nbr == 0)
         {
             for (auto f : cur_frame)
@@ -304,7 +227,6 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
-        TIMER_STOP
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
         if (to_show)
@@ -364,18 +286,14 @@ int main(int argc, char *argv[])
         }
 
         frame_nbr++;
-        prepare_message(m,coords, coord_i,CAM_IDX);
+        prepare_message(m, coords, CAM_IDX);
         std::stringbuf s;
-        Comm.serialize_coords(m,&s);
-        
+        Comm.serialize_coords(m, &s);
         //std::cout<<s.str()<<std::endl;
         //std::cout<<s.str().length()<<std::endl;
-        
         Comm.send_message(m);
-        
     }
 
-    free(coords);
     free(adfGeoTransform);
 
     std::cout << "detection end\n";
