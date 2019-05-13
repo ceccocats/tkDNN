@@ -20,6 +20,7 @@ Build with cmake
 mkdir build
 cd build
 cmake ..
+# use -DBUILD_DEPS=False to skip dataset download
 make
 ```
 during the cmake configuration it will be dowloaded the weights needed for running
