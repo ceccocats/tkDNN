@@ -76,6 +76,8 @@ void pixel2coord(int x, int y, double &lat, double &lon, double *adfGeoTransform
 
     lon = a * x + b * y + xoff;
     lat = d * x + e * y + yoff;
+
+    
 }
 void coord2pixel(double lat, double lon, int &x, int &y, double *adfGeoTransform)
 {
@@ -174,7 +176,7 @@ unsigned long long time_in_ms()
     return t_stamp_ms;
 }
 
-void prepare_message(Message *m, const std::vector<ObjCoords>& coords, int idx)
+void prepare_message(Message *m, const std::vector<ObjCoords> &coords, int idx)
 {
     m->cam_idx = idx;
     m->t_stamp_ms = time_in_ms();
@@ -184,6 +186,7 @@ void prepare_message(Message *m, const std::vector<ObjCoords>& coords, int idx)
     for (int i = 0; i < coords.size(); i++)
     {
         Categories cat;
+
         switch (coords[i].class_)
         {
         case 0:
@@ -205,7 +208,8 @@ void prepare_message(Message *m, const std::vector<ObjCoords>& coords, int idx)
             cat = Categories::C_bycicle;
             break;
         }
-        RoadUser r{coords[i].lat_, coords[i].long_, 0, 1, C_car};
+        RoadUser r{static_cast<float>(coords[i].lat_), static_cast<float>(coords[i].long_), 0, 1, cat};
+        std::cout<<std::setprecision(10) <<r.latitude<<" , "<<r.longitude << " " << cat << std::endl;
         m->objects.push_back(r);
     }
 

@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         maskfile = argv[7];
     char *cameraCalib = "../demo/demo/data/calib36.params";
     if (argc > 8)
-        cameraCalib = argv[7];
+        cameraCalib = argv[8];
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     {
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
         cv::namedWindow("topview", cv::WINDOW_NORMAL);
-        frame_top = cv::imread("../demo/demo/data/map_b.jpg");
+        frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
         original_frame_top = frame_top.clone();
     }
 
@@ -147,6 +147,13 @@ int main(int argc, char *argv[])
 
     int frame_nbr = 0;
 
+    //save video
+    /*cv::VideoWriter outputVideo;
+    cv::Size S = cv::Size((int)cap.get(cv::CAP_PROP_FRAME_WIDTH), //Acquire input size
+                          (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    outputVideo.open("test.avi", static_cast<int>(cap.get(cv::CAP_PROP_FOURCC)), cap.get(cv::CAP_PROP_FPS), S, true);*/
+    
+
     while (gRun)
     {
 
@@ -154,7 +161,7 @@ int main(int argc, char *argv[])
 
         cv::Mat temp = frame.clone();
         undistort(temp, frame, cameraMat, distCoeff);
-        //cv::imwrite("undistorted.jpg", frame);
+        cv::imwrite(std::to_string(CAM_IDX) + ".jpg", frame);
 
         if (!frame.data)
         {
@@ -195,6 +202,8 @@ int main(int argc, char *argv[])
 
                 if (objClass < 6)
                 {
+                    
+                    
                     convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
 
                     //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
@@ -209,6 +218,8 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
+        TIMER_START
 
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
@@ -227,6 +238,7 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
+        TIMER_STOP
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
         if (to_show)
@@ -268,12 +280,16 @@ int main(int argc, char *argv[])
             }
         }
 
+
+
         if (to_show)
         {
             sem.lock();
             frame_v = frame.clone();
             frame_top_v = frame_top.clone();
             sem.unlock();
+
+            //outputVideo<< frame_top;
         }
 
         if (frame_nbr == 0 && to_show)
@@ -287,11 +303,8 @@ int main(int argc, char *argv[])
 
         frame_nbr++;
         prepare_message(m, coords, CAM_IDX);
-        std::stringbuf s;
-        Comm.serialize_coords(m, &s);
-        //std::cout<<s.str()<<std::endl;
-        //std::cout<<s.str().length()<<std::endl;
         Comm.send_message(m);
+
     }
 
     free(adfGeoTransform);
