@@ -17,6 +17,8 @@
 #include "gdal/gdal_priv.h"
 #include "gdal/cpl_conv.h"
 
+#include "tracker.h"
+
 #include <yaml-cpp/yaml.h>
 
 #include "../masa_protocol/include/send.hpp"
@@ -76,8 +78,6 @@ void pixel2coord(int x, int y, double &lat, double &lon, double *adfGeoTransform
 
     lon = a * x + b * y + xoff;
     lat = d * x + e * y + yoff;
-
-    
 }
 void coord2pixel(double lat, double lon, int &x, int &y, double *adfGeoTransform)
 {
@@ -176,6 +176,51 @@ unsigned long long time_in_ms()
     return t_stamp_ms;
 }
 
+void addRoadUserfromTracker(const std::vector<Tracker>& trackers, Message *m, geodetic_converter::GeodeticConverter& gc)
+{
+    m->t_stamp_ms = time_in_ms();
+    m->num_objects = trackers.size();
+    m->objects.clear();
+    double lat, lon, alt;
+
+    for (auto t : trackers)
+    {
+        if (t.pred_list_.size() > 0)
+        {
+            Categories cat;
+            switch (t.class_)
+            {
+            case 0:
+                cat = Categories::C_person;
+                break;
+            case 1:
+                cat = Categories::C_car;
+                break;
+            case 2:
+                cat = Categories::C_car;
+                break;
+            case 3:
+                cat = Categories::C_bus;
+                break;
+            case 4:
+                cat = Categories::C_motorbike;
+                break;
+            case 5:
+                cat = Categories::C_bycicle;
+                break;
+            }
+            //std::cout << t.pred_list_.size() << std::endl;
+            gc.enu2Geodetic(t.pred_list_.back().x_, t.pred_list_.back().y_, 0, &lat, &lon, &alt);
+            //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
+            uint8_t velocity = uint8_t(std::abs(t.pred_list_.back().vel_ * 3.6 / 2));
+            uint8_t orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            RoadUser r{static_cast<float>(lat), static_cast<float>(lon), velocity, orientation, cat};
+            std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << int(r.speed) << " " << int(r.orientation) << " " << r.category << std::endl;
+            m->objects.push_back(r);
+        }
+    }
+}
+
 void prepare_message(Message *m, const std::vector<ObjCoords> &coords, int idx)
 {
     m->cam_idx = idx;
@@ -209,7 +254,7 @@ void prepare_message(Message *m, const std::vector<ObjCoords> &coords, int idx)
             break;
         }
         RoadUser r{static_cast<float>(coords[i].lat_), static_cast<float>(coords[i].long_), 0, 1, cat};
-        std::cout<<std::setprecision(10) <<r.latitude<<" , "<<r.longitude << " " << cat << std::endl;
+        std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << cat << std::endl;
         m->objects.push_back(r);
     }
 

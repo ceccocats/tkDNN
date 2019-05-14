@@ -126,6 +126,8 @@ int main(int argc, char *argv[])
     Communicator Comm(SOCK_DGRAM);
     Comm.open_client_socket("127.0.0.1", 8888);
     Message *m = new Message;
+    m->cam_idx = CAM_IDX;
+    m->lights.clear();
 
     /*Conversion for tracker, from gps to meters and viceversa*/
     geodetic_converter::GeodeticConverter gc;
@@ -152,7 +154,6 @@ int main(int argc, char *argv[])
     cv::Size S = cv::Size((int)cap.get(cv::CAP_PROP_FRAME_WIDTH), //Acquire input size
                           (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
     outputVideo.open("test.avi", static_cast<int>(cap.get(cv::CAP_PROP_FOURCC)), cap.get(cv::CAP_PROP_FPS), S, true);*/
-    
 
     while (gRun)
     {
@@ -202,8 +203,6 @@ int main(int argc, char *argv[])
 
                 if (objClass < 6)
                 {
-                    
-                    
                     convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
 
                     //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
         for (size_t i = 0; i < coords.size(); i++)
         {
             gc.geodetic2Enu(coords[i].lat_, coords[i].long_, 0, &east, &north, &up);
-            cur_frame.push_back(Data(east, north, frame_nbr));
+            cur_frame.push_back(Data(east, north, frame_nbr, coords[i].class_));
         }
         if (frame_nbr == 0)
         {
@@ -240,6 +239,15 @@ int main(int argc, char *argv[])
 
         TIMER_STOP
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
+
+
+        //prepare message with tracker info
+        addRoadUserfromTracker(trackers, m, gc);
+        //prepare the message with detection info
+        //prepare_message(m, coords, CAM_IDX);
+        //send message
+        Comm.send_message(m);
+
 
         if (to_show)
         {
@@ -280,8 +288,6 @@ int main(int argc, char *argv[])
             }
         }
 
-
-
         if (to_show)
         {
             sem.lock();
@@ -302,9 +308,7 @@ int main(int argc, char *argv[])
         }
 
         frame_nbr++;
-        prepare_message(m, coords, CAM_IDX);
-        Comm.send_message(m);
-
+        
     }
 
     free(adfGeoTransform);
