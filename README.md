@@ -7,6 +7,12 @@ this branch actually work on every NVIDIA GPU that support the dependencies:
 * CUDNN 7.105
 * TENSORRT 4.02
 
+## Dependencies
+
+```
+sudo apt install libgdal-dev libeigen3-dev python-matplotlib libyaml-cpp-dev libcereal-dev
+```
+
 ## Workflow
 The recommended workflow follow these step:
 * Build and train a model in Keras (on any PC)
