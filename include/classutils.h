@@ -176,7 +176,7 @@ unsigned long long time_in_ms()
     return t_stamp_ms;
 }
 
-void addRoadUserfromTracker(const std::vector<Tracker>& trackers, Message *m, geodetic_converter::GeodeticConverter& gc)
+void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, geodetic_converter::GeodeticConverter &gc, const cv::Mat& maskOrient, double *adfGeoTransform)
 {
     m->t_stamp_ms = time_in_ms();
     m->num_objects = trackers.size();
@@ -211,11 +211,30 @@ void addRoadUserfromTracker(const std::vector<Tracker>& trackers, Message *m, ge
             }
             //std::cout << t.pred_list_.size() << std::endl;
             gc.enu2Geodetic(t.pred_list_.back().x_, t.pred_list_.back().y_, 0, &lat, &lon, &alt);
+
+            int pix_x, pix_y;
+            coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+
+            std::cout<<maskOrient.at<cv::Vec3b>(pix_y,pix_x)<<std::endl;
+
+            uint8_t maskOrientPixel = maskOrient.at<cv::Vec3b>(pix_y,pix_x)[0]; 
+            uint8_t orientation;
+            if(maskOrientPixel != 0)
+            {
+                orientation = maskOrientPixel;
+                std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
+            }
+            else
+            {
+                orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+                //std::cout<<"orientation given by the tracker "<< int(orientation)<<std::endl;
+            }
+            
             //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
             uint8_t velocity = uint8_t(std::abs(t.pred_list_.back().vel_ * 3.6 / 2));
-            uint8_t orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            
             RoadUser r{static_cast<float>(lat), static_cast<float>(lon), velocity, orientation, cat};
-            std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << int(r.speed) << " " << int(r.orientation) << " " << r.category << std::endl;
+            //std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << int(r.speed) << " " << int(r.orientation) << " " << r.category << std::endl;
             m->objects.push_back(r);
         }
     }

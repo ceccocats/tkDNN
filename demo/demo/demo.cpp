@@ -79,6 +79,9 @@ int main(int argc, char *argv[])
     char *cameraCalib = "../demo/demo/data/calib36.params";
     if (argc > 8)
         cameraCalib = argv[8];
+    char *maskFileOrient = "../demo/demo/data/mask_orient/6315_mask_orient.jpg";
+    if (argc > 9)
+        maskFileOrient = argv[9];
 
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
@@ -137,6 +140,18 @@ int main(int argc, char *argv[])
 
     /*Mask info*/
     cv::Mat mask = cv::imread(maskfile, cv::IMREAD_GRAYSCALE);
+    cv::Mat maskOrient = cv::imread(maskFileOrient);
+
+    /*for(int i=0; i< mask.cols; i++)
+    {
+        for(int j=0; j< mask.rows; j++)
+        {
+            std::cout<<maskOrient.at<cv::Vec3b>(i,j)    <<std::endl;
+        }
+    }
+    
+
+    return 0;*/
 
     /*tracker infos*/
     srand(time(NULL));
@@ -155,14 +170,21 @@ int main(int argc, char *argv[])
                           (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
     outputVideo.open("test.avi", static_cast<int>(cap.get(cv::CAP_PROP_FOURCC)), cap.get(cv::CAP_PROP_FPS), S, true);*/
 
+    cv::Mat map1, map2;
+
     while (gRun)
     {
-
+        TIMER_START
         cap >> frame;
 
+        if (frame_nbr == 0)
+            cv::initUndistortRectifyMap(cameraMat, distCoeff, cv::Mat(), cameraMat, frame.size(), CV_16SC2, map1, map2);
         cv::Mat temp = frame.clone();
-        undistort(temp, frame, cameraMat, distCoeff);
-        cv::imwrite(std::to_string(CAM_IDX) + ".jpg", frame);
+
+        cv::remap(temp, frame, map1, map2, 1);
+
+        //undistort(temp, frame, cameraMat, distCoeff);
+
 
         if (!frame.data)
         {
@@ -218,8 +240,6 @@ int main(int argc, char *argv[])
             }
         }
 
-        TIMER_START
-
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
         for (size_t i = 0; i < coords.size(); i++)
@@ -237,17 +257,14 @@ int main(int argc, char *argv[])
             Track(cur_frame, dt, n_states, initial_age, age_threshold, trackers);
         }
 
-        TIMER_STOP
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
 
-
         //prepare message with tracker info
-        addRoadUserfromTracker(trackers, m, gc);
+        addRoadUserfromTracker(trackers, m, gc, maskOrient, adfGeoTransform);
         //prepare the message with detection info
         //prepare_message(m, coords, CAM_IDX);
         //send message
         Comm.send_message(m);
-
 
         if (to_show)
         {
@@ -308,7 +325,7 @@ int main(int argc, char *argv[])
         }
 
         frame_nbr++;
-        
+        TIMER_STOP
     }
 
     free(adfGeoTransform);
