@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 project (tkDNN)
 
-set(BUILD_DEPS true CACHE BOOL "If true download deps")
+set(TEST_DATA true CACHE BOOL "If true download deps")
 
-if( ${BUILD_DEPS} )
+if( ${TEST_DATA} )
 	message("Launching pre-build dependency installer script...")
 
     execute_process (COMMAND bash -c "bash build_models.sh download"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-	set(BUILD_DEPS false CACHE BOOL "If true download deps" FORCE)
+	set(TEST_DATA false CACHE BOOL "If true download deps" FORCE)
 	message("Finished dowloading test weights")
 endif()
 
