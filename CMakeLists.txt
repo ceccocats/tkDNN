@@ -15,8 +15,8 @@ endif()
 #-------------------------------------------------------------------------------
 # CUDA
 #-------------------------------------------------------------------------------
-SET(CUDA_SEPARABLE_COMPILATION ON)
 find_package(CUDA 9.0 REQUIRED)
+SET(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
 
 # compile Discovery only if TensorRT is installed
