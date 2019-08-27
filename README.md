@@ -49,4 +49,7 @@ this will genereate a yolo3_berkeley.rt file that can be used for live detection
 ./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
 
+<!-- Acknowledgements -->
+# Acknowledgements
 
+This work has been supported by the EU H2020 project CLASS, contract #780622.
