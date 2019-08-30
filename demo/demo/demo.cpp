@@ -6,11 +6,22 @@
 #include <ctime>
 #include <pthread.h>
 
+#include <time.h>
+#include <chrono>
+#include <math.h>
+#include <typeinfo>
+
 #include "utils.h"
+#include "BoxDetection.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+//saliency
+#include <opencv2/core/utility.hpp>
+#include <opencv2/saliency.hpp>
+#include <opencv2/highgui.hpp>
 
 #include "Yolo3Detection.h"
 #include "classutils.h"
@@ -96,6 +107,8 @@ int main(int argc, char *argv[])
         std::cout << "camera started\n";
 
     cv::Mat frame;
+    cv::Mat frame_crop;
+    char buf_frame_crop_name [200];
     cv::Mat frame_top;
     cv::Mat dnn_input;
     cv::Mat original_frame_top;
@@ -106,7 +119,8 @@ int main(int argc, char *argv[])
     {
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
         cv::namedWindow("topview", cv::WINDOW_NORMAL);
-        frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
+        // frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
+	    frame_top = cv::imread("../demo/demo/data/map/MASA_4670.png");
         original_frame_top = frame_top.clone();
     }
 
@@ -171,12 +185,36 @@ int main(int argc, char *argv[])
     outputVideo.open("test.avi", static_cast<int>(cap.get(cv::CAP_PROP_FOURCC)), cap.get(cv::CAP_PROP_FPS), S, true);*/
 
     cv::Mat map1, map2;
+    auto start_t = std::chrono::steady_clock::now();
+    auto step_t = std::chrono::steady_clock::now();
+    auto end_t = std::chrono::steady_clock::now();
+    auto step_t_segmentation = std::chrono::steady_clock::now();
+    auto end_t_segmentation = std::chrono::steady_clock::now();
+
+    // information for the disparity map
+    std::vector <cv::Rect> pre_rois;
+    cv::Mat pre_frame;
+    cv::Mat orig_frame;
+    cv::Mat canny, pre_canny, canny_RGB, pre_canny_RGB;
+    cv::Mat canny_img;
+
+    // box variable
+    tk::dnn::box b;
+    int x0, w, x1, y0, h, y1;
+    int objClass;
+    std::string det_class;;
+    float prob; 
+    cv::Scalar intensity;
+    cv::Rect roi;
 
     while (gRun)
     {
         TIMER_START
-        cap >> frame;
+        start_t = std::chrono::steady_clock::now();
+        step_t = start_t;
 
+        cap >> frame;
+        orig_frame = frame.clone();
         if (frame_nbr == 0)
             cv::initUndistortRectifyMap(cameraMat, distCoeff, cv::Mat(), cameraMat, frame.size(), CV_16SC2, map1, map2);
         cv::Mat temp = frame.clone();
@@ -205,26 +243,100 @@ int main(int argc, char *argv[])
 
         coords.clear();
 
+        end_t = std::chrono::steady_clock::now();
+        std::cout << " TIME 1 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
+        step_t = end_t;
         // draw dets
+        std::cout<<"num detected: "<<num_detected<<std::endl;
+
+        //preprocessing frame
+        step_t_segmentation = std::chrono::steady_clock::now();
+        // src_gray
+        canny_img = img_laplacian(orig_frame,0);
+        cv::Canny(canny_img, canny, 100, 100*2 );
+        sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_canny.jpg",frame_nbr, 999);
+        cv::imwrite(buf_frame_crop_name, canny);
+        end_t_segmentation = std::chrono::steady_clock::now();
+        std::cout << " - TIME END pre canny : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+        step_t_segmentation = end_t_segmentation;
+        // std::cout<<"o: "<<orig_frame.cols<<" - "<<orig_frame.rows<<std::endl;
+        // std::cout<<"canny: "<<canny.cols<<" - "<<canny.rows<<std::endl;
+        // std::cout<<"pre: "<<pre_canny.cols<<" - "<<pre_canny.rows<<std::endl;
+        if(frame_nbr!=0)
+        {
+            // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB) 
+            cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
+            cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+            frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr, 999, 0);
+            
+            end_t_segmentation = std::chrono::steady_clock::now();
+            std::cout << " TIME canny : frame_disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+            step_t_segmentation = end_t_segmentation;
+
+            //--------------------------------
+            //frame box disparity on the original image
+            step_t_segmentation = std::chrono::steady_clock::now();
+            frame_box_disparity(pre_frame, frame, pre_rois, frame_nbr);
+            // reset pre_rois for the new roi of the current frame
+            // pre_rois.erase(pre_rois.begin(), pre_rois.end());
+            end_t_segmentation = std::chrono::steady_clock::now();
+            std::cout << " TIME Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+            step_t_segmentation = end_t_segmentation;
+
+            //frame box disparity on the preprocessed image
+            cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
+            cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+            frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr);
+            // reset pre_rois for the new roi of the current frame
+            pre_rois.erase(pre_rois.begin(), pre_rois.end());
+            end_t_segmentation = std::chrono::steady_clock::now();
+            std::cout << " TIME Canny Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+            step_t_segmentation = end_t_segmentation;
+            //---------------------------------
+        }
+
+        // compute some metrics on the whole frame
+        segmentation(pre_frame, frame, frame_nbr, 0, 0);
+
         for (int i = 0; i < num_detected; i++)
         {
 
-            tk::dnn::box b = yolo.detected[i];
-            int x0 = b.x;
-            int x1 = b.x + b.w;
-            int y0 = b.y;
-            int y1 = b.y + b.h;
-            int objClass = b.cl;
-            std::string det_class = obj_class[b.cl];
-            float prob = b.prob;
+            b = yolo.detected[i];
+            x0 = b.x;
+            w = b.w;
+            x1 = b.x + w;
+            y0 = b.y;
+            h = b.h;
+            y1 = b.y + h;
+            objClass = b.cl;
+            det_class = obj_class[b.cl];
+            prob = b.prob;
 
-            cv::Scalar intensity = mask.at<uchar>(cv::Point(int(x0 + b.w / 2), y1));
-
+            intensity = mask.at<uchar>(cv::Point(int(x0 + b.w / 2), y1));
+            
             if (intensity[0])
             {
 
                 if (objClass < 6)
                 {
+
+                    // find the rectangular on the frame (sub-figure)                        
+                    roi.x = x0;
+                    roi.y = y0;
+                    // std::cout<<"x "<<roi.x<<" - y "<<roi.y<<std::endl;
+                    roi.width = (x0+w >= frame.cols)? frame.cols-1-x0 : w;
+                    roi.height = (y0+h >= frame.rows)? frame.rows-1-y0 : h;
+                    // std::cout<<"w "<<roi.width<<" - h "<<roi.height<<std::endl;
+                    // std::cout<<"wf "<<frame.cols<<" - hf "<<frame.rows<<std::endl;
+                    std::cout<<"---"<<std::endl;
+                    std::cout<<"x "<<roi.x<<" to "<<roi.width+roi.x<<" wf "<<frame.cols<<std::endl;
+                    std::cout<<"y "<<roi.y<<" to "<<roi.height+roi.y<<" hf "<<frame.rows<<std::endl;
+                    //update pre_roi for the next frame
+                    pre_rois.push_back(roi);
+
+                    segmentation(frame(roi), frame(roi), frame_nbr, i, 1);
+
+                    /////
                     convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
 
                     //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
@@ -235,11 +347,14 @@ int main(int argc, char *argv[])
                     int thickness = 2;
                     cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
                     cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), yolo.colors[b.cl], -1);
-                    cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
+                    cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness); 
                 }
             }
         }
 
+        end_t = std::chrono::steady_clock::now();
+        std::cout << " TIME 2 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
+        step_t = end_t;
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
         for (size_t i = 0; i < coords.size(); i++)
@@ -323,6 +438,10 @@ int main(int argc, char *argv[])
                 return 1;
             }
         }
+
+        // update pre_frame for the disparity map
+        pre_frame = orig_frame.clone();
+        pre_canny = canny.clone();
 
         frame_nbr++;
         TIMER_STOP
