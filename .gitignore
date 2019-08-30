@@ -1,4 +1,10 @@
 *~
+demo/demo/data/img_crop/
+demo/demo/data/img_disparity/
+demo/demo/data/map/
+demo/demo/data/masks_orient/
+demo/demo/data/pmat_new/
+demo/demo/data/masks_v2/
 build/
 .vscode/
 *.bin
@@ -8,3 +14,4 @@ build/
 *.h5
 *.tar.gz
 *.weights
+*.zip
