@@ -38,9 +38,15 @@
 bool gRun;
 std::string obj_class[10]{"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
 
-cv::Mat frame_v;
-cv::Mat frame_top_v;
 std::mutex sem;
+
+struct InfoShow{
+    std::vector<Tracker> trackers;
+    geodetic_converter::GeodeticConverter gc;
+    double adfGeoTransform[6];
+    cv::Mat H;
+    cv::Mat frame_v;
+};
 
 void sig_handler(int signo)
 {
@@ -48,15 +54,86 @@ void sig_handler(int signo)
     gRun = false;
 }
 
+
+
 void *showImages(void *x_void_ptr)
 {
+    InfoShow *info_show = (InfoShow *) x_void_ptr;
+    double lat, lon, alt;
+    int pix_x, pix_y;
+    cv::Mat frame_top;
+    cv::Mat original_frame_top;
+    cv::namedWindow("detection", cv::WINDOW_NORMAL);
+    cv::namedWindow("topview", cv::WINDOW_NORMAL);
+    // original_frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
+    original_frame_top = cv::imread("../demo/demo/data/map/MASA_4670.png");
+    cv::Mat frame_v_loc;
+    std::vector<Tracker> trackers;
+    geodetic_converter::GeodeticConverter gc;
+    double adfGeoTransform[6];
+    cv::Mat H;
     while (gRun)
     {
+        TIMER_START
+        // critical section: copy the struct in local variable
+        // in this way we can unlock the sem for the main thread
         sem.lock();
-        cv::imshow("detection", frame_v);
-        cv::imshow("topview", frame_top_v);
+        frame_v_loc = info_show->frame_v.clone();
+        // std::vector<Tracker> trackers;
+        trackers = info_show->trackers;
+        // geodetic_converter::GeodeticConverter gc;
+        gc = info_show->gc;
+        for(int i = 0; i < 6; i++ )
+            adfGeoTransform[i] = info_show->adfGeoTransform[i];
+        // cv::Mat H;
+        H = info_show->H.clone();
         sem.unlock();
-        cv::waitKey(30);
+        
+        frame_top = original_frame_top.clone();
+        for (auto t : trackers)
+        {
+            for (size_t p = 1; p < t.pred_list_.size(); p++)
+            {
+
+                gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
+                //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
+                
+                coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
+
+                //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
+                if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
+                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+
+                std::vector<cv::Point2f> map_p, camera_p;
+                map_p.push_back(cv::Point2f(pix_x, pix_y));
+
+                //transform camera pixel to map pixel
+                cv::perspectiveTransform(map_p, camera_p, H.inv());
+                //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
+
+                cv::circle(frame_v_loc, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+
+                /*if(p == t.pred_list_.size()-1)
+                {
+                    auto center = cv::Point(camera_p[0].x, camera_p[0].y);
+                    auto color = cv::Scalar(t.r_, t.g_, t.b_);
+                    draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame);
+
+                    center = cv::Point(pix_x,pix_y);
+                    draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame_top);
+                }*/
+            }
+        }
+
+            //outputVideo<< frame_top;
+        // ------------------------------------------------
+        
+        cv::imshow("detection", frame_v_loc);
+        cv::imshow("topview", frame_top);
+        cv::waitKey(1);
+        std::cout<<"visual: ";
+        TIMER_STOP
+
     }
 }
 
@@ -99,7 +176,6 @@ int main(int argc, char *argv[])
     yolo.thresh = 0.25;
 
     gRun = true;
-
     cv::VideoCapture cap(input);
     if (!cap.isOpened())
         gRun = false;
@@ -109,20 +185,9 @@ int main(int argc, char *argv[])
     cv::Mat frame;
     cv::Mat frame_crop;
     char buf_frame_crop_name [200];
-    cv::Mat frame_top;
     cv::Mat dnn_input;
-    cv::Mat original_frame_top;
 
     pthread_t visual;
-
-    if (to_show)
-    {
-        cv::namedWindow("detection", cv::WINDOW_NORMAL);
-        cv::namedWindow("topview", cv::WINDOW_NORMAL);
-        // frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
-	    frame_top = cv::imread("../demo/demo/data/map/MASA_4670.png");
-        original_frame_top = frame_top.clone();
-    }
 
     /*projection matrix from camera to map*/
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
@@ -150,7 +215,7 @@ int main(int argc, char *argv[])
     geodetic_converter::GeodeticConverter gc;
     gc.initialiseReference(44.655540, 10.934315, 0);
     double east, north, up;
-    double lat, lon, alt;
+    // double lat, lon, alt;
 
     /*Mask info*/
     cv::Mat mask = cv::imread(maskfile, cv::IMREAD_GRAYSCALE);
@@ -207,6 +272,17 @@ int main(int argc, char *argv[])
     cv::Scalar intensity;
     cv::Rect roi;
 
+    InfoShow info_show;
+    if (to_show)
+    {
+        info_show.H = cv::Mat(cv::Size(3, 3), CV_64FC1);
+        if (pthread_create(&visual, NULL, showImages, (void *)&info_show))
+        {
+            fprintf(stderr, "Error creating thread\n");
+            return 1;
+        }
+    }
+
     while (gRun)
     {
         TIMER_START
@@ -254,8 +330,8 @@ int main(int argc, char *argv[])
         // src_gray
         canny_img = img_laplacian(orig_frame,0);
         cv::Canny(canny_img, canny, 100, 100*2 );
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_canny.jpg",frame_nbr, 999);
-        cv::imwrite(buf_frame_crop_name, canny);
+        // sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_canny.jpg",frame_nbr, 999);
+        // cv::imwrite(buf_frame_crop_name, canny);
         end_t_segmentation = std::chrono::steady_clock::now();
         std::cout << " - TIME END pre canny : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
         step_t_segmentation = end_t_segmentation;
@@ -273,34 +349,33 @@ int main(int argc, char *argv[])
             std::cout << " TIME canny : frame_disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
             step_t_segmentation = end_t_segmentation;
 
-            //--------------------------------
-            //frame box disparity on the original image
-            step_t_segmentation = std::chrono::steady_clock::now();
-            frame_box_disparity(pre_frame, frame, pre_rois, frame_nbr);
-            // reset pre_rois for the new roi of the current frame
-            // pre_rois.erase(pre_rois.begin(), pre_rois.end());
-            end_t_segmentation = std::chrono::steady_clock::now();
-            std::cout << " TIME Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
-            step_t_segmentation = end_t_segmentation;
+            // //--------------------------------
+            // //frame box disparity on the original image
+            // step_t_segmentation = std::chrono::steady_clock::now();
+            // frame_box_disparity(pre_frame, frame, pre_rois, frame_nbr);
+            // // reset pre_rois for the new roi of the current frame
+            // // pre_rois.erase(pre_rois.begin(), pre_rois.end());
+            // end_t_segmentation = std::chrono::steady_clock::now();
+            // std::cout << " TIME Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+            // step_t_segmentation = end_t_segmentation;
 
-            //frame box disparity on the preprocessed image
-            cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-            cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
-            frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr);
-            // reset pre_rois for the new roi of the current frame
-            pre_rois.erase(pre_rois.begin(), pre_rois.end());
-            end_t_segmentation = std::chrono::steady_clock::now();
-            std::cout << " TIME Canny Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
-            step_t_segmentation = end_t_segmentation;
-            //---------------------------------
+            // //frame box disparity on the preprocessed image
+            // cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
+            // cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+            // frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr);
+            // // reset pre_rois for the new roi of the current frame
+            // pre_rois.erase(pre_rois.begin(), pre_rois.end());
+            // end_t_segmentation = std::chrono::steady_clock::now();
+            // std::cout << " TIME Canny Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
+            // step_t_segmentation = end_t_segmentation;
+            // //---------------------------------
         }
 
         // compute some metrics on the whole frame
-        segmentation(pre_frame, frame, frame_nbr, 0, 0);
+        // segmentation(pre_frame, frame, frame_nbr, 0, 0);
 
         for (int i = 0; i < num_detected; i++)
         {
-
             b = yolo.detected[i];
             x0 = b.x;
             w = b.w;
@@ -321,11 +396,11 @@ int main(int argc, char *argv[])
                 {
 
                     // find the rectangular on the frame (sub-figure)                        
-                    roi.x = x0;
-                    roi.y = y0;
+                    roi.x = (x0 > 0)? x0 : 0;
+                    roi.y = (y0 > 0)? y0 : 0;
                     // std::cout<<"x "<<roi.x<<" - y "<<roi.y<<std::endl;
-                    roi.width = (x0+w >= frame.cols)? frame.cols-1-x0 : w;
-                    roi.height = (y0+h >= frame.rows)? frame.rows-1-y0 : h;
+                    roi.width = (roi.x+w >= frame.cols)? frame.cols-1-roi.x : w;
+                    roi.height = (roi.y+h >= frame.rows)? frame.rows-1-roi.y : h;
                     // std::cout<<"w "<<roi.width<<" - h "<<roi.height<<std::endl;
                     // std::cout<<"wf "<<frame.cols<<" - hf "<<frame.rows<<std::endl;
                     std::cout<<"---"<<std::endl;
@@ -334,7 +409,7 @@ int main(int argc, char *argv[])
                     //update pre_roi for the next frame
                     pre_rois.push_back(roi);
 
-                    segmentation(frame(roi), frame(roi), frame_nbr, i, 1);
+                    // segmentation(frame(roi), frame(roi), frame_nbr, i, 1);
 
                     /////
                     convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
@@ -383,60 +458,18 @@ int main(int argc, char *argv[])
 
         if (to_show)
         {
-            frame_top = original_frame_top.clone();
-            for (auto t : trackers)
-            {
-                for (size_t p = 1; p < t.pred_list_.size(); p++)
-                {
-
-                    gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
-                    //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
-                    int pix_x, pix_y;
-                    coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-
-                    //std::cout << "pix_x: " << pix_x << " pix_y: " << pix_y << std::endl;
-                    if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                        cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
-
-                    std::vector<cv::Point2f> map_p, camera_p;
-                    map_p.push_back(cv::Point2f(pix_x, pix_y));
-
-                    //transform camera pixel to map pixel
-                    cv::perspectiveTransform(map_p, camera_p, H.inv());
-                    //std::cout << "pix_x: " << camera_p[0].x << " pix_y: " << camera_p[0].y << std::endl;
-
-                    cv::circle(frame, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
-
-                    /*if(p == t.pred_list_.size()-1)
-                    {
-                        auto center = cv::Point(camera_p[0].x, camera_p[0].y);
-                        auto color = cv::Scalar(t.r_, t.g_, t.b_);
-                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame);
-
-                        center = cv::Point(pix_x,pix_y);
-                        draw_arrow(t.pred_list_[p].yaw_, t.pred_list_[p].vel_,color, center, frame_top);
-                    }*/
-                }
-            }
-        }
-
-        if (to_show)
-        {
+            //populate the InfoShow 
             sem.lock();
-            frame_v = frame.clone();
-            frame_top_v = frame_top.clone();
+            info_show.frame_v = frame.clone();
+            // std::vector<Tracker> trackers;
+            info_show.trackers = trackers;
+            // geodetic_converter::GeodeticConverter gc;
+            info_show.gc = gc;
+            for(int i = 0; i < 6; i++ )
+                info_show.adfGeoTransform[i] = adfGeoTransform[i];
+            // cv::Mat H;
+            info_show.H = H.clone();
             sem.unlock();
-
-            //outputVideo<< frame_top;
-        }
-
-        if (frame_nbr == 0 && to_show)
-        {
-            if (pthread_create(&visual, NULL, showImages, NULL))
-            {
-                fprintf(stderr, "Error creating thread\n");
-                return 1;
-            }
         }
 
         // update pre_frame for the disparity map
