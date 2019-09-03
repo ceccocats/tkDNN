@@ -1,6 +1,6 @@
 #include "BoxDetection.h"
 #include <string.h>
-
+char buf_frame_crop_name [200];
 
 cv::Mat img_threshold(cv::Mat frame_crop)
 {
@@ -258,67 +258,73 @@ void image_segmentation(cv::Mat frame_crop, int frame_nbr, int i)
 {    
     // Watershed Algorithm
     // https://docs.opencv.org/3.4/d7/d1c/tutorial_js_watershed.html
-    char buf_frame_crop_name [200];
+    
     auto step_t_segmentation = std::chrono::steady_clock::now();
     auto end_t_segmentation = std::chrono::steady_clock::now();
-
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgthr.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_threshold(frame_crop)); 
+    cv::Mat ret;
+    // ret = img_threshold(frame_crop);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgthr.jpg", frame_nbr, i, img_threshold(frame_crop));
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME imgthr ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgback.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_background(frame_crop)); 
+    // ret =img_background(frame_crop);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgback.jpg", frame_nbr, i, img_background(frame_crop));
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME imgback ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgtrans.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_dist_transform(frame_crop)); 
+    // ret = img_dist_transform(frame_crop);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgtrans.jpg", frame_nbr, i, img_dist_transform(frame_crop));
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME imgtrans ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    // sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgwatershed.jpg",frame_nbr, i);
-    // cv::imwrite(buf_frame_crop_name, img_watershed(frame_crop)); 
+    // // ret = img_watershed(frame_crop);
+    // if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgwatershed.jpg", frame_nbr, i, img_watershed(frame_crop)); 
 }
 
 void image_gradients(cv::Mat frame_crop, int frame_nbr, int i)
 {
     // Image Gradients
     // https://docs.opencv.org/trunk/da/d85/tutorial_js_gradients.html
-    char buf_frame_crop_name [200];
+    
     auto step_t_segmentation = std::chrono::steady_clock::now();
     auto end_t_segmentation = std::chrono::steady_clock::now();
-
+    cv::Mat ret;
     // sobel
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgsobel_x_8U.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_sobel_abssobel(frame_crop, 0)); 
+    // ret = img_sobel_abssobel(frame_crop, 0);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgsobel_x_8U.jpgg", frame_nbr, i, img_sobel_abssobel(frame_crop, 0));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME sobel0 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    printf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgsobel_y_8U.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_sobel_abssobel(frame_crop, 1));
+    // ret = img_sobel_abssobel(frame_crop, 1);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgsobel_y_8U.jpg", frame_nbr, i, img_sobel_abssobel(frame_crop, 1));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME sobel1 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgsobel_x_64F.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_sobel_abssobel(frame_crop, 2)); 
+    // ret = img_sobel_abssobel(frame_crop, 2);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgsobel_x_64F.jpg", frame_nbr, i, img_sobel_abssobel(frame_crop, 2));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME sobel2 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imgsobel_y_64F.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_sobel_abssobel(frame_crop, 3));
+    // ret = img_sobel_abssobel(frame_crop, 3);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imgsobel_y_64F.jpg", frame_nbr, i, img_sobel_abssobel(frame_crop, 3));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME sobel3 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
     
     // laplacian
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imglaplacian_gr.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_laplacian(frame_crop, 0));
+    // ret = img_laplacian(frame_crop, 0);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imglaplacian_gr.jpg", frame_nbr, i, img_laplacian(frame_crop, 0));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME laplacian0 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation; 
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_imglaplacian_dst.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_laplacian(frame_crop, 1));
+    // ret = img_laplacian(frame_crop, 1);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_imglaplacian_dst.jpg", frame_nbr, i, img_laplacian(frame_crop, 1));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME laplacian1 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
@@ -331,7 +337,7 @@ void image_find_contours(cv::Mat frame_crop, int frame_nbr, int i)
     // Finding contours in your image
     // https://docs.opencv.org/3.4/df/d0d/tutorial_find_contours.html
 
-    char buf_frame_crop_name [200];
+    
     auto step_t_segmentation = std::chrono::steady_clock::now();
     auto end_t_segmentation = std::chrono::steady_clock::now();
     // plot lines on figure. 3 ways:
@@ -339,11 +345,12 @@ void image_find_contours(cv::Mat frame_crop, int frame_nbr, int i)
     // 2 - use laplacian image (one line)
     // 3 - use sobel (1st dir) image and sobel (2nd dir) image to plot two different lines
     cv::Mat canny_output1, canny_output2, canny_output3a, canny_output3b;
+    cv::Mat contours;
     // src_gray
     cv::Mat img1 = img_laplacian(frame_crop, 0);
     cv::Canny(img1, canny_output1, 100, 100*2 );
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_canny1.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, canny_output1);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_canny1.jpg", frame_nbr, i, canny_output1);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME canny1 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
@@ -351,37 +358,39 @@ void image_find_contours(cv::Mat frame_crop, int frame_nbr, int i)
     // cv::Mat img2 = img_laplacian(frame_crop, 2);
     // cv::Canny(img2, canny_output2, 100, 100*2 );
     cv::Canny(img1, canny_output2, 100, 100*2 );
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_canny2.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, canny_output2);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_canny2.jpg", frame_nbr, i, canny_output2);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME canny2 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
     // dstx
     cv::Mat img3a = img_sobel_abssobel(frame_crop, 0);
     cv::Canny(img3a, canny_output3a, 100, 100*2 );
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_canny3a.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, canny_output3a);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_canny3a.jpg", frame_nbr, i, canny_output3a);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME canny3a ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
     // dsty
     cv::Mat img3b = img_sobel_abssobel(frame_crop, 1);
     cv::Canny(img3b, canny_output3b, 100, 100*2 );
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_canny3b.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, canny_output3b);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_canny3b.jpg", frame_nbr, i, canny_output3b);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME canny3b ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
     
     // 1 line
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_line1.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, find_contours(frame_crop, img1, canny_output1, 1));
+    // contours = find_contours(frame_crop, img1, canny_output1, 1);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_line1.jpg", frame_nbr, i, find_contours(frame_crop, img1, canny_output1, 1));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME line1 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
     // 3 line
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_line2.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, find_contours(frame_crop, img1, canny_output2, 3));
+    // contours = find_contours(frame_crop, img1, canny_output2, 1);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_line2.jpg", frame_nbr, i, find_contours(frame_crop, img1, canny_output2, 1));
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME line2 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
@@ -389,8 +398,8 @@ void image_find_contours(cv::Mat frame_crop, int frame_nbr, int i)
     cv::Mat img_line = frame_crop.clone();
     img_line = find_contours(img_line, img3a, canny_output3a, 1);
     img_line = find_contours(img_line, img3b, canny_output3b, 1);
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_line3.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, img_line);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_line3.jpg", frame_nbr, i, img_line);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME line3 ("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
@@ -414,7 +423,7 @@ void image_saliency(cv::Mat frame_crop, int frame_nbr, int i)
 {
     // https://github.com/opencv/opencv_contrib/blob/master/modules/saliency/samples/computeSaliency.cpp
     cv::Ptr<cv::saliency::Saliency> saliencyAlgorithm;
-    char buf_frame_crop_name [200];
+    
     int const_molt_mat = 0;
     auto step_t_segmentation = std::chrono::steady_clock::now();
     auto end_t_segmentation = std::chrono::steady_clock::now();
@@ -425,9 +434,7 @@ void image_saliency(cv::Mat frame_crop, int frame_nbr, int i)
     cv::Mat spect_res = compute_saliency(frame_crop, saliencyAlgorithm, const_molt_mat, 0);
     if(!spect_res.empty())
     {
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_saliency_SpectralResidual.jpg",frame_nbr, i);
-        cv::imwrite(buf_frame_crop_name, spect_res);
-
+        if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_saliency_SpectralResidual.jpg", frame_nbr, i, spect_res);
     }
     else
     {
@@ -442,9 +449,7 @@ void image_saliency(cv::Mat frame_crop, int frame_nbr, int i)
     spect_res = compute_saliency(frame_crop, saliencyAlgorithm, const_molt_mat, 1);
     if(!spect_res.empty())
     {
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_saliency_BinarySpectralResidual.jpg",frame_nbr, i);
-        cv::imwrite(buf_frame_crop_name, spect_res);
-
+        if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_saliency_BinarySpectralResidual.jpg", frame_nbr, i, spect_res);
     }
     else
     {
@@ -460,9 +465,7 @@ void image_saliency(cv::Mat frame_crop, int frame_nbr, int i)
     spect_res = compute_saliency(frame_crop, saliencyAlgorithm, const_molt_mat, 0);
     if(!spect_res.empty())
     {
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_saliency_FineGrained.jpg",frame_nbr, i);
-        cv::imwrite(buf_frame_crop_name, spect_res);
-
+        if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_saliency_FineGrained.jpg", frame_nbr, i, spect_res);
     }
     else
     {
@@ -506,17 +509,16 @@ void image_saliency(cv::Mat frame_crop, int frame_nbr, int i)
     saliencyAlgorithm.dynamicCast<cv::saliency::MotionSaliencyBinWangApr2014>()->init();
     cvtColor( frame_sal, frame_sal, cv::COLOR_BGR2GRAY );
     saliencyAlgorithm->computeSaliency( frame_sal, saliencyMap);
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d_saliency_BinWangApr.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, saliencyMap);
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d_saliency_BinWangApr.jpg", frame_nbr, i, saliencyMap);
+
     end_t_segmentation = std::chrono::steady_clock::now();
     std::cout << " - TIME BING WANG APR 2014("<<frame_nbr<<"-"<<i<<") : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
     step_t_segmentation = end_t_segmentation;
 }
 
-void frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int ret=0)
+cv::Mat frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int ret=0)
 {
     // https://stackoverflow.com/questions/27035672/cv-extract-differences-between-two-images
-    char buf_frame_crop_name [200];
     cv::Mat backgroundImage = pre_frame.clone();
     cv::Mat currentImage = frame.clone();
     cv::Mat diffImage;
@@ -530,10 +532,8 @@ void frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int
 
     cv::Mat foregroundMask = cv::Mat::zeros(diffImage.rows, diffImage.cols, CV_8UC1);
     // std::cout<<"diffImage: "<<diffImage.cols<<" - "<<diffImage.rows<<std::endl;
-    // sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_pc1.jpg",frame_nbr,i);
-    // cv::imwrite(buf_frame_crop_name, backgroundImage);
-    // sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_c1.jpg",frame_nbr,i);
-    // cv::imwrite(buf_frame_crop_name, currentImage);
+    // if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_pc1.jpg", frame_nbr, i, backgroundImage);
+    // if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_c1.jpg", frame_nbr, i, currentImage);
     float threshold = 30.0f;
     float dist;
 
@@ -552,9 +552,9 @@ void frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int
             }
         }
     }
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_dif.jpg",frame_nbr,i);
-    cv::imwrite(buf_frame_crop_name, foregroundMask);
-    std::cout<<"foregroundMask: "<<foregroundMask.cols<<" - "<<foregroundMask.rows<<std::endl;
+    if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_dif.jpg", frame_nbr, i, foregroundMask);
+
+    return foregroundMask;
 }
 
 void frame_box_disparity(cv::Mat pre_frame, cv::Mat frame, std::vector <cv::Rect>  pre_rois, int frame_nbr)
@@ -562,7 +562,6 @@ void frame_box_disparity(cv::Mat pre_frame, cv::Mat frame, std::vector <cv::Rect
 
     int roi_tollerance = 10;
     cv::Mat pre_frame_crop, frame_crop;
-    char buf_frame_crop_name [200];
     int dx, dy;
     int id = 1;
     auto step_t_segmentation = std::chrono::steady_clock::now();
@@ -570,8 +569,8 @@ void frame_box_disparity(cv::Mat pre_frame, cv::Mat frame, std::vector <cv::Rect
 
     for(auto r : pre_rois)
     {
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_orig.jpg",frame_nbr, id);
-        cv::imwrite(buf_frame_crop_name, pre_frame(r));
+        if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_orig.jpg", frame_nbr, id, pre_frame(r));
+
         //resize last roi with a tollerance
         dx = r.width / roi_tollerance;
         dy = r.height / roi_tollerance;
@@ -582,17 +581,15 @@ void frame_box_disparity(cv::Mat pre_frame, cv::Mat frame, std::vector <cv::Rect
         r.height = ((r.y+r.height+dy+dy) >= frame.rows)? (frame.rows-1-r.y) : (r.height+dy+dy);
         // std::cout<<"disp: w "<<r.width<<" - h "<<r.height<<std::endl;
         // std::cout<<"disp: wf "<<frame.cols<<" - hf "<<frame.rows<<std::endl;
-        std::cout<<"---"<<std::endl;
-        std::cout<<"disp: x "<<r.x<<" to "<<r.width+r.x<<" wf "<<frame.cols<<std::endl;
-        std::cout<<"disp: y "<<r.y<<" to "<<r.height+r.y<<" hf "<<frame.rows<<std::endl;
+        // std::cout<<"---"<<std::endl;
+        // std::cout<<"disp: x "<<r.x<<" to "<<r.width+r.x<<" wf "<<frame.cols<<std::endl;
+        // std::cout<<"disp: y "<<r.y<<" to "<<r.height+r.y<<" hf "<<frame.rows<<std::endl;
                        
         //crop pre_frame and current frame 
         pre_frame_crop = pre_frame(r);
         frame_crop = frame(r);
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_cur.jpg",frame_nbr, id);
-        cv::imwrite(buf_frame_crop_name, frame_crop);
-        sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_pre.jpg",frame_nbr, id);
-        cv::imwrite(buf_frame_crop_name, pre_frame_crop);
+        if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_cur.jpg", frame_nbr, id, frame_crop);
+        if(SAVE) SAVE_TO("../demo/demo/data/img_disparity/%d_%d_pre.jpg", frame_nbr, id, pre_frame_crop);
         
         // difference from two consecutive frame
         step_t_segmentation = std::chrono::steady_clock::now();
@@ -609,15 +606,14 @@ void segmentation(cv::Mat pre_frame, cv::Mat frame_crop, int frame_nbr, int i, i
     //mode=0 (for whole frame), it computes the frame disparity
     //mode=1 (for single box), it doesn't compute the frame disparity (it has already been done-see frame_box_disparity())
     // whole figure
-    char buf_frame_crop_name [200];
     char buf_str [15];
     if(!mode)
         sprintf(buf_str,"whole frame");
     else
         sprintf(buf_str,"a box frame");
+    
+    if(SAVE) SAVE_TO("../demo/demo/data/img_crop/%d_%d.jpg", frame_nbr, i, frame_crop);
 
-    sprintf(buf_frame_crop_name,"../demo/demo/data/img_crop/%d_%d.jpg",frame_nbr, i);
-    cv::imwrite(buf_frame_crop_name, frame_crop); 
     auto step_t_segmentation = std::chrono::steady_clock::now();
     auto end_t_segmentation = std::chrono::steady_clock::now();
 

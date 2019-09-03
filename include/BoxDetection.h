@@ -22,6 +22,12 @@
 #include <opencv2/saliency.hpp>
 #include <opencv2/highgui.hpp>
 
+#define SAVE false
+#define SAVE_TO(name, fn, i, var) {sprintf(buf_frame_crop_name,name,fn,i);\
+    cv::imwrite(buf_frame_crop_name, var);}
+
+
+
 // cv::Mat img_threshold(cv::Mat frame_crop);
 // cv::Mat img_background(cv::Mat frame_crop);
 // cv::Mat img_dist_transform(cv::Mat frame_crop);
@@ -35,4 +41,4 @@ void segmentation(cv::Mat pre_frame, cv::Mat frame_crop, int frame_nbr, int i, i
 
 //canny
 cv::Mat img_laplacian(cv::Mat frame_crop, int ret);
-void frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int ret);
+cv::Mat frame_disparity(cv::Mat pre_frame, cv::Mat frame, int frame_nbr, int i, int ret);
