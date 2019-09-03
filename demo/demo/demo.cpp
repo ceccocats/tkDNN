@@ -46,15 +46,15 @@ struct InfoShow{
     double adfGeoTransform[6];
     cv::Mat H;
     cv::Mat frame_v;
+    cv::Mat frame_disp;
 };
+
 
 void sig_handler(int signo)
 {
     std::cout << "request gateway stop\n";
     gRun = false;
 }
-
-
 
 void *showImages(void *x_void_ptr)
 {
@@ -65,6 +65,8 @@ void *showImages(void *x_void_ptr)
     cv::Mat original_frame_top;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
     cv::namedWindow("topview", cv::WINDOW_NORMAL);
+    cv::namedWindow("disparity", cv::WINDOW_NORMAL);
+
     // original_frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
     original_frame_top = cv::imread("../demo/demo/data/map/MASA_4670.png");
     cv::Mat frame_v_loc;
@@ -72,6 +74,8 @@ void *showImages(void *x_void_ptr)
     geodetic_converter::GeodeticConverter gc;
     double adfGeoTransform[6];
     cv::Mat H;
+    cv::Mat frame_disp_loc;
+
     while (gRun)
     {
         TIMER_START
@@ -87,6 +91,8 @@ void *showImages(void *x_void_ptr)
             adfGeoTransform[i] = info_show->adfGeoTransform[i];
         // cv::Mat H;
         H = info_show->H.clone();
+        frame_disp_loc = info_show->frame_disp.clone();
+        
         sem.unlock();
         
         frame_top = original_frame_top.clone();
@@ -127,9 +133,13 @@ void *showImages(void *x_void_ptr)
 
             //outputVideo<< frame_top;
         // ------------------------------------------------
-        
+        std::cout<<"size: "<<frame_v_loc.rows<<" - "<<frame_v_loc.cols<<std::endl;
+        std::cout<<"size: "<<frame_top.rows<<" - "<<frame_top.cols<<std::endl;
+        std::cout<<"size: "<<frame_disp_loc.rows<<" - "<<frame_disp_loc.cols<<std::endl;
         cv::imshow("detection", frame_v_loc);
         cv::imshow("topview", frame_top);
+        cv::imshow("disparity", frame_disp_loc);
+
         cv::waitKey(1);
         std::cout<<"visual: ";
         TIMER_STOP
@@ -174,7 +184,6 @@ int main(int argc, char *argv[])
     tk::dnn::Yolo3Detection yolo;
     yolo.init(net);
     yolo.thresh = 0.25;
-
     gRun = true;
     cv::VideoCapture cap(input);
     if (!cap.isOpened())
@@ -182,12 +191,13 @@ int main(int argc, char *argv[])
     else
         std::cout << "camera started\n";
 
+    pthread_t visual;
+     
     cv::Mat frame;
     cv::Mat frame_crop;
+    cv::Mat frame_disp;
     char buf_frame_crop_name [200];
     cv::Mat dnn_input;
-
-    pthread_t visual;
 
     /*projection matrix from camera to map*/
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
@@ -273,6 +283,7 @@ int main(int argc, char *argv[])
     cv::Rect roi;
 
     InfoShow info_show;
+
     if (to_show)
     {
         info_show.H = cv::Mat(cv::Size(3, 3), CV_64FC1);
@@ -281,15 +292,16 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Error creating thread\n");
             return 1;
         }
-    }
+    }  
 
     while (gRun)
-    {
+    {       
         TIMER_START
         start_t = std::chrono::steady_clock::now();
         step_t = start_t;
-
+        
         cap >> frame;
+
         orig_frame = frame.clone();
         if (frame_nbr == 0)
             cv::initUndistortRectifyMap(cameraMat, distCoeff, cv::Mat(), cameraMat, frame.size(), CV_16SC2, map1, map2);
@@ -299,7 +311,6 @@ int main(int argc, char *argv[])
 
         //undistort(temp, frame, cameraMat, distCoeff);
 
-
         if (!frame.data)
         {
             usleep(1000000);
@@ -307,6 +318,7 @@ int main(int argc, char *argv[])
             printf("cap reinitialize\n");
             continue;
         }
+
 
         // this will be resized to the net format
         dnn_input = frame.clone();
@@ -343,8 +355,15 @@ int main(int argc, char *argv[])
             // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB) 
             cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
             cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
-            frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr, 999, 0);
-            
+            frame_disp = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr, 999, 0);
+            std::cout<<"size: "<<frame_disp.rows<<" - "<<frame_disp.cols<<std::endl;
+            if (frame_disp.rows == 0 || frame_disp.cols == 0)
+                return -1;
+            if (frame_disp.empty()) 
+            { // only fools don't check...
+                std::cout << "image not loaded !" << std::endl;
+                return -1;
+            }
             end_t_segmentation = std::chrono::steady_clock::now();
             std::cout << " TIME canny : frame_disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
             step_t_segmentation = end_t_segmentation;
@@ -469,6 +488,7 @@ int main(int argc, char *argv[])
                 info_show.adfGeoTransform[i] = adfGeoTransform[i];
             // cv::Mat H;
             info_show.H = H.clone();
+            info_show.frame_disp = frame_disp.clone();
             sem.unlock();
         }
 
