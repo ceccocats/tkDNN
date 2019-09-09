@@ -215,14 +215,14 @@ void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, ge
             int pix_x, pix_y;
             coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
 
-            std::cout<<maskOrient.at<cv::Vec3b>(pix_y,pix_x)<<std::endl;
+            // std::cout<<maskOrient.at<cv::Vec3b>(pix_y,pix_x)<<std::endl;
 
             uint8_t maskOrientPixel = maskOrient.at<cv::Vec3b>(pix_y,pix_x)[0]; 
             uint8_t orientation;
             if(maskOrientPixel != 0)
             {
                 orientation = maskOrientPixel;
-                std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
+                // std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
             }
             else
             {
