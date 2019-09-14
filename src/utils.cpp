@@ -21,7 +21,7 @@ bool fileExist(const char *fname) {
 }
 
 
-void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** data_d, int seek)
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek)
 {
     std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
     std::stringstream error_s;

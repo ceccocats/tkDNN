@@ -2,15 +2,16 @@
 #include<vector>
 #include "tkdnn.h"
 
+
 int main() {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 320, 544, 1);
+    tk::dnn::dataDim_t dim(1, 1, 320, 544, 1);
     tk::dnn::Network net(dim);
 
     // create yolo3 model
-    std::string bin_path  = "../tests/yolo3_berkeley";
-    int classes = 10;
+    std::string bin_path  = "../tests/yolo3_flir";
+    int classes = 5;
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
@@ -23,7 +24,7 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "yolo3_berkeley.rt");
+    tk::dnn::NetworkRT netRT(&net, "yolo3_flir.rt");
 
     // the network have 3 outputs
     tk::dnn::dataDim_t out_dim[3];

@@ -32,7 +32,7 @@ bool Yolo3Detection::init(std::string tensor_path) {
         num = yRT->num;
 
         // make a yolo layer for interpret predictions
-        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, nullptr); // yolo without input and bias
+        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, ""); // yolo without input and bias
         yolo[i]->mask_h = new dnnType[num];
         yolo[i]->bias_h = new dnnType[num*3*2];
         memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);

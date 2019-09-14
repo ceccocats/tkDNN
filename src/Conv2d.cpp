@@ -6,7 +6,7 @@ namespace tk { namespace dnn {
 
 Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                const char* fname_weights, bool batchnorm) : 
+                std::string fname_weights, bool batchnorm) : 
     
     LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1, 
              fname_weights, batchnorm) {

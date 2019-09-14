@@ -75,7 +75,7 @@ class LayerWgs : public Layer {
 
 public:
     LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt, 
-             const char* fname_weights, bool batchnorm = false); 
+             std::string fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -108,7 +108,7 @@ public:
 class Dense : public LayerWgs {
 
 public:
-    Dense(Network *net, int out_ch, const char* fname_weights); 
+    Dense(Network *net, int out_ch, std::string fname_weights); 
     virtual ~Dense();
     virtual layerType_t getLayerType() { return LAYER_DENSE; };
 
@@ -151,7 +151,7 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                const char* fname_weights, bool batchnorm = false); 
+                std::string fname_weights, bool batchnorm = false); 
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -352,7 +352,7 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, const char* fname_weights);
+    Yolo(Network *net, int classes, int num, std::string fname_weights);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
@@ -389,7 +389,7 @@ class RegionInterpret {
 
 public:
     RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
-                    int classes, int coords, int num, float thresh, const char* fname_weights);
+                    int classes, int coords, int num, float thresh, std::string fname_weights);
     ~RegionInterpret();
 
     dataDim_t input_dim, output_dim;
