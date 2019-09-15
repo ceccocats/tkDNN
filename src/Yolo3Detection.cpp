@@ -68,18 +68,19 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     float yRatio =  float(imageORIG.rows) / float(netRT->input_dim.h);
 
     resize(imageORIG, imageORIG, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+
     imageORIG.convertTo(imageF, CV_32FC3, 1/255.0); 
 
     //split channels
     cv::split(imageF,bgr);//split source
 
     //write channels
-    int idx = 0;
-    memcpy((void*)&input[idx], (void*)bgr[2].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    idx = imageF.rows*imageF.cols;
-    memcpy((void*)&input[idx], (void*)bgr[1].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    idx *= 2;    
-    memcpy((void*)&input[idx], (void*)bgr[0].data, imageF.rows*imageF.cols*sizeof(dnnType));
+    for(int i=0; i<netRT->input_dim.c; i++) {
+        int idx = i*imageF.rows*imageF.cols;
+        int ch = netRT->input_dim.c-1 -i;
+        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
+    }
+
 
     //DO INFERENCE
     dnnType *rt_out[3]; 

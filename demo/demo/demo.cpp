@@ -12,7 +12,9 @@
 #include "Yolo3Detection.h"
 
 bool 			gRun;
-std::string   	obj_class[10] {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
+//std::string   	obj_class[10] {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
+//std::string   	obj_class[3] {"person", "bike", "car"};
+std::string   	obj_class[10] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
 
 void sig_handler(int signo) {

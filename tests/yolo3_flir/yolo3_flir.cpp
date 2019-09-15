@@ -11,7 +11,7 @@ int main() {
 
     // create yolo3 model
     std::string bin_path  = "../tests/yolo3_flir";
-    int classes = 5;
+    int classes = 3;
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
