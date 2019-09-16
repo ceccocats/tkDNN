@@ -14,6 +14,11 @@ int main() {
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
+    // fill classes names
+    for(int i=0; i<3; i++) {
+        yolo[i]->classesNames = {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
+    }
+
     // Load input
     dnnType *data;
     dnnType *input_h;

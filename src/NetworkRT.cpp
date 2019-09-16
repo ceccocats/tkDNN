@@ -461,6 +461,15 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         for(int i=0; i<3*2*r->num; i++)
             r->bias[i] = readBUF<dnnType>(buf);
 
+		// save classes names
+        r->classesNames.resize(r->classes);
+		for(int i=0; i<r->classes; i++) {
+            char tmp[YOLORT_CLASSNAME_W];
+			for(int j=0; j<YOLORT_CLASSNAME_W; j++)
+				tmp[j] = readBUF<char>(buf);
+            r->classesNames[i] = std::string(tmp);
+		}
+
         yolos[n_yolos++] = r;
         return r;
     } 

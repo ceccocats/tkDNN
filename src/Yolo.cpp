@@ -25,6 +25,12 @@ Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights) :
         readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
     }
 
+    // init default classes name
+    classesNames.clear();
+    for(int i=0; i<classes; i++) {
+        classesNames.push_back(std::to_string(i));
+    }
+
     // same
     output_dim.n = input_dim.n;
     output_dim.c = input_dim.c;

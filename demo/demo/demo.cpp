@@ -12,10 +12,6 @@
 #include "Yolo3Detection.h"
 
 bool 			gRun;
-//std::string   	obj_class[10] {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
-//std::string   	obj_class[3] {"person", "bike", "car"};
-std::string   	obj_class[10] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-
 bool SAVE_RESULT = false;
 
 void sig_handler(int signo) {
@@ -77,7 +73,7 @@ int main(int argc, char *argv[]) {
             int x1   				= b.x + b.w;
             int y0   				= b.y;
             int y1   				= b.y + b.h;
-            std::string det_class 	= obj_class[b.cl];
+            std::string det_class 	= yolo.getYoloLayer()->classesNames[b.cl];
             float prob 				= b.prob;
 
             std::cout<<det_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";

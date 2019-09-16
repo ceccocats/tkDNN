@@ -2,6 +2,7 @@
 #define LAYER_H
 
 #include<iostream>
+#include<vector>
 #include "utils.h"
 #include "Network.h"
 
@@ -359,6 +360,7 @@ public:
     int classes, num;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
+    std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
     int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);

@@ -52,6 +52,13 @@ class Yolo3Detection {
 
         void update(cv::Mat &frame);
 
+        tk::dnn::Yolo* getYoloLayer(int n=0) {
+            if(n<3)
+                return yolo[n];
+            else 
+                return nullptr;
+        }
+
 };
 
 }}

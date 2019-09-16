@@ -38,6 +38,7 @@ bool Yolo3Detection::init(std::string tensor_path) {
         memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);
         memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*3*2);
         yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
+        yolo[i]->classesNames = yRT->classesNames;
     }
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
