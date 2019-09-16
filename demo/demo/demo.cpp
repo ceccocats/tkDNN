@@ -16,6 +16,7 @@ bool 			gRun;
 //std::string   	obj_class[3] {"person", "bike", "car"};
 std::string   	obj_class[10] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
+bool SAVE_RESULT = false;
 
 void sig_handler(int signo) {
     std::cout<<"request gateway stop\n";
@@ -46,6 +47,14 @@ int main(int argc, char *argv[]) {
     else
         std::cout<<"camera started\n";
 
+
+    cv::VideoWriter resultVideo;
+    if(SAVE_RESULT) {
+        int w = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+        int h = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+        resultVideo.open("result.mp4", CV_FOURCC('M','P','4','V'), 30, cv::Size(w, h));
+    }
+
     cv::Mat frame;
     cv::Mat dnn_input;
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
@@ -53,7 +62,7 @@ int main(int argc, char *argv[]) {
     while(gRun) {
         cap >> frame; 
         if(!frame.data) {
-            continue;
+            break;
         }  
  
         // this will be resized to the net format
@@ -86,6 +95,8 @@ int main(int argc, char *argv[]) {
     
         cv::imshow("detection", frame);
         cv::waitKey(1);
+        if(SAVE_RESULT)
+            resultVideo << frame;
     }
 
     std::cout<<"detection end\n";   
