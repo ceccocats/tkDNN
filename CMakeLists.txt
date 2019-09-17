@@ -112,7 +112,7 @@ target_link_libraries(yolo3_demo tkDNN)
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/)
 install(TARGETS tkDNN kernels DESTINATION lib)
-install(FILES "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" # source directory
+install(FILES "${CMAKE_SOURCE_DIR}/cmake/${CMAKE_PROJECT_NAME}Config.cmake" # source directory
         DESTINATION "share/${CMAKE_PROJECT_NAME}/cmake/" # target directory
 )
 
