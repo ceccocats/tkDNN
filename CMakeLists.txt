@@ -4,7 +4,7 @@ project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
 
 # project specific flags
 if(DEBUG)
@@ -110,8 +110,7 @@ target_link_libraries(yolo3_demo tkDNN)
 #         CACHE PATH "default install path" FORCE)
 #endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY include/ DESTINATION include/${CMAKE_PROJECT_NAME}
-FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/ DESTINATION include/)
 install(TARGETS tkDNN kernels DESTINATION lib)
 install(FILES "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" # source directory
         DESTINATION "share/${CMAKE_PROJECT_NAME}/cmake/" # target directory
