@@ -85,7 +85,7 @@ void coord2pixel(double lat, double lon, int &x, int &y, double *adfGeoTransform
     y = int(round((lat - adfGeoTransform[3]) / adfGeoTransform[5]));
 }
 
-void fillMatrix(cv::Mat &H, float *matrix, bool show = false)
+void fillMatrix(cv::Mat &H, double *matrix, bool show = false)
 {
     double *vals = (double *)H.data;
     for (int i = 0; i < 9; i++)
@@ -103,7 +103,6 @@ void convert_coords(std::vector<ObjCoords> &coords, int x, int y, int detected_c
     double latitude, longitude;
     std::vector<cv::Point2f> x_y, ll;
     x_y.push_back(cv::Point2f(x, y));
-
     //transform camera pixel to map pixel
     cv::perspectiveTransform(x_y, ll, H);
     //tranform to map pixel to map gps
@@ -136,25 +135,24 @@ void read_projection_matrix(cv::Mat &H, char *path)
     size_t len = 0;
     ssize_t read;
 
-    float *proj_matrix = (float *)malloc(9 * sizeof(float));
-
+    // float *proj_matrix = (float *)malloc(9 * sizeof(float));
+    double proj_matrix[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    int i = 0;
     fp = fopen(path, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
-
-    int i = 0;
+        
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        if (3 == sscanf(line, "%f %f %f", &proj_matrix[i * 3 + 0], &proj_matrix[i * 3 + 1], &proj_matrix[i * 3 + 2]))
-        {
+        std::cout<<line<<std::endl;
+        std::stringstream ss(line);
+        while (ss >> proj_matrix[i])
             i++;
-        }
     }
-    free(line);
     fclose(fp);
     fillMatrix(H, proj_matrix);
-
-    free(proj_matrix);
+    free(line);
+    // free(proj_matrix);
 }
 
 void draw_arrow(float angleRad, float vel, cv::Scalar color, cv::Point center, cv::Mat &frame)
@@ -176,10 +174,9 @@ unsigned long long time_in_ms()
     return t_stamp_ms;
 }
 
-void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, geodetic_converter::GeodeticConverter &gc, const cv::Mat& maskOrient, double *adfGeoTransform)
+void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, geodetic_converter::GeodeticConverter &gc, const cv::Mat& maskOrient, double *adfGeoTransform, cv::Mat H)
 {
     m->t_stamp_ms = time_in_ms();
-    m->num_objects = trackers.size();
     m->objects.clear();
     double lat, lon, alt;
 
@@ -215,29 +212,65 @@ void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, ge
             int pix_x, pix_y;
             coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
 
-            // std::cout<<maskOrient.at<cv::Vec3b>(pix_y,pix_x)<<std::endl;
+            // TODO: test correctness - added perspective transform call to converter pix_x and pix_y
+            // sometimes some values are wrong. float ok? 
+            // std::vector<cv::Point2f> map_p, camera_p;
+            // std::cout<<"--- pix_x, pix_y: "<<pix_x<<", "<<pix_y<<std::endl;
+            // map_p.push_back(cv::Point2f(pix_x, pix_y));
+            // std::cout<<"map_p: "<<map_p<<std::endl;
+            // //transform camera pixel to map pixel
+            // cv::perspectiveTransform(map_p, camera_p, H.inv());
+            // std::cout<<"size H: "<<H.cols<<", "<<H.rows<<std::endl;
+            // std::cout<<"camera_p: "<<camera_p<<std::endl;    
+            // // TODO: in some cases these lines causes seg fault!
+            // std::cout<<"y, x :"<<camera_p[0].y<<",  "<<camera_p[0].x<<std::endl;
+            // std::cout<<"size maskorient: "<<maskOrient.cols<<", "<<maskOrient.rows<<std::endl;
+            // // std::cout<<"vec3b: "<<(cv::Vec3b)(pix_y,pix_x);
+            // assert (camera_p[0].x < maskOrient.cols);
+            // assert (camera_p[0].y < maskOrient.rows);
+            // uint8_t maskOrientPixel = maskOrient.at<cv::Vec3b>(camera_p[0].y,camera_p[0].x)[0]; 
+            // std::cout<<"boo: "<<maskOrient.at<cv::Vec3b>(camera_p[0].y,camera_p[0].x)<<std::endl;
+            // uint8_t orientation;
+            // if(maskOrientPixel != 0)
+            // {
+            //     orientation = maskOrientPixel;
+            //     // std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
+            // }
+            // else
+            // {
+            //     orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            //     //std::cout<<"orientation given by the tracker "<< int(orientation)<<std::endl;
+            // }
 
-            uint8_t maskOrientPixel = maskOrient.at<cv::Vec3b>(pix_y,pix_x)[0]; 
-            uint8_t orientation;
-            if(maskOrientPixel != 0)
-            {
-                orientation = maskOrientPixel;
-                // std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
-            }
-            else
-            {
-                orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
-                //std::cout<<"orientation given by the tracker "<< int(orientation)<<std::endl;
-            }
-            
+            // TODO: to validate -> it works for grayscale image (see demo.cpp, row: "cv::Mat maskOrient = cv::imread(camera->maskFileOrient, 0);")
+            // TODO: include perspective transform
+            // std::cout<<"y, x :"<<pix_y<<", "<<pix_x<<std::endl;
+            // std::cout<<"size maskorient: "<<maskOrient.cols<<", "<<maskOrient.rows<<std::endl;
+            // std::cout<<"point: "<<(cv::Point)(pix_y,pix_x);
+            // uint8_t maskOrientPixel = maskOrient.at<uchar>(pix_y,pix_x);
+            // uint8_t orientation;
+            // if(maskOrientPixel != 0)
+            // {
+            //     orientation = maskOrientPixel;
+            //     // std::cout<<"orientation given by the mask "<< int(orientation)<<std::endl;
+            // }
+            // else
+            // {
+            //     orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            //     //std::cout<<"orientation given by the tracker "<< int(orientation)<<std::endl;
+            // }
+
+            uint8_t orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            // std::cout<<"orient: "<<unsigned(orientation)<<std::endl;
             //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
             uint8_t velocity = uint8_t(std::abs(t.pred_list_.back().vel_ * 3.6 / 2));
-            
+            // std::cout<<"vel: "<<unsigned(velocity)<<std::endl;
             RoadUser r{static_cast<float>(lat), static_cast<float>(lon), velocity, orientation, cat};
             //std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << int(r.speed) << " " << int(r.orientation) << " " << r.category << std::endl;
             m->objects.push_back(r);
         }
     }
+    m->num_objects = m->objects.size();
 }
 
 void prepare_message(Message *m, const std::vector<ObjCoords> &coords, int idx)
@@ -247,7 +280,7 @@ void prepare_message(Message *m, const std::vector<ObjCoords> &coords, int idx)
     m->num_objects = coords.size();
 
     m->objects.clear();
-    for (int i = 0; i < coords.size(); i++)
+    for (unsigned int i = 0; i < coords.size(); i++)
     {
         Categories cat;
 
