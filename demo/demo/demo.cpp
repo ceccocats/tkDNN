@@ -674,7 +674,6 @@ void *computationTask(void *x_void_ptr)
     Message *m = new Message;
     m->cam_idx = camera->CAM_IDX;
     m->lights.clear();
-    std::cout<<"COMM\n";
     /*Conversion for tracker, from gps to meters and viceversa*/
     // mutex_cv.lock();
     geodetic_converter::GeodeticConverter gc;
@@ -682,7 +681,6 @@ void *computationTask(void *x_void_ptr)
     // mutex_cv.unlock();
     double east, north, up;
     // double lat, lon, alt;
-    std::cout<<"COMMINT\n";
     /*Mask info*/
     cv::Mat mask = cv::imread(camera->maskfile, cv::IMREAD_GRAYSCALE);
     cv::Mat maskOrient = cv::imread(camera->maskFileOrient);
@@ -698,7 +696,6 @@ void *computationTask(void *x_void_ptr)
     
    
     return 0;*/
-    std::cout<<"COMM2\n";
     /*tracker infos*/
     std::vector<Tracker> trackers;
     std::vector<Data> cur_frame;
@@ -902,15 +899,16 @@ void *computationTask(void *x_void_ptr)
         step_t = end_t;
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
-        assert (!coords.empty());
         for (size_t i = 0; i < coords.size(); i++)
         {
             gc.geodetic2Enu(coords[i].lat_, coords[i].long_, 0, &east, &north, &up);
             cur_frame.push_back(Data(east, north, frame_nbr, coords[i].class_));
         }
-        assert (!cur_frame.empty());
         if (first_iteration)
         {
+            // if there aren't detections and it is the first iteration, we can't initialize the tracker, so continue
+            if(cur_frame.empty())
+                continue;
             for (auto f : cur_frame)
                 trackers.push_back(Tracker(f, initial_age, dt, n_states));
         }
@@ -920,18 +918,17 @@ void *computationTask(void *x_void_ptr)
         }
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
         //prepare message with tracker info
-        assert (trackers.size()!=0);
-        // mutex_cv.lock();
-        addRoadUserfromTracker(trackers, m, gc, maskOrient, adfGeoTransform, H);
-        // mutex_cv.unlock();
-        
-        //prepare the message with detection info
-        //prepare_message(m, coords, CAM_IDX);
-        //send message
-        // assert (!m->objects.empty());
-        if (!m->objects.empty())
-            Comm.send_message(m);
-        // assert (trackers.size()!=0);
+        if(trackers.size()==0)
+        {
+            // mutex_cv.lock();
+            addRoadUserfromTracker(trackers, m, gc, maskOrient, adfGeoTransform, H);
+            // mutex_cv.unlock();
+            //prepare the message with detection info
+            //prepare_message(m, coords, CAM_IDX);
+            //send message
+            if (!m->objects.empty())
+                Comm.send_message(m);
+        }
         
         if (to_show)
         {
