@@ -1,89 +1,34 @@
-#include <iostream>
-#include <signal.h>
-#include <stdlib.h> /* srand, rand */
-#include <unistd.h>
-#include <mutex>
-#include <ctime>
-#include <pthread.h>
-
 #include <time.h>
-#include <chrono>
-#include <math.h>
-#include <typeinfo>
 
 #include "utils.h"
-#include "BoxDetection.h"
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-//saliency
-#include <opencv2/core/utility.hpp>
-#include <opencv2/saliency.hpp>
-#include <opencv2/highgui.hpp>
-
 #include "Yolo3Detection.h"
-#include "classutils.h"
+#include "message.h"
+#include "visualization.h"
+
+#include "tracker.h"
 #include "../masa_protocol/include/send.hpp"
 #include "../masa_protocol/include/serialize.hpp"
 
-#include "ekf.h"
-#include "trackutils.h"
-#include "plot.h"
-#include "tracker.h"
-#include <assert.h> 
+// #include <assert.h>
+// #include <unistd.h>
+// #include <mutex>
+// #include <ctime>
+// #include <pthread.h>
+// #include <signal.h>
+// #include <chrono>
+// #include <math.h>
+// #include <typeinfo>
+// #include <iostream>
 
 #define MAX_DETECT_SIZE 100
 
-std::chrono::steady_clock::time_point local_clock_start;
-
-std::mutex mutexgRun;
-
 bool gRun;
+std::chrono::steady_clock::time_point local_clock_start;
+std::mutex mutexgRun;
 std::string obj_class[10]{"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};
-
 //mutex for some opencv operations
 std::mutex mutex_cv;
-
-struct ModFrame_t{
-    std::vector<Tracker> trackers;
-    geodetic_converter::GeodeticConverter gc;
-    double adfGeoTransform[6];
-    cv::Mat H;
-    cv::Mat original_frame;
-    tk::dnn::Yolo3Detection yolo;
-    cv::Mat mask;
-    // sem for mainthread, detectionthread and topviewthread
-    std::mutex sem;
-};
-
-struct Frame_t{
-    char *input;
-    cv::Mat frame;
-    int frame_nbr;
-    // sem_vc for mainthread, videocapturethread, originalthread and disparitythread
-    std::mutex sem_vc;
-};
-
-struct Camera_t{ 
-    int CAM_IDX;
-    char *input;
-    char *pmatrix;
-    char *maskfile;
-    char *cameraCalib;
-    char *maskFileOrient;
-    bool to_show;
-    tk::dnn::Yolo3Detection yolo;
-    double adfGeoTransform[6];
-};
-
-struct Show_t{
-    cv::Mat original, detection, topview, disparity;
-    bool update_o, update_de, update_t, update_di; 
-    // a single mutex for each operation - the show_updates function must get all mutex
-    std::mutex mutex_o, mutex_de, mutex_t, mutex_di;
-}updates;
+Show_t updates;
 
 void sig_handler(int signo)
 {
@@ -95,9 +40,9 @@ void sig_handler(int signo)
 
 void *readVideoCapture(void *x_void_ptr)
 {
-    std::cout<<"readVideoCapture start...\n";
-    
-    Frame_t *info_f = (Frame_t *) x_void_ptr;
+    std::cout << "readVideoCapture start...\n";
+
+    Frame_t *info_f = (Frame_t *)x_void_ptr;
     mutex_cv.lock();
     cv::VideoCapture cap(info_f->input, cv::CAP_FFMPEG);
     mutex_cv.unlock();
@@ -112,7 +57,6 @@ void *readVideoCapture(void *x_void_ptr)
     }
     else
         std::cout << "camera started\n";
-    
 
     // cap.set(cv::CAP_PROP_BUFFERSIZE,3);
     // std::cout<<"buf size: "<<cap.get(CV_CAP_PROP_BUFFERSIZE)<<std::endl;
@@ -120,36 +64,36 @@ void *readVideoCapture(void *x_void_ptr)
     auto step_t = std::chrono::steady_clock::now();
     auto end_t = std::chrono::steady_clock::now();
     auto current_timestamp = std::chrono::steady_clock::now();
-    
-    // compute fps and find camera's clock 
+
+    // compute fps and find camera's clock
     double shift, mean_time = 0;
     std::cout << "Frames per second using video.get(CV_CAP_PROP_FPS) : " << cap.get(CV_CAP_PROP_FPS) << std::endl;
-    std::cout<<"readVideoCapture computes frame rate...\n";
-    // //compute frame rate 
-    int i=0;
+    std::cout << "readVideoCapture computes frame rate...\n";
+    // //compute frame rate
+    int i = 0;
     int num_f = 120;
-    // the first 20 frames are null 
-    while (i<21)
-    {        
+    // the first 20 frames are null
+    while (i < 21)
+    {
         cap >> frame_loc;
         i++;
     }
 
-    i=0;
+    i = 0;
     start_t = std::chrono::steady_clock::now();
-    while (i<num_f)
-    {        
+    while (i < num_f)
+    {
         step_t = std::chrono::steady_clock::now();
         cap >> frame_loc;
         mean_time = mean_time + std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - step_t).count();
-        std::cout << " step "<<i<<" : "<<std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - step_t).count() << " ms"<<std::endl;
+        std::cout << " step " << i << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - step_t).count() << " ms" << std::endl;
         i++;
     }
-    end_t = std::chrono::steady_clock::now();    
+    end_t = std::chrono::steady_clock::now();
 
-    std::cout << "Capturing " << num_f << " frames" << std::endl ;
-    std::cout << " Time taken : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms"<<std::endl;
-    
+    std::cout << "Capturing " << num_f << " frames" << std::endl;
+    std::cout << " Time taken : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms" << std::endl;
+
     /*
     mean_time indicates the milliseconds from a frame and the next. (frame rate)
     local_clock_sync is the camera clock.
@@ -158,39 +102,38 @@ void *readVideoCapture(void *x_void_ptr)
     otherwise it will be considered old.
     */
     auto local_clock_sync = std::chrono::steady_clock::now();
-    mean_time = mean_time/num_f;
+    mean_time = mean_time / num_f;
     shift = ((double)std::chrono::duration_cast<std::chrono::milliseconds>(local_clock_sync - local_clock_start).count()) / mean_time;
     shift = (shift - (int)shift) * mean_time;
-    std::cout<<".-------------------------------\n";
-    std::cout<<" mean time: "<<mean_time<<std::endl;
-    std::cout<<" shift: "<<shift<<std::endl;
-    std::cout<<" TIMEDIFFERENCE:  "<<std::chrono::duration_cast<std::chrono::milliseconds>(local_clock_sync - local_clock_start).count()<<std::endl;
-    std::cout<<"\n\n\n\n";
-    std::cout<<"readVideoCapture start to capture...\n";
+    std::cout << ".-------------------------------\n";
+    std::cout << " mean time: " << mean_time << std::endl;
+    std::cout << " shift: " << shift << std::endl;
+    std::cout << " TIMEDIFFERENCE:  " << std::chrono::duration_cast<std::chrono::milliseconds>(local_clock_sync - local_clock_start).count() << std::endl;
+    std::cout << "\n\n\n\n";
+    std::cout << "readVideoCapture start to capture...\n";
     while (gRun)
-    {    
-        // mutex_cv.lock();    
+    {
+        // mutex_cv.lock();
         cap >> frame_loc;
         // mutex_cv.unlock();
         current_timestamp = std::chrono::steady_clock::now();
-        shift = std::chrono::duration_cast<std::chrono::milliseconds>(current_timestamp - local_clock_sync).count() ;
-        std::cout << " RELATIVE TIMESTAMP FRAME : "<<shift << " ms"<<std::endl;
+        shift = std::chrono::duration_cast<std::chrono::milliseconds>(current_timestamp - local_clock_sync).count();
+        std::cout << " RELATIVE TIMESTAMP FRAME : " << shift << " ms" << std::endl;
         shift = shift / mean_time;
         shift = (shift - (int)shift) * mean_time;
-        shift = (shift - mean_time/2 >= 0)? -(mean_time - shift) : shift;
-        std::cout<<"DELAY frame_"<<frame_nbr_loc<<" : "<< shift << " ms"<<std::endl;
+        shift = (shift - mean_time / 2 >= 0) ? -(mean_time - shift) : shift;
+        std::cout << "DELAY frame_" << frame_nbr_loc << " : " << shift << " ms" << std::endl;
         // TODO: here introduce a tollerance to discard old frame
 
-        // std::cout<< "CV_CAP_PROP_POS_MSEC:   "<< cap.get( cv::CAP_PROP_POS_MSEC) <<std::endl; 
+        // std::cout<< "CV_CAP_PROP_POS_MSEC:   "<< cap.get( cv::CAP_PROP_POS_MSEC) <<std::endl;
         // std::cout<< "CV_CAP_PROP_POS_FRAMES:  "<< cap.get( cv::CAP_PROP_POS_FRAMES) <<std::endl;  // <-- the v4l2 'sequence' field
         // std::cout<< "CV_CAP_PROP_FPS:  "<< cap.get( cv::CAP_PROP_FPS)<<std::endl;
         // std::cout << "Format: " << cap.get(CV_CAP_PROP_FORMAT) << "\n";
         // CAP_PROP_POS_MSEC Current position of the video file in milliseconds or video capture timestamp.
-        std::cout<<"id: "<<cap.get(cv::CAP_PROP_POS_MSEC)<<std::endl;
+        std::cout << "id: " << cap.get(cv::CAP_PROP_POS_MSEC) << std::endl;
         // CAP_PROP_FRAME_COUNT Number of frames in the video file.
-        std::cout<<"id: "<<cap.get(cv::CAP_PROP_FRAME_COUNT)<<std::endl;
+        std::cout << "id: " << cap.get(cv::CAP_PROP_FRAME_COUNT) << std::endl;
 
-        
         if (!frame_loc.data)
         {
             usleep(1000000);
@@ -202,409 +145,31 @@ void *readVideoCapture(void *x_void_ptr)
         }
 
         end_t = std::chrono::steady_clock::now();
-        std::cout << " VC-TIME 1 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms"<<std::endl;
+        std::cout << " VC-TIME 1 : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms" << std::endl;
         start_t = end_t;
 
         info_f->sem_vc.lock();
         info_f->frame = frame_loc.clone();
         info_f->frame_nbr = frame_nbr_loc;
         info_f->sem_vc.unlock();
-        // usleep(50000); 
+        // usleep(50000);
         end_t = std::chrono::steady_clock::now();
-        std::cout << " VC-TIME 2 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms"<<std::endl;
+        std::cout << " VC-TIME 2 : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms" << std::endl;
         start_t = end_t;
-        frame_nbr_loc ++;
-    }
-    return (void *)0;
-}
-
-/* Thread function to show the updated images 
-**/
-void *show_updates(void *x_void_ptr)
-{
-    cv::namedWindow("original", cv::WINDOW_NORMAL);
-    cv::namedWindow("detection", cv::WINDOW_NORMAL);
-    cv::namedWindow("topview", cv::WINDOW_NORMAL);
-    cv::namedWindow("disparity", cv::WINDOW_NORMAL);
-    cv::Mat original_loc, detection_loc, topview_loc, disparity_loc;
-    bool update_o_loc, update_de_loc, update_t_loc, update_di_loc;
-    
-    while (gRun)
-    {
-        TIMER_START
-        // critical section: copy the struct in local variable
-        // in this way we can unlock the sem for the main thread
-        if(updates.mutex_o.try_lock())
-            {
-            update_o_loc = updates.update_o;
-            updates.update_o = false;
-            if(update_o_loc)
-                original_loc = updates.original.clone();
-            updates.mutex_o.unlock();
-            }
-
-        if(updates.mutex_de.try_lock())
-            {    
-            update_de_loc = updates.update_de;
-            updates.update_de = false;
-            if(update_de_loc)
-                detection_loc = updates.detection.clone();
-            updates.mutex_de.unlock();
-            }
-
-        if(updates.mutex_t.try_lock())
-            {  
-            update_t_loc = updates.update_t;
-            updates.update_t = false;
-            if(update_t_loc)
-                topview_loc = updates.topview.clone();
-            updates.mutex_t.unlock();
-            }
-
-        if(updates.mutex_di.try_lock())
-            {  
-            update_di_loc = updates.update_di;
-            updates.update_di = false;
-            if(update_di_loc)
-                disparity_loc = updates.disparity.clone();
-            updates.mutex_di.unlock();
-            }
-
-        if(update_o_loc)
-            cv::imshow("original", original_loc);
-        if(update_de_loc)
-            cv::imshow("detection", detection_loc);
-        if(update_t_loc)
-            cv::imshow("topview", topview_loc);
-        if(update_di_loc)
-            cv::imshow("disparity", disparity_loc);
-        cv::waitKey(1);
-        // usleep(20000);  //sleep 20 msec
-        std::cout<<"show_updates: ";
-        TIMER_STOP
-    }
-    return (void *)0;
-}
-
-void *originalFrame(void *x_void_ptr)
-{
-    Frame_t *info_show_orig = (Frame_t *) x_void_ptr;
-    cv::Mat frame_loc;
-    int frame_nbr_loc = 0;
-    while (gRun)
-    {
-        TIMER_START
-        // critical section: copy the struct in local variable
-        // in this way we can unlock the sem for the main thread
-        info_show_orig->sem_vc.lock();
-        frame_loc = info_show_orig->frame.clone();
-        frame_nbr_loc = info_show_orig->frame_nbr;
-        info_show_orig->sem_vc.unlock();
-        if (frame_nbr_loc == 0)
-        {
-            usleep(1000000);
-            printf("no frame received\n");
-            continue;
-        }
-        updates.mutex_o.lock();
-        updates.original = frame_loc.clone();
-        updates.update_o = true;
-        updates.mutex_o.unlock();
-        usleep(10000);  //sleep 10 msec
-        std::cout<<"originalFrame: ";
-        TIMER_STOP
-    }
-    return (void *)0;
-}
-
-void *detectionFrame(void *x_void_ptr)
-{
-    ModFrame_t *info_show = (ModFrame_t *) x_void_ptr;
-    double lat, lon, alt;
-    int pix_x, pix_y;
-    cv::Mat original_frame_loc;
-    std::vector<Tracker> trackers;
-
-    geodetic_converter::GeodeticConverter gc;
-    double adfGeoTransform[6];
-    cv::Mat H;
-    tk::dnn::Yolo3Detection yolo;
-    int num_detected;
-    cv::Mat mask;
-
-    // box variable
-    tk::dnn::box b;
-    int x0, w, x1, y0, h, y1;
-    int objClass;
-    std::string det_class;;
-    // float prob; 
-    cv::Scalar intensity;
-    std::vector<cv::Point2f> map_p, camera_p;
-    int baseline = 0;
-    float fontScale = 0.5;
-    int thickness = 2;
-
-    while (gRun)
-    {
-        TIMER_START
-        // critical section: copy the struct in local variable
-        // in this way we can unlock the sem for the main thread
-        info_show->sem.lock();
-        original_frame_loc = info_show->original_frame.clone();
-        // std::vector<Tracker> trackers;
-        trackers = info_show->trackers;
-        // geodetic_converter::GeodeticConverter gc;
-        gc = info_show->gc;
-        for(int i = 0; i < 6; i++ )
-            adfGeoTransform[i] = info_show->adfGeoTransform[i];
-        // cv::Mat H;
-        H = info_show->H.clone();
-        yolo = info_show->yolo;
-        mask = info_show->mask.clone();
-        info_show->sem.unlock();
-        
-        if (trackers.empty())
-        {
-            usleep(1000000);
-            printf("no data available\n");
-            continue;
-        }
-
-        num_detected = yolo.detected.size();
-        for (int i = 0; i < num_detected; i++)
-        {
-            b = yolo.detected[i];
-            x0 = b.x;
-            w = b.w;
-            x1 = b.x + w;
-            y0 = b.y;
-            h = b.h;
-            y1 = b.y + h;
-            objClass = b.cl;
-            det_class = obj_class[b.cl];
-            // prob = b.prob;
-
-            intensity = mask.at<uchar>(cv::Point(int(x0 + b.w / 2), y1));
-            
-            if (intensity[0] && objClass < 6)
-            {
-                //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
-                cv::rectangle(original_frame_loc, cv::Point(x0, y0), cv::Point(x1, y1), yolo.colors[objClass], 2);
-                // draw label
-                cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
-                cv::rectangle(original_frame_loc, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), yolo.colors[b.cl], -1);
-                cv::putText(original_frame_loc, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness); 
-            }
-        }
-
-        for (auto t : trackers)
-        {
-            for (size_t p = 1; p < t.pred_list_.size(); p++)
-            {
-                gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
-                coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-
-                map_p.clear();
-                camera_p.clear();
-                map_p.push_back(cv::Point2f(pix_x, pix_y));
-
-                //transform camera pixel to map pixel
-                cv::perspectiveTransform(map_p, camera_p, H.inv());
-                // std::cout<<"x,y: "<<pix_x<<", "<<pix_y<<std::endl;
-                // std::cout<<"map_p: "<<map_p<<std::endl;
-                // std::cout<<"camera_p: "<<camera_p<<std::endl;
-                // std::cout<<"size original_frame_loc: "<<original_frame_loc.cols<<", "<<original_frame_loc.rows<<std::endl;
-                // assert (camera_p[0].x < original_frame_loc.cols);
-                // assert (camera_p[0].y < original_frame_loc.rows);
-                if (camera_p[0].x < original_frame_loc.cols && camera_p[0].y < original_frame_loc.rows && camera_p[0].x >= 0 && camera_p[0].y >= 0)
-                    cv::circle(original_frame_loc, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
-            }
-        }
-
-        updates.mutex_de.lock();
-        updates.detection = original_frame_loc.clone();
-        updates.update_de = true;
-        updates.mutex_de.unlock();
-
-        std::cout<<"detectionFrame: ";
-        TIMER_STOP
-
-    }
-    return (void *)0;
-}
-
-void *topviewFrame(void *x_void_ptr)
-{
-    ModFrame_t *info_show = (ModFrame_t *) x_void_ptr;
-    double lat, lon, alt;
-    int pix_x, pix_y;
-    cv::Mat frame_top;
-    cv::Mat original_frame_top;
-    // original_frame_top = cv::imread("../demo/demo/data/map/map_geo.jpg");
-    original_frame_top = cv::imread("../demo/demo/data/map/MASA_4670.png");
-    // original_frame_top = cv::imread("../demo/demo/data/map/MASA_4670_V.png");
-    
-    std::vector<Tracker> trackers;
-    geodetic_converter::GeodeticConverter gc;
-    double adfGeoTransform[6];
-    cv::Mat H;
-    while (gRun)
-    {
-        TIMER_START
-        // critical section: copy the struct in local variable
-        // in this way we can unlock the sem for the main thread
-        info_show->sem.lock();
-        // std::vector<Tracker> trackers;
-        trackers = info_show->trackers;
-        // geodetic_converter::GeodeticConverter gc;
-        gc = info_show->gc;
-        for(int i = 0; i < 6; i++ )
-            adfGeoTransform[i] = info_show->adfGeoTransform[i];
-        // cv::Mat H;
-        H = info_show->H.clone();
-        info_show->sem.unlock();
-        if (trackers.empty())
-        {
-            usleep(1000000);
-            printf("no data available\n");
-            continue;
-        }
-        frame_top = original_frame_top.clone();
-        for (auto t : trackers)
-        {
-            for (size_t p = 1; p < t.pred_list_.size(); p++)
-            {
-                gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
-                coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
-                if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
-
-            }
-        }
-        //outputVideo<< frame_top;
-        // ------------------------------------------------
-        updates.mutex_t.lock();
-        updates.topview = frame_top.clone();
-        updates.update_t = true;
-        updates.mutex_t.unlock();
-
-        std::cout<<"topviewFrame: ";
-        TIMER_STOP
-
-    }    
-    return (void *)0;
-}
-
-void *disparityFrame(void *x_void_ptr)
-{
-    Frame_t *info_show_disparity = (Frame_t *) x_void_ptr;
-    bool first_iteration = true;
-    cv::Mat frame_loc;
-    int frame_nbr_loc = 0, pre_frame_nbr_loc = 0;
-    auto start_t = std::chrono::steady_clock::now();
-    auto step_t = std::chrono::steady_clock::now();
-    auto end_t = std::chrono::steady_clock::now();
-
-    // information for the disparity map
-    cv::Mat canny, pre_canny, canny_RGB, pre_canny_RGB;
-    cv::Mat canny_img;
-    cv::Mat disparity_frame;
-    while (gRun)
-    {
-        start_t = std::chrono::steady_clock::now();
-        step_t = start_t;
-        // critical section: copy the struct in local variable
-        // in this way we can unlock the sem for the main thread
-        info_show_disparity->sem_vc.lock();
-        frame_loc = info_show_disparity->frame.clone();
-        frame_nbr_loc = info_show_disparity->frame_nbr;
-        info_show_disparity->sem_vc.unlock();
-        if (frame_nbr_loc == 0)
-        {
-            usleep(1000000);
-            printf("no frame received\n");
-            continue;
-        }
-        // compute frame disparity only in there is a new frame
-        if(frame_nbr_loc - pre_frame_nbr_loc > 0)
-        {
-            pre_frame_nbr_loc = frame_nbr_loc;
-            //preprocessing frame
-            step_t = std::chrono::steady_clock::now();
-            // src_gray
-            canny_img = img_laplacian(frame_loc,0);
-            cv::Canny(canny_img, canny, 100, 100*2 );
-            // sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_canny.jpg",frame_nbr_loc, 999);
-            // cv::imwrite(buf_frame_crop_name, canny);
-            end_t = std::chrono::steady_clock::now();
-            std::cout << " TIME END pre canny : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
-            step_t = end_t;
-            // std::cout<<"o: "<<frame_loc.cols<<" - "<<frame_loc.rows<<std::endl;
-            // std::cout<<"canny: "<<canny.cols<<" - "<<canny.rows<<std::endl;
-            // std::cout<<"pre: "<<pre_canny.cols<<" - "<<pre_canny.rows<<std::endl;
-            if(!first_iteration)
-            {
-                // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB) 
-                cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-                cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
-                disparity_frame = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr_loc, 999, 0);
-                // std::cout<<"size: "<<disparity_frame.rows<<" - "<<disparity_frame.cols<<std::endl;
-                // if (disparity_frame.rows == 0 || disparity_frame.cols == 0)
-                //     return -1;
-                // if (disparity_frame.empty()) 
-                // { // only fools don't check...
-                //     std::cout << "image not loaded !" << std::endl;
-                //     return -1;
-                // }
-                end_t = std::chrono::steady_clock::now();
-                std::cout << " TIME canny : frame_disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
-                step_t = end_t;
-
-                // //--------------------------------
-                // //frame box disparity on the original image
-                // step_t_segmentation = std::chrono::steady_clock::now();
-                // frame_box_disparity(pre_frame, frame, pre_rois, frame_nbr_loc);
-                // // reset pre_rois for the new roi of the current frame
-                // // pre_rois.erase(pre_rois.begin(), pre_rois.end());
-                // end_t_segmentation = std::chrono::steady_clock::now();
-                // std::cout << " TIME Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
-                // step_t_segmentation = end_t_segmentation;
-
-                // //frame box disparity on the preprocessed image
-                // cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-                // cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
-                // frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr_loc);
-                // // reset pre_rois for the new roi of the current frame
-                // pre_rois.erase(pre_rois.begin(), pre_rois.end());
-                // end_t_segmentation = std::chrono::steady_clock::now();
-                // std::cout << " TIME Canny Frame disparity : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t_segmentation - step_t_segmentation).count() << " ms"<<std::endl;
-                // step_t_segmentation = end_t_segmentation;
-                // //---------------------------------
-
-                updates.mutex_di.lock();
-                updates.disparity = disparity_frame.clone();
-                updates.update_di = true;
-                updates.mutex_di.unlock();
-            }
-            pre_canny = canny.clone();
-            if(first_iteration)
-                first_iteration = false;
-            end_t = std::chrono::steady_clock::now();
-            std::cout<<"disparityFrame : TIME END pre canny : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t).count() << " ms"<<std::endl;
-        }
+        frame_nbr_loc++;
     }
     return (void *)0;
 }
 
 void *computationTask(void *x_void_ptr)
 {
-    Camera_t *camera = (Camera_t *) x_void_ptr;
+    Camera_t *camera = (Camera_t *)x_void_ptr;
     pthread_t visual, originalshow, detectionshow, topviewshow, disparityshow;
     pthread_t videocap;
     //create video capture thread
     Frame_t info_f;
     info_f.input = camera->input;
-    if (pthread_create(&videocap, NULL, readVideoCapture, (void*)&info_f))
+    if (pthread_create(&videocap, NULL, readVideoCapture, (void *)&info_f))
     {
         fprintf(stderr, "Error creating thread\n");
         return (void *)1;
@@ -612,9 +177,9 @@ void *computationTask(void *x_void_ptr)
 
     bool to_show = camera->to_show;
     double adfGeoTransform[6];
-    for(int i=0; i<6; i++)
+    for (int i = 0; i < 6; i++)
         adfGeoTransform[i] = camera->adfGeoTransform[i];
-    
+
     ModFrame_t info_show;
     if (to_show)
     {
@@ -623,39 +188,39 @@ void *computationTask(void *x_void_ptr)
         updates.update_de = false;
         updates.update_t = false;
         updates.update_di = false;
-        if (pthread_create(&visual, NULL, show_updates, (void*)NULL))
+        if (pthread_create(&visual, NULL, show_updates, (void *)NULL))
         {
             fprintf(stderr, "Error creating thread\n");
             return (void *)1;
         };
-        if (pthread_create(&originalshow, NULL, originalFrame, (void*)&info_f))
+        if (pthread_create(&originalshow, NULL, originalFrame, (void *)&info_f))
         {
             fprintf(stderr, "Error creating thread\n");
             return (void *)1;
         };
-        if (pthread_create(&disparityshow, NULL, disparityFrame, (void*)&info_f))
+        if (pthread_create(&disparityshow, NULL, disparityFrame, (void *)&info_f))
         {
             fprintf(stderr, "Error creating thread\n");
             return (void *)1;
         };
         info_show.H = cv::Mat(cv::Size(3, 3), CV_64FC1);
-        if (pthread_create(&detectionshow, NULL, detectionFrame, (void*)&info_show))
+        if (pthread_create(&detectionshow, NULL, detectionFrame, (void *)&info_show))
         {
             fprintf(stderr, "Error creating thread\n");
             return (void *)1;
         };
-        if (pthread_create(&topviewshow, NULL, topviewFrame, (void*)&info_show))
+        if (pthread_create(&topviewshow, NULL, topviewFrame, (void *)&info_show))
         {
             fprintf(stderr, "Error creating thread\n");
             return (void *)1;
         };
-    } 
-      
-    char* pmatrix = camera->pmatrix;
+    }
+
+    char *pmatrix = camera->pmatrix;
     /*projection matrix from camera to map*/
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
     read_projection_matrix(H, pmatrix);
-    assert (cv::countNonZero(H) > 0);
+    assert(cv::countNonZero(H) > 0);
     // std::cout<<H<<std::endl;
     // return (void*)0;
     /*Camera calibration*/
@@ -666,11 +231,11 @@ void *computationTask(void *x_void_ptr)
 
     /*GPS information*/
     std::vector<ObjCoords> coords;
-    
+
     /*socket*/
     Communicator Comm(SOCK_DGRAM);
     Comm.open_client_socket((char *)"127.0.0.1", 8888);
-    
+
     Message *m = new Message;
     m->cam_idx = camera->CAM_IDX;
     m->lights.clear();
@@ -729,10 +294,11 @@ void *computationTask(void *x_void_ptr)
 
     // box variable
     tk::dnn::box b;
-    int x0, h, y1; //w, x1, y0; 
+    int x0, h, y1; //w, x1, y0;
     int objClass;
-    std::string det_class;;
-    // float prob; 
+    std::string det_class;
+    ;
+    // float prob;
     cv::Scalar intensity;
 
     cv::Mat frame;
@@ -740,18 +306,18 @@ void *computationTask(void *x_void_ptr)
     cv::Mat dnn_input;
     bool first_iteration = true;
     while (gRun)
-    {       
+    {
         TIMER_START
         start_t = std::chrono::steady_clock::now();
         step_t = start_t;
-        
+
         info_f.sem_vc.lock();
         frame = info_f.frame.clone();
-        if(info_f.frame_nbr - frame_nbr > 1)
-            std::cout<<"more than one - f_n (diff "<<info_f.frame_nbr - frame_nbr<<")\n";
+        if (info_f.frame_nbr - frame_nbr > 1)
+            std::cout << "more than one - f_n (diff " << info_f.frame_nbr - frame_nbr << ")\n";
         frame_nbr = info_f.frame_nbr;
         info_f.sem_vc.unlock();
-        std::cout<<"f_n: "<<frame_nbr<<std::endl;
+        std::cout << "f_n: " << frame_nbr << std::endl;
         // if (!frame.data)
         if (frame_nbr == 0)
         {
@@ -778,10 +344,10 @@ void *computationTask(void *x_void_ptr)
 
         coords.clear();
         end_t = std::chrono::steady_clock::now();
-        std::cout << " TIME 1 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
+        std::cout << " TIME 1 : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
         step_t = end_t;
         // draw dets
-        std::cout<<"camera: "<<camera->CAM_IDX <<" - num detected: "<<num_detected<<std::endl;
+        std::cout << "camera: " << camera->CAM_IDX << " - num detected: " << num_detected << std::endl;
 
         //TODO: move in a thread
         // //preprocessing frame
@@ -799,14 +365,14 @@ void *computationTask(void *x_void_ptr)
         // // std::cout<<"pre: "<<pre_canny.cols<<" - "<<pre_canny.rows<<std::endl;
         // if(!first_iteration)
         // {
-        //     // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB) 
+        //     // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB)
         //     cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
         //     cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
         //     disparity_frame = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr, 999, 0);
         //     std::cout<<"size: "<<disparity_frame.rows<<" - "<<disparity_frame.cols<<std::endl;
         //     if (disparity_frame.rows == 0 || disparity_frame.cols == 0)
         //         return -1;
-        //     if (disparity_frame.empty()) 
+        //     if (disparity_frame.empty())
         //     { // only fools don't check...
         //         std::cout << "image not loaded !" << std::endl;
         //         return -1;
@@ -854,14 +420,14 @@ void *computationTask(void *x_void_ptr)
             // prob = b.prob;
 
             intensity = mask.at<uchar>(cv::Point(int(x0 + b.w / 2), y1));
-            
+
             if (intensity[0])
             {
 
                 if (objClass < 6)
                 {
 
-                    // find the rectangular on the frame (sub-figure)                        
+                    // find the rectangular on the frame (sub-figure)
                     // roi.x = (x0 > 0)? x0 : 0;
                     // roi.y = (y0 > 0)? y0 : 0;
                     // // std::cout<<"x "<<roi.x<<" - y "<<roi.y<<std::endl;
@@ -878,9 +444,8 @@ void *computationTask(void *x_void_ptr)
                     // segmentation(frame(roi), frame(roi), frame_nbr, i, 1);
 
                     /////
-                    convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform, frame_nbr);
-                    
-                    
+                    convert_coords(coords, x0 + b.w / 2, y1, objClass, H, adfGeoTransform);
+
                     // //std::cout<<objClass<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
                     // cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), camera->yolo.colors[objClass], 2);
                     // // draw label
@@ -889,13 +454,13 @@ void *computationTask(void *x_void_ptr)
                     // int thickness = 2;
                     // cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
                     // cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), camera->yolo.colors[b.cl], -1);
-                    // cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness); 
+                    // cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
                 }
             }
         }
 
         end_t = std::chrono::steady_clock::now();
-        std::cout << " TIME 2 : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms"<<std::endl;
+        std::cout << " TIME 2 : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
         step_t = end_t;
         //convert from latitude and longitude to meters for ekf
         cur_frame.clear();
@@ -907,7 +472,7 @@ void *computationTask(void *x_void_ptr)
         if (first_iteration)
         {
             // if there aren't detections and it is the first iteration, we can't initialize the tracker, so continue
-            if(cur_frame.empty())
+            if (cur_frame.empty())
                 continue;
             for (auto f : cur_frame)
                 trackers.push_back(Tracker(f, initial_age, dt, n_states));
@@ -918,7 +483,7 @@ void *computationTask(void *x_void_ptr)
         }
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
         //prepare message with tracker info
-        if(trackers.size()==0)
+        if (trackers.size() == 0)
         {
             // mutex_cv.lock();
             addRoadUserfromTracker(trackers, m, gc, maskOrient, adfGeoTransform, H);
@@ -929,17 +494,17 @@ void *computationTask(void *x_void_ptr)
             if (!m->objects.empty())
                 Comm.send_message(m);
         }
-        
+
         if (to_show)
         {
-            //populate the ModFrame_t 
+            //populate the ModFrame_t
             info_show.sem.lock();
             info_show.original_frame = frame.clone();
             // std::vector<Tracker> trackers;
             info_show.trackers = trackers;
             // geodetic_converter::GeodeticConverter gc;
             info_show.gc = gc;
-            for(int i = 0; i < 6; i++ )
+            for (int i = 0; i < 6; i++)
                 info_show.adfGeoTransform[i] = adfGeoTransform[i];
             // cv::Mat H;
             info_show.H = H.clone();
@@ -952,11 +517,11 @@ void *computationTask(void *x_void_ptr)
         // update pre_frame for the disparity map
         // pre_frame = orig_frame.clone();
         // pre_canny = canny.clone();
-        if(first_iteration)
+        if (first_iteration)
             first_iteration = false;
-    
+
         frame_nbr++;
-        std::cout<<camera->CAM_IDX<<" camera thread: ";
+        std::cout << camera->CAM_IDX << " camera thread: ";
         TIMER_STOP
     }
     return (void *)0;
@@ -968,7 +533,7 @@ int main(int argc, char *argv[])
     std::cout << "detection\n";
     signal(SIGINT, sig_handler);
     srand(time(NULL));
-    bool no_params = false; //flag to indicate if there are camera parameters or we use mp4 test video 
+    bool no_params = false; //flag to indicate if there are camera parameters or we use mp4 test video
 
     char *net = (char *)"yolo3_coco4.rt";
     if (argc > 1)
@@ -980,27 +545,27 @@ int main(int argc, char *argv[])
     if (argc > 3)
     {
         n = argv[3];
-        if(strcmp(n, "-n"))
-            return -1;    
+        if (strcmp(n, "-n"))
+            return -1;
     };
     int n_cameras = 0;
     if (argc > 4)
     {
         n_cameras = atoi(argv[4]);
-        if(argc < 5+ 7 * n_cameras)
+        if (argc < 5 + 7 * n_cameras)
         {
-            std::cout<<"too few parameters\n";
+            std::cout << "too few parameters\n";
             return -1;
         }
-        if(!n_cameras)
+        if (!n_cameras)
         {
             n_cameras = 1;
             no_params = true;
-        }        
+        }
     }
-    Camera_t cameras[n_cameras]; 
-    bool *to_show = (bool *) malloc(n_cameras * sizeof(bool)); 
-    if(no_params) 
+    Camera_t cameras[n_cameras];
+    bool *to_show = (bool *)malloc(n_cameras * sizeof(bool));
+    if (no_params)
     {
         cameras[0].CAM_IDX = 20936;
         cameras[0].input = (char *)"../demo/demo/data/single_ped_2.mp4";
@@ -1013,76 +578,74 @@ int main(int argc, char *argv[])
     }
     else
     {
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].CAM_IDX = atoi(argv[5+i]);
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].input = argv[5+n_cameras+i];
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].pmatrix = argv[5+2*n_cameras+i];
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].maskfile = argv[5+3*n_cameras+i];
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].cameraCalib = argv[5+4*n_cameras+i];
-        for(int i = 0; i<n_cameras; i++)
-            cameras[i].maskFileOrient = argv[5+5*n_cameras+i];
-        for(int i = 0; i<n_cameras; i++)
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].CAM_IDX = atoi(argv[5 + i]);
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].input = argv[5 + n_cameras + i];
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].pmatrix = argv[5 + 2 * n_cameras + i];
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].maskfile = argv[5 + 3 * n_cameras + i];
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].cameraCalib = argv[5 + 4 * n_cameras + i];
+        for (int i = 0; i < n_cameras; i++)
+            cameras[i].maskFileOrient = argv[5 + 5 * n_cameras + i];
+        for (int i = 0; i < n_cameras; i++)
         {
-            cameras[i].to_show = atoi(argv[5+6*n_cameras+i]); //only one camera can be shown
-            to_show[i] = atoi(argv[5+6*n_cameras+i]);
+            cameras[i].to_show = atoi(argv[5 + 6 * n_cameras + i]); //only one camera can be shown
+            to_show[i] = atoi(argv[5 + 6 * n_cameras + i]);
         }
     }
     //TODO now only one camera can be visualized
-    int check_visualization=0;
-    for(int i = 0; i<n_cameras; i++)
+    int check_visualization = 0;
+    for (int i = 0; i < n_cameras; i++)
         check_visualization += to_show[i];
-    if(check_visualization > 1)
+    if (check_visualization > 1)
         return -1;
 
-    
     tk::dnn::Yolo3Detection yolo[n_cameras];
-    for(int i=0; i<n_cameras; i++)
+    for (int i = 0; i < n_cameras; i++)
     {
         yolo[i].init(net);
-        yolo[i].thresh = 0.25;    
+        yolo[i].thresh = 0.25;
     }
     // tk::dnn::Yolo3Detection yolo;
     // yolo.init(net);
-    // yolo.thresh = 0.25;    
-    
+    // yolo.thresh = 0.25;
+
     gRun = true;
 
-    // start the local clock. It is used to check the incoming frames (by different cameras) 
+    // start the local clock. It is used to check the incoming frames (by different cameras)
     local_clock_start = std::chrono::steady_clock::now();
 
     /*GPS information*/
     double *adfGeoTransform = (double *)malloc(6 * sizeof(double));
     readTiff(tiffile, adfGeoTransform);
-   
-    for(int i=0; i<n_cameras; i++)
+
+    for (int i = 0; i < n_cameras; i++)
     {
-        for(int j = 0; j < 6; j++ )
-                cameras[i].adfGeoTransform[j] = adfGeoTransform[j];
+        for (int j = 0; j < 6; j++)
+            cameras[i].adfGeoTransform[j] = adfGeoTransform[j];
         cameras[i].yolo = yolo[i];
         // cameras[i].yolo = yolo;
-        
     }
-    std::cout<<"INIZIA:\n";
+    std::cout << "INIZIA:\n";
     pthread_t camera_task[n_cameras];
-    for(int i=0; i<n_cameras; i++)
+    for (int i = 0; i < n_cameras; i++)
     {
-        std::cout<<"creating thread\n";
-        if(pthread_create(&camera_task[i], NULL, computationTask, (void*)&cameras[i]))
+        std::cout << "creating thread\n";
+        if (pthread_create(&camera_task[i], NULL, computationTask, (void *)&cameras[i]))
         {
             fprintf(stderr, "error creating thread\n");
             return 1;
         }
-        std::cout<<"WHAT2\n";
+        std::cout << "WHAT2\n";
     }
-    for(int i=0; i<n_cameras; i++)
+    for (int i = 0; i < n_cameras; i++)
     {
         pthread_join(camera_task[i], NULL);
     }
-    std::cout <<" free adfGeoT \n";
+    std::cout << " free adfGeoT \n";
     free(adfGeoTransform);
     std::cout << "detection end\n";
     return 0;

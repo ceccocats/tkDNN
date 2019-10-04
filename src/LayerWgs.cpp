@@ -4,24 +4,29 @@
 #include "Layer.h"
 #include "kernels.h"
 
-namespace tk { namespace dnn {
+namespace tk
+{
+namespace dnn
+{
 
-LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
-                   int kh, int kw, int kl, 
-                   const char* fname_weights, bool batchnorm) : Layer(net) {
+LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
+                   int kh, int kw, int kl,
+                   const char *fname_weights, bool batchnorm) : Layer(net)
+{
 
-    this->inputs  = inputs;
-    this->outputs = outputs;    
-    this->weights_path  = std::string(fname_weights);
-   
-    std::cout<<"Reading weights: I="<<inputs<<" O="<<outputs<<" KERNEL="<<kh<<"x"<<kw<<"x"<<kl<<"\n";
+    this->inputs = inputs;
+    this->outputs = outputs;
+    this->weights_path = std::string(fname_weights);
+
+    std::cout << "Reading weights: I=" << inputs << " O=" << outputs << " KERNEL=" << kh << "x" << kw << "x" << kl << "\n";
     int seek = 0;
-    readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek);
-    seek += inputs*outputs*kh*kw*kl;
+    readBinaryFile(weights_path.c_str(), inputs * outputs * kh * kw * kl, &data_h, &data_d, seek);
+    seek += inputs * outputs * kh * kw * kl;
     readBinaryFile(weights_path.c_str(), outputs, &bias_h, &bias_d, seek);
-    
+
     this->batchnorm = batchnorm;
-    if(batchnorm) {
+    if (batchnorm)
+    {
         seek += outputs;
         readBinaryFile(weights_path.c_str(), outputs, &scales_h, &scales_d, seek);
         seek += outputs;
@@ -32,86 +37,90 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         float eps = CUDNN_BN_MIN_EPSILON;
 
         power_h = new dnnType[outputs];
-        for(int i=0; i<outputs; i++) power_h[i] = 1.0f;
+        for (int i = 0; i < outputs; i++)
+            power_h[i] = 1.0f;
 
-        for(int i=0; i<outputs; i++)
-            mean_h[i] = mean_h[i] / -sqrt(eps + variance_h[i]); 
+        for (int i = 0; i < outputs; i++)
+            mean_h[i] = mean_h[i] / -sqrt(eps + variance_h[i]);
 
-        for(int i=0; i<outputs; i++)
+        for (int i = 0; i < outputs; i++)
             variance_h[i] = 1.0f / sqrt(eps + variance_h[i]);
     }
 
-
-    if(!net->fp16)
+    if (!net->fp16)
         return;
 
     //convert to fp16
-    int w_size = inputs*outputs*kh*kw*kl;
+    int w_size = inputs * outputs * kh * kw * kl;
     data16_h = new __half[w_size];
-    cudaMalloc(&data16_d, w_size*sizeof(__half));
+    cudaMalloc(&data16_d, w_size * sizeof(__half));
     float2half(data_d, data16_d, w_size);
-    cudaMemcpy(data16_h, data16_d, w_size*sizeof(__half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(data16_h, data16_d, w_size * sizeof(__half), cudaMemcpyDeviceToHost);
 
     int b_size = outputs;
     bias16_h = new __half[b_size];
-    cudaMalloc(&bias16_d, w_size*sizeof(__half));
+    cudaMalloc(&bias16_d, w_size * sizeof(__half));
     float2half(bias_d, bias16_d, b_size);
-    cudaMemcpy(bias16_h, bias16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(bias16_h, bias16_d, b_size * sizeof(__half), cudaMemcpyDeviceToHost);
 
-    if(batchnorm) {
+    if (batchnorm)
+    {
 
-        power16_h    = new __half[b_size];  
-        mean16_h     = new __half[b_size];
+        power16_h = new __half[b_size];
+        mean16_h = new __half[b_size];
         variance16_h = new __half[b_size];
-        scales16_h   = new __half[b_size];
+        scales16_h = new __half[b_size];
 
-        cudaMalloc(&power16_d, b_size*sizeof(__half));
-        cudaMalloc(&mean16_d, b_size*sizeof(__half));
-        cudaMalloc(&variance16_d, b_size*sizeof(__half));
-        cudaMalloc(&scales16_d, b_size*sizeof(__half));
+        cudaMalloc(&power16_d, b_size * sizeof(__half));
+        cudaMalloc(&mean16_d, b_size * sizeof(__half));
+        cudaMalloc(&variance16_d, b_size * sizeof(__half));
+        cudaMalloc(&scales16_d, b_size * sizeof(__half));
 
         //temporary buffers
         float *tmp_d;
-        cudaMalloc(&tmp_d, b_size*sizeof(float));
+        cudaMalloc(&tmp_d, b_size * sizeof(float));
 
         //init power array of ones
-        cudaMemcpy(tmp_d, power_h, b_size*sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(tmp_d, power_h, b_size * sizeof(float), cudaMemcpyHostToDevice);
         float2half(tmp_d, power16_d, b_size);
-        cudaMemcpy(power16_h, power16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(power16_h, power16_d, b_size * sizeof(__half), cudaMemcpyDeviceToHost);
 
         //mean array
 
-        cudaMemcpy(tmp_d, mean_h, b_size*sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(tmp_d, mean_h, b_size * sizeof(float), cudaMemcpyHostToDevice);
         float2half(tmp_d, mean16_d, b_size);
-        cudaMemcpy(mean16_h, mean16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(mean16_h, mean16_d, b_size * sizeof(__half), cudaMemcpyDeviceToHost);
 
         //convert variance
- 
-        cudaMemcpy(tmp_d, variance_h, b_size*sizeof(float), cudaMemcpyHostToDevice);
+
+        cudaMemcpy(tmp_d, variance_h, b_size * sizeof(float), cudaMemcpyHostToDevice);
         float2half(tmp_d, variance16_d, b_size);
-        cudaMemcpy(variance16_h, variance16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(variance16_h, variance16_d, b_size * sizeof(__half), cudaMemcpyDeviceToHost);
 
         //conver scales
         float2half(scales_d, scales16_d, b_size);
-        cudaMemcpy(scales16_h, scales16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(scales16_h, scales16_d, b_size * sizeof(__half), cudaMemcpyDeviceToHost);
     }
 }
 
-LayerWgs::~LayerWgs() {
+LayerWgs::~LayerWgs()
+{
 
-    delete [] data_h;
-    delete [] bias_h;
-    checkCuda( cudaFree(data_d) );
-    checkCuda( cudaFree(bias_d) );
+    delete[] data_h;
+    delete[] bias_h;
+    checkCuda(cudaFree(data_d));
+    checkCuda(cudaFree(bias_d));
 
-    if(batchnorm) {
-        delete [] scales_h;
-        delete [] mean_h;
-        delete [] variance_h;
-        checkCuda( cudaFree(scales_d) );
-        checkCuda( cudaFree(mean_d) );
-        checkCuda( cudaFree(variance_d) );
+    if (batchnorm)
+    {
+        delete[] scales_h;
+        delete[] mean_h;
+        delete[] variance_h;
+        checkCuda(cudaFree(scales_d));
+        checkCuda(cudaFree(mean_d));
+        checkCuda(cudaFree(variance_d));
     }
 }
 
-}}
+} // namespace dnn
+} // namespace tk

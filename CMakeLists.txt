@@ -38,11 +38,19 @@ cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS} -lgdal)
 
+file(GLOB class_SRC "src/class_src/*.cpp")
+set(class_LIBS ${OpenCV_LIBS} -lgdal yaml-cpp python2.7)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES} "~/repos/cereal/include" ${CMAKE_CURRENT_SOURCE_DIR}/tracker_CLASS/c++/src)
 include_directories( BEFORE ${MY_SOURCE_DIR}/src /usr/include/python2.7 )
+
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
+
+add_library(CLASS SHARED ${class_SRC})
+target_link_libraries(CLASS ${class_LIBS})
+
 
 #static 
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})
@@ -104,8 +112,7 @@ add_executable(yolo3_demo demo/demo/demo.cpp
                         tracker_CLASS/c++/src/tracker.cpp )
 
                         
-target_link_libraries(yolo3_demo tkDNN)
-target_link_libraries(yolo3_demo python2.7 yaml-cpp)
+target_link_libraries(yolo3_demo tkDNN CLASS)
 
 
 

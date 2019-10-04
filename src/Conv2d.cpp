@@ -2,14 +2,18 @@
 
 #include "Layer.h"
 
-namespace tk { namespace dnn {
+namespace tk
+{
+namespace dnn
+{
 
-Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
-                int strideH, int strideW, int paddingH, int paddingW,
-                const char* fname_weights, bool batchnorm) : 
-    
-    LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1, 
-             fname_weights, batchnorm) {
+Conv2d::Conv2d(Network *net, int out_ch, int kernelH, int kernelW,
+               int strideH, int strideW, int paddingH, int paddingW,
+               const char *fname_weights, bool batchnorm) :
+
+                LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1,
+                            fname_weights, batchnorm)
+{
 
     this->kernelH = kernelH;
     this->kernelW = kernelW;
@@ -18,56 +22,55 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     this->paddingH = paddingH;
     this->paddingW = paddingW;
 
-    checkCUDNN( cudnnCreateFilterDescriptor(&filterDesc) );
-    checkCUDNN( cudnnCreateConvolutionDescriptor(&convDesc) );
-    checkCUDNN( cudnnCreateTensorDescriptor(&biasTensorDesc) );
+    checkCUDNN(cudnnCreateFilterDescriptor(&filterDesc));
+    checkCUDNN(cudnnCreateConvolutionDescriptor(&convDesc));
+    checkCUDNN(cudnnCreateTensorDescriptor(&biasTensorDesc));
 
     int n = input_dim.n;
     int c = input_dim.c;
     int h = input_dim.h;
     int w = input_dim.w;
 
-    checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc,
-                net->tensorFormat, net->dataType, n, c, h, w) );
+    checkCUDNN(cudnnSetTensor4dDescriptor(srcTensorDesc,
+                                          net->tensorFormat, net->dataType, n, c, h, w));
 
-    checkCUDNN( cudnnSetFilter4dDescriptor(filterDesc,
-                net->dataType, net->tensorFormat, out_ch, input_dim.c, 
-                kernelH, kernelW) );
+    checkCUDNN(cudnnSetFilter4dDescriptor(filterDesc,
+                                          net->dataType, net->tensorFormat, out_ch, input_dim.c,
+                                          kernelH, kernelW));
 
-    checkCUDNN( cudnnSetConvolution2dDescriptor(convDesc,
-                paddingH, paddingW, // padding
-                strideH, strideW, // stride
-                1,1, // upscale
-                CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT) );
+    checkCUDNN(cudnnSetConvolution2dDescriptor(convDesc,
+                                               paddingH, paddingW, // padding
+                                               strideH, strideW,   // stride
+                                               1, 1,               // upscale
+                                               CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
     // find dimension of convolution output
-    checkCUDNN( cudnnGetConvolution2dForwardOutputDim(
-                convDesc, srcTensorDesc, filterDesc,
-                &n, &c, &h, &w) );
+    checkCUDNN(cudnnGetConvolution2dForwardOutputDim(
+        convDesc, srcTensorDesc, filterDesc,
+        &n, &c, &h, &w));
 
-    checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
-                net->tensorFormat, net->dataType, n, c, h, w) );
-                
-    checkCUDNN( cudnnGetConvolutionForwardAlgorithm(net->cudnnHandle,
-                srcTensorDesc, filterDesc, convDesc, dstTensorDesc,
-                CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo) );
- 
+    checkCUDNN(cudnnSetTensor4dDescriptor(dstTensorDesc,
+                                          net->tensorFormat, net->dataType, n, c, h, w));
+
+    checkCUDNN(cudnnGetConvolutionForwardAlgorithm(net->cudnnHandle,
+                                                   srcTensorDesc, filterDesc, convDesc, dstTensorDesc,
+                                                   CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo));
+
     workSpace = NULL;
     ws_sizeInBytes = 0;
 
-    checkCUDNN( cudnnGetConvolutionForwardWorkspaceSize(net->cudnnHandle,
-                srcTensorDesc, filterDesc, convDesc, dstTensorDesc,
-                algo, &ws_sizeInBytes) );
+    checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(net->cudnnHandle,
+                                                       srcTensorDesc, filterDesc, convDesc, dstTensorDesc,
+                                                       algo, &ws_sizeInBytes));
 
-    if (ws_sizeInBytes!=0) {
-        checkCuda( cudaMalloc(&workSpace, ws_sizeInBytes) );
+    if (ws_sizeInBytes != 0)
+    {
+        checkCuda(cudaMalloc(&workSpace, ws_sizeInBytes));
     }
 
-
-    checkCUDNN( cudnnSetTensor4dDescriptor(biasTensorDesc,
-                net->tensorFormat, net->dataType,
-                1, out_ch, 1, 1) );
-
+    checkCUDNN(cudnnSetTensor4dDescriptor(biasTensorDesc,
+                                          net->tensorFormat, net->dataType,
+                                          1, out_ch, 1, 1));
 
     output_dim.n = n;
     output_dim.c = c;
@@ -76,53 +79,58 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     output_dim.l = 1;
 
     //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
+    checkCuda(cudaMalloc(&dstData, output_dim.tot() * sizeof(dnnType)));
 }
 
-Conv2d::~Conv2d() {
-    
-    checkCUDNN( cudnnDestroyFilterDescriptor(filterDesc) );
-    checkCUDNN( cudnnDestroyConvolutionDescriptor(convDesc) );
-    checkCUDNN( cudnnDestroyTensorDescriptor(biasTensorDesc) );
+Conv2d::~Conv2d()
+{
 
-    if (ws_sizeInBytes!=0)
-        checkCuda( cudaFree(workSpace) );
+    checkCUDNN(cudnnDestroyFilterDescriptor(filterDesc));
+    checkCUDNN(cudnnDestroyConvolutionDescriptor(convDesc));
+    checkCUDNN(cudnnDestroyTensorDescriptor(biasTensorDesc));
 
-    checkCuda( cudaFree(dstData) );
+    if (ws_sizeInBytes != 0)
+        checkCuda(cudaFree(workSpace));
+
+    checkCuda(cudaFree(dstData));
 }
 
-dnnType* Conv2d::infer(dataDim_t &dim, dnnType* srcData) {
-
+dnnType *Conv2d::infer(dataDim_t &dim, dnnType *srcData)
+{
 
     // convolution
     dnnType alpha = dnnType(1);
-    dnnType beta  = dnnType(0);
-    checkCUDNN( cudnnConvolutionForward(net->cudnnHandle,
-                &alpha, srcTensorDesc, srcData, filterDesc,
-                data_d, convDesc, algo, workSpace, ws_sizeInBytes,
-                &beta, dstTensorDesc, dstData) );
+    dnnType beta = dnnType(0);
+    checkCUDNN(cudnnConvolutionForward(net->cudnnHandle,
+                                       &alpha, srcTensorDesc, srcData, filterDesc,
+                                       data_d, convDesc, algo, workSpace, ws_sizeInBytes,
+                                       &beta, dstTensorDesc, dstData));
 
-    if(!batchnorm) {
+    if (!batchnorm)
+    {
         // bias
         alpha = dnnType(1);
-        beta  = dnnType(1);
-        checkCUDNN( cudnnAddTensor(net->cudnnHandle,
-                    &alpha, biasTensorDesc, bias_d,
-                    &beta, dstTensorDesc, dstData) );
-    } else {
+        beta = dnnType(1);
+        checkCUDNN(cudnnAddTensor(net->cudnnHandle,
+                                  &alpha, biasTensorDesc, bias_d,
+                                  &beta, dstTensorDesc, dstData));
+    }
+    else
+    {
         float one = 1;
         float zero = 0;
         cudnnBatchNormalizationForwardInference(net->cudnnHandle,
-            CUDNN_BATCHNORM_SPATIAL, &one, &zero, 
-            dstTensorDesc, dstData, dstTensorDesc, 
-            dstData, biasTensorDesc, //same tensor descriptor as bias 
-            scales_d, bias_d, mean_d, variance_d, 
-            CUDNN_BN_MIN_EPSILON);
+                                                CUDNN_BATCHNORM_SPATIAL, &one, &zero,
+                                                dstTensorDesc, dstData, dstTensorDesc,
+                                                dstData, biasTensorDesc, //same tensor descriptor as bias
+                                                scales_d, bias_d, mean_d, variance_d,
+                                                CUDNN_BN_MIN_EPSILON);
     }
-    //update data dimensions    
+    //update data dimensions
     dim = output_dim;
 
     return dstData;
 }
 
-}}
+} // namespace dnn
+} // namespace tk

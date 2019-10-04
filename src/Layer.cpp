@@ -2,28 +2,35 @@
 
 #include "Layer.h"
 
-namespace tk { namespace dnn {
+namespace tk
+{
+namespace dnn
+{
 
-Layer::Layer(Network *net) {
+Layer::Layer(Network *net)
+{
 
     this->net = net;
 
-    if(net != nullptr) {
+    if (net != nullptr)
+    {
         this->input_dim = net->getOutputDim();
         this->output_dim = input_dim;
-        
-        checkCUDNN( cudnnCreateTensorDescriptor(&srcTensorDesc) );
-        checkCUDNN( cudnnCreateTensorDescriptor(&dstTensorDesc) );
 
-        if(!net->addLayer(this))
-            FatalError("Net reached max number of layers");    
+        checkCUDNN(cudnnCreateTensorDescriptor(&srcTensorDesc));
+        checkCUDNN(cudnnCreateTensorDescriptor(&dstTensorDesc));
+
+        if (!net->addLayer(this))
+            FatalError("Net reached max number of layers");
     }
 }
 
-Layer::~Layer() {
+Layer::~Layer()
+{
 
-    checkCUDNN( cudnnDestroyTensorDescriptor(srcTensorDesc) );
-    checkCUDNN( cudnnDestroyTensorDescriptor(dstTensorDesc) );
+    checkCUDNN(cudnnDestroyTensorDescriptor(srcTensorDesc));
+    checkCUDNN(cudnnDestroyTensorDescriptor(dstTensorDesc));
 }
 
-}}
+} // namespace dnn
+} // namespace tk
