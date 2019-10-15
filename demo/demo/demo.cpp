@@ -4,6 +4,7 @@
 #include "Yolo3Detection.h"
 #include "message.h"
 #include "visualization.h"
+#include "configuration.h"
 
 #include "tracker.h"
 #include "../masa_protocol/include/send.hpp"
@@ -483,7 +484,7 @@ void *computationTask(void *x_void_ptr)
         }
         std::cout << "There are " << trackers.size() << " trackers" << std::endl;
         //prepare message with tracker info
-        if (trackers.size() == 0)
+        if (trackers.size() != 0)
         {
             // mutex_cv.lock();
             addRoadUserfromTracker(trackers, m, gc, maskOrient, adfGeoTransform, H);
@@ -533,119 +534,57 @@ int main(int argc, char *argv[])
     std::cout << "detection\n";
     signal(SIGINT, sig_handler);
     srand(time(NULL));
-    bool no_params = false; //flag to indicate if there are camera parameters or we use mp4 test video
 
-    char *net = (char *)"yolo3_coco4.rt";
-    if (argc > 1)
-        net = argv[1];
-    char *tiffile = (char *)"../demo/demo/data/map_b.tif";
-    if (argc > 2)
-        tiffile = argv[2];
-    char *n;
-    if (argc > 3)
-    {
-        n = argv[3];
-        if (strcmp(n, "-n"))
-            return -1;
-    };
-    int n_cameras = 0;
-    if (argc > 4)
-    {
-        n_cameras = atoi(argv[4]);
-        if (argc < 5 + 7 * n_cameras)
-        {
-            std::cout << "too few parameters\n";
-            return -1;
-        }
-        if (!n_cameras)
-        {
-            n_cameras = 1;
-            no_params = true;
-        }
-    }
-    Camera_t cameras[n_cameras];
-    bool *to_show = (bool *)malloc(n_cameras * sizeof(bool));
-    if (no_params)
-    {
-        cameras[0].CAM_IDX = 20936;
-        cameras[0].input = (char *)"../demo/demo/data/single_ped_2.mp4";
-        cameras[0].pmatrix = (char *)"../demo/demo/data/pmundist.txt";
-        cameras[0].maskfile = (char *)"../demo/demo/data/mask36.jpg";
-        cameras[0].cameraCalib = (char *)"../demo/demo/data/calib36.params";
-        cameras[0].maskFileOrient = (char *)"../demo/demo/data/mask_orient/6315_mask_orient.jpg";
-        cameras[0].to_show = true;
-        to_show[0] = true;
-    }
-    else
-    {
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].CAM_IDX = atoi(argv[5 + i]);
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].input = argv[5 + n_cameras + i];
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].pmatrix = argv[5 + 2 * n_cameras + i];
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].maskfile = argv[5 + 3 * n_cameras + i];
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].cameraCalib = argv[5 + 4 * n_cameras + i];
-        for (int i = 0; i < n_cameras; i++)
-            cameras[i].maskFileOrient = argv[5 + 5 * n_cameras + i];
-        for (int i = 0; i < n_cameras; i++)
-        {
-            cameras[i].to_show = atoi(argv[5 + 6 * n_cameras + i]); //only one camera can be shown
-            to_show[i] = atoi(argv[5 + 6 * n_cameras + i]);
-        }
-    }
-    //TODO now only one camera can be visualized
-    int check_visualization = 0;
-    for (int i = 0; i < n_cameras; i++)
-        check_visualization += to_show[i];
-    if (check_visualization > 1)
+    Parameters_t par;
+
+    if(!read_parameters(argc, argv, &par))
         return -1;
-
-    tk::dnn::Yolo3Detection yolo[n_cameras];
-    for (int i = 0; i < n_cameras; i++)
-    {
-        yolo[i].init(net);
-        yolo[i].thresh = 0.25;
-    }
+    
+    // tk::dnn::Yolo3Detection yolo[par.n_cameras];
+    // for(int i=0; i<par.n_cameras; i++)
+    // {
+    //     std::cout<<"par net: "<<par.net<<std::endl;
+    //     yolo[i].init(par.net);
+    //     yolo[i].thresh = 0.25;    
+    // }
     // tk::dnn::Yolo3Detection yolo;
     // yolo.init(net);
-    // yolo.thresh = 0.25;
-
+    // yolo.thresh = 0.25;    
+    
     gRun = true;
-
-    // start the local clock. It is used to check the incoming frames (by different cameras)
+    // start the local clock. It is used to check the incoming frames (by different cameras) 
     local_clock_start = std::chrono::steady_clock::now();
 
     /*GPS information*/
     double *adfGeoTransform = (double *)malloc(6 * sizeof(double));
-    readTiff(tiffile, adfGeoTransform);
-
-    for (int i = 0; i < n_cameras; i++)
+    readTiff(par.tiffile, adfGeoTransform);
+    // Camera_t cameras[par.n_cameras]; 
+    for(int i=0; i<par.n_cameras; i++)
     {
-        for (int j = 0; j < 6; j++)
-            cameras[i].adfGeoTransform[j] = adfGeoTransform[j];
-        cameras[i].yolo = yolo[i];
+        for(int j = 0; j < 6; j++ )
+            par.cameras[i].adfGeoTransform[j] = adfGeoTransform[j];
+        // par.cameras[i].yolo = yolo[i];
+        par.cameras[i].yolo.init(par.net);
+        par.cameras[i].yolo.thresh = 0.25;
+        // cameras[i].yolo = yolo[i];
         // cameras[i].yolo = yolo;
+        
     }
-    std::cout << "INIZIA:\n";
-    pthread_t camera_task[n_cameras];
-    for (int i = 0; i < n_cameras; i++)
+    pthread_t camera_task[par.n_cameras];
+    for(int i=0; i<par.n_cameras; i++)
     {
-        std::cout << "creating thread\n";
-        if (pthread_create(&camera_task[i], NULL, computationTask, (void *)&cameras[i]))
+        std::cout<<"creating thread\n";
+        if(pthread_create(&camera_task[i], NULL, computationTask, (void*)&(par.cameras[i])))
         {
             fprintf(stderr, "error creating thread\n");
             return 1;
         }
-        std::cout << "WHAT2\n";
     }
-    for (int i = 0; i < n_cameras; i++)
+    for(int i=0; i<par.n_cameras; i++)
     {
         pthread_join(camera_task[i], NULL);
     }
-    std::cout << " free adfGeoT \n";
+    std::cout <<" free adfGeoT \n";
     free(adfGeoTransform);
     std::cout << "detection end\n";
     return 0;
