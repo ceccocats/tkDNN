@@ -167,6 +167,7 @@ void *computationTask(void *x_void_ptr)
     Camera_t *camera = (Camera_t *)x_void_ptr;
     pthread_t visual, originalshow, detectionshow, topviewshow, disparityshow;
     pthread_t videocap;
+    tk::dnn::Yolo3Detection yolo = *(camera->yolo);
     //create video capture thread
     Frame_t info_f;
     info_f.input = camera->input;
@@ -216,7 +217,6 @@ void *computationTask(void *x_void_ptr)
             return (void *)1;
         };
     }
-
     char *pmatrix = camera->pmatrix;
     /*projection matrix from camera to map*/
     cv::Mat H(cv::Size(3, 3), CV_64FC1);
@@ -306,6 +306,7 @@ void *computationTask(void *x_void_ptr)
     cv::Mat frame_crop;
     cv::Mat dnn_input;
     bool first_iteration = true;
+
     while (gRun)
     {
         TIMER_START
@@ -338,8 +339,8 @@ void *computationTask(void *x_void_ptr)
         // this will be resized to the net format
         dnn_input = frame.clone();
         // TODO: async infer
-        camera->yolo.update(dnn_input);
-        int num_detected = camera->yolo.detected.size();
+        yolo.update(dnn_input);
+        int num_detected = yolo.detected.size();
         if (num_detected > MAX_DETECT_SIZE)
             num_detected = MAX_DETECT_SIZE;
 
@@ -409,7 +410,7 @@ void *computationTask(void *x_void_ptr)
 
         for (int i = 0; i < num_detected; i++)
         {
-            b = camera->yolo.detected[i];
+            b = yolo.detected[i];
             x0 = b.x;
             // w = b.w;
             // x1 = b.x + w;
@@ -509,7 +510,7 @@ void *computationTask(void *x_void_ptr)
                 info_show.adfGeoTransform[i] = adfGeoTransform[i];
             // cv::Mat H;
             info_show.H = H.clone();
-            info_show.yolo = camera->yolo;
+            info_show.yolo = yolo;
             // std::copy(camera->yolo.begin(), camera->yolo.end(), info_show.yolo.begin());
             info_show.mask = mask.clone();
             info_show.sem.unlock();
@@ -540,13 +541,12 @@ int main(int argc, char *argv[])
     if(!read_parameters(argc, argv, &par))
         return -1;
     
-    // tk::dnn::Yolo3Detection yolo[par.n_cameras];
-    // for(int i=0; i<par.n_cameras; i++)
-    // {
-    //     std::cout<<"par net: "<<par.net<<std::endl;
-    //     yolo[i].init(par.net);
-    //     yolo[i].thresh = 0.25;    
-    // }
+    tk::dnn::Yolo3Detection yolo[par.n_cameras];
+    for(int i=0; i<par.n_cameras; i++)
+    {
+        yolo[i].init(par.net);
+        yolo[i].thresh = 0.25;    
+    }
     // tk::dnn::Yolo3Detection yolo;
     // yolo.init(net);
     // yolo.thresh = 0.25;    
@@ -563,9 +563,9 @@ int main(int argc, char *argv[])
     {
         for(int j = 0; j < 6; j++ )
             par.cameras[i].adfGeoTransform[j] = adfGeoTransform[j];
-        // par.cameras[i].yolo = yolo[i];
-        par.cameras[i].yolo.init(par.net);
-        par.cameras[i].yolo.thresh = 0.25;
+        par.cameras[i].yolo = &yolo[i];
+        // par.cameras[i].yolo.init(par.net);
+        // par.cameras[i].yolo.thresh = 0.25;
         // cameras[i].yolo = yolo[i];
         // cameras[i].yolo = yolo;
         

@@ -16,7 +16,7 @@ struct Camera_t
     char *cameraCalib;
     char *maskFileOrient;
     bool to_show;
-    tk::dnn::Yolo3Detection yolo;
+    tk::dnn::Yolo3Detection *yolo;
     double adfGeoTransform[6];
 };
 
