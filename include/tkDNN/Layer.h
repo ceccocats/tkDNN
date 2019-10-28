@@ -227,7 +227,9 @@ public:
     int paddingH, paddingW;
 
     Pooling(Network *net, int winH, int winW, 
-            int strideH, int strideW, tkdnnPoolingMode_t pool_mode); 
+            int strideH, int strideW, 
+            int paddingH = 0, int paddingW = 0,
+            tkdnnPoolingMode_t pool_mode = POOLING_MAX); 
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 

@@ -6,6 +6,7 @@
 namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
+                  int paddingH, int paddingW,
                   tkdnnPoolingMode_t pool_mode) : 
     Layer(net) {
 
@@ -14,8 +15,8 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->strideH = strideH;
     this->strideW = strideW;
     this->pool_mode = pool_mode;
-    this->paddingH = 0;
-    this->paddingW = 0;
+    this->paddingH = paddingH;
+    this->paddingW = paddingW;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
@@ -38,7 +39,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     }
 
     checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnnPoolingMode_t(pool_mode),
-                CUDNN_NOT_PROPAGATE_NAN, winH, winW, 0, 0, strideH, strideW) );
+                CUDNN_NOT_PROPAGATE_NAN, winH, winW, paddingH, paddingW, strideH, strideW) );
 
     checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc, 
                 net->tensorFormat, net->dataType, n, c, h, w) );

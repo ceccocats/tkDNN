@@ -89,8 +89,24 @@ target_link_libraries(test_yolo3_coco4 tkDNN)
 add_executable(test_yolo3_berkeley tests/yolo3_berkeley/yolo3_berkeley.cpp)
 target_link_libraries(test_yolo3_berkeley tkDNN)
 
+<<<<<<< HEAD
 add_executable(test_yolo3_flir tests/yolo3_flir/yolo3_flir.cpp)
 target_link_libraries(test_yolo3_flir tkDNN)
+=======
+add_executable(test_yolo3_tetrapack tests/yolo3_tetrapack/yolo3_tetrapack.cpp)
+target_link_libraries(test_yolo3_tetrapack tkDNN)
+
+add_executable(test_yolo3_tetrapack_resize tests/yolo3_tetrapack_resize/yolo3_tetrapack_resize.cpp)
+target_link_libraries(test_yolo3_tetrapack_resize tkDNN)
+
+add_executable(test_yolo3_BCDS6 tests/yolo3_BCDS6/yolo3_BCDS6.cpp)
+target_link_libraries(test_yolo3_BCDS6 tkDNN)
+
+add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
+target_link_libraries(test_resnet101 tkDNN)
+
+
+>>>>>>> e1d0fa3... resnet first try
 ################################################################################
 
 
