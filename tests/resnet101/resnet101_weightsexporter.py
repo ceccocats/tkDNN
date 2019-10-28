@@ -40,6 +40,7 @@ def print_wb_output(model, input_batch):
     print(i.shape)
     i.tofile("debug/input.bin", format="f")
 
+    f = None
     for n, m in model.named_modules():
         in_output = m._value_hook
         print(n, ' ----------------------------------------------------------------')
@@ -47,6 +48,12 @@ def print_wb_output(model, input_batch):
         o = np.array(o, dtype=np.float32)
         t = '-'.join(n.split('.'))
         o.tofile("debug/" + t + ".bin", format="f")
+
+        if 'Conv2d' in str(m.type) or 'Linear' in str(m.type):
+            f = open("layers/" + t + ".bin", mode='wb')
+
+        if f is None:
+            continue
 
         # print(m._parameters)
         print(m.type)
@@ -65,20 +72,19 @@ def print_wb_output(model, input_batch):
             b = np.array(b, dtype=np.float32)
             print ("    bias shape:", np.shape(b))
         else:
-            b = np.array(o, dtype=np.float32)*0
+            b = np.zeros(w.shape[0], dtype=np.float32)
             print ("    bias shape:", np.shape(b))
-
-        if 'BatchNorm2d' in str(m.type):
-            s = np.array(o, dtype=np.float32)*0+1
-
-        f = open("layers/" + t + ".bin", mode='wb')
         
         if 'BatchNorm2d' in str(m.type):
+            s = np.zeros(w.shape[0], dtype=np.float32)+1
             s.tofile(f, format="f")
 
         w.tofile(f, format="f")
         b.tofile(f, format="f")
-        f.close()
+
+        if 'BatchNorm2d' in str(m.type) or 'Linear' in str(m.type):
+            f.close()
+            f = None
 
 
 
