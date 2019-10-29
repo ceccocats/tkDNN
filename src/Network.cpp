@@ -17,6 +17,7 @@ Network::Network(dataDim_t input_dim) {
              <<", CUDNN v"<<cu_ver<<")\n";
     dataType = CUDNN_DATA_FLOAT;
     tensorFormat = CUDNN_TENSOR_NCHW;
+    dontLoadWeights = false;
 
     checkCUDNN( cudnnCreate(&cudnnHandle) );
     checkERROR( cublasCreate(&cublasHandle) );

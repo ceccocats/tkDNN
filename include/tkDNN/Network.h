@@ -60,6 +60,7 @@ public:
     dataDim_t getOutputDim();
 
     bool fp16, dla;
+    bool dontLoadWeights;
 };
 
 }}
