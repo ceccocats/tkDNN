@@ -263,10 +263,16 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     //std::cout<<"convert Pooling\n";
 
+    PoolingType ptype;
+    if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX) ptype = PoolingType::kMAX;
+    if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE) ptype = PoolingType::kAVERAGE;
+    if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE_EXCLUDE_PADDING) ptype = PoolingType::kMAX_AVERAGE_BLEND;
+
     IPoolingLayer *lRT = networkRT->addPooling(*input, 
-        PoolingType::kMAX, DimsHW{l->winH, l->winW});
+        ptype, DimsHW{l->winH, l->winW});
     checkNULL(lRT);
     lRT->setStride(DimsHW{l->strideH, l->strideW});
+    lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
 
     return lRT;
 }

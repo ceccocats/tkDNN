@@ -225,6 +225,7 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
+    tkdnnPoolingMode_t pool_mode;
 
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
@@ -238,7 +239,6 @@ public:
 protected:
 
     cudnnPoolingDescriptor_t poolingDesc;
-    tkdnnPoolingMode_t pool_mode;
     dnnType *tmpInputData, *tmpOutputData;
     bool poolOn3d;
 };
@@ -270,7 +270,8 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 public:
-    Layer **layers;  //ids of layers to be merged
+    static const int MAX_INPUT_LAYERS = 16;
+    Layer *layers[MAX_INPUT_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
 };
 
