@@ -92,8 +92,6 @@ target_link_libraries(test_yolo3_berkeley tkDNN)
 add_executable(test_yolo3_flir tests/yolo3_flir/yolo3_flir.cpp)
 target_link_libraries(test_yolo3_flir tkDNN)
 
-add_executable(test_yolo3_BCDS6 tests/yolo3_BCDS6/yolo3_BCDS6.cpp)
-target_link_libraries(test_yolo3_BCDS6 tkDNN)
 
 add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)

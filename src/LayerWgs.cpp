@@ -19,7 +19,14 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
     readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek);
     seek += inputs*outputs*kh*kw*kl;
     readBinaryFile(weights_path.c_str(), outputs, &bias_h, &bias_d, seek);
-    
+
+std::cout<<"w:\n";
+    printDeviceVector(64, data_d, true);
+
+std::cout<<"b:\n";
+    printDeviceVector(64, bias_d, true);
+std::cout<<"step----------------------------------------\n";
+
     this->batchnorm = batchnorm;
     if(batchnorm) {
         seek += outputs;
@@ -28,6 +35,17 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         readBinaryFile(weights_path.c_str(), outputs, &mean_h, &mean_d, seek);
         seek += outputs;
         readBinaryFile(weights_path.c_str(), outputs, &variance_h, &variance_d, seek);
+
+std::cout<<"s:\n";
+    printDeviceVector(64, scales_d, true);
+    
+std::cout<<"m:\n";
+    printDeviceVector(64, mean_d, true);
+    
+std::cout<<"v:\n";
+    printDeviceVector(64, variance_d, true);
+
+    std::cout<<"END----------------------------------------\n";
 
         float eps = CUDNN_BN_MIN_EPSILON;
 

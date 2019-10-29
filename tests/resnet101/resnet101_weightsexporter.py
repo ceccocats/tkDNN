@@ -4,6 +4,14 @@ from PIL import Image
 from torchvision import transforms
 from torchsummary import summary
 import numpy as np
+import struct 
+
+def bin_write(f, data):
+    data =data.flatten()
+    # print(data)
+    fmt = 'f'*len(data)
+    bin = struct.pack(fmt, *data)
+    f.write(bin)
 
 def hook(module, input, output):
     setattr(module, "_value_hook", output)
@@ -12,7 +20,7 @@ def hook(module, input, output):
 
 def print_wb(model, folder):
     for name, param in model.named_parameters():
-        print ("Layer", name)
+        # print ("Layer", name)
         t = name.split('.')[0:-1]
         arg = name.split('.')[-1]
         t = '-'.join(t)
@@ -43,20 +51,22 @@ def print_wb_output(model, input_batch):
     f = None
     for n, m in model.named_modules():
         in_output = m._value_hook
-        print(n, ' ----------------------------------------------------------------')
         o = in_output.data.numpy()
         o = np.array(o, dtype=np.float32)
         t = '-'.join(n.split('.'))
         o.tofile("debug/" + t + ".bin", format="f")
 
-        if 'Conv2d' in str(m.type) or 'Linear' in str(m.type):
-            f = open("layers/" + t + ".bin", mode='wb')
-
-        if f is None:
+        if not(' of Conv2d' in str(m.type) or ' of Linear' in str(m.type) or ' of BatchNorm2d' in str(m.type)):
             continue
+        
+        if ' of Conv2d' in str(m.type) or ' of Linear' in str(m.type):
+            file_name = "layers/" + t + ".bin"
+            print("open file: ", file_name)
+            f = open(file_name, mode='wb')
 
+        print(n, ' ----------------------------------------------------------------')
         # print(m._parameters)
-        print(m.type)
+        #print(m.type)
 
         w = np.array([])
         b = np.array([])
@@ -71,20 +81,43 @@ def print_wb_output(model, input_batch):
             b = m._parameters['bias'].data.numpy()
             b = np.array(b, dtype=np.float32)
             print ("    bias shape:", np.shape(b))
-        else:
-            b = np.zeros(w.shape[0], dtype=np.float32)
-            print ("    bias shape:", np.shape(b))
+        # else:
+        #     b = np.zeros(w.shape[0], dtype=np.float32)
+        #     print ("    bias shape:", np.shape(b))
         
         if 'BatchNorm2d' in str(m.type):
-            s = np.zeros(w.shape[0], dtype=np.float32)+1
-            s.tofile(f, format="f")
+            b = m._parameters['bias'].data.numpy()
+            b = np.array(b, dtype=np.float32)
+            s = m._parameters['weight'].data.numpy()
+            s = np.array(s, dtype=np.float32)
+            rm = m.running_mean.data.numpy()
+            rm = np.array(rm, dtype=np.float32)
+            rv = m.running_var.data.numpy()
+            rv = np.array(rv, dtype=np.float32)
+            #s.tofile(f, format="f")
+            bin_write(f,b)
+            bin_write(f,s)
+            bin_write(f,rm)
+            bin_write(f,rv)
+            print ("    s shape:", np.shape(s))
+            print ("    rm shape:", np.shape(rm))
+            print ("    rv shape:", np.shape(rv))
 
-        w.tofile(f, format="f")
-        b.tofile(f, format="f")
+        else:
+            
+            # w.tofile(f, format="f")
+            bin_write(f,w)
+            # print("w- ",w)
+            if b.size > 0:
+                # b.tofile(f, format="f")
+                bin_write(f,b)
+                # print("b - ",b)
 
-        if 'BatchNorm2d' in str(m.type) or 'Linear' in str(m.type):
+        if ' of BatchNorm2d' in str(m.type) or ' of Linear' in str(m.type):
             f.close()
+            print("close file")
             f = None
+            # return
 
 
 
@@ -120,9 +153,9 @@ if __name__ == '__main__':
         output = model(input_batch)
 
     # Tensor of shape 1000, with confidence scores over Imagenet's 1000 classes
-    print(output)
+    # print(output)
 
 
     print_wb_output(model, input_batch)
 
-    print(list(model.children()))
+    # print(list(model.children()))

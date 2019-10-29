@@ -54,6 +54,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device)
         vec = new dnnType[size];
         cudaDeviceSynchronize();
         cudaMemcpy(vec, vec_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
+        cudaDeviceSynchronize();
     } else {
         vec = vec_d;
     }
@@ -78,7 +79,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
         cudaDeviceSynchronize();
         cudaMemcpy(data_h, data_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
         cudaMemcpy(correct_h, correct_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
-    
+        cudaDeviceSynchronize();
     } else {
         data_h = data_d;
         correct_h = correct_d;

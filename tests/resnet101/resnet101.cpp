@@ -148,7 +148,7 @@ const char *layer4_2_conv3_bin = "../tests/resnet101/layers/layer4-2-conv3.bin";
 //final
 const char *fc_bin = "../tests/resnet101/layers/fc.bin";
 
-const char *output_bin = "../tests/resnet101/debug/layer1-0-conv3.bin";
+const char *output_bin = "../tests/resnet101/debug/layer1-0-relu.bin";
 
 int main()
 {
@@ -161,16 +161,21 @@ int main()
     tk::dnn::Activation relu3(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Pooling maxpool4(&net, 3, 3, 2, 2, 1, 1, tk::dnn::POOLING_MAX);
 
-
     //layer 1
     tk::dnn::Conv2d layer1_0_conv1(&net, 64, 1, 1, 1, 1, 0, 0, layer1_0_conv1_bin, true);
+    tk::dnn::Activation relu1_0_1(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Conv2d layer1_0_conv2(&net, 64, 3, 3, 1, 1, 1, 1, layer1_0_conv2_bin, true);
+    tk::dnn::Activation relu1_0_2(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Conv2d layer1_0_conv3(&net, 256, 1, 1, 1, 1, 0, 0, layer1_0_conv3_bin, true);
-
-/*
+    
+    tk::dnn::Layer *m83_layers[1] = { &maxpool4 };
+    tk::dnn::Route      m83  (&net, m83_layers, 1);
+    tk::dnn::Conv2d layer1_0_downsample_0(&net, 256, 1, 1, 1, 1, 0, 0, layer1_0_downsample_0_bin, true);
+    
+    tk::dnn::Shortcut   s1_0 (&net, &layer1_0_conv3);
     tk::dnn::Activation layer1_0_relu(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d layer1_0_downsample_0(&net, 256, 1, 1, 1, 1, 1, 1, layer1_0_downsample_0, true);
-
+/*
+    
     tk::dnn::Conv2d layer1_1_conv1(&net, 64, 1, 1, 1, 1, 1, 1, layer1_1_conv1_bin, true);
     tk::dnn::Conv2d layer1_1_conv2(&net, 64, 3, 3, 1, 1, 1, 1, layer1_1_conv2_bin, true);
     tk::dnn::Conv2d layer1_1_conv3(&net, 256, 1, 1, 1, 1, 1, 1, layer1_1_conv3_bin, true);
@@ -347,6 +352,7 @@ int main()
     dnnType *data;
     dnnType *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
+    printDeviceVector(64, data, true);
 
     //print network model
     net.print();
@@ -356,7 +362,7 @@ int main()
 */
     
     tk::dnn::dataDim_t out_dim;
-    out_dim = layer1_0_conv3.output_dim;
+    out_dim = net.layers[net.num_layers-1]->output_dim;
     dnnType *cudnn_out, *rt_out;
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
@@ -368,7 +374,9 @@ int main()
         TIMER_STOP
         dim1.print();
     }
-    cudnn_out = layer1_0_conv3.dstData;
+    cudnn_out = net.layers[net.num_layers-1]->dstData;
+
+    printDeviceVector(64, cudnn_out, true);
 /*
     tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30);
