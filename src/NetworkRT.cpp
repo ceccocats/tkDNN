@@ -183,6 +183,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
     if(type == LAYER_UPSAMPLE)
         return convert_layer(input, (Upsample*) l);
 
+    std::cout<<l->getLayerName()<<"\n";
     FatalError("Layer not implemented in tensorRT");
     return NULL;
 }
