@@ -236,14 +236,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     if(!l->deConv) {
         IConvolutionLayer *lRTconv = networkRT->addConvolution(*input, 
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
-        checkNULL(lRT);
+        checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
         lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT = (ILayer*) lRTconv;
     } else {
         IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input, 
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
-        checkNULL(lRT);
+        checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
         lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT = (ILayer*) lRTconv;
