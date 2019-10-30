@@ -161,6 +161,7 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+    bool deConv;
 
 protected:
     cudnnFilterDescriptor_t filterDesc;
@@ -173,8 +174,6 @@ protected:
     void inferCUDNN(dnnType* srcData, bool back = false);
     void*  workSpace;
     size_t ws_sizeInBytes;
-
-    bool deConv;
 };
 
 

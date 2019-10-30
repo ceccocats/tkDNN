@@ -75,6 +75,7 @@ public:
 
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Conv2d *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeConv2d *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Activation *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Dense *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Pooling *l);
