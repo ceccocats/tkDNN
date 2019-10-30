@@ -90,7 +90,7 @@
 
 void printCenteredTitle(const char *title, char fill, int dim);
 bool fileExist(const char *fname);
-void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0, bool skipLoad = false);
 int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true);
 void printDeviceVector(int size, dnnType* vec_d, bool device = true);
 void resize(int size, dnnType **data);

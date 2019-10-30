@@ -162,7 +162,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
 
     if(type == LAYER_DENSE)
         return convert_layer(input, (Dense*) l);
-    if(type == LAYER_CONV2D)
+    if(type == LAYER_CONV2D || type == LAYER_DECONV2D)
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
@@ -235,13 +235,22 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     else
         b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
 
-    // Add a convolution layer with 20 outputs and a 5x5 filter.
-    IConvolutionLayer *lRT = networkRT->addConvolution(*input, 
-               l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
-    checkNULL(lRT);
-
-    lRT->setStride(DimsHW{l->strideH, l->strideW});
-    lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
+    ILayer *lRT = nullptr;
+    if(!l->deConv) {
+        IConvolutionLayer *lRTconv = networkRT->addConvolution(*input, 
+            l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
+        checkNULL(lRTconv);
+        lRTconv->setStride(DimsHW{l->strideH, l->strideW});
+        lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
+        lRT = (ILayer*) lRTconv;
+    } else {
+        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input, 
+            l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
+        checkNULL(lRTconv);
+        lRTconv->setStride(DimsHW{l->strideH, l->strideW});
+        lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
+        lRT = (ILayer*) lRTconv;
+    }
 
     if(l->batchnorm) {
         Weights power{dtRT, power_b, l->outputs};

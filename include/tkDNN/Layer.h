@@ -11,6 +11,7 @@ namespace tk { namespace dnn {
 enum layerType_t {
     LAYER_DENSE,
     LAYER_CONV2D,
+    LAYER_DECONV2D,
     LAYER_ACTIVATION,
     LAYER_FLATTEN,
     LAYER_MULADD,
@@ -47,6 +48,7 @@ public:
         switch(type) {
             case LAYER_DENSE:       return "Dense";
             case LAYER_CONV2D:      return "Conv2d";
+            case LAYER_DECONV2D:    return "DeConv2d";
             case LAYER_ACTIVATION:  return "Activation";
             case LAYER_FLATTEN:     return "Flatten";
             case LAYER_MULADD:      return "MulAdd";
@@ -75,7 +77,7 @@ protected:
 class LayerWgs : public Layer {
 
 public:
-    LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt, 
+    LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
              std::string fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
@@ -152,22 +154,43 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm = false); 
+                std::string fname_weights, bool batchnorm = false, bool deConv = false);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+    bool deConv;
 
 protected:
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
-    cudnnConvolutionFwdAlgo_t algo;
+    cudnnConvolutionFwdAlgo_t     fwAlgo;
+    cudnnConvolutionBwdDataAlgo_t bwAlgo;
     cudnnTensorDescriptor_t biasTensorDesc;
 
+    void initCUDNN(bool back = false);
+    void inferCUDNN(dnnType* srcData, bool back = false);
     void*  workSpace;
     size_t ws_sizeInBytes;
+};
+
+
+/**
+    Convolutional 2D layer
+*/
+class DeConv2d : public Conv2d {
+
+public:
+    DeConv2d( Network *net, int out_ch, int kernelH, int kernelW,
+            int strideH, int strideW, int paddingH, int paddingW,
+            std::string fname_weights, bool batchnorm = false) :
+            Conv2d(net, out_ch, kernelH, kernelW, strideH, strideW, paddingH, paddingW, fname_weights, batchnorm, true) {}
+    virtual ~DeConv2d() {}
+    virtual layerType_t getLayerType() { return LAYER_DECONV2D; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
 

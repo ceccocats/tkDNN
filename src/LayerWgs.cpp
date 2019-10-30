@@ -16,18 +16,18 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
    
     std::cout<<"Reading weights: I="<<inputs<<" O="<<outputs<<" KERNEL="<<kh<<"x"<<kw<<"x"<<kl<<"\n";
     int seek = 0;
-    readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek);
+    readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek, net->dontLoadWeights);
     seek += inputs*outputs*kh*kw*kl;
-    readBinaryFile(weights_path.c_str(), outputs, &bias_h, &bias_d, seek);
+    readBinaryFile(weights_path.c_str(), outputs, &bias_h, &bias_d, seek, net->dontLoadWeights);
 
     this->batchnorm = batchnorm;
     if(batchnorm) {
         seek += outputs;
-        readBinaryFile(weights_path.c_str(), outputs, &scales_h, &scales_d, seek);
+        readBinaryFile(weights_path.c_str(), outputs, &scales_h, &scales_d, seek, net->dontLoadWeights);
         seek += outputs;
-        readBinaryFile(weights_path.c_str(), outputs, &mean_h, &mean_d, seek);
+        readBinaryFile(weights_path.c_str(), outputs, &mean_h, &mean_d, seek, net->dontLoadWeights);
         seek += outputs;
-        readBinaryFile(weights_path.c_str(), outputs, &variance_h, &variance_d, seek);
+        readBinaryFile(weights_path.c_str(), outputs, &variance_h, &variance_d, seek, net->dontLoadWeights);
 
         float eps = CUDNN_BN_MIN_EPSILON;
 

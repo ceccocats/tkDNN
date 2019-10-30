@@ -21,26 +21,29 @@ bool fileExist(const char *fname) {
 }
 
 
-void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek)
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek, bool skipLoad)
 {
-    std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
-    std::stringstream error_s;
-    if (!dataFile)
-    {
-        error_s << "Error opening file " << fname; 
-        FatalError(error_s.str());
-    }
-
-    if(seek != 0) {
-        dataFile.seekg(seek*sizeof(dnnType), dataFile.cur);
-    }
-
     int size_b = size*sizeof(dnnType);
     *data_h = new dnnType[size];
-    if (!dataFile.read ((char*) *data_h, size_b)) 
-    {
-        error_s << "Error reading file " << fname; 
-        FatalError(error_s.str());
+
+    if(!skipLoad) {
+        std::ifstream dataFile(fname, std::ios::in | std::ios::binary);
+        std::stringstream error_s;
+        if (!dataFile) {
+            error_s << "Error opening file " << fname;
+            FatalError(error_s.str());
+        }
+
+        if (seek != 0) {
+            dataFile.seekg(seek * sizeof(dnnType), dataFile.cur);
+        }
+
+        if (!dataFile.read((char *) *data_h, size_b)) {
+            error_s << "Error reading file " << fname;
+            FatalError(error_s.str());
+        }
+    } else {
+        std::cout<<COL_RED<<"WARNING: skipping data load, this should only used in debug\n"<<COL_END;
     }
     
     checkCuda( cudaMalloc(data_d, size_b) );
