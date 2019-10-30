@@ -73,10 +73,10 @@ void Conv2d::initCUDNN(bool back) {
     } else {
         checkCUDNN( cudnnGetConvolutionForwardAlgorithm(net->cudnnHandle,
                                                         srcTensor, filterDesc, convDesc, dstTensor,
-                                                        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &fwAlgo) );
+                                                        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo) );
         checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(net->cudnnHandle,
                                                            srcTensor, filterDesc, convDesc, dstTensor,
-                                                           fwAlgo, &ws_sizeInBytes));
+                                                           algo, &ws_sizeInBytes));
     }
 }
 
@@ -93,14 +93,14 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
     } else {
         checkCUDNN(cudnnConvolutionForward(net->cudnnHandle,
                                            &alpha, srcTensorDesc, srcData, filterDesc,
-                                           data_d, convDesc, fwAlgo, workSpace, ws_sizeInBytes,
+                                           data_d, convDesc, algo, workSpace, ws_sizeInBytes,
                                            &beta, dstTensorDesc, dstData));
     }
 
     if(!batchnorm) {
         // bias
         alpha = dnnType(1);
-        beta  = dnnType(0);
+        beta  = dnnType(1);
         checkCUDNN( cudnnAddTensor(net->cudnnHandle,
                                    &alpha, biasTensorDesc, bias_d,
                                    &beta, dstTensorDesc, dstData) );
@@ -116,7 +116,7 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
     }
 }
 
-Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
+Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
                 int strideH, int strideW, int paddingH, int paddingW,
                 std::string fname_weights, bool batchnorm, bool deConv) :
     
@@ -156,7 +156,7 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
 }
 
 Conv2d::~Conv2d() {
-    
+
     checkCUDNN( cudnnDestroyFilterDescriptor(filterDesc) );
     checkCUDNN( cudnnDestroyConvolutionDescriptor(convDesc) );
     checkCUDNN( cudnnDestroyTensorDescriptor(biasTensorDesc) );

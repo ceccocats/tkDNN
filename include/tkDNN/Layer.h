@@ -166,7 +166,7 @@ public:
 protected:
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
-    cudnnConvolutionFwdAlgo_t     fwAlgo;
+    cudnnConvolutionFwdAlgo_t     algo;
     cudnnConvolutionBwdDataAlgo_t bwAlgo;
     cudnnTensorDescriptor_t biasTensorDesc;
 

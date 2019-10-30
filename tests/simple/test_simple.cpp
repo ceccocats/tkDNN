@@ -19,6 +19,8 @@ int main() {
     tk::dnn::Dense      l5(&net, 4, d2_bin);
     tk::dnn::Activation l6(&net, CUDNN_ACTIVATION_RELU);
 
+    net.print();
+
     // Load input
     dnnType *data;
     dnnType *input_h;
