@@ -88,8 +88,11 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
         std::cout<<"Building tensorRT cuda engine...\n";
         engineRT = builderRT->buildCudaEngine(*networkRT);
+        if(engineRT == nullptr)
+            FatalError("cloud not build cuda engine")
         // we don't need the network any more
         //networkRT->destroy();
+        std::cout<<"serialize net\n";
         serialize(name);
     } else {
         deserialize(name);
