@@ -9,6 +9,32 @@ unsigned long long time_in_ms()
     return t_stamp_ms;
 }
 
+/* Convert orientation from radian to quantized degree (from 360 to 255)
+**/
+uint8_t orientation_to_uint8(float yaw)
+{
+    // 57.29 is (180/pi) -> conversion in degrees
+    // 17 / 24 is (255/360) -> quantization
+    // let a yaw in radians, it is converted into degrees (*57.29), 
+    // then into positive degrees, then it is quantized into 255. 
+    uint8_t orientation = uint8_t((int((yaw * 57.29 + 360)) % 360) * 17 / 24);
+    return orientation;
+}
+
+/* Convert speed from m/s to quantized km/h every 1/2 km/h
+**/
+uint8_t speed_to_uint8(float vel)
+{
+    // 3.6 -> conversion in km/h
+    // *2 -> quantization km/h evrey 1/2
+    // let a velocity in m/s, it is converted into km/h (*3.6), then (*2) 
+    // we achive a double speed. In a urban track we can consider a maximum 
+    // speed of 127 km/h. So we can fit 127 on a byte with a multiplication 
+    // by 2. Each increment corresponds to a speed greater than 1/2 km/h.
+    uint8_t velocity = uint8_t(std::abs(vel * 3.6 * 2));
+    return velocity;
+}        
+
 void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, geodetic_converter::GeodeticConverter &gc, const cv::Mat &maskOrient, double *adfGeoTransform, cv::Mat H)
 {
     m->t_stamp_ms = time_in_ms();
@@ -95,10 +121,11 @@ void addRoadUserfromTracker(const std::vector<Tracker> &trackers, Message *m, ge
             //     //std::cout<<"orientation given by the tracker "<< int(orientation)<<std::endl;
             // }
 
-            uint8_t orientation = uint8_t((int((t.pred_list_.back().yaw_ * 57.29 + 360)) % 360) * 17 / 24);
+            uint8_t orientation = orientation_to_uint8(t.pred_list_.back().yaw_);
             // std::cout<<"orient: "<<unsigned(orientation)<<std::endl;
             //std::cout << "lat: " << lat << " lon: " << lon << std::endl;
-            uint8_t velocity = uint8_t(std::abs(t.pred_list_.back().vel_ * 3.6 / 2));
+            uint8_t velocity = speed_to_uint8(t.pred_list_.back().vel_);
+            
             // std::cout<<"vel: "<<unsigned(velocity)<<std::endl;
             RoadUser r{static_cast<float>(lat), static_cast<float>(lon), velocity, orientation, cat};
             //std::cout << std::setprecision(10) << r.latitude << " , " << r.longitude << " " << int(r.speed) << " " << int(r.orientation) << " " << r.category << std::endl;
