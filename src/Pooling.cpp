@@ -26,6 +26,9 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     int w = input_dim.w;
     int l = input_dim.l;
 
+    printf("before: %d %d\n", h, w);
+    
+
     poolOn3d = false;
     
     if(l > 1) { 
@@ -38,6 +41,8 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
         n = l;
     }
 
+    
+
     checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnnPoolingMode_t(pool_mode),
                 CUDNN_NOT_PROPAGATE_NAN, winH, winW, paddingH, paddingW, strideH, strideW) );
 
@@ -45,12 +50,23 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                 net->tensorFormat, net->dataType, n, c, h, w) );
 
     //get out dim
-    checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
-    //h = (h + winH*this->paddingH)/strideH;
-    //w = (w + winW*this->paddingW)/strideW;
+    // checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
+
+    //compute w and h as in darknet
+
+    int padH = paddingH == 0? winH -1 : paddingH;
+    int padW = paddingW == 0? winW -1 : paddingW;
+
+    h = (h + padH - winH)/strideH +1;
+    w =  (w + padW - winW)/strideW +1;
+
+    // h = (h + winH*this->paddingH)/strideH;
+    // w = (w + winW*this->paddingW)/strideW;
 
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
                 net->tensorFormat, net->dataType, n, c, h, w) );
+
+    printf("after: %d %d\n", h, w);
        
     output_dim.n = n;
     output_dim.c = c;

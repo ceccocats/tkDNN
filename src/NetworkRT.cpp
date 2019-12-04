@@ -209,7 +209,9 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
 
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
-    //std::cout<<"convert conv2D\n";
+    std::cout<<"convert conv2D\n";
+    printf("%d %d %d %d %d\n", l->kernelH, l->kernelW, l->inputs, l->outputs, l->batchnorm);
+
 
     void *data_b, *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {
@@ -274,7 +276,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
-    //std::cout<<"convert Pooling\n";
+    std::cout<<"convert Pooling\n";
+    // printf("%d %d\n", l->winW, l->winH);
 
     PoolingType ptype;
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX) ptype = PoolingType::kMAX;

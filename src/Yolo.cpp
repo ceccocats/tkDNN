@@ -15,14 +15,16 @@ Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights) :
     Layer(net) {
     
     this->classes = classes;
-    this->num = num;
+    this->num = 3;
 
     // load anchors
     if(fname_weights != "") {
         int seek = 0;
-        readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
-        seek += num;
+        readBinaryFile(fname_weights, 3, &mask_h, &mask_d, seek);
+        seek += 3;
         readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
+        for(int i=0; i<3*num*2; i++)
+            printf("%f\n", bias_h[i]);
     }
 
     // init default classes name
