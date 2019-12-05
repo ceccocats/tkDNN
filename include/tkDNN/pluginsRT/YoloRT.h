@@ -8,16 +8,17 @@ class YoloRT : public IPlugin {
 
 
 public:
-	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr) {
+	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr, int n_masks=3) {
 
 		this->classes = classes;
 		this->num = num;
+		this->n_masks = n_masks;
 
-        mask = new dnnType[num];
-        bias = new dnnType[num*3*2];
+        mask = new dnnType[n_masks];
+        bias = new dnnType[num*n_masks*2];
         if(yolo != nullptr) {
-            memcpy(mask, yolo->mask_h, sizeof(dnnType)*num);
-            memcpy(bias, yolo->bias_h, sizeof(dnnType)*num*3*2);
+            memcpy(mask, yolo->mask_h, sizeof(dnnType)*n_masks);
+            memcpy(bias, yolo->bias_h, sizeof(dnnType)*num*n_masks*2);
 			classesNames = yolo->classesNames;
         }
 	}
@@ -60,7 +61,7 @@ public:
 		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
 
 		for (int b = 0; b < batchSize; ++b){
-			for(int n = 0; n < num; ++n){
+			for(int n = 0; n < n_masks; ++n){
 				int index = entry_index(b, n*w*h, 0, batchSize);
 				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
 				
@@ -75,19 +76,20 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 5*sizeof(int) + num*sizeof(dnnType) + num*3*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
+		return 6*sizeof(int) + n_masks*sizeof(dnnType) + num*n_masks*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
 	}
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
 		tk::dnn::writeBUF(buf, classes);
 		tk::dnn::writeBUF(buf, num);
+		tk::dnn::writeBUF(buf, n_masks);
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
-        for(int i=0; i<num; i++)
+        for(int i=0; i<n_masks; i++)
     		tk::dnn::writeBUF(buf, mask[i]);
-        for(int i=0; i<3*2*num; i++)
+        for(int i=0; i<n_masks*2*num; i++)
     		tk::dnn::writeBUF(buf, bias[i]);
 
 		// save classes names
@@ -101,7 +103,7 @@ public:
 	}
 
 	int c, h, w;
-    int classes, num;
+    int classes, num, n_masks;
 	std::vector<std::string> classesNames;
 
     dnnType *mask;

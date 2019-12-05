@@ -11,19 +11,20 @@
 
 namespace tk { namespace dnn {
 
-Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights) : 
+Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks) : 
     Layer(net) {
     
     this->classes = classes;
-    this->num = 3;
+    this->num = num;
+    this->n_masks = n_masks;
 
     // load anchors
     if(fname_weights != "") {
         int seek = 0;
-        readBinaryFile(fname_weights, 3, &mask_h, &mask_d, seek);
-        seek += 3;
-        readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
-        for(int i=0; i<3*num*2; i++)
+        readBinaryFile(fname_weights, n_masks, &mask_h, &mask_d, seek);
+        seek += n_masks;
+        readBinaryFile(fname_weights, n_masks*num*2, &bias_h, &bias_d, seek);
+        for(int i=0; i<n_masks*num*2; i++)
             printf("%f\n", bias_h[i]);
     }
 
@@ -70,7 +71,7 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     checkCuda( cudaMemcpy(dstData, srcData, dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
 
     for (int b = 0; b < dim.n; ++b){
-        for(int n = 0; n < num; ++n){
+        for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
             

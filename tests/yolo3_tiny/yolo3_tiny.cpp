@@ -52,7 +52,7 @@ int main() {
 
     tk::dnn::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c12_bin, true);
     tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -102,21 +102,21 @@ int main() {
         dim1.print();   
     }
  
-    // tk::dnn::dataDim_t dim2 = dim;
-    // printCenteredTitle(" TENSORRT inference ", '=', 30); {
-    //     dim2.print();
-    //     TIMER_START
-    //     out_data2 = netRT.infer(dim2, data);
-    //     TIMER_STOP
-    //     dim2.print();
-    // }
+    tk::dnn::dataDim_t dim2 = dim;
+    printCenteredTitle(" TENSORRT inference ", '=', 30); {
+        dim2.print();
+        TIMER_START
+        out_data2 = netRT.infer(dim2, data);
+        TIMER_STOP
+        dim2.print();
+    }
 
     printCenteredTitle(" CHECK RESULTS ", '=', 30);
     dnnType *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
-    // std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
-    // std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
+    std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
+    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
     return 0;
 }

@@ -379,11 +379,11 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights);
+    Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks=3);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num;
+    int classes, num, n_masks;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     std::vector<std::string> classesNames;
