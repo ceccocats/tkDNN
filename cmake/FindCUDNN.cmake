@@ -14,14 +14,14 @@ list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .so.5)
 find_library(CUDNN_LIB
     NAMES cudnn
     PATHS
-    /usr/local/driveworks-2.0/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
+    /usr/local/driveworks/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
     /usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu/
     NO_DEFAULT_PATH
 )
 find_library(CUDNN_NVLIB
     NAMES "nvinfer"
     PATHS
-    /usr/local/driveworks-2.0/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
+    /usr/local/driveworks/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
     /usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu/
     NO_DEFAULT_PATH
 )
