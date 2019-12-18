@@ -44,7 +44,8 @@ void Conv2d::initCUDNN(bool back) {
             convDesc, srcTensor, filterDesc,
             &tmpdim.n, &tmpdim.c, &tmpdim.h, &tmpdim.w) );
     if(odim.n != tmpdim.n || odim.c != tmpdim.c || odim.h != tmpdim.h || odim.w != tmpdim.w) {
-        std::cout<<"tkdim: "; odim.print();
+        std::cout<<"tkdim input: "; idim.print();
+        std::cout<<"tkdim output: "; odim.print();
         std::cout<<"cudnndim: "; tmpdim.print();
         FatalError("Eror conv dimension mismatch");
     }
@@ -107,12 +108,12 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
     } else {
         alpha = dnnType(1);
         beta  = dnnType(0);
-        cudnnBatchNormalizationForwardInference(net->cudnnHandle,
+        checkCUDNN( cudnnBatchNormalizationForwardInference(net->cudnnHandle,
                                                 CUDNN_BATCHNORM_SPATIAL, &alpha, &beta,
                                                 dstTensorDesc, dstData, dstTensorDesc,
                                                 dstData, biasTensorDesc, //same tensor descriptor as bias
                                                 scales_d, bias_d, mean_d, variance_d,
-                                                CUDNN_BN_MIN_EPSILON);
+                                                CUDNN_BN_MIN_EPSILON) );
     }
 }
 
@@ -140,8 +141,8 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     } else {
         output_dim.n = input_dim.n;
         output_dim.c = out_ch;
-        output_dim.h = (input_dim.h * strideH) - 2*paddingH + kernelH -1;
-        output_dim.w = (input_dim.w * strideW) - 2*paddingW + kernelW -1;
+        output_dim.h = ((input_dim.h-1) * strideH) - 2*paddingH + kernelH;
+        output_dim.w = ((input_dim.w-1) * strideW) - 2*paddingW + kernelW;
         output_dim.l = 1;
     }
     initCUDNN(deConv);

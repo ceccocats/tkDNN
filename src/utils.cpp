@@ -89,7 +89,6 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
         data_h = data_d;
         correct_h = correct_d;
     }
-
     int diffs = 0;
     for(int i=0; i<size; i++) {
         if(data_h[i] != data_h[i] || correct_h[i] != correct_h[i] || //nan control

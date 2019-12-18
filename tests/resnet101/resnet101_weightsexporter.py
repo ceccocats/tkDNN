@@ -6,6 +6,8 @@ from torchsummary import summary
 import numpy as np
 import struct 
 
+import torch.nn as nn
+
 def bin_write(f, data):
     data =data.flatten()
     # print(data)

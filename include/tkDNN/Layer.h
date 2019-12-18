@@ -12,6 +12,7 @@ enum layerType_t {
     LAYER_DENSE,
     LAYER_CONV2D,
     LAYER_DECONV2D,
+    LAYER_DEFORMCONV2D,
     LAYER_ACTIVATION,
     LAYER_FLATTEN,
     LAYER_MULADD,
@@ -49,6 +50,7 @@ public:
             case LAYER_DENSE:       return "Dense";
             case LAYER_CONV2D:      return "Conv2d";
             case LAYER_DECONV2D:    return "DeConv2d";
+            case LAYER_DEFORMCONV2D:return "DeformConv2d";
             case LAYER_ACTIVATION:  return "Activation";
             case LAYER_FLATTEN:     return "Flatten";
             case LAYER_MULADD:      return "MulAdd";
@@ -78,7 +80,7 @@ class LayerWgs : public Layer {
 
 public:
     LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
-             std::string fname_weights, bool batchnorm = false); 
+             std::string fname_weights, bool batchnorm = false, bool additional_bias = false); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -86,6 +88,10 @@ public:
 
     dnnType *data_h, *data_d;
     dnnType *bias_h, *bias_d;
+
+    // additional bias for DCN
+    bool additional_bias;
+    dnnType *bias2_h, *bias2_d;
 
     //batchnorm
     bool batchnorm;
@@ -193,6 +199,31 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
+
+/**
+    Deformable Convolutionl 2d layer
+*/  
+class DeformConv2d : public LayerWgs {
+
+public:
+    DeformConv2d( Network *net, int out_ch, int deformable_group, int kernelH, int kernelW,
+                int strideH, int strideW, int paddingH, int paddingW,
+                std::string d_fname_weights, std::string fname_weights, bool batchnorm);
+    virtual ~DeformConv2d();
+    virtual layerType_t getLayerType() { return LAYER_DEFORMCONV2D; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    tk::dnn::Conv2d *preconv; 
+    int out_ch;
+    int deformableGroup;
+    int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+protected:
+
+    cudnnTensorDescriptor_t biasTensorDesc;
+
+    void initCUDNN();
+
+};
 
 /**
     Flatten layer

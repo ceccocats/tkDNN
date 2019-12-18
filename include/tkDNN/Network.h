@@ -32,7 +32,7 @@ struct dataDim_t {
 };
 
 class Layer;
-const int MAX_LAYERS = 256;
+const int MAX_LAYERS = 512;
 
 class Network {
 

@@ -280,7 +280,6 @@ int main()
     tk::dnn::Pooling avgpool(&net, 7, 7, 7, 7, 0, 0, tk::dnn::POOLING_AVERAGE);
     tk::dnn::Dense   fc(&net, 1000, fc_bin);
 
-  
     // Load input
     dnnType *data;
     dnnType *input_h;

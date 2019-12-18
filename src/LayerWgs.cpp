@@ -8,7 +8,7 @@ namespace tk { namespace dnn {
 
 LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
                    int kh, int kw, int kl, 
-                   std::string fname_weights, bool batchnorm) : Layer(net) {
+                   std::string fname_weights, bool batchnorm, bool additional_bias) : Layer(net) {
 
     this->inputs  = inputs;
     this->outputs = outputs;    
@@ -18,6 +18,12 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
     int seek = 0;
     readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek, net->dontLoadWeights);
     seek += inputs*outputs*kh*kw*kl;
+    this->additional_bias = additional_bias;
+    if(additional_bias) {
+        readBinaryFile(weights_path.c_str(), outputs, &bias2_h, &bias2_d, seek, net->dontLoadWeights);
+        seek += outputs;   
+    }
+    
     readBinaryFile(weights_path.c_str(), outputs, &bias_h, &bias_d, seek, net->dontLoadWeights);
 
     this->batchnorm = batchnorm;

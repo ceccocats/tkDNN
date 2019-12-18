@@ -102,6 +102,9 @@ target_link_libraries(test_yolo3_flir tkDNN)
 add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)
 
+add_executable(test_resnet101_cnet tests/resnet101_cnet/resnet101_cnet.cpp)
+target_link_libraries(test_resnet101_cnet tkDNN)
+
 ################################################################################
 
 

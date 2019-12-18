@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <algorithm>
 #include <cstring>
+#include "kernels.h"
+#include <errno.h>
 
 #define CUDA_KERNEL_LOOP(i, n)                          \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x;   \
@@ -133,4 +135,110 @@ void modulated_deformable_im2col_cuda(cudaStream_t stream,
     printf("error in modulated_deformable_im2col_cuda: %s\n", cudaGetErrorString(err));
   }
 
+}
+
+
+void dcn_v2_cuda_forward(float *input, float *weight,
+                         float *bias, float *ones,
+                         float *offset, float *mask,
+                         float *output, float *columns,
+                         int kernel_h, int kernel_w,
+                         const int stride_h, const int stride_w,
+                         const int pad_h, const int pad_w,
+                         const int dilation_h, const int dilation_w,
+                         const int deformable_group,
+                         const int in_n, const int in_c, const int in_h, const int in_w, 
+                         const int out_n, const int out_c, const int out_h, const int out_w,
+                         const int dst_dim, cudaStream_t stream)
+{
+  checkCuda(cudaDeviceSynchronize());
+  cudaError_t cudaStat;    
+  cublasStatus_t stat;
+  cublasHandle_t handle;
+  stat = cublasCreate(&handle);
+  if (stat != CUBLAS_STATUS_SUCCESS) {
+      printf ("CUBLAS initialization failed\n");
+      return;
+  }
+  checkCuda(cudaDeviceSynchronize());
+  
+  const int batch = in_n;
+  const int channels = in_c;
+  const int height = in_h;
+  const int width = in_w;
+
+  const int channels_out = out_c;
+  const int channels_kernel = in_c;
+  const int kernel_h_ = kernel_h;
+  const int kernel_w_ = kernel_w;
+
+  const int height_out = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int width_out = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+
+  float *input_n;
+  cudaMalloc(&input_n, (in_n*in_c*in_h*in_w)*sizeof(float));
+  cudaMemcpy(input_n, input, (in_n*in_c*in_h*in_w)*sizeof(float), cudaMemcpyDeviceToDevice);
+  checkCuda(cudaDeviceSynchronize());
+
+  float *offset_n;
+  cudaMalloc(&offset_n, ((dst_dim/3)*2)*sizeof(float));
+  cudaMemcpy(offset_n, offset, ((dst_dim/3)*2)*sizeof(float), cudaMemcpyDeviceToDevice);
+  checkCuda(cudaDeviceSynchronize());
+
+  float *mask_n;
+  cudaMalloc(&mask_n, (dst_dim/3)*sizeof(float));
+  cudaMemcpy(mask_n, mask, (dst_dim/3)*sizeof(float), cudaMemcpyDeviceToDevice);
+  checkCuda(cudaDeviceSynchronize());
+
+  float *output_n;
+  checkCuda(cudaMalloc(&output_n, (channels_out*height_out*width_out)*sizeof(float)));
+  checkCuda(cudaDeviceSynchronize());
+  
+  long m_ = channels_out;
+  long n_ = height_out * width_out;
+  long k_ = 1;
+  float alpha = 1.0;
+  float beta = 0.0;
+  checkCuda(cudaDeviceSynchronize());
+  stat = cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, 
+              n_, m_, k_, &alpha, 
+              ones, k_, bias, k_, 
+              &beta, output_n, n_);
+  if (stat != CUBLAS_STATUS_SUCCESS) {
+      printf ("CUBLAS initialization failed\n");
+      return ;
+  }
+
+  checkCuda(cudaDeviceSynchronize());
+
+  modulated_deformable_im2col_cuda(stream,
+                                    input_n, offset_n,
+                                    mask_n,
+                                    1, channels, height, width,
+                                    height_out, width_out, kernel_h, kernel_w,
+                                    pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+                                    deformable_group, columns);
+  checkCuda(cudaDeviceSynchronize());
+
+  //(k * m)  x  (m * n)
+  // Y = WC
+  long m = channels_out;
+  long n = height_out * width_out;
+  long k = channels * kernel_h * kernel_w;
+
+  alpha = 1.0;
+  beta = 1.0;
+  
+  stat = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 
+              n, m, k, &alpha, 
+              columns, n, weight, k, 
+              &beta, output_n, n);
+
+  cudaMemcpy(output, output_n, (n*m)*sizeof(float), cudaMemcpyDeviceToDevice);  
+  checkCuda(cudaDeviceSynchronize());
+            
+  if (stat != CUBLAS_STATUS_SUCCESS) {
+      printf ("CUBLAS initialization failed\n");
+      return ;
+  }
 }
