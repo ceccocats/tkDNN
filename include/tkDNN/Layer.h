@@ -219,7 +219,12 @@ public:
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
 protected:
 
+    dnnType *ones_d1;
+    dnnType *ones_d2;
     cudnnTensorDescriptor_t biasTensorDesc;
+    int chunk_dim;
+    dnnType *offset, *mask;
+    dnnType *output_conv;
 
     void initCUDNN();
 
