@@ -172,9 +172,9 @@ const char *reg_conv2_bin = "../tests/resnet101_cnet/layers/reg-2.bin";
 const char *fc_bin = "../tests/resnet101_cnet/layers/fc.bin";
 
 const char *output_bin[]={
-"../tests/resnet101_cnet/debug/hm.bin",
-"../tests/resnet101_cnet/debug/wh.bin",
-"../tests/resnet101_cnet/debug/reg.bin"};
+ "../tests/resnet101_cnet/debug/hm.bin",
+ "../tests/resnet101_cnet/debug/wh.bin",
+ "../tests/resnet101_cnet/debug/reg.bin"};
 
 int main()
 {
@@ -317,17 +317,17 @@ int main()
     tk::dnn::Layer    *route_1_0_layers[1] = { layer2_deconv1_relu };
     tk::dnn::Conv2d     *hm_conv1 = new tk::dnn::Conv2d(&net, 64, 3, 3, 1, 1, 1, 1, hm_conv1_bin, false);
     tk::dnn::Activation *hm_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *hm = new tk::dnn::Conv2d(&net, 80, 1, 1, 1, 1, 0, 0, hm_conv2_bin, false);
+    tk::dnn::Conv2d     *hm = new tk::dnn::Conv2d(&net, 80, 1, 1, 1, 1, 0, 0, hm_conv2_bin, false, false, true);
 
     tk::dnn::Route    *route_1_0             = new tk::dnn::Route(&net, route_1_0_layers, 1);
     tk::dnn::Conv2d     *wh_conv1 = new tk::dnn::Conv2d(&net, 64, 3, 3, 1, 1, 1, 1, wh_conv1_bin, false);
     tk::dnn::Activation *wh_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *wh = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, wh_conv2_bin, false);        
+    tk::dnn::Conv2d     *wh = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, wh_conv2_bin, false, false, true);        
     
     tk::dnn::Route    *route_2_0             = new tk::dnn::Route(&net, route_1_0_layers, 1);
     tk::dnn::Conv2d     *reg_conv1 = new tk::dnn::Conv2d(&net, 64, 3, 3, 1, 1, 1, 1, reg_conv1_bin, false);
     tk::dnn::Activation *reg_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *reg = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, reg_conv2_bin, false);
+    tk::dnn::Conv2d     *reg = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, reg_conv2_bin, false, false, true);
 
     // Load input
     dnnType *data;
@@ -339,7 +339,7 @@ int main()
     net.print();
 
     //convert network to tensorRT
-//    tk::dnn::NetworkRT netRT(&net, "resnet101_cnet.rt");
+    tk::dnn::NetworkRT netRT(&net, "resnet101_cnet.rt");
 
     
     tk::dnn::dataDim_t dim1 = dim; //input dim
@@ -354,7 +354,7 @@ int main()
 
     // printDeviceVector(64, cudnn_out, true);
 
-/*    tk::dnn::dataDim_t dim2 = dim;
+    tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30);
     {
         dim2.print();
@@ -363,10 +363,9 @@ int main()
         TIMER_STOP
         dim2.print();
     }
-    rt_out = (dnnType *)netRT.buffersRT[1];
-*/
 
-    tk::dnn::Conv2d *outs[3] = { hm, wh, reg }; 
+    tk::dnn::Layer *outs[3] = { hm, wh, reg }; 
+    
     for(int i=0; i<3; i++) {
         printCenteredTitle((std::string(" RESNET CHECK RESULTS ") + std::to_string(i) + " ").c_str(), '=', 30);
         
@@ -382,14 +381,15 @@ int main()
 
         dnnType *cudnn_out, *rt_out;
         cudnn_out = outs[i]->dstData;
+        rt_out = (dnnType *)netRT.buffersRT[i+1];
 
         std::cout << "CUDNN vs correct";
         checkResult(odim, cudnn_out, out);
 
-    /*  std::cout << "TRT   vs correct";
+        std::cout << "TRT   vs correct";
         checkResult(odim, rt_out, out);
         std::cout << "CUDNN vs TRT    ";
-        checkResult(odim, cudnn_out, rt_out);*/
+        checkResult(odim, cudnn_out, rt_out);
     }
     return 0;
 }

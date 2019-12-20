@@ -4,10 +4,10 @@
 
 namespace tk { namespace dnn {
 
-Layer::Layer(Network *net) {
+Layer::Layer(Network *net, bool final) {
 
     this->net = net;
-
+    this->final = final;
     if(net != nullptr) {
         this->input_dim = net->getOutputDim();
         this->output_dim = input_dim;

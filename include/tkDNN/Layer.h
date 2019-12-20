@@ -32,7 +32,7 @@ enum layerType_t {
 class Layer {
 
 public:
-    Layer(Network *net);
+    Layer(Network *net, bool final = false);
     virtual ~Layer();
     virtual layerType_t getLayerType() = 0;
 
@@ -43,6 +43,7 @@ public:
 
     dataDim_t input_dim, output_dim;
     dnnType *dstData;  //where results will be putted
+    bool final;        //if the layer is the final one
 
     std::string getLayerName() {
         layerType_t type = getLayerType();
@@ -80,7 +81,7 @@ class LayerWgs : public Layer {
 
 public:
     LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
-             std::string fname_weights, bool batchnorm = false, bool additional_bias = false); 
+             std::string fname_weights, bool batchnorm = false, bool additional_bias = false, bool final = false); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -160,7 +161,7 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm = false, bool deConv = false);
+                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -217,10 +218,15 @@ public:
     int out_ch;
     int deformableGroup;
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+    dnnType *ones_d1;
+    dnnType *ones_d2;
+    int chunk_dim;
+    dnnType *offset, *mask;
+    dnnType *output_conv;
+
 protected:
 
     cudnnTensorDescriptor_t biasTensorDesc;
-
     void initCUDNN();
 
 };

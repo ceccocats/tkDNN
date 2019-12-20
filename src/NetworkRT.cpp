@@ -75,7 +75,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             input = Ilay->getOutput(0);
             input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
             
-            if(l->getLayerType() == LAYER_YOLO)
+            if(l->getLayerType() == LAYER_YOLO || l->final)
                 networkRT->markOutput(*input);
             tensors[l] = input;
         }
@@ -182,6 +182,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Yolo*) l);
     if(type == LAYER_UPSAMPLE)
         return convert_layer(input, (Upsample*) l);
+    if(type == LAYER_DEFORMCONV2D)
+        return convert_layer(input, (DeformConv2d*) l);
 
     std::cout<<l->getLayerName()<<"\n";
     FatalError("Layer not implemented in tensorRT");
@@ -254,6 +256,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT = (ILayer*) lRTconv;
         
+        Dims d = lRTconv->getOutput(0)->getDimensions();
+        std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
     }
 
     checkNULL(lRT);
@@ -419,6 +423,53 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
+    //std::cout<<"convert DEFORMABLE\n";
+    ILayer *preconv = convert_layer(input, l->preconv);
+
+    ITensor **inputs = new ITensor*[2];
+    inputs[0] = input;
+    inputs[1] = preconv->getOutput(0);
+
+    //std::cout<<"New plugin DEFORMABLE\n";
+    IPlugin *plugin = new DeformableConvRT(l);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+
+    // batchnorm
+    void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
+    if(dtRT == DataType::kHALF) {
+        bias_b     = l->bias16_h;
+        power_b    = l->power16_h;
+        mean_b     = l->mean16_h;
+        variance_b = l->variance16_h;
+        scales_b   = l->scales16_h;
+    } else {
+        bias_b     = l->bias_h;
+        power_b    = l->power_h;
+        mean_b     = l->mean_h;
+        variance_b = l->variance_h;
+        scales_b   = l->scales_h;
+    }
+
+    Weights power{dtRT, power_b, l->outputs};
+    Weights shift{dtRT, mean_b, l->outputs};
+    Weights scale{dtRT, variance_b, l->outputs};
+    std::cout<<lRT->getNbOutputs()<<std::endl;
+    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
+                shift, scale, power);
+    
+    checkNULL(lRT2);
+
+    Weights shift2{dtRT, bias_b, l->outputs};
+    Weights scale2{dtRT, scales_b, l->outputs};
+    IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
+                shift2, scale2, power);
+    checkNULL(lRT3);
+
+    return lRT3;
 }
 
 bool NetworkRT::serialize(const char *filename) {
