@@ -31,6 +31,7 @@ using namespace nvinfer1;
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
 //#include "pluginsRT/Int8Calibrator.h"
+#include "pluginsRT/DeformableConvRT.h"
 
 class PluginFactory : IPluginFactory
 {
@@ -85,6 +86,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Yolo *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeformConv2d *l);
 
     bool serialize(const char *filename);
     bool deserialize(const char *filename);

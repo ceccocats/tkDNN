@@ -8,12 +8,12 @@ namespace tk { namespace dnn {
 
 LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
                    int kh, int kw, int kl, 
-                   std::string fname_weights, bool batchnorm, bool additional_bias) : Layer(net) {
+                   std::string fname_weights, bool batchnorm, bool additional_bias, bool final) : Layer(net, final) {
 
     this->inputs  = inputs;
     this->outputs = outputs;    
     this->weights_path  = std::string(fname_weights);
-   
+
     std::cout<<"Reading weights: I="<<inputs<<" O="<<outputs<<" KERNEL="<<kh<<"x"<<kw<<"x"<<kl<<"\n";
     int seek = 0;
     readBinaryFile(weights_path.c_str(), inputs*outputs*kh*kw*kl, &data_h, &data_d, seek, net->dontLoadWeights);

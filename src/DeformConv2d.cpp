@@ -25,25 +25,23 @@ void DeformConv2d::initCUDNN() {
     if (dst_dim % 3 != 0 )
         std::cout<<"take attention\n\n";
     chunk_dim = dst_dim/3;
-    checkCuda(cudaMalloc(&offset, 2*chunk_dim*sizeof(dnnType)));
-    checkCuda(cudaMalloc(&mask, chunk_dim*sizeof(dnnType)));
+    checkCuda( cudaMalloc(&offset, 2*chunk_dim*sizeof(dnnType)));
+    checkCuda( cudaMalloc(&mask, chunk_dim*sizeof(dnnType)));
     
     // kernel ones
     
-    cudaMallocHost(&ones_d1, (height_ones*width_ones)*sizeof(dnnType));
+    checkCuda( cudaMalloc(&ones_d1, (height_ones*width_ones)*sizeof(dnnType)) );
     float aus1[height_ones*width_ones];
     for(int i=0; i<height_ones*width_ones; i++)
         aus1[i]=1.0f;
-    cudaMemcpy(ones_d1, aus1, (height_ones*width_ones)*sizeof(dnnType), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
+    checkCuda( cudaMemcpy(ones_d1, aus1, (height_ones*width_ones)*sizeof(dnnType), cudaMemcpyHostToDevice) );
     
-    cudaMallocHost(&ones_d2, dim_ones*sizeof(dnnType));
+    checkCuda( cudaMalloc(&ones_d2, dim_ones*sizeof(dnnType)) );
     float aus2[dim_ones];
     for(int i=0; i<dim_ones; i++)
         aus2[i]=1.0f;
-    cudaMemcpy(ones_d2, aus2, (dim_ones)*sizeof(dnnType), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-
+    checkCuda( cudaMemcpy(ones_d2, aus2, (dim_ones)*sizeof(dnnType), cudaMemcpyHostToDevice) );
+    checkCuda( cudaDeviceSynchronize() );
 }
 
 DeformConv2d::DeformConv2d( Network *net, int out_ch, int deformable_group, int kernelH, int kernelW,
