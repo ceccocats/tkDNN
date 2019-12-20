@@ -15,9 +15,9 @@ using namespace nvinfer1;
 // Logger for info/warning/errors
 class Logger : public ILogger {
     void log(Severity severity, const char* msg) override {
-// #ifdef DEBUG
+#ifdef DEBUG
         std::cout <<"TENSORRT LOG: "<< msg << std::endl;
-// #endif
+#endif
     }
 } loggerRT;
 
@@ -209,8 +209,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
 
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
-    std::cout<<"convert conv2D\n";
-    printf("%d %d %d %d %d\n", l->kernelH, l->kernelW, l->inputs, l->outputs, l->batchnorm);
+    // std::cout<<"convert conv2D\n";
+    // printf("%d %d %d %d %d\n", l->kernelH, l->kernelW, l->inputs, l->outputs, l->batchnorm);
 
 
     void *data_b, *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
@@ -261,7 +261,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         Weights power{dtRT, power_b, l->outputs};
         Weights shift{dtRT, mean_b, l->outputs};
         Weights scale{dtRT, variance_b, l->outputs};
-        std::cout<<lRT->getNbOutputs()<<std::endl;
+        // std::cout<<lRT->getNbOutputs()<<std::endl;
         IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
                     shift, scale, power);
         
@@ -280,8 +280,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
-    std::cout<<"convert Pooling\n";
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d (layer)\n", l->input_dim.h, l->input_dim.w, l->output_dim.h, l->output_dim.w,  l->winW, l->winH,  l->strideH, l->strideW, l->paddingH, l->paddingW, l->pool_mode, tkdnnPoolingMode_t::POOLING_MAX) ;
+    // std::cout<<"convert Pooling\n";
 
     PoolingType ptype;
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX) ptype = PoolingType::kMAX;
@@ -291,29 +290,28 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     IPoolingLayer *lRT = networkRT->addPooling(*input, 
         ptype, DimsHW{l->winH, l->winW});
     checkNULL(lRT);
+
+    lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
+    lRT->setStride(DimsHW{l->strideH, l->strideW});
+
     
-    // if (l->input_dim.h == 13 && l->output_dim.h == 13)
-    // {
-    //     lRT->setPadding(DimsHW{7, 7});    
-    //     lRT->setStride(DimsHW{2, 2});
-    // }
-    // else
-    // {
-        lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
-        lRT->setStride(DimsHW{l->strideH, l->strideW});
-    // }
-
-    // IResizeLayer *lRT = networkRT->addResize(*lRT->getOutput(0));
-    // checkNULL(lRT);
-    // lRT->setOutputDimensions(l->output_dim);
-
     ITensor *t = lRT->getOutput(0);
-    for(int j=0; j<t->getDimensions().nbDims; j++) {
-            std::cout<<t->getDimensions().d[j]<<" ";
-        }
-        std::cout<<" (TensorRT)\n";
+    // for(int j=0; j<t->getDimensions().nbDims; j++) {
+    //         std::cout<<t->getDimensions().d[j]<<" ";
+    //     }
+    //     std::cout<<" (TensorRT)\n";
 
-    return lRT;
+    IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h,l->output_dim.w );
+    IPluginLayer *lRT1 = networkRT->addPlugin(&t, 1, *plugin);
+    checkNULL(lRT1);
+
+    // ITensor *t1 = lRT1->getOutput(0);
+    // for(int j=0; j<t1->getDimensions().nbDims; j++) {
+    //         std::cout<<t1->getDimensions().d[j]<<" ";
+    //     }
+    //     std::cout<<" (TensorRT after resize )\n";
+
+    return lRT1;
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
@@ -347,17 +345,17 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
-    std::cout<<"convert route\n";
+    // std::cout<<"convert route\n";
     
 
 
     ITensor **tens = new ITensor*[l->layers_n];
     for(int i=0; i<l->layers_n; i++) {
         tens[i] = tensors[l->layers[i]];
-        for(int j=0; j<tens[i]->getDimensions().nbDims; j++) {
-            std::cout<<tens[i]->getDimensions().d[j]<<" ";
-        }
-        std::cout<<"\n";
+        // for(int j=0; j<tens[i]->getDimensions().nbDims; j++) {
+        //     std::cout<<tens[i]->getDimensions().d[j]<<" ";
+        // }
+        // std::cout<<"\n";
     }
     
     IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
@@ -499,6 +497,16 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Pooling") == 0) {
+        ResizeLayerRT *r = new ResizeLayerRT(readBUF<int>(buf), //o_c
+                                            readBUF<int>(buf), //o_h
+                                            readBUF<int>(buf)); //o_w
+        r->i_c = readBUF<int>(buf);
+        r->i_h = readBUF<int>(buf);
+        r->i_w = readBUF<int>(buf);
         return r;
     } 
 

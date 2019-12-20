@@ -9,6 +9,9 @@ void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size, cud
 
 void fill(dnnType* data, int size, dnnType val, cudaStream_t stream = cudaStream_t(0));
 
+void resizeForward(  dnnType* srcData, dnnType* dstData, int n, int i_c, int i_h, int i_w,
+                    int o_c, int o_h, int o_w, cudaStream_t stream = cudaStream_t(0));
+
 void reorgForward(  dnnType* srcData, dnnType* dstData, 
                     int n, int c, int h, int w, int stride, cudaStream_t stream = cudaStream_t(0));
 void softmaxForward(float *input, int n, int batch, int batch_offset, 

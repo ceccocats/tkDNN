@@ -130,7 +130,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
     for (i = 0; i < lw*lh; ++i){
         int row = i / lw;
         int col = i % lw;
-        for(n = 0; n < num; ++n){
+        for(n = 0; n < n_masks; ++n){
             int obj_index  = entry_index(0, n*lw*lh + i, 4, classes, input_dim, output_dim);
             float objectness = predictions[obj_index];
             if(objectness <= thresh) continue;

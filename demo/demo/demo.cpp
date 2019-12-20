@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sig_handler);
 
 
-    char *net = "yolo3_berkeley.rt";
+    char *net = "yolo3.rt";
     if(argc > 1)
         net = argv[1]; 
     char *input = "../demo/yolo_test.mp4";

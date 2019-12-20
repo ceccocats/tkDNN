@@ -33,6 +33,7 @@ class Yolo3Detection {
     public:
         int classes = 0;
         int num = 0;
+        int n_masks = 0;
         float thresh = 0.3;
         cv::Scalar colors[256];
 

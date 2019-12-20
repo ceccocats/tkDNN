@@ -53,7 +53,6 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     // checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
 
     //compute w and h as in darknet
-
     int padH = paddingH == 0? winH -1 : paddingH;
     int padW = paddingW == 0? winW -1 : paddingW;
 

@@ -30,6 +30,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ShortcutRT.h"
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
+#include "pluginsRT/ResizeLayerRT.h"
 //#include "pluginsRT/Int8Calibrator.h"
 
 class PluginFactory : IPluginFactory

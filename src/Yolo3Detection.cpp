@@ -22,7 +22,8 @@ bool Yolo3Detection::init(std::string tensor_path) {
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
 
-    if(netRT->pluginFactory->n_yolos != 3) {
+
+    if(netRT->pluginFactory->n_yolos < 2 ) {
         FatalError("this is not yolo3");
     }
 
@@ -30,13 +31,14 @@ bool Yolo3Detection::init(std::string tensor_path) {
         YoloRT *yRT = netRT->pluginFactory->yolos[i];
         classes = yRT->classes;
         num = yRT->num;
+        n_masks = yRT->n_masks;
 
         // make a yolo layer for interpret predictions
-        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, ""); // yolo without input and bias
-        yolo[i]->mask_h = new dnnType[num];
-        yolo[i]->bias_h = new dnnType[num*3*2];
-        memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);
-        memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*3*2);
+        yolo[i] = new tk::dnn::Yolo(nullptr, classes, n_masks, ""); // yolo without input and bias
+        yolo[i]->mask_h = new dnnType[n_masks];
+        yolo[i]->bias_h = new dnnType[num*n_masks*2];
+        memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*n_masks);
+        memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*n_masks*2);
         yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
         yolo[i]->classesNames = yRT->classesNames;
     }
@@ -84,7 +86,7 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
 
 
     //DO INFERENCE
-    dnnType *rt_out[3]; 
+    dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
     tk::dnn::dataDim_t dim = netRT->input_dim;
     checkCuda(cudaMemcpyAsync(input_d, input, dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
 
@@ -99,7 +101,7 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     TIMER_START
     // compute dets
     ndets = 0;
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
         rt_out[i] = (dnnType*)netRT->buffersRT[i+1];
         yolo[i]->dstData = rt_out[i];
         yolo[i]->computeDetections(dets, ndets, netRT->input_dim.w, netRT->input_dim.h, thresh);

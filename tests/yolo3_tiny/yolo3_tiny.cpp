@@ -118,5 +118,6 @@ int main() {
     std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
     std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
     std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
+    
     return 0;
 }
