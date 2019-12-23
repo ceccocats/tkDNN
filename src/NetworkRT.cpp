@@ -426,17 +426,21 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
-    //std::cout<<"convert DEFORMABLE\n";
+    std::cout<<"convert DEFORMABLE\n";
     ILayer *preconv = convert_layer(input, l->preconv);
+    checkNULL(preconv);
 
     ITensor **inputs = new ITensor*[2];
     inputs[0] = input;
     inputs[1] = preconv->getOutput(0);
 
-    //std::cout<<"New plugin DEFORMABLE\n";
-    IPlugin *plugin = new DeformableConvRT(l);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    std::cout<<"New plugin DEFORMABLE\n";
+    IPlugin *plugin = new DeformableConvRT(l->chunk_dim, l->kernelH, l->kernelW, l->strideH, l->strideW, l->paddingH, l->paddingW, 
+                                            l->deformableGroup, l->input_dim.n, l->input_dim.c, l->input_dim.h, l->input_dim.w, 
+                                            l->output_dim.n, l->output_dim.c, l->output_dim.h, l->output_dim.w, l);
+    IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
+    lRT->setName( ("Deformable" + std::to_string(l->id)).c_str() );
 
     // batchnorm
     void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
@@ -515,8 +519,9 @@ bool NetworkRT::deserialize(const char *filename) {
 
 IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
     const char * buf = reinterpret_cast<const char*>(serialData);
-    
+
     std::string name(layerName);
+    std::cout<<name<<std::endl;
 
     if(name.find("Activation") == 0) {
         ActivationLeakyRT *a = new ActivationLeakyRT();
@@ -586,7 +591,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         yolos[n_yolos++] = r;
         return r;
     } 
-
     if(name.find("Upsample") == 0) {
         UpsampleRT *r = new UpsampleRT(readBUF<int>(buf)); //stride
         r->c = readBUF<int>(buf);
@@ -606,6 +610,46 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         return r;
     } 
 */
+    if(name.find("Deformable") == 0) {
+        DeformableConvRT *r = new DeformableConvRT(readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
+                                                    readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
+                                                    readBUF<int>(buf), readBUF<int>(buf),
+                                                    readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),
+                                                    readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),
+                                                    nullptr); 
+        dnnType *aus = new dnnType[r->chunk_dim*2];
+        for(int i=0; i<r->chunk_dim*2; i++)
+    		aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->offset, aus, sizeof(dnnType)*2*r->chunk_dim, cudaMemcpyHostToDevice) );
+        free(aus);
+		aus = new dnnType[r->chunk_dim];
+		for(int i=0; i<r->chunk_dim; i++)
+            aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->mask, aus, sizeof(dnnType)*r->chunk_dim, cudaMemcpyHostToDevice) );
+        free(aus);
+		aus = new dnnType[(r->i_c * r->o_c * r->kh * r->kw * 1 )];
+		for(int i=0; i<(r->i_c * r->o_c * r->kh * r->kw * 1 ); i++)
+    		aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->data_d, aus, sizeof(dnnType)*(r->i_c * r->o_c * r->kh * r->kw * 1 ), cudaMemcpyHostToDevice) );
+        free(aus);
+		aus = new dnnType[r->o_c];
+		for(int i=0; i < r->o_c; i++)
+    		aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->bias2_d, aus, sizeof(dnnType)*r->o_c, cudaMemcpyHostToDevice) );
+        free(aus);
+		aus = new dnnType[r->height_ones * r->width_ones];
+		for(int i=0; i<r->height_ones * r->width_ones; i++)
+    		aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->ones_d1, aus, sizeof(dnnType)*r->height_ones * r->width_ones, cudaMemcpyHostToDevice) );
+        free(aus);
+		aus = new dnnType[r->dim_ones];
+		for(int i=0; i<r->dim_ones; i++)
+    		aus[i] = readBUF<dnnType>(buf);
+		checkCuda( cudaMemcpy(r->ones_d2, aus, sizeof(dnnType)*r->dim_ones, cudaMemcpyHostToDevice) );
+        free(aus);
+        return r;
+    } 
+
     FatalError("Cant deserialize Plugin");
     return NULL;
 }

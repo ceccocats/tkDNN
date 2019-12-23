@@ -43,6 +43,8 @@ public:
 
     dataDim_t input_dim, output_dim;
     dnnType *dstData;  //where results will be putted
+
+    int id = 0;
     bool final;        //if the layer is the final one
 
     std::string getLayerName() {
