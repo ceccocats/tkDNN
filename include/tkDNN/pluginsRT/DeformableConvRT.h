@@ -7,8 +7,51 @@ class DeformableConvRT : public IPlugin {
 
 
 public:
-	DeformableConvRT(tk::dnn::DeformConv2d *deformable) {
-		this->defRT = deformable;
+	DeformableConvRT(int chunk_dim, int kh, int kw, int sh, int sw, int ph, int pw, 
+					int deformableGroup, int i_n, int i_c, int i_h, int i_w, 
+					int o_n, int o_c, int o_h, int o_w, 
+					tk::dnn::DeformConv2d *deformable = nullptr) {
+		this->chunk_dim = chunk_dim;
+		// int dst_dim = conv_dim.tot();
+		// std::cout<<"conv_dim: \n";
+		// conv_dim.print();
+		// if (dst_dim % 3 != 0 )
+		// 	std::cout<<"take attention\n\n";
+		// this->chunk_dim = dst_dim/3;
+		this->kh = kh;
+		this->kw = kw;
+		this->sh = sh;
+		this->sw = sw;
+		this->ph = ph;
+		this->pw = pw;
+		this->deformableGroup = deformableGroup;
+		this->i_n = i_n;
+		this->i_c = i_c;
+		this->i_h = i_h;
+		this->i_w = i_w;
+		this->o_n = o_n;
+		this->o_c = o_c;
+		this->o_h = o_h;
+		this->o_w = o_w;
+		height_ones = (i_h + 2 * ph - (1 * (kh - 1) + 1)) / sh + 1;
+		width_ones = (i_w + 2 * pw - (1 * (kw - 1) + 1)) / sw + 1;
+		dim_ones = i_c * kh * kw * 1 * height_ones * width_ones;
+		std::cout<<i_c * o_c * kh * kw * 1<<"\n";
+		checkCuda( cudaMalloc(&data_d, i_c * o_c * kh * kw * 1 * sizeof(dnnType)));
+		checkCuda( cudaMalloc(&bias2_d, o_c*sizeof(dnnType)));
+		checkCuda( cudaMalloc(&ones_d1, height_ones * width_ones * sizeof(dnnType)));
+		checkCuda( cudaMalloc(&offset, 2*chunk_dim*sizeof(dnnType)));
+		checkCuda( cudaMalloc(&mask, chunk_dim*sizeof(dnnType)));
+		checkCuda( cudaMalloc(&ones_d2, dim_ones*sizeof(dnnType)));
+		if(deformable != nullptr) {
+			this->defRT = deformable;
+			checkCuda( cudaMemcpy(data_d, deformable->data_d, sizeof(dnnType)*i_c * o_c * kh * kw * 1, cudaMemcpyDeviceToDevice) );
+			checkCuda( cudaMemcpy(bias2_d, deformable->bias2_d, sizeof(dnnType)*o_c, cudaMemcpyDeviceToDevice) );
+            checkCuda( cudaMemcpy(ones_d1, deformable->ones_d1, sizeof(dnnType)*height_ones*width_ones, cudaMemcpyDeviceToDevice) );
+            checkCuda( cudaMemcpy(offset, deformable->offset, sizeof(dnnType)*2*chunk_dim, cudaMemcpyDeviceToDevice) );
+            checkCuda( cudaMemcpy(mask, deformable->mask, sizeof(dnnType)*chunk_dim, cudaMemcpyDeviceToDevice) );
+            checkCuda( cudaMemcpy(ones_d2, deformable->ones_d2, sizeof(dnnType)*dim_ones, cudaMemcpyDeviceToDevice) );
+		}
 	}
 
 	~DeformableConvRT(){
@@ -24,6 +67,14 @@ public:
 	}
 
 	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
+		// i_n = 1;
+		// i_c = inputDims[0].d[0];
+		// i_h = inputDims[0].d[1];
+		// i_w = inputDims[0].d[2];
+		// o_n = 1;
+		// o_c = outputDims[0].d[0];
+		// o_h = outputDims[0].d[1];
+		// o_w = outputDims[0].d[2];
 	}
 
 	int initialize() override {
@@ -39,42 +90,108 @@ public:
 	}
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-
+std::cout<<"LOL\n";
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *output_conv = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
 
 		// split conv2d outputs into offset to mask
-		checkCuda(cudaMemcpy(defRT->offset, defRT->output_conv, 2*defRT->chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-		checkCuda(cudaMemcpy(defRT->mask, defRT->output_conv + 2*defRT->chunk_dim, defRT->chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
+		checkCuda(cudaMemcpy(offset, output_conv, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
+		checkCuda(cudaMemcpy(mask, output_conv + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
 		// kernel sigmoide
-		activationSIGMOIDForward(defRT->mask, defRT->mask, defRT->chunk_dim);
+		activationSIGMOIDForward(mask, mask, chunk_dim);
 	
 		// deformable convolution
-		dcn_v2_cuda_forward(srcData, defRT->data_d,
-							defRT->bias2_d, defRT->ones_d1,
-							defRT->offset, defRT->mask,
-							reinterpret_cast<dnnType*>(outputs[0]), defRT->ones_d2,
-							defRT->kernelH, defRT->kernelW,
-							defRT->strideH, defRT->strideW,
-							defRT->paddingH, defRT->paddingW,
+		dcn_v2_cuda_forward(srcData, data_d,
+							bias2_d, ones_d1,
+							offset, mask,
+							reinterpret_cast<dnnType*>(outputs[0]), ones_d2,
+							kh, kw,
+							sh, sw,
+							ph, pw,
 							1, 1,
-							defRT->deformableGroup, 
-							defRT->preconv->input_dim.n, defRT->preconv->input_dim.c, defRT->preconv->input_dim.h, defRT->preconv->input_dim.w,
-							defRT->output_dim.n, defRT->output_dim.c, defRT->output_dim.h, defRT->output_dim.w,
-							defRT->chunk_dim);
+							deformableGroup, 
+							i_n, i_c, i_h, i_w,
+							o_n, o_c, o_h, o_w,
+							chunk_dim);
 
 		return 0;
 	}
 
 
 	virtual size_t getSerializationSize() override {
-		return 0;
+		return 16 * sizeof(int) + chunk_dim * 3 * sizeof(dnnType) + (i_c * o_c * kh * kw * 1 ) * sizeof(dnnType) +
+			   o_c * sizeof(dnnType) + height_ones * width_ones * sizeof(dnnType) + dim_ones * sizeof(dnnType);
 	}
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
+		tk::dnn::writeBUF(buf, chunk_dim);
+		tk::dnn::writeBUF(buf, kh);
+		tk::dnn::writeBUF(buf, kw);
+		tk::dnn::writeBUF(buf, sh);
+		tk::dnn::writeBUF(buf, sw);
+		tk::dnn::writeBUF(buf, ph);
+		tk::dnn::writeBUF(buf, pw);
+		tk::dnn::writeBUF(buf, deformableGroup);
+		tk::dnn::writeBUF(buf, i_n);
+		tk::dnn::writeBUF(buf, i_c);
+		tk::dnn::writeBUF(buf, i_h);
+		tk::dnn::writeBUF(buf, i_w);
+		tk::dnn::writeBUF(buf, o_n);
+		tk::dnn::writeBUF(buf, o_c);
+		tk::dnn::writeBUF(buf, o_h);
+		tk::dnn::writeBUF(buf, o_w);
+		dnnType *aus = new dnnType[chunk_dim*2];
+		checkCuda( cudaMemcpy(aus, offset, sizeof(dnnType)*2*chunk_dim, cudaMemcpyDeviceToHost) );
+        for(int i=0; i<chunk_dim*2; i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
+		aus = new dnnType[chunk_dim];
+		checkCuda( cudaMemcpy(aus, mask, sizeof(dnnType)*chunk_dim, cudaMemcpyDeviceToHost) );
+        for(int i=0; i<chunk_dim; i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
+		aus = new dnnType[(i_c * o_c * kh * kw * 1 )];
+		checkCuda( cudaMemcpy(aus, data_d, sizeof(dnnType)*(i_c * o_c * kh * kw * 1 ), cudaMemcpyDeviceToHost) );
+        for(int i=0; i<(i_c * o_c * kh * kw * 1 ); i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
+		aus = new dnnType[o_c];
+		checkCuda( cudaMemcpy(aus, bias2_d, sizeof(dnnType)*o_c, cudaMemcpyDeviceToHost) );
+        for(int i=0; i < o_c; i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
+		aus = new dnnType[height_ones * width_ones];
+		checkCuda( cudaMemcpy(aus, ones_d1, sizeof(dnnType)*height_ones * width_ones, cudaMemcpyDeviceToHost) );
+        for(int i=0; i<height_ones * width_ones; i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
+		aus = new dnnType[dim_ones];
+		checkCuda( cudaMemcpy(aus, ones_d2, sizeof(dnnType)*dim_ones, cudaMemcpyDeviceToHost) );
+        for(int i=0; i<dim_ones; i++)
+    		tk::dnn::writeBUF(buf, aus[i]);
+		free(aus);
 	}
 
+	int i_n, i_c, i_h, i_w;
+	int o_n, o_c, o_h, o_w;
 	int size;
+	int chunk_dim;
+	int kh, kw;
+	int sh, sw;
+	int ph, pw;
+	int deformableGroup;
+	int height_ones;
+	int width_ones;
+	int dim_ones;
+		
+	dnnType *data_d;
+    dnnType *bias2_d;
+	dnnType *ones_d1;
+	dnnType * offset;
+	dnnType * mask;
+	dnnType *ones_d2;
+	
+	
 	tk::dnn::DeformConv2d *defRT;
 };

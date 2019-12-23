@@ -61,6 +61,7 @@ bool Network::addLayer(Layer *l) {
     if(num_layers == MAX_LAYERS)
         return false;
     
+    l->id = num_layers;
     layers[num_layers++] = l;
     return true;
 }
