@@ -291,31 +291,23 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE) ptype = PoolingType::kAVERAGE;
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE_EXCLUDE_PADDING) ptype = PoolingType::kMAX_AVERAGE_BLEND;
 
-    IPoolingLayer *lRT = networkRT->addPooling(*input, 
-        ptype, DimsHW{l->winH, l->winW});
+
+    if(l->input_dim.h % 2 == 1 && l->input_dim.w % 2 == 1)
+    {
+      IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h+1,l->output_dim.w+1 );
+      IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+      checkNULL(lRT);
+      lRT->setName( "Resize" );
+
+      input = lRT->getOutput(0);
+    }
+
+    IPoolingLayer *lRT = networkRT->addPooling(*input, ptype, DimsHW{l->winH, l->winW});
     checkNULL(lRT);
 
     lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
     lRT->setStride(DimsHW{l->strideH, l->strideW});
-
-    
-    ITensor *t = lRT->getOutput(0);
-    // for(int j=0; j<t->getDimensions().nbDims; j++) {
-    //         std::cout<<t->getDimensions().d[j]<<" ";
-    //     }
-    //     std::cout<<" (TensorRT)\n";
-
-    IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h,l->output_dim.w );
-    IPluginLayer *lRT1 = networkRT->addPlugin(&t, 1, *plugin);
-    checkNULL(lRT1);
-
-    // ITensor *t1 = lRT1->getOutput(0);
-    // for(int j=0; j<t1->getDimensions().nbDims; j++) {
-    //         std::cout<<t1->getDimensions().d[j]<<" ";
-    //     }
-    //     std::cout<<" (TensorRT after resize )\n";
-
-    return lRT1;
+    return lRT;
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
@@ -551,7 +543,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         return r;
     } 
 
-    if(name.find("Pooling") == 0) {
+    if(name.find("Resize") == 0) {
         ResizeLayerRT *r = new ResizeLayerRT(readBUF<int>(buf), //o_c
                                             readBUF<int>(buf), //o_h
                                             readBUF<int>(buf)); //o_w

@@ -25,8 +25,6 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     int h = input_dim.h;
     int w = input_dim.w;
     int l = input_dim.l;
-
-    printf("before: %d %d\n", h, w);
     
 
     poolOn3d = false;
@@ -64,8 +62,6 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
 
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
                 net->tensorFormat, net->dataType, n, c, h, w) );
-
-    printf("after: %d %d\n", h, w);
        
     output_dim.n = n;
     output_dim.c = c;

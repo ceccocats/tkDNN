@@ -24,8 +24,8 @@ Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_
         readBinaryFile(fname_weights, n_masks, &mask_h, &mask_d, seek);
         seek += n_masks;
         readBinaryFile(fname_weights, n_masks*num*2, &bias_h, &bias_d, seek);
-        for(int i=0; i<n_masks*num*2; i++)
-            printf("%f\n", bias_h[i]);
+        //for(int i=0; i<n_masks*num*2; i++)
+            //printf("%f\n", bias_h[i]);
     }
 
     // init default classes name

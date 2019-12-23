@@ -17,7 +17,7 @@ __global__ void resize_kernel(  int i_N,float *x, int i_w, int i_h, int i_c,
     int out_c = i%o_c;
     i = i/o_c;
 
-    //copying last column/last row
+    //copying last column/last row as padding
     int in_index = ((i*i_c + MIN(out_c,i_c-1))*i_h +  MIN(out_h,i_h-1))*i_w + MIN(out_w, i_w-1);
     out[out_index] = x[in_index];
 }

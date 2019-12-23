@@ -17,8 +17,8 @@ void Conv2d::initCUDNN(bool back) {
         idim = output_dim;
         odim = input_dim;
     }
-    idim.print();
-    odim.print();
+    //idim.print();
+    //odim.print();
 
     checkCUDNN( cudnnCreateFilterDescriptor(&filterDesc) );
     checkCUDNN( cudnnCreateConvolutionDescriptor(&convDesc) );
