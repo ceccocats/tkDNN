@@ -8,3 +8,4 @@ build/
 *.h5
 *.tar.gz
 *.weights
+.idea/
