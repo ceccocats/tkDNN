@@ -3,9 +3,10 @@ tkDNN is a Deep Neural Network library built with cuDNN primitives specifically 
 The main scope is to do high performance inference on already trained models.
 
 this branch actually work on every NVIDIA GPU that support the dependencies:
-* CUDA 9
-* CUDNN 7.105
-* TENSORRT 4.02
+* CUDA 10.0
+* CUDNN 7.603
+* TENSORRT 6.01
+* OPENCV 4.1
 
 ## Workflow
 The recommended workflow follow these step:
@@ -48,5 +49,3 @@ this will genereate a yolo3_berkeley.rt file that can be used for live detection
 ./yolo3_demo                               # launch detection on a demo video
 ./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
-
-

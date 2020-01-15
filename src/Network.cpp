@@ -18,10 +18,6 @@ Network::Network(dataDim_t input_dim) {
     dataType = CUDNN_DATA_FLOAT;
     tensorFormat = CUDNN_TENSOR_NCHW;
     dontLoadWeights = false;
-
-    checkCUDNN( cudnnCreate(&cudnnHandle) );
-    checkERROR( cublasCreate(&cublasHandle) );
-
     num_layers = 0;
 
     fp16 = false;
@@ -39,6 +35,11 @@ Network::Network(dataDim_t input_dim) {
         std::cout<<COL_REDB<<"!! FP16 INERENCE ENABLED !!"<<COL_END<<"\n";
     if(dla)
         std::cout<<COL_GREENB<<"!! DLA INERENCE ENABLED !!"<<COL_END<<"\n";
+
+
+    checkCUDNN( cudnnCreate(&cudnnHandle) );
+    checkERROR( cublasCreate(&cublasHandle) );
+
 }
 
 Network::~Network() {
