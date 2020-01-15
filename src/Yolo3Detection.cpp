@@ -94,6 +94,8 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
         netRT->infer(dim, input_d);
         TIMER_STOP
         dim.print();
+    
+        stats.push_back(t_ns);
     }
     
     TIMER_START

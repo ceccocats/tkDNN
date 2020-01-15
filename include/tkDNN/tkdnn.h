@@ -5,4 +5,4 @@
 #include "Layer.h"
 #include "NetworkRT.h"
 
-#define TKDNN_VERSION 300
+#define TKDNN_VERSION 400
