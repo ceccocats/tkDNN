@@ -68,7 +68,7 @@ void *readVideoCapture(void *x_void_ptr)
 
     // compute fps and find camera's clock
     double shift, mean_time = 0;
-    std::cout << "Frames per second using video.get(CV_CAP_PROP_FPS) : " << cap.get(CV_CAP_PROP_FPS) << std::endl;
+    std::cout << "Frames per second using video.get(cv::CAP_PROP_FPS) : " << cap.get(cv::CAP_PROP_FPS) << std::endl;
     std::cout << "readVideoCapture computes frame rate...\n";
     // //compute frame rate
     int i = 0;
@@ -128,7 +128,7 @@ void *readVideoCapture(void *x_void_ptr)
 
         // std::cout<< "CV_CAP_PROP_POS_MSEC:   "<< cap.get( cv::CAP_PROP_POS_MSEC) <<std::endl;
         // std::cout<< "CV_CAP_PROP_POS_FRAMES:  "<< cap.get( cv::CAP_PROP_POS_FRAMES) <<std::endl;  // <-- the v4l2 'sequence' field
-        // std::cout<< "CV_CAP_PROP_FPS:  "<< cap.get( cv::CAP_PROP_FPS)<<std::endl;
+        // std::cout<< "cv::CAP_PROP_FPS:  "<< cap.get( cv::CAP_PROP_FPS)<<std::endl;
         // std::cout << "Format: " << cap.get(CV_CAP_PROP_FORMAT) << "\n";
         // CAP_PROP_POS_MSEC Current position of the video file in milliseconds or video capture timestamp.
         std::cout << "id: " << cap.get(cv::CAP_PROP_POS_MSEC) << std::endl;
@@ -368,8 +368,8 @@ void *computationTask(void *x_void_ptr)
         // if(!first_iteration)
         // {
         //     // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB)
-        //     cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-        //     cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+        //     cv::cvtColor(pre_canny, pre_canny_RGB, cv::COLOR_GRAY2RGB);
+        //     cv::cvtColor(canny, canny_RGB, cv::COLOR_GRAY2RGB);
         //     disparity_frame = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr, 999, 0);
         //     std::cout<<"size: "<<disparity_frame.rows<<" - "<<disparity_frame.cols<<std::endl;
         //     if (disparity_frame.rows == 0 || disparity_frame.cols == 0)
@@ -394,8 +394,8 @@ void *computationTask(void *x_void_ptr)
         //     // step_t_segmentation = end_t_segmentation;
 
         //     // //frame box disparity on the preprocessed image
-        //     // cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-        //     // cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+        //     // cv::cvtColor(pre_canny, pre_canny_RGB, cv::COLOR_GRAY2RGB);
+        //     // cv::cvtColor(canny, canny_RGB, cv::COLOR_GRAY2RGB);
         //     // frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr);
         //     // // reset pre_rois for the new roi of the current frame
         //     // pre_rois.erase(pre_rois.begin(), pre_rois.end());

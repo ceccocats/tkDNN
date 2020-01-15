@@ -39,6 +39,8 @@ file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} -lcudnn -lnvinfer ${OpenCV_LIBS} -lgdal)
 
 file(GLOB class_SRC "src/class_src/*.cpp")
+list(REMOVE_ITEM class_SRC "src/class_src/boxDetection.cpp")
+
 set(class_LIBS ${OpenCV_LIBS} -lgdal yaml-cpp python2.7)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O3")

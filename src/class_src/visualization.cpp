@@ -200,7 +200,7 @@ void *detectionFrame(void *x_void_ptr)
                 // assert (camera_p[0].x < original_frame_loc.cols);
                 // assert (camera_p[0].y < original_frame_loc.rows);
                 if (camera_p[0].x < original_frame_loc.cols && camera_p[0].y < original_frame_loc.rows && camera_p[0].x >= 0 && camera_p[0].y >= 0)
-                    cv::circle(original_frame_loc, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                    cv::circle(original_frame_loc, cv::Point(camera_p[0].x, camera_p[0].y), 3.0, cv::Scalar(t.r_, t.g_, t.b_), cv::FILLED, 8, 0);
             }
         }
 
@@ -259,7 +259,7 @@ void *topviewFrame(void *x_void_ptr)
                 gc.enu2Geodetic(t.pred_list_[p].x_, t.pred_list_[p].y_, 0, &lat, &lon, &alt);
                 coord2pixel(lat, lon, pix_x, pix_y, adfGeoTransform);
                 if (pix_x < frame_top.cols && pix_y < frame_top.rows && pix_x >= 0 && pix_y >= 0)
-                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), CV_FILLED, 8, 0);
+                    cv::circle(frame_top, cv::Point(pix_x, pix_y), 7.0, cv::Scalar(t.r_, t.g_, t.b_), cv::FILLED, 8, 0);
             }
         }
         //outputVideo<< frame_top;
@@ -312,7 +312,7 @@ void *disparityFrame(void *x_void_ptr)
             //preprocessing frame
             step_t = std::chrono::steady_clock::now();
             // src_gray
-            canny_img = img_laplacian(frame_loc, 0);
+            //canny_img = img_laplacian(frame_loc, 0);
             cv::Canny(canny_img, canny, 100, 100 * 2);
             // sprintf(buf_frame_crop_name,"../demo/demo/data/img_disparity/%d_%d_canny.jpg",frame_nbr_loc, 999);
             // cv::imwrite(buf_frame_crop_name, canny);
@@ -325,9 +325,9 @@ void *disparityFrame(void *x_void_ptr)
             if (!first_iteration)
             {
                 // backtorgb = cv::cvtColor(pre_canny,cv::COLOR_GRAY2RGB)
-                cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-                cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
-                disparity_frame = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr_loc, 999, 0);
+                cv::cvtColor(pre_canny, pre_canny_RGB, cv::COLOR_GRAY2RGB);
+                cv::cvtColor(canny, canny_RGB, cv::COLOR_GRAY2RGB);
+                //disparity_frame = frame_disparity(pre_canny_RGB, canny_RGB, frame_nbr_loc, 999, 0);
                 // std::cout<<"size: "<<disparity_frame.rows<<" - "<<disparity_frame.cols<<std::endl;
                 // if (disparity_frame.rows == 0 || disparity_frame.cols == 0)
                 //     return -1;
@@ -351,8 +351,8 @@ void *disparityFrame(void *x_void_ptr)
                 // step_t_segmentation = end_t_segmentation;
 
                 // //frame box disparity on the preprocessed image
-                // cv::cvtColor(pre_canny, pre_canny_RGB, CV_GRAY2RGB);
-                // cv::cvtColor(canny, canny_RGB, CV_GRAY2RGB);
+                // cv::cvtColor(pre_canny, pre_canny_RGB, cv::COLOR_GRAY2RGB);
+                // cv::cvtColor(canny, canny_RGB, cv::COLOR_GRAY2RGB);
                 // frame_box_disparity(pre_canny_RGB, canny_RGB, pre_rois, frame_nbr_loc);
                 // // reset pre_rois for the new roi of the current frame
                 // pre_rois.erase(pre_rois.begin(), pre_rois.end());

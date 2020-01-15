@@ -7,7 +7,7 @@
 
 //saliency
 #include <opencv2/core/utility.hpp>
-#include <opencv2/saliency.hpp>
+//#include <opencv2/saliency.hpp>
 #include <opencv2/highgui.hpp>
 
 #include <chrono>
