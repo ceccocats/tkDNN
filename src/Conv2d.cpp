@@ -117,7 +117,7 @@ dnnType* Conv2d::infer(dataDim_t &dim, dnnType* srcData) {
             dstTensorDesc, dstData, dstTensorDesc, 
             dstData, biasTensorDesc, //same tensor descriptor as bias 
             scales_d, bias_d, mean_d, variance_d, 
-            CUDNN_BN_MIN_EPSILON);
+            TKDNN_BN_MIN_EPSILON);
     }
     //update data dimensions    
     dim = output_dim;
