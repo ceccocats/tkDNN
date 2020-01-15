@@ -34,7 +34,7 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         seek += outputs;
         readBinaryFile(weights_path.c_str(), outputs, &variance_h, &variance_d, seek);
 
-        float eps = CUDNN_BN_MIN_EPSILON;
+        float eps = TKDNN_BN_MIN_EPSILON;
 
         power_h = new dnnType[outputs];
         for (int i = 0; i < outputs; i++)

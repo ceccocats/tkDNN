@@ -120,11 +120,11 @@ dnnType *Conv2d::infer(dataDim_t &dim, dnnType *srcData)
         float one = 1;
         float zero = 0;
         cudnnBatchNormalizationForwardInference(net->cudnnHandle,
-                                                CUDNN_BATCHNORM_SPATIAL, &one, &zero,
-                                                dstTensorDesc, dstData, dstTensorDesc,
-                                                dstData, biasTensorDesc, //same tensor descriptor as bias
-                                                scales_d, bias_d, mean_d, variance_d,
-                                                CUDNN_BN_MIN_EPSILON);
+            CUDNN_BATCHNORM_SPATIAL, &one, &zero, 
+            dstTensorDesc, dstData, dstTensorDesc, 
+            dstData, biasTensorDesc, //same tensor descriptor as bias 
+            scales_d, bias_d, mean_d, variance_d, 
+            TKDNN_BN_MIN_EPSILON);
     }
     //update data dimensions
     dim = output_dim;
