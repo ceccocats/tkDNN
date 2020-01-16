@@ -49,4 +49,4 @@ this will genereate a yolo3_berkeley.rt file that can be used for live detection
 ./yolo3_demo                               # launch detection on a demo video
 ./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
-![Demo preview](https://github.com/ceccocats/tkDNN/releases/download/v0.4/demo.gif)
+![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
