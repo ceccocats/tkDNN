@@ -292,7 +292,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE_EXCLUDE_PADDING) ptype = PoolingType::kMAX_AVERAGE_BLEND;
 
 
-    if(l->input_dim.h % 2 == 1 && l->input_dim.w % 2 == 1)
+    // if(l->input_dim.h % 2 == 1 && l->input_dim.w % 2 == 1)
+    if(l->input_dim.h == l->output_dim.h && l->input_dim.w == l->output_dim.w)
     {
       IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h+1,l->output_dim.w+1 );
       IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
@@ -322,6 +323,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
 
     } else if(l->act_mode == CUDNN_ACTIVATION_RELU) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
+        checkNULL(lRT);
+        return lRT;
+    } else if(l->act_mode == CUDNN_ACTIVATION_SIGMOID) {
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kSIGMOID);
         checkNULL(lRT);
         return lRT;
     

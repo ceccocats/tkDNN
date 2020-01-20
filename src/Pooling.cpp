@@ -7,8 +7,8 @@ namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   int paddingH, int paddingW,
-                  tkdnnPoolingMode_t pool_mode) : 
-    Layer(net) {
+                  tkdnnPoolingMode_t pool_mode, bool final) : 
+    Layer(net, final) {
 
     this->winH = winH;
     this->winW = winW;
@@ -53,10 +53,17 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     //compute w and h as in darknet
     int padH = paddingH == 0? winH -1 : paddingH;
     int padW = paddingW == 0? winW -1 : paddingW;
-
-    h = (h + padH - winH)/strideH +1;
-    w =  (w + padW - winW)/strideW +1;
-
+    
+    if(final){
+        h = (h + padH - winH)/strideH +1 +1;
+        w =  (w + padW - winW)/strideW +1 +1;
+    }
+    else{
+        h = (h + padH - winH)/strideH +1;
+        w =  (w + padW - winW)/strideW +1;
+    }
+    
+    
     // h = (h + winH*this->paddingH)/strideH;
     // w = (w + winW*this->paddingW)/strideW;
 

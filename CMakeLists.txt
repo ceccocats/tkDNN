@@ -27,7 +27,7 @@ if(NVINFER STREQUAL "NVINFER-NOTFOUND")
 endif()
 
 # compile
-file(GLOB tkdnn_CUSRC "src/kernels/*.cu")
+file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/*.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 
