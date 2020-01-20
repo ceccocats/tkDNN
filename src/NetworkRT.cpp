@@ -275,18 +275,18 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     if(l->act_mode == ACTIVATION_LEAKY) {
         //std::cout<<"New plugin LEAKY\n";
         
-        /*
+#if NV_TENSORRT_MAJOR < 6                
         // plugin version
         IPlugin *plugin = new ActivationLeakyRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-        */
-
+#else 
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
         lRT->setAlpha(0.1);
         checkNULL(lRT);
         return lRT;
+#endif
 
     } else if(l->act_mode == CUDNN_ACTIVATION_RELU) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
