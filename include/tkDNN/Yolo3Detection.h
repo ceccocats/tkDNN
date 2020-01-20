@@ -40,6 +40,9 @@ class Yolo3Detection {
         // this is filled with results
         std::vector<tk::dnn::box> detected;
 
+        // keep track of inference times (ms)
+        std::vector<double> stats;
+
         Yolo3Detection() {}
 
         virtual ~Yolo3Detection() {}
