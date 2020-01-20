@@ -101,6 +101,13 @@ int main(int argc, char *argv[]) {
     }
 
     std::cout<<"detection end\n";   
+
+
+    std::cout<<COL_GREENB<<"\n\nTime stats:\n";
+    std::cout<<"Min: "<<*std::min_element(yolo.stats.begin(), yolo.stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(yolo.stats.begin(), yolo.stats.end())<<" ms\n";    
+    double mean = 0; for(int i=0; i<yolo.stats.size(); i++) mean += yolo.stats[i]; mean /= yolo.stats.size();
+    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;    
     return 0;
 }
 
