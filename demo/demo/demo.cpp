@@ -7,6 +7,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/videoio.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 // #include "Yolo3Detection.h"
@@ -48,9 +49,9 @@ int main(int argc, char *argv[]) {
 
     cv::VideoWriter resultVideo;
     if(SAVE_RESULT) {
-        int w = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-        int h = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-        resultVideo.open("result.mp4", CV_FOURCC('M','P','4','V'), 30, cv::Size(w, h));
+        int w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+        int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
     }
 
     cv::Mat frame;

@@ -113,7 +113,7 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
                                                 dstTensorDesc, dstData, dstTensorDesc,
                                                 dstData, biasTensorDesc, //same tensor descriptor as bias
                                                 scales_d, bias_d, mean_d, variance_d,
-                                                CUDNN_BN_MIN_EPSILON) );
+                                                TKDNN_BN_MIN_EPSILON) );
     }
 }
 
