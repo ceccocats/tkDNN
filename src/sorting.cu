@@ -45,7 +45,7 @@ struct threshold : public thrust::binary_function<float,float,float>
 {
   __host__ __device__
   float operator()(float x, float y) { 
-    float toll = 1e-6; 
+    double toll = 1e-6; 
     if(fabsf(x-y)>toll) 
         return 0.0f; 
     else

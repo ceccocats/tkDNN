@@ -55,8 +55,8 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     int padW = paddingW == 0? winW -1 : paddingW;
     
     if(final){
-        h = (h + padH - winH)/strideH +1 +1;
-        w =  (w + padW - winW)/strideW +1 +1;
+        h = (h + 2*paddingH - winH)/strideH +1 ;
+        w =  (w + 2*paddingW - winW)/strideW +1;
     }
     else{
         h = (h + padH - winH)/strideH +1;

@@ -1,21 +1,13 @@
 #include "kernels.h"
-
-__device__ 
-__forceinline__ 
-double sigmoid (double a)
-{
-    return 1.0 / (1.0 + exp (-a));
-}
+#include <math.h>
 
 
 __global__
 void activation_sigmoid(dnnType *input, dnnType *output, int size) {
 
-    int stride = gridDim.x * blockDim.x;
-    int tid = blockDim.x * blockIdx.x + threadIdx.x;
-    for (int i = tid; i < size; i += stride) {
-        output[i] = sigmoid (input[i]);
-    }
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < size)
+        output[i] = 1.0f / (1.0f + exp (-input[i]));
  }
 
 
