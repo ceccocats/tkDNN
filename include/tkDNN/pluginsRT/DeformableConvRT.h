@@ -90,7 +90,6 @@ public:
 	}
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-std::cout<<"LOL\n";
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *output_conv = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
 

@@ -93,6 +93,9 @@ class CenternetDetection {
         // draw
         std::vector<std::string> coco_class_name;
 
+        // keep track of inference times (ms)
+        std::vector<double> stats;
+        
         CenternetDetection() {}
 
         virtual ~CenternetDetection() {}

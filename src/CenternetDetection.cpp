@@ -229,58 +229,50 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     src.at<float>(2,1)=src.at<float>(1,1) + (src.at<float>(0,0)-src.at<float>(1,0) );
     dst.at<float>(2,0)=dst.at<float>(1,0) + (-dst.at<float>(0,1)+dst.at<float>(1,1) );
     dst.at<float>(2,1)=dst.at<float>(1,1) + (dst.at<float>(0,0)-dst.at<float>(1,0) );
-    // std::cout<<"src: "<<src<<std::endl;
-    // std::cout<<"dst: "<<dst<<std::endl;
+    
     cv::Mat trans = cv::getAffineTransform( src, dst );
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME getAffinetr : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME gett affine trans: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
+    
+
     resize(imageORIG, imageF, cv::Size(new_width, new_height));
     sz = imageF.size();
     std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
-    cv::warpAffine(imageF, imageF, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
     
+
+    cv::warpAffine(imageF, imageF, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
+    
 
     sz = imageF.size();
     std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME convert_to: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
-    std::cout<<"mean: "<<mean<<", std: "<<stddev<<std::endl;
-
-    dim2 = dim;
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME before split: " << std::chrono::duration_cast<std::chrono::microseconds>(end_t - step_t).count() << " us" << std::endl;
-    step_t = end_t;
-
-    //split channels
-    cv::split(imageF,bgr);//split source
     
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME split: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME convert: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
+    
+    dim2 = dim;
+    
+    //split channels
+    cv::split(imageF,bgr);//split source
     
     for(int i=0; i<3; i++){
         bgr[i] = bgr[i] - mean[i];
         bgr[i] = bgr[i] / stddev[i];
     }
 
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME mean std: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
-
     //write channels
     for(int i=0; i<dim2.c; i++) {
         int idx = i*imageF.rows*imageF.cols;
         int ch = dim2.c-3 +i;
-        std::cout<<"i: "<<i<<", idx: "<<idx<<", ch: "<<ch<<std::endl;
+        // std::cout<<"i: "<<i<<", idx: "<<idx<<", ch: "<<ch<<std::endl;
         memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
     }
 
@@ -292,241 +284,85 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
         netRT->infer(dim2, input_d);
         TIMER_STOP
         dim2.print();
+
+        stats.push_back(t_ns);
     }
     // checkResult(dim2.tot(), input_h, input);
-    std::cout<<" --- pre-process ---\n";
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
+    step_t = std::chrono::steady_clock::now();
+    
     // ------------------------------------ process --------------------------------------------
     
     rt_out[0] = (dnnType *)netRT->buffersRT[1];
     rt_out[1] = (dnnType *)netRT->buffersRT[2];
     rt_out[2] = (dnnType *)netRT->buffersRT[3]; 
     rt_out[3] = (dnnType *)netRT->buffersRT[4]; 
-
     activationSIGMOIDForward(rt_out[0], rt_out[0], dim_hm.tot());
     checkCuda( cudaDeviceSynchronize() );
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME sigmoid : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
 
     subtractWithThreshold(rt_out[0], rt_out[0] + dim_hm.tot(), rt_out[1], rt_out[0]);
 
-    float *prova;
-    checkCuda( cudaMallocHost(&prova, K*sizeof(float)) ); 
-    checkCuda( cudaMemcpy(prova, rt_out[0], K*sizeof(float), cudaMemcpyDeviceToHost) );
-    std::cout<<"heat:\n";
-    for(int i=0; i<K; i++)
-        std::cout<<prova[i]<<" ";
-    std::cout<<"\n\n\n";
-    // for(int i=0; i < dim_hm.tot(); i++){
-    //     if(hm_h[i]-hmax_h[i] > toll || hm_h[i]-hmax_h[i] < -toll){
-    //         hm_h[i] = 0.0f;
-    //     }
-    // }
-    // checkCuda( cudaFreeHost(hmax_h) );
-    std::cout<<" --- hmax ---\n";
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME threshold: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
     // ----------- nms end
     // ----------- topk  
       
-
-    // thrust::device_vector<int> ids_d;
-    // int ids[dim_hm.h * dim_hm.w];
-    // for(int i=0; i<dim_hm.h * dim_hm.w; i++){
-    //     ids[i]=i;
-    // }
-    // std::vector<int> ids2( dim_hm.h * dim_hm.w );
-    // for(int i=0; i<dim_hm.h * dim_hm.w; i++){
-    //     ids2[i]=i;
-    // }
-    // int ids2[dim_hm.h * dim_hm.w];
-    
-    // checkCuda( cudaMemcpy(ids2_d, ids2, dim_hm.h * dim_hm.w*sizeof(int), cudaMemcpyHostToDevice) );
     if(K > dim_hm.h * dim_hm.w){
         printf ("Error topk (K is too large)\n");
         return;
     }
-
     
     checkCuda( cudaMemcpy(ids_d, ids_, dim_hm.c * dim_hm.h * dim_hm.w*sizeof(int), cudaMemcpyHostToDevice) );    
-    // checkCuda( cudaMemcpy(ids_2d, ids_2, dim_hm.h * dim_hm.w*sizeof(int), cudaMemcpyHostToDevice) );    
-    
-    
-    // sortAndTopKonDevice(rt_out[0], ids_2d, topk_scores, topk_inds_ , topk_ys_ , topk_xs_ ,dim_hm.h * dim_hm.w, K, dim_hm.c);
-    // checkCuda( cudaDeviceSynchronize() );
 
-    // for(int i=0; i<dim_hm.c; i++){
-    //     // get the hm->output_dim.h * hm->output_dim.w elements for each channel and sort it. Then find the first 100 elements
-    //     // memcpy(ids2, ids, dim_hm.h * dim_hm.w);
-    //     sort(rt_out[0]+ i * dim_hm.h * dim_hm.w,
-    //             rt_out[0]+ i * dim_hm.h * dim_hm.w + dim_hm.h * dim_hm.w,
-    //             ids_d);
-    //     // end_t = std::chrono::steady_clock::now();
-    //     // std::cout << " TIME sort channel "<<i<<": " << std::chrono::duration_cast<std::chrono::microseconds>(end_t - step_t).count() << " ms" << std::endl;
-    //     // step_t = end_t;
-    //     topk(rt_out[0]+ i * dim_hm.h * dim_hm.w, ids_d, K, topk_scores + i*K,
-    //         topk_inds_ + i*K, topk_ys_ + i*K, topk_xs_ + i*K);
-    //     // checkCuda( cudaMemcpy(ids2, ids2_d, dim_hm.h * dim_hm.w*sizeof(int), cudaMemcpyDeviceToHost) );
-
-    //     // for (int j=0; j<dim_hm.h * dim_hm.w; j++) {
-    //     //     topk_scores[i*K + count] = hm_h[i * dim_hm.h * dim_hm.w + ids2[j]];
-    //     //     topk_inds_[i*K +count] = ids2[j];
-    //     //     topk_ys_[i*K +count] = (int)(ids2[j] / width);
-    //     //     topk_xs_[i*K +count] = (int)(ids2[j] % width);
-    //     //     if(++count == K)
-    //     //         break;
-    //     // }
-    //     // end_t = std::chrono::steady_clock::now();
-    //     // std::cout << " TIME topk channel "<<i<<": " << std::chrono::duration_cast<std::chrono::microseconds>(end_t - step_t).count() << " ms" << std::endl;
-    //     // step_t = end_t;
-    
-    // }
-    // checkCuda( cudaFree(ids_d ));
-    std::cout<<" --- a 100 ---\n";
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME sort topk on 80 channel: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
-    // final
-
-    // sort(topk_scores,
-    //     topk_scores +  dim_hm.c * K,
-    //     topk_inds_);
     sort(rt_out[0],
             rt_out[0]+dim_hm.tot(),
             ids_d);
     checkCuda( cudaDeviceSynchronize() );   
-    int *topk_inds;
-    checkCuda( cudaMallocHost(&topk_inds, K*sizeof(int)) ); 
-    // checkCuda( cudaMemcpy(topk_inds, ids_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    // for(int i=0; i<K; i++)
-    //     std::cout<<topk_inds[i]<<" ";
-    // std::cout<<"\n\n\n";
-
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME sort channel: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME sort: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
 
-    // topk(topk_scores, topk_inds_, K, scores_d,
-    //     topk_inds_d, topk_ys_d, topk_xs_d);
     topk(rt_out[0], ids_d, K, scores_d,
         topk_inds_d, topk_ys_d, topk_xs_d);
-    checkCuda( cudaDeviceSynchronize() );
+    checkCuda( cudaDeviceSynchronize() );    
+
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME topk channel: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME topk: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
-    
-    
-    checkCuda( cudaMemcpy(topk_inds, topk_inds_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    for(int i=0; i<K; i++)
-        std::cout<<topk_inds[i]<<" ";
-    std::cout<<std::endl;
-    
-    
+        
     checkCuda( cudaMemcpy(scores, scores_d, K *sizeof(float), cudaMemcpyDeviceToHost) );
-    std::cout<<"\n\nscores:\n";
-    for(int i=0; i<K;i++)
-        std::cout<<scores[i]<<" ";
-    std::cout<<std::endl;
-    
-    
-    std::cout<<"\n\n\n";
+
     topKxyclasses(topk_inds_d, topk_inds_d+K, K, width, dim_hm.w*dim_hm.h, clses_d, inttopk_xs_d, inttopk_ys_d);
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME topk x y clses 2: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    step_t = end_t;
+
     checkCuda( cudaMemcpy(topk_xs_d, (float *)inttopk_xs_d, K*sizeof(float), cudaMemcpyDeviceToDevice) );
     checkCuda( cudaMemcpy(topk_ys_d, (float *)inttopk_ys_d, K*sizeof(float), cudaMemcpyDeviceToDevice) );
     
     checkCuda( cudaMemcpy(clses, clses_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    std::cout<<"\ntopk_ids: \n";
-    checkCuda( cudaMemcpy(topk_inds, topk_inds_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    for(int i=0; i<K; i++)
-        std::cout<<topk_inds[i]<<" ";
-    std::cout<<std::endl;
-    std::cout<<"\ntopk_clses: \n";
-    checkCuda( cudaMemcpy(topk_inds, clses_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    for(int i=0; i<K; i++)
-        std::cout<<topk_inds[i]<<" ";
-    std::cout<<std::endl;
-    std::cout<<"\nxs: \n";
-    checkCuda( cudaMemcpy(topk_inds, topk_xs_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    for(int i=0; i<K; i++)
-        std::cout<<topk_inds[i]<<" ";
-    std::cout<<std::endl;
-    std::cout<<"\nys: \n";
-    checkCuda( cudaMemcpy(topk_inds, topk_ys_d, K*sizeof(int), cudaMemcpyDeviceToHost) );
-    for(int i=0; i<K; i++)
-        std::cout<<topk_inds[i]<<" ";
-    std::cout<<std::endl;
-    // return;
-
-    // checkCuda( cudaDeviceSynchronize() );
-    // checkCuda( cudaFree(topk_scores) );
-    // checkCuda( cudaFree(topk_inds_) );
-    // checkCuda( cudaFree(topk_ys_) );
-    // checkCuda( cudaFree(topk_xs_) );
-
-
-    // checkCuda( cudaFree(scores_d) );
-    // checkCuda( cudaFree(topk_inds_d) );
-
-
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME clses topk 1 time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
+    
     // ----------- topk end 
     
-    // dnnType *reg_aus;
-    // checkCuda( cudaMallocHost(&reg_aus, dim_reg.tot()*sizeof(dnnType)) ); 
-    // checkCuda( cudaMemcpy(reg_aus, rt_out[3], dim_reg.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost) );    
-
-    // for(int i = 0; i < K; i++){
-    //     topk_xs[i] = topk_xs[i] + reg_aus[topk_inds[i]];
-    //     topk_ys[i] = topk_ys[i] + reg_aus[topk_inds[i]+dim_reg.h*dim_reg.w];
-    // }
     topKxyAddOffset(topk_inds_d, K, dim_reg.h*dim_reg.w, inttopk_xs_d, inttopk_ys_d, topk_xs_d, topk_ys_d, rt_out[3]);
     // checkCuda( cudaDeviceSynchronize() );
+    
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME add offset: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
-    // checkCuda( cudaFreeHost(reg_aus) );
-
-    // dnnType *wh_aus;
     
-    // checkCuda( cudaMemcpy(wh_aus, rt_out[2], dim_wh.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost) );    
     bboxes(topk_inds_d, K, dim_wh.h*dim_wh.w, topk_xs_d, topk_ys_d, rt_out[2], bbx0_d, bbx1_d, bby0_d, bby1_d);
     // checkCuda( cudaDeviceSynchronize() );
+    
     checkCuda( cudaMemcpy(bbx0, bbx0_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
     checkCuda( cudaMemcpy(bby0, bby0_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
     checkCuda( cudaMemcpy(bbx1, bbx1_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
     checkCuda( cudaMemcpy(bby1, bby1_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
-    // for(int i = 0; i < K; i++){
-    //     bboxes[i * 4] = topk_xs[i] - wh_aus[topk_inds[i]] / 2;
-    //     bboxes[i * 4 + 1] = topk_ys[i] - wh_aus[topk_inds[i]+dim_reg.h*dim_reg.w] / 2;
-    //     bboxes[i * 4 + 2] = topk_xs[i] + wh_aus[topk_inds[i]] / 2;
-    //     bboxes[i * 4 + 3] = topk_ys[i] + wh_aus[topk_inds[i]+dim_reg.h*dim_reg.w] / 2;
-    // }
-    // for(int i = 0; i < K; i++){
-    //     std::cout<<"-----\n(x0, y0) = ("<<bbx0<<", "<<bby0<<")\n(x1,y1) = ("<<bbx1<<", "<<bby1<<")\n";
-        
-    // }
-
-    // checkCuda( cudaFreeHost(wh_aus) );
-    // checkCuda( cudaFreeHost(topk_inds) );
-    // checkCuda( cudaFreeHost(topk_ys) );
-    // checkCuda( cudaFreeHost(topk_xs) );
-    std::cout<<" --- bboxes ---\n";
+    
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME bboxes: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
-    // servono [bboxes, scores, clses]
-    // checkCuda( cudaDeviceSynchronize() );
 
-    std::cout<<" --- process ---\n";
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
     // ---------------------------------- post-process -----------------------------------------
     
     // --------- ctdet_post_process
@@ -548,12 +384,13 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     
     cv::Mat trans2(cv::Size(3,2), CV_32F);
     trans2 = cv::getAffineTransform( dst, src );
+
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME getAffineTrans 2: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
+
     cv::Mat new_pt1(cv::Size(1,2), CV_32F);
-    cv::Mat new_pt2(cv::Size(1,2), CV_32F);
- 
+    cv::Mat new_pt2(cv::Size(1,2), CV_32F); 
 
     for(int i = 0; i<K; i++){
         new_pt1.at<float>(0,0)=static_cast<float>(trans2.at<double>(0,0))*bbx0[i] +
@@ -570,23 +407,18 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
                                 static_cast<float>(trans2.at<double>(1,1))*bby1[i] +
                                 static_cast<float>(trans2.at<double>(1,2))*1.0;
 
-        // std::cout<<"\n new: "<<new_pt1<<" - "<<new_pt2<<std::endl;
         target_coords[i*4] = new_pt1.at<float>(0,0);
         target_coords[i*4+1] = new_pt1.at<float>(0,1);
         target_coords[i*4+2] = new_pt2.at<float>(0,0);
         target_coords[i*4+3] = new_pt2.at<float>(0,1);
-        // std::cout<<new_pt1.at<float>(0,0)<<", "<<new_pt1.at<float>(0,1)<<", "<<new_pt2.at<float>(0,0)<<", "<<new_pt2.at<float>(0,1)<<std::endl;
-        // std::cout<<"target:cords "<<target_coords[i*4]<<" - "<<target_coords[i*4+1]<<std::endl; 
     }
-    
-    // int *classes;
-    
+        
     detected.clear();
     for(int i = 0; i<classes; i++){
         for(int j=0; j<K; j++)
             if(clses[j] == i){
                 if(scores[j] > thresh){
-                    std::cout<<"th: "<<scores[j]<<" - cl: "<<clses[j]<<" i: "<<i<<std::endl;
+                    // std::cout<<"th: "<<scores[j]<<" - cl: "<<clses[j]<<" i: "<<i<<std::endl;
                     //add coco bbox
                     //det[0:4], i, det[4]
                     int x0   = target_coords[j*4];
@@ -607,10 +439,11 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
                 }
             }
     }
-    std::cout<<" --- post_process ---\n";
+    
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME detections: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
+
     std::cout<<"TOTAL: \n";
     TIMER_STOP
 }

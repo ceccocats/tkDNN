@@ -105,8 +105,11 @@ target_link_libraries(test_resnet101_cnet tkDNN)
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
 
-add_executable(yolo3_demo demo/demo/demo.cpp)
+add_executable(yolo3_demo demo/demo/demo_yolo3.cpp)
 target_link_libraries(yolo3_demo tkDNN)
+
+add_executable(centernet_demo demo/demo/demo_centernet.cpp)
+target_link_libraries(centernet_demo tkDNN)
 
 
 #-------------------------------------------------------------------------------
