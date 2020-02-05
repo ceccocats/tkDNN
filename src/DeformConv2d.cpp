@@ -76,8 +76,8 @@ DeformConv2d::~DeformConv2d() {
 
     checkCUDNN( cudnnDestroyTensorDescriptor(biasTensorDesc) );
     checkCuda( cudaFree(dstData) );
-    checkCuda( cudaFreeHost(ones_d1) );
-    checkCuda( cudaFreeHost(ones_d2) );
+    checkCuda( cudaFree(ones_d1) );
+    checkCuda( cudaFree(ones_d2) );
     checkCuda( cudaFree(offset) );
     checkCuda( cudaFree(mask) );
     checkCuda( cudaFree(output_conv) );
