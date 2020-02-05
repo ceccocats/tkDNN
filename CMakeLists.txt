@@ -114,6 +114,9 @@ target_link_libraries(yolo3_demo tkDNN)
 add_executable(centernet_demo demo/demo/demo_centernet.cpp)
 target_link_libraries(centernet_demo tkDNN)
 
+add_executable(map_demo demo/demo/map.cpp)
+target_link_libraries(map_demo tkDNN)
+
 
 #-------------------------------------------------------------------------------
 # Install
