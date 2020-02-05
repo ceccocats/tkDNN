@@ -85,7 +85,7 @@ class LayerWgs : public Layer {
 
 public:
     LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
-             std::string fname_weights, bool batchnorm = false, bool additional_bias = false, bool final = false); 
+             std::string fname_weights, bool batchnorm = false, bool additional_bias = false, bool final = false, bool deConv = false, int groups = 1); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -165,7 +165,7 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false);
+                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false, int groups = 1);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -173,6 +173,7 @@ public:
 
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
     bool deConv;
+    int groups;
 
 protected:
     cudnnFilterDescriptor_t filterDesc;
@@ -196,8 +197,8 @@ class DeConv2d : public Conv2d {
 public:
     DeConv2d( Network *net, int out_ch, int kernelH, int kernelW,
             int strideH, int strideW, int paddingH, int paddingW,
-            std::string fname_weights, bool batchnorm = false) :
-            Conv2d(net, out_ch, kernelH, kernelW, strideH, strideW, paddingH, paddingW, fname_weights, batchnorm, true) {}
+            std::string fname_weights, bool batchnorm = false, int groups = 1) :
+            Conv2d(net, out_ch, kernelH, kernelW, strideH, strideW, paddingH, paddingW, fname_weights, batchnorm, true, false, groups) {}
     virtual ~DeConv2d() {}
     virtual layerType_t getLayerType() { return LAYER_DECONV2D; };
 

@@ -8,8 +8,13 @@ namespace tk { namespace dnn {
 
 LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
                    int kh, int kw, int kl, 
-                   std::string fname_weights, bool batchnorm, bool additional_bias, bool final) : Layer(net, final) {
-
+                   std::string fname_weights, bool batchnorm, bool additional_bias, bool final, bool deConv, int groups) : Layer(net, final) {
+                       
+    if(deConv)
+        inputs = inputs/groups;
+    else
+        outputs = outputs/groups;    
+        
     this->inputs  = inputs;
     this->outputs = outputs;    
     this->weights_path  = std::string(fname_weights);

@@ -17,8 +17,6 @@ void Conv2d::initCUDNN(bool back) {
         idim = output_dim;
         odim = input_dim;
     }
-    //idim.print();
-    //odim.print();
 
     checkCUDNN( cudnnCreateFilterDescriptor(&filterDesc) );
     checkCUDNN( cudnnCreateConvolutionDescriptor(&convDesc) );
@@ -29,7 +27,7 @@ void Conv2d::initCUDNN(bool back) {
                                            net->tensorFormat, net->dataType, idim.n, idim.c, idim.h, idim.w) );
 
     checkCUDNN( cudnnSetFilter4dDescriptor(filterDesc,
-                                           net->dataType, net->tensorFormat, odim.c, idim.c,
+                                           net->dataType, net->tensorFormat, odim.c, idim.c/groups,
                                            kernelH, kernelW) );
 
     checkCUDNN( cudnnSetConvolution2dDescriptor(convDesc,
@@ -38,16 +36,20 @@ void Conv2d::initCUDNN(bool back) {
                                                 1,1, // upscale
                                                 CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT) );
 
+    checkCUDNN(  cudnnSetConvolutionGroupCount(convDesc,
+                                                groups) );
+
     // check dimension of convolution output
     dataDim_t tmpdim;
     checkCUDNN( cudnnGetConvolution2dForwardOutputDim(
             convDesc, srcTensor, filterDesc,
             &tmpdim.n, &tmpdim.c, &tmpdim.h, &tmpdim.w) );
+
     if(odim.n != tmpdim.n || odim.c != tmpdim.c || odim.h != tmpdim.h || odim.w != tmpdim.w) {
         std::cout<<"tkdim input: "; idim.print();
         std::cout<<"tkdim output: "; odim.print();
         std::cout<<"cudnndim: "; tmpdim.print();
-        FatalError("Eror conv dimension mismatch");
+        FatalError("Error conv dimension mismatch");
     }
 
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensor,
@@ -119,11 +121,10 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
 
 Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm, bool deConv, bool final) :
+                std::string fname_weights, bool batchnorm, bool deConv, bool final, int groups) :
     
     LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1, 
-             fname_weights, batchnorm, false, final) {
-
+             fname_weights, batchnorm, false, final, deConv, groups) {
     this->kernelH = kernelH;
     this->kernelW = kernelW;
     this->strideH = strideH;
@@ -131,6 +132,7 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     this->paddingH = paddingH;
     this->paddingW = paddingW;
     this->deConv = deConv;
+    this->groups = groups;
 
     if(!deConv) {
         output_dim.n = input_dim.n;
