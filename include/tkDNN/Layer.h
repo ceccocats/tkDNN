@@ -434,7 +434,7 @@ public:
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 256;
+    static const int MAX_DETECTIONS = 1024;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
     static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
 };
