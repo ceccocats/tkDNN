@@ -102,6 +102,9 @@ target_link_libraries(test_resnet101_cnet tkDNN)
 add_executable(test_dla34 tests/dla34/dla34.cpp)
 target_link_libraries(test_dla34 tkDNN)
 
+add_executable(test_dla34_cnet tests/dla34_cnet/dla34_cnet.cpp)
+target_link_libraries(test_dla34_cnet tkDNN)
+
 ################################################################################
 
 
