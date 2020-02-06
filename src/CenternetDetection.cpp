@@ -18,7 +18,7 @@ bool CenternetDetection::init(std::string tensor_path) {
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     
-    dim = tk::dnn::dataDim_t(1, 3, 224, 224, 1);
+    dim = tk::dnn::dataDim_t(1, 3, 512, 512, 1);
     const char *coco_class_name_[] = {
             "person", "bicycle", "car", "motorcycle", "airplane", 
             "bus", "train", "truck", "boat", "traffic light", "fire hydrant",
@@ -43,9 +43,12 @@ bool CenternetDetection::init(std::string tensor_path) {
     checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
     checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
 
-    dim_hm = tk::dnn::dataDim_t(1, 80, 56, 56, 1);
-    dim_wh = tk::dnn::dataDim_t(1, 2, 56, 56, 1);
-    dim_reg = tk::dnn::dataDim_t(1, 2, 56, 56, 1);
+    // dim_hm = tk::dnn::dataDim_t(1, 80, 56, 56, 1);
+    // dim_wh = tk::dnn::dataDim_t(1, 2, 56, 56, 1);
+    // dim_reg = tk::dnn::dataDim_t(1, 2, 56, 56, 1);
+    dim_hm = tk::dnn::dataDim_t(1, 80, 128, 128, 1);
+    dim_wh = tk::dnn::dataDim_t(1, 2, 128, 128, 1);
+    dim_reg = tk::dnn::dataDim_t(1, 2, 128, 128, 1);
 
     checkCuda( cudaMalloc(&topk_scores, dim_hm.c * K *sizeof(float)) );
     checkCuda( cudaMalloc(&topk_inds_, dim_hm.c * K *sizeof(int)) );      
@@ -93,6 +96,8 @@ bool CenternetDetection::init(std::string tensor_path) {
 
     mean << 0.408, 0.447, 0.47;
     stddev << 0.289, 0.274, 0.278;
+    // mean << 0.485, 0.456, 0.406;
+    // stddev << 0.229, 0.224, 0.225;
 }
 
 void CenternetDetection::testdog() {
@@ -104,8 +109,8 @@ void CenternetDetection::testdog() {
     imageORIG.convertTo(imageF, CV_32FC3, 1/255.0); 
     sz = imageF.size();
     std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
-    resize(imageF, imageF, cv::Size(256, 256));
-    const int cropSize = 224;
+    resize(imageF, imageF, cv::Size(512, 512));
+    const int cropSize = 512;
     const int offsetW = (imageF.cols - cropSize) / 2;
     const int offsetH = (imageF.rows - cropSize) / 2;
     const cv::Rect roi(offsetW, offsetH, cropSize, cropSize);
