@@ -104,7 +104,7 @@ int main()
 {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 224, 224, 1);
+    tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);
     tk::dnn::Network net(dim);
     tk::dnn::Layer *last1, *last2, *last3, *last4;
     tk::dnn::Layer *base1, *base2, *base3, *base4, *base5, *base6, *ida1, *ida2_1, *ida2_2, *ida3_1, *ida3_2, *ida3_3, *idaup_1, *idaup_2;

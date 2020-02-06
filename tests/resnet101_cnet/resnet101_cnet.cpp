@@ -187,7 +187,7 @@ int main()
 {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 224, 224, 1);
+    tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);
     tk::dnn::Network net(dim);
 
     tk::dnn::Conv2d conv1(&net, 64, 7, 7, 2, 2, 3, 3, conv1_bin, true);
