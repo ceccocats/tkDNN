@@ -138,7 +138,8 @@ void modulated_deformable_im2col_cuda(cudaStream_t stream,
 }
 
 
-void dcn_v2_cuda_forward(float *input, float *weight,
+void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle, 
+                         float *input, float *weight,
                          float *bias, float *ones,
                          float *offset, float *mask,
                          float *output, float *columns,
@@ -151,14 +152,7 @@ void dcn_v2_cuda_forward(float *input, float *weight,
                          const int out_n, const int out_c, const int out_h, const int out_w,
                          const int chunk_dim, cudaStream_t stream)
 {  
-  cublasStatus_t stat;
-  cublasHandle_t handle;
-  stat = cublasCreate(&handle);
-  if (stat != CUBLAS_STATUS_SUCCESS) {
-      printf ("CUBLAS initialization failed\n");
-      return;
-  }
-
+  // stat and handle have be moved out to preserve 2 - 6 milliseconds every 100. 
   const int channels = in_c;
   const int height = in_h;
   const int width = in_w;

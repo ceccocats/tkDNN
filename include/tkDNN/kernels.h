@@ -38,7 +38,8 @@ void modulated_deformable_im2col_cuda(cudaStream_t stream,
                                 const int dilation_h, const int dilation_w,
                                 const int deformable_group, float *data_col);
 
-void dcn_v2_cuda_forward(float *input, float *weight,
+void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle, 
+                         float *input, float *weight,
                          float *bias, float *ones,
                          float *offset, float *mask,
                          float *output, float *columns,
