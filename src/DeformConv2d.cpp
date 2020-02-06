@@ -31,16 +31,19 @@ void DeformConv2d::initCUDNN() {
     // kernel ones
     
     checkCuda( cudaMalloc(&ones_d1, (height_ones*width_ones)*sizeof(dnnType)) );
-    float aus1[height_ones*width_ones];
+    dnnType *aus1;
+    checkCuda( cudaMallocHost(&aus1, (height_ones*width_ones)*sizeof(dnnType)) );
     for(int i=0; i<height_ones*width_ones; i++)
         aus1[i]=1.0f;
     checkCuda( cudaMemcpy(ones_d1, aus1, (height_ones*width_ones)*sizeof(dnnType), cudaMemcpyHostToDevice) );
-    
+    checkCuda( cudaFreeHost(aus1) );
     checkCuda( cudaMalloc(&ones_d2, dim_ones*sizeof(dnnType)) );
-    float aus2[dim_ones];
+    dnnType *aus2;
+    checkCuda( cudaMallocHost(&aus2, dim_ones*sizeof(dnnType)) );
     for(int i=0; i<dim_ones; i++)
         aus2[i]=1.0f;
     checkCuda( cudaMemcpy(ones_d2, aus2, (dim_ones)*sizeof(dnnType), cudaMemcpyHostToDevice) );
+    checkCuda( cudaFreeHost(aus2) );
     checkCuda( cudaDeviceSynchronize() );
 }
 

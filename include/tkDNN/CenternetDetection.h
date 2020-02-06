@@ -73,14 +73,14 @@ class CenternetDetection {
         //processing
         float toll = 0.000001;
         int K = 100;
-        int width = 56;        // TODO
+        int width = 128;//56;        // TODO
     
     
     public:
         dnnType *rt_out[4];
 
-        float inp_height = 224;//512;
-        float inp_width = 224;//512;
+        float inp_height = 512;//224;//512;
+        float inp_width = 512;//224;//512;
     
         int classes = 80;
         int num = 0;
