@@ -9,6 +9,11 @@ namespace tk { namespace dnn {
 
 void DeformConv2d::initCUDNN() {
 
+    stat = cublasCreate(&handle);
+    if (stat != CUBLAS_STATUS_SUCCESS) {
+        printf ("CUBLAS initialization failed\n");
+        return;
+    }
     checkCUDNN( cudnnCreateTensorDescriptor(&biasTensorDesc) );
     checkCUDNN( cudnnSetTensor4dDescriptor(biasTensorDesc,
                                            net->tensorFormat, net->dataType,
@@ -84,6 +89,7 @@ DeformConv2d::~DeformConv2d() {
     checkCuda( cudaFree(offset) );
     checkCuda( cudaFree(mask) );
     checkCuda( cudaFree(output_conv) );
+    cublasDestroy(handle);
 }
 
 dnnType* DeformConv2d::infer(dataDim_t &dim, dnnType* srcData) {
@@ -95,9 +101,10 @@ dnnType* DeformConv2d::infer(dataDim_t &dim, dnnType* srcData) {
     checkCuda(cudaMemcpy(mask, output_conv + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
     // kernel sigmoide
     activationSIGMOIDForward(mask, mask, chunk_dim);
- 
+
     // deformable convolution
-    dcn_v2_cuda_forward(srcData, this->data_d,
+    dcn_v2_cuda_forward(stat, handle, 
+                         srcData, this->data_d,
                          this->bias2_d, ones_d1,
                          offset, mask,
                          dstData, ones_d2,

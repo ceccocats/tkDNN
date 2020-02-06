@@ -52,10 +52,21 @@ public:
             checkCuda( cudaMemcpy(mask, deformable->mask, sizeof(dnnType)*chunk_dim, cudaMemcpyDeviceToDevice) );
             checkCuda( cudaMemcpy(ones_d2, deformable->ones_d2, sizeof(dnnType)*dim_ones, cudaMemcpyDeviceToDevice) );
 		}
+		stat = cublasCreate(&handle);
+		if (stat != CUBLAS_STATUS_SUCCESS) {
+			printf ("CUBLAS initialization failed\n");
+			return;
+  		}
 	}
 
 	~DeformableConvRT(){
-
+		checkCuda( cudaFree(data_d) );
+		checkCuda( cudaFree(bias2_d) );
+		checkCuda( cudaFree(ones_d1) );
+		checkCuda( cudaFree(offset) );
+		checkCuda( cudaFree(mask) );
+		checkCuda( cudaFree(ones_d2) );
+		cublasDestroy(handle);
 	}
 
 	int getNbOutputs() const override {
@@ -100,7 +111,8 @@ public:
 		activationSIGMOIDForward(mask, mask, chunk_dim);
 	
 		// deformable convolution
-		dcn_v2_cuda_forward(srcData, data_d,
+		dcn_v2_cuda_forward(stat, handle, 
+                         	srcData, data_d,
 							bias2_d, ones_d1,
 							offset, mask,
 							reinterpret_cast<dnnType*>(outputs[0]), ones_d2,
@@ -172,6 +184,8 @@ public:
 		free(aus);
 	}
 
+	cublasStatus_t stat; 
+	cublasHandle_t handle; 
 	int i_n, i_c, i_h, i_w;
 	int o_n, o_c, o_h, o_w;
 	int size;

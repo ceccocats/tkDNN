@@ -453,7 +453,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
     lRT->setName( ("Deformable" + std::to_string(l->id)).c_str() );
-
+    delete(inputs);
     // batchnorm
     void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {

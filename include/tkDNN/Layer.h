@@ -229,6 +229,9 @@ public:
     dnnType *offset, *mask;
     dnnType *output_conv;
 
+    cublasStatus_t stat;
+    cublasHandle_t handle;
+
 protected:
 
     cudnnTensorDescriptor_t biasTensorDesc;
