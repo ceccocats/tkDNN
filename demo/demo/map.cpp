@@ -21,6 +21,14 @@ struct BoundigBox : public tk::dnn::box
     friend std::ostream& operator<<(std::ostream& os, const BoundigBox& bb);
     int unique_truth_index = -1;
     int truth_flag = 0;
+    float max_IoU = 0;
+
+    void clear()
+    {
+        unique_truth_index = -1;
+        truth_flag = 0;
+        max_IoU = 0;
+    }
 };
 
 bool boxComparison (const BoundigBox& a,const BoundigBox& b) 
@@ -33,7 +41,8 @@ std::ostream& operator<<(std::ostream& os, const BoundigBox& bb)
 {
     os <<"w: "<< bb.w << ", h: "<< bb.h << ", x: "<< bb.x << ", y: "<< bb.y <<
          ", cat: "<< bb.cl << ", conf: "<< bb.prob<< ", truth: "<< 
-         bb.truth_flag<< ", assignedGT: "<< bb.unique_truth_index<<"\n";
+         bb.truth_flag<< ", assignedGT: "<< bb.unique_truth_index<< 
+         ", maxIoU: "<< bb.max_IoU<<"\n";
     return os;
 }
 
@@ -111,7 +120,7 @@ struct PR
     }
 };
 
-double computeMap(std::vector<Frame> &images,const int classes,const int IoU_thresh, const int map_points, const bool verbose=false)
+double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const int map_points, const bool verbose=false)
 {
     std::cout<<"Computing mAP"<<std::endl;
 
@@ -171,8 +180,10 @@ double computeMap(std::vector<Frame> &images,const int classes,const int IoU_thr
                 // std::cout<<"det i:"<<i<<" maxIoU:"<<maxIoU<<" tIndex:"<<truth_index<<std::endl;
                 if(truth_index > -1 && maxIoU > IoU_thresh)
                 {
+                    // std::cout<<"(INSIDE) IoU thresh:"<<IoU_thresh<<" maxIoU:"<<maxIoU<<" maxIoU > IoU_thresh:"<<(maxIoU > IoU_thresh)<<std::endl;
                     img.det[i].unique_truth_index = truth_index + gt_checked;
                     img.det[i].truth_flag = 1;
+                    img.det[i].max_IoU = maxIoU;
                 }
             }
 
@@ -299,7 +310,7 @@ double computeMap(std::vector<Frame> &images,const int classes,const int IoU_thr
 
     mean_average_precision = mean_average_precision / classes;
 
-    std::cout<<"Classes: "<<classes<<" mAP: "<< mean_average_precision<<std::endl;
+    std::cout<<"Classes: "<<classes<<" mAP " <<IoU_thresh<<": "<< mean_average_precision<<std::endl;
     return mean_average_precision;
 }
 
@@ -311,11 +322,27 @@ int main(int argc, char *argv[])
     char *net = "yolo3.rt";
     if(argc > 1)
         net = argv[1]; 
-    char *labels_path = "/media/887E650E7E64F67A/val2014/all_labels.txt";
+    char type = 'y';
     if(argc > 2)
-        labels_path = argv[2]; 
+        type = argv[2][0]; 
+    char *labels_path = "/media/887E650E7E64F67A/val2017/all_labels2017.txt";
+    if(argc > 3)
+        labels_path = argv[3]; 
+    
 
-    networkType_t ntype = YOLO;
+    networkType_t ntype;
+    switch(type)
+    {
+        case 'y':
+            ntype = YOLO;
+            break;
+        case 'c':
+            ntype = CENTERNET;
+            break;
+        default:
+        FatalError("type not allowed (3rd parameter)");
+    }
+
     bool show = false;
 
     tk::dnn::Yolo3Detection yolo;
@@ -342,8 +369,10 @@ int main(int argc, char *argv[])
     if(show)
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
 
+    std::vector<tk::dnn::box> detected_bbox;
+    
     int i=0;
-    while (std::getline(all_labels, l_filename) && i < 1000) 
+    while (std::getline(all_labels, l_filename)) // && i < 1000) 
     {
         Frame f;
         f.l_filename = l_filename;
@@ -363,7 +392,9 @@ int main(int argc, char *argv[])
         dnn_input = frame.clone();
 
         //inference
-        std::vector<tk::dnn::box> detected_bbox;
+
+        detected_bbox.clear();
+        
         switch(ntype)
         {
             case YOLO:
@@ -377,6 +408,9 @@ int main(int argc, char *argv[])
             default:
                 FatalError("Network type not allowed ");
         }
+
+        // std::ofstream myfile;
+        // myfile.open ("det/"+f.l_filename.substr(l_filename.find("000")));
 
         // save detections labels
         for(auto d:detected_bbox)
@@ -392,9 +426,13 @@ int main(int argc, char *argv[])
             b.cl = d.cl;
             f.det.push_back(b);
 
+            // myfile << d.cl << " "<< d.prob << " "<< d.x << " "<< d.y << " "<< d.w << " "<< d.h <<"\n";
+
 			if(show)// draw rectangle for detection
-                cv::rectangle(frame, cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(255, 0, 0), 2);             
+                cv::rectangle(frame, cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
         }
+
+        // myfile.close();
 
         // read and save groundtruth labels
         std::ifstream labels(l_filename);
@@ -423,11 +461,24 @@ int main(int argc, char *argv[])
     std::cout<<"Done."<<std::endl;
     
     int classes = 80;
-    int IoU_thresh = 0.5;
     int map_points = 0;
+    int map_levels = 10;
+    float map_step = 0.05;
+    float IoU_thresh = 0.5;
     bool verbose = false;
 
-    computeMap(images,classes,IoU_thresh,map_points, verbose);
+    double AP = 0;
+    for(int i=0; i<map_levels; ++i)
+    {
+        for(auto& img:images)
+            for(auto & d:img.det)
+                d.clear();
+        AP += computeMap(images,classes,IoU_thresh,map_points, verbose);
+        IoU_thresh +=map_step;
+    }
+    AP/=map_levels;
+    std::cout<<"mAP "<<IoU_thresh-map_step*map_levels<<":"<<IoU_thresh<<" = "<<AP<<std::endl;
+
 
     return 0;
 }
