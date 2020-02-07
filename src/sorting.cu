@@ -66,31 +66,25 @@ void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, co
     
 }
 
-void topKxyAddOffset(int * ids_begin, const int K, const int size, int *intxs_begin, int *intys_begin, float *xs_begin, float *ys_begin, dnnType *src_begin){
-    float *src_out;
-    checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
+void topKxyAddOffset(int * ids_begin, const int K, const int size, 
+                     int *intxs_begin, int *intys_begin, float *xs_begin, 
+                     float *ys_begin, dnnType *src_begin, float *src_out, int *ids_out){
     thrust::gather(thrust::device, ids_begin, ids_begin + K, src_begin, src_out);
     thrust::transform(thrust::device, intxs_begin, intxs_begin + K, src_out, xs_begin, thrust::plus<float>());
-    int *ids_out;
-    checkCuda( cudaMalloc(&ids_out, K *sizeof(int)) );
     thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(size), ids_out, thrust::plus<int>());
     thrust::gather(thrust::device, ids_out, ids_out+K, src_begin, src_out);
     thrust::transform(thrust::device, intys_begin, intys_begin + K, src_out, ys_begin, thrust::plus<float>());
-    checkCuda( cudaFree(src_out) );
-    checkCuda( cudaFree(ids_out) );
 }
 
-void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, dnnType *src_begin, float *bbx0, float *bbx1, float *bby0, float *bby1){ 
-    float *src_out;
-    checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
+void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 
+            dnnType *src_begin, float *bbx0, float *bbx1, float *bby0, float *bby1,
+            float *src_out, int *ids_out){ 
     thrust::gather(thrust::device, ids_begin, ids_begin + K, src_begin, src_out);
     thrust::transform(thrust::device, src_out, src_out + K, thrust::make_constant_iterator(2), src_out, thrust::divides<float>());
     // x0
     thrust::transform(thrust::device, xs_begin, xs_begin + K, src_out, bbx0, thrust::minus<float>());
     // x1
     thrust::transform(thrust::device, xs_begin, xs_begin + K, src_out, bbx1, thrust::plus<float>());
-    int *ids_out;
-    checkCuda( cudaMalloc(&ids_out, K *sizeof(int)) );
     thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(size), ids_out, thrust::plus<int>());
     thrust::gather(thrust::device, ids_out, ids_out + K, src_begin, src_out);
     thrust::transform(thrust::device, src_out, src_out + K, thrust::make_constant_iterator(2), src_out, thrust::divides<float>());
@@ -98,7 +92,5 @@ void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float
     thrust::transform(thrust::device, ys_begin, ys_begin + K, src_out, bby0, thrust::minus<float>());
     // y1
     thrust::transform(thrust::device, ys_begin, ys_begin + K, src_out, bby1, thrust::plus<float>());
-    checkCuda( cudaFree(src_out) );
-    checkCuda( cudaFree(ids_out) );
 }
 

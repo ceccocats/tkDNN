@@ -96,8 +96,13 @@ bool CenternetDetection::init(std::string tensor_path) {
 
     mean << 0.408, 0.447, 0.47;
     stddev << 0.289, 0.274, 0.278;
-    // mean << 0.485, 0.456, 0.406;
-    // stddev << 0.229, 0.224, 0.225;
+
+    // Alloc array used in the kernel 
+    checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
+    checkCuda( cudaMalloc(&ids_out, K *sizeof(int)) );
+    // checkCuda( cudaFree(src_out) );
+    // checkCuda( cudaFree(ids_out) );
+
 }
 
 void CenternetDetection::testdog() {
@@ -349,14 +354,14 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     
     // ----------- topk end 
     
-    topKxyAddOffset(topk_inds_d, K, dim_reg.h*dim_reg.w, inttopk_xs_d, inttopk_ys_d, topk_xs_d, topk_ys_d, rt_out[3]);
+    topKxyAddOffset(topk_inds_d, K, dim_reg.h*dim_reg.w, inttopk_xs_d, inttopk_ys_d, topk_xs_d, topk_ys_d, rt_out[3], src_out, ids_out);
     // checkCuda( cudaDeviceSynchronize() );
     
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME add offset: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
     step_t = end_t;
     
-    bboxes(topk_inds_d, K, dim_wh.h*dim_wh.w, topk_xs_d, topk_ys_d, rt_out[2], bbx0_d, bbx1_d, bby0_d, bby1_d);
+    bboxes(topk_inds_d, K, dim_wh.h*dim_wh.w, topk_xs_d, topk_ys_d, rt_out[2], bbx0_d, bbx1_d, bby0_d, bby1_d, src_out, ids_out);
     // checkCuda( cudaDeviceSynchronize() );
     
     checkCuda( cudaMemcpy(bbx0, bbx0_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
