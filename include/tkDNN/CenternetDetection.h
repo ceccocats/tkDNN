@@ -75,7 +75,9 @@ class CenternetDetection {
         int K = 100;
         int width = 128;//56;        // TODO
     
-    
+        // pointer used in the kernels
+        float *src_out;
+        int *ids_out;
     public:
         dnnType *rt_out[4];
 
