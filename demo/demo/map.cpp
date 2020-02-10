@@ -164,10 +164,13 @@ int main(int argc, char *argv[])
     int map_levels = 10;
     float map_step = 0.05;
     float IoU_thresh = 0.5;
+    float conf_thresh = 0.3;
     bool verbose = false;
 
-    double AP = computeMapNIoULevels(images,classes,IoU_thresh, map_points, map_step, map_levels, verbose);
+    double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
+
+    computeTPFPFN(images,classes,IoU_thresh,conf_thresh);
 
 
     return 0;
