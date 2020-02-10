@@ -71,14 +71,19 @@ def exp_input(model, input_batch):
 def print_wb_output(model):
     f = None
     for n, m in model.named_modules():
+        m.eval()
+        if 'DLAResBlock' in str(m.type):
+            continue
+
         in_output = m._value_hook
         o = in_output.data.numpy()
         o = np.array(o, dtype=np.float32)
+        
         t = '-'.join(n.split('.'))
         o.tofile("debug/" + t + ".bin", format="f")
         print('------- ', n, ' ------') 
         print("debug  ",o.shape)
-        
+
         if not(' of Conv2d' in str(m.type) or ' of Linear' in str(m.type) or ' of BatchNorm2d' in str(m.type)):
             continue
         
@@ -116,24 +121,19 @@ def print_wb_output(model):
             print ("    s shape:", np.shape(s))
             print ("    rm shape:", np.shape(rm))
             print ("    rv shape:", np.shape(rv))
-
+            
         else:
             bin_write(f,w)
-            if b.size > 0:
+            if b.size > 0 and b is not None:
                 bin_write(f,b)
-
+                
         if ' of BatchNorm2d' in str(m.type) or ' of Linear' in str(m.type):
             f.close()
             print("close file")
             f = None
 
-
-
-
-
 if __name__ == '__main__':
-
-    model = torch.hub.load('pytorch/vision', 'resnet101', pretrained=True)
+    model = ptcv_get_model("dla34", pretrained=True)
     model.eval()
 
     # load an example image and load it on model
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     print_wb_output(model)
 
-    with open("resnet101.txt", 'w') as f:
+    with open("dla34.txt", 'w') as f:
         for item in list(model.children()):
             f.write("%s\n" % item)
 
