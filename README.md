@@ -27,6 +27,36 @@ make
 during the cmake configuration it will be dowloaded the weights needed for running
 the tests
 
+## DLA34 and ResNet101 weights
+To get weights and outputs needed for running the tests you can use the Python 
+script and the Anaconda environment included in the repository.   
+
+Create Anaconda environment and activate it:
+```
+conda env create -f file_name.yml
+source activate env_name 
+```
+Run the Python script inside the environment.
+
+## CenterNet weights
+To get the weights needed for running the tests:
+
+* clone the forked repository by the original CenterNet:
+```
+git clone https://github.com/sapienzadavide/CenterNet.git
+```
+* follow the instruction in the README.md and INSTALL.md
+* copy the weigths and outputs from /path/to/CenterNet/src/ in ./test/centernet-path/ . For example:
+```
+cp /path/to/CenterNet/src/layers_dla/* ./test/dla34_cnet/layers/
+cp /path/to/CenterNet/src/debug_dla/* ./test/dla34_cnet/debug/
+```
+or
+```
+cp /path/to/CenterNet/src/layers_resdcn/* ./test/resnet101_cnet/layers/
+cp /path/to/CenterNet/src/debug_resdcn/* ./test/resnet101_cnet/debug/
+```
+
 ## Test
 Assumiung you have correctly builded the library these are the test ready to exec:
 * test_simple: a simple convolutional and dense network (CUDNN only)
@@ -35,6 +65,11 @@ Assumiung you have correctly builded the library these are the test ready to exe
 * test_yolo: YOLO detection network (CUDNN and TENSORRT)
 * test_yolo_tiny: smaller version of YOLO (CUDNN and TENSRRT)
 * test_yolo3_berkeley: our yolo3 version trained with BDD100K dateset 
+* test_resnet101: ResNet101 network (CUDNN and TENSORRT)
+* test_resnet101_cnet: CenterNet detection based on ResNet101 (CUDNN and TENSORRT)
+* test_dla34: DLA34 network (CUDNN and TENSORRT)
+* test_dla34_cnet: CenterNet detection based on DLA34 (CUDNN and TENSORRT)
+
 
 ## yolo3 berkeley demo detection
 For the live detection you need to precompile the tensorRT file by luncing the desidered network test, this is the recommended process:
@@ -50,3 +85,31 @@ this will genereate a yolo3_berkeley.rt file that can be used for live detection
 ./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
+
+
+## CenterNet (DLA34, ResNet101) demo detection
+For the live detection you need to precompile the tensorRT file by luncing the desidered network test, this is the recommended process:
+```
+export TKDNN_MODE=FP16   # set the half floating point optimization
+```
+
+For CenterNet based on ResNet101:
+```
+rm resnet101_cnet.rt		 # be sure to delete(or move) old tensorRT files
+./test_resnet101_cnet              # run the yolo test (is slow)
+# with f16 inference the result will be a bit incorrect
+```
+
+For CenterNet based on DLA34:
+```
+rm dla34_cnet.rt		     # be sure to delete(or move) old tensorRT files
+./test_dla34_cnet                  # run the yolo test (is slow)
+# with f16 inference the result will be a bit incorrect
+```
+
+this will genereate resnet101_cnet.rt and dla34_cnet.rt file that can be used for live detection:
+```
+./centernet_demo                               # launch detection on a demo video
+./centernet_demo resnet101_cnet.rt /dev/video0 # launch detection on device 0
+./centernet_demo dla34_cnet.rt /dev/video0     # launch detection on device 0
+```
