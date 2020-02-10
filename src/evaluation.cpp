@@ -77,11 +77,8 @@ float boxIoU(const BoundingBox &a, const BoundingBox &b)
 }
 
 /* Credits to https://github.com/AlexeyAB/darknet/blob/master/src/detector.c*/
-double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const int map_points, const bool verbose)
+double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, const int map_points, const bool verbose)
 {
-
-    std::cout<<"Computing mAP"<<std::endl;
-
     if(verbose)
         for(auto img:images)
             img.print();
@@ -103,8 +100,11 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
         groundtruths_count += i.gt.size();
     }
 
-    std::cout<<"gt_count: "<<groundtruths_count<<std::endl;
-    std::cout<<"det_count: "<<detections_count<<std::endl;
+    if(verbose)
+    {
+        std::cout<<"gt_count: "<<groundtruths_count<<std::endl;
+        std::cout<<"det_count: "<<detections_count<<std::endl;
+    }
 
     std::vector<BoundingBox> all_dets;
     std::vector<BoundingBox> all_gts;
@@ -117,7 +117,7 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
     {
         for(size_t i=0; i<img.det.size(); i++)
         {
-            if(img.det[i].prob > 0)
+            if(img.det[i].prob > conf_thresh)
             {
                 float maxIoU = 0;
                 int truth_index = -1;
@@ -257,17 +257,18 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
             avg_precision = avg_precision / map_points;
         }
 
-        std::cout<<"Class: "<<i<<" AP: "<< avg_precision<<std::endl;
+        if(verbose)
+            std::cout<<"Class: "<<i<<" AP: "<< avg_precision<<std::endl;
         mean_average_precision += avg_precision;
     }
 
     mean_average_precision = mean_average_precision / classes;
 
-    std::cout<<"Classes: "<<classes<<" mAP " <<IoU_thresh<<": "<< mean_average_precision<<std::endl;
+    std::cout<<"Classes: "<<classes<<" mAP " <<IoU_thresh<<":\t"<< mean_average_precision<<std::endl;
     return mean_average_precision;
 }
 
-double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh, const int map_points, const float map_step, const int map_levels, const bool verbose)
+double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh, const float conf_thresh, const int map_points, const float map_step, const int map_levels, const bool verbose)
 {
     double AP = 0;
     float IoU_thresh = i_IoU_thresh;
@@ -276,9 +277,85 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const f
         for(auto& img:images)
             for(auto & d:img.det)
                 d.clear();
-        AP += computeMap(images,classes,IoU_thresh,map_points, verbose);
+        AP += computeMap(images,classes,IoU_thresh,conf_thresh,map_points, verbose);
         IoU_thresh +=map_step;
     }
     AP/=map_levels;
     return AP;
+}
+
+void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, bool verbose)
+{
+    std::vector<int> truth_classes_count(classes,0);
+    std::vector<int> dets_classes_count(classes,0);
+    std::vector<PR> pr( classes);
+    
+    for(auto &img:images)
+    {
+        for(auto& tc: truth_classes_count)
+            tc = 0;
+        for(auto& dc: dets_classes_count)
+            dc = 0;
+
+        std::vector<bool> det_assigned(img.det.size(), false);
+        for(size_t j=0; j<img.gt.size(); j++)
+        {
+            truth_classes_count[img.gt[j].cl]++;
+            float maxIoU = 0;
+            int det_index = -1;
+            for(size_t i=0; i<img.det.size(); i++)
+            {
+                if(img.det[i].prob > conf_thresh)
+                {               
+                    float currentIoU = boxIoU(img.det[i], img.gt[j]);
+                    if(currentIoU > maxIoU && img.det[i].cl == img.gt[j].cl && !det_assigned[i])
+                    {
+                        maxIoU = currentIoU;                    
+                        det_index = i;
+                    }
+                }
+            }
+            if(det_index > -1 && maxIoU > IoU_thresh && !det_assigned[det_index])
+            {
+                img.det[det_index].unique_truth_index = j;
+                img.det[det_index].truth_flag = 1;
+                img.det[det_index].max_IoU = maxIoU;
+                det_assigned[det_index] = true;
+                dets_classes_count[img.det[det_index].cl]++;
+            }
+        }
+
+        for(size_t i=0; i<img.det.size(); i++)
+        {
+            if(img.det[i].truth_flag)
+                pr[img.det[i].cl].tp ++;
+            else
+                pr[img.det[i].cl].fp ++;
+        }
+        for(size_t i=0; i<classes; i++)
+        {
+            pr[i].fn += truth_classes_count[i] - dets_classes_count[i];
+        }
+    }
+
+    double avg_precision = 0, avg_recall = 0, f1_score = 0;
+
+    for(size_t i=0; i<classes; i++)
+    {
+        pr[i].precision = (pr[i].tp + pr[i].fp) > 0 ? (double)pr[i].tp / (double)(pr[i].tp +pr[i].fp) : 0;
+        pr[i].recall = (pr[i].tp + pr[i].fn) > 0 ? (double)pr[i].tp / (double)(pr[i].tp +pr[i].fn) : 0;
+        if(verbose)
+            std::cout<<"Class "<<i<<"\tTP: "<<pr[i].tp<<"\tFP: "<<pr[i].fp<<"\tFN: "<<pr[i].fn<<"\tprecision: "<<pr[i].precision<<"\trecall: "<<pr[i].recall<<std::endl;
+            // std::cout<<i<<"\t"<<pr[i].tp<<"\t"<<pr[i].fp<<"\t"<<pr[i].fn<<"\t"<<pr[i].precision<<"\t"<<pr[i].recall<<std::endl;
+        avg_precision += pr[i].precision;
+        avg_recall += pr[i].recall;
+    }
+    avg_precision /= classes;
+    avg_recall /= classes;
+
+    f1_score = avg_precision + avg_recall > 0 ? 2 * ( avg_precision * avg_recall ) / ( avg_precision + avg_recall ) : 0;
+
+    std::cout<<"avg precision: "<<avg_precision<<"\tavg recall: "<<avg_recall<<"\tavg f1 score:"<<f1_score<<std::endl;
+
+    
 }
