@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     char ntype = 'y';
     char *config_filename = "../demo/config.yaml";
     char * net = "yolo3.rt";
-    char * labels_path = "/media/887E650E7E64F67A/val2017/all_labels2017.txt";
+    char * labels_path = "../demo/COCO_val2017/all_labels.txt";
     bool show = false;
     bool write_dets = false;
     int n_images = 1000;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
         ntype = argv[2][0];    
     if(argc > 3)
         labels_path = argv[3]; 
-    if(argc > 3)
+    if(argc > 4)
         config_filename = argv[4]; 
 
     tk::dnn::Yolo3Detection yolo;
