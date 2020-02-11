@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <yaml-cpp/yaml.h>
+
 #include "tkdnn.h"
 
 
@@ -44,6 +46,10 @@ float overlap(float x1, float w1, float x2, float w2);
 float boxIntersection(const BoundingBox &a, const BoundingBox &b);
 float boxUnion(const BoundingBox &a, const BoundingBox &b);
 float boxIoU(const BoundingBox &a, const BoundingBox &b);
+
+void readParams(char* config_filename, int& classes, int& map_points, 
+                int& map_levels, float& map_step, float& IoU_thresh, 
+                float& conf_thresh, bool& verbose);
 
 double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh=0.3, const int map_points=101, const bool verbose=false);
 double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh=0.5, const float conf_thresh=0.3, const int map_points=101, const float map_step=0.05, const int map_levels=10, const bool verbose=false);
