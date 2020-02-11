@@ -67,16 +67,15 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
     const int s_col = height_col * width_col;
     const int s_col2 = 2 * s_col;
 
-    float *data_col_ptr = data_col + ((c_col * batch_size + b_col) * height_col + h_col) * width_col + w_col;
+    const int first_member = w_col + width_col * h_col;
+    // float *data_col_ptr = data_col + ((c_col * batch_size + b_col) * height_col + h_col) * width_col + w_col;
+    float *data_col_ptr = data_col + first_member + s_col * (c_col * batch_size + b_col);
     //const float* data_im_ptr = data_im + ((b_col * num_channels + c_im) * height + h_in) * width + w_in;
     const float *data_im_ptr = data_im + (b_col * num_channels + c_im) * height * width;
     const int add_ptr = (b_col * deformable_group + deformable_group_index) * kk * s_col;
     const float *data_offset_ptr = data_offset + add_ptr + add_ptr;
-
     const float *data_mask_ptr = data_mask + add_ptr;
 
-    const int first_member = w_col + width_col * h_col;
-    float val = static_cast<float>(0);
     #pragma unroll
     for (int i = 0; i < 3; ++i)
     {
@@ -99,6 +98,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
         const float h_im = offset_h + h_in + i;
         const float w_im = offset_w + w_in + j;
         //if (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) {
+        float val = static_cast<float>(0);
         if (h_im < height && w_im < width && h_im > -1 && w_im > -1)
         {
           //const float map_h = i * dilation_h + offset_h;
@@ -149,16 +149,16 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
     const int s_col = height_col * width_col;
     const int s_col2 = 2 * s_col;
 
-    float *data_col_ptr = data_col + ((c_col * batch_size + b_col) * height_col + h_col) * width_col + w_col;
+    const int first_member = w_col + width_col * h_col;
+    // float *data_col_ptr = data_col + ((c_col * batch_size + b_col) * height_col + h_col) * width_col + w_col;
+    float *data_col_ptr = data_col + first_member + s_col * (c_col * batch_size + b_col);
     //const float* data_im_ptr = data_im + ((b_col * num_channels + c_im) * height + h_in) * width + w_in;
     const float *data_im_ptr = data_im + (b_col * num_channels + c_im) * height * width;
     const int add_ptr = (b_col * deformable_group + deformable_group_index) * kk * s_col;
     const float *data_offset_ptr = data_offset + add_ptr + add_ptr;
 
     const float *data_mask_ptr = data_mask + add_ptr;
-
-    const int first_member = w_col + width_col * h_col;
-    float val = static_cast<float>(0);
+    
     #pragma unroll
     for (int i = 0; i < kernel_h; ++i)
     {
@@ -181,6 +181,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
         const float h_im = offset_h + h_in + i * dilation_h;
         const float w_im = offset_w + w_in + j * dilation_w;
         //if (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) {
+        float val = static_cast<float>(0);
         if (h_im < height && w_im < width && h_im > -1 && w_im > -1)
         {
           //const float map_h = i * dilation_h + offset_h;
