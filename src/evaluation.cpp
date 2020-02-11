@@ -76,6 +76,21 @@ float boxIoU(const BoundingBox &a, const BoundingBox &b)
     return I / U;
 }
 
+void readParams(char* config_filename, int& classes, int& map_points, 
+                int& map_levels, float& map_step, float& IoU_thresh, 
+                float& conf_thresh, bool& verbose)
+{
+    YAML::Node config   = YAML::LoadFile(config_filename);
+    classes     = config["classes"].as<int>();
+    map_points  = config["map_points"].as<int>();
+    map_levels  = config["map_levels"].as<int>();
+    map_step    = config["map_step"].as<float>();
+    IoU_thresh  = config["IoU_thresh"].as<float>();
+    conf_thresh = config["conf_thresh"].as<float>();
+    verbose     = config["verbose"].as<bool>();
+
+}
+
 /* Credits to https://github.com/AlexeyAB/darknet/blob/master/src/detector.c*/
 double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, const int map_points, const bool verbose)
 {

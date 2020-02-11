@@ -17,7 +17,7 @@ endif()
 find_package(CUDA 9.0 REQUIRED)
 SET(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
-#set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 
 find_package(CUDNN REQUIRED)
 
@@ -39,7 +39,7 @@ find_package(yaml-cpp REQUIRED)
 # Build Libraries
 #-------------------------------------------------------------------------------
 file(GLOB tkdnn_SRC "src/*.cpp")
-set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS})
+set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
@@ -120,7 +120,7 @@ add_executable(centernet_demo demo/demo/demo_centernet.cpp)
 target_link_libraries(centernet_demo tkDNN)
 
 add_executable(map_demo demo/demo/map.cpp)
-target_link_libraries(map_demo tkDNN yaml-cpp)
+target_link_libraries(map_demo tkDNN)
 
 
 #-------------------------------------------------------------------------------
