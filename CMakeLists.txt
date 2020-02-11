@@ -32,6 +32,7 @@ cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
 
+find_package(yaml-cpp REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Build Libraries
@@ -118,7 +119,7 @@ add_executable(centernet_demo demo/demo/demo_centernet.cpp)
 target_link_libraries(centernet_demo tkDNN)
 
 add_executable(map_demo demo/demo/map.cpp)
-target_link_libraries(map_demo tkDNN)
+target_link_libraries(map_demo tkDNN yaml-cpp)
 
 
 #-------------------------------------------------------------------------------

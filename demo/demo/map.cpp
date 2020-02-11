@@ -17,6 +17,8 @@
 #include "evaluation.h"
 
 #include <map>
+#include <yaml-cpp/yaml.h>
+
 
 void convertFilename(std::string &filename,const std::string l_folder, const std::string i_folder, const std::string l_ext,const std::string i_ext)
 {
@@ -24,27 +26,53 @@ void convertFilename(std::string &filename,const std::string l_folder, const std
     filename.replace(filename.find(l_ext),l_ext.length(),i_ext);
 }
 
+void readParams(char* config_filename, std::string& net, char &ntype, std::string& labels_path, 
+                bool &show, bool& write_dets, int& classes, int& n_images, 
+                int& map_points, int& map_levels, float& map_step, 
+                float& IoU_thresh, float& conf_thresh, bool& verbose)
+{
+    YAML::Node config   = YAML::LoadFile(config_filename);
+    net         = config["net"].as<std::string>();
+    ntype       = config["ntype"].as<char>();
+    labels_path = config["labels_path"].as<std::string>();
+    show        = config["show"].as<bool>();
+    write_dets  = config["write_dets"].as<bool>();
+    classes     = config["classes"].as<int>();
+    n_images    = config["n_images"].as<int>();
+    map_points  = config["map_points"].as<int>();
+    map_levels  = config["map_levels"].as<int>();
+    map_step    = config["map_step"].as<float>();
+    IoU_thresh  = config["IoU_thresh"].as<float>();
+    conf_thresh = config["conf_thresh"].as<float>();
+    verbose     = config["verbose"].as<bool>();
+
+}
+
 int main(int argc, char *argv[]) 
 {
-    // char *net = "resnet101_cnet_FP32.rt";
-    char *net = "yolo3.rt";
+
+    char *config_filename = "config.yaml";
     if(argc > 1)
-        net = argv[1]; 
-    char ntype = 'y';
+        config_filename = argv[1]; 
+
+    char ntype;
+    std::string net, labels_path;
+    bool show, write_dets, verbose;
+    int classes, map_points, map_levels, n_images;
+    float map_step, IoU_thresh, conf_thresh;
+
+    readParams( config_filename, net, ntype, labels_path, show, write_dets, 
+                classes, n_images, map_points, map_levels, map_step, 
+                IoU_thresh, conf_thresh, verbose);
+
     if(argc > 2)
-        ntype = argv[2][0]; 
-    //path to txt file with all realpath of images labels
-    char *labels_path = "/media/887E650E7E64F67A/val2017/all_labels2017.txt";
+        net = argv[2]; 
     if(argc > 3)
-        labels_path = argv[3]; 
-    
-    bool show = false;
-    bool write_dets = false;
+        ntype = argv[3][0];    
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
     
-
     switch(ntype)
     {
         case 'y':
@@ -57,29 +85,26 @@ int main(int argc, char *argv[])
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-
     std::ifstream all_labels(labels_path);
     std::string l_filename;
     std::vector<Frame> images;
+    std::vector<tk::dnn::box> detected_bbox;
 
     std::cout<<"Reading groundtruth and generating detections"<<std::endl;
 
     if(show)
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
 
-    std::vector<tk::dnn::box> detected_bbox;
-    
-    int i=0;
-    while (std::getline(all_labels, l_filename) && i < 1000) 
+    for (int images_done=0 ; std::getline(all_labels, l_filename) && images_done < n_images ; ++images_done) 
     {
-        std::cout <<COL_ORANGEB<< "Images done:\t" << i++ << "\n"<<COL_END;
+        std::cout <<COL_ORANGEB<< "Images done:\t" << images_done<< "\n"<<COL_END;
 
         Frame f;
         f.l_filename = l_filename;
         f.i_filename = l_filename;
         convertFilename(f.i_filename, "labels", "images", ".txt", ".jpg");
 
-        // generate detections
+        // read frame
         cv::Mat frame = cv::imread(f.i_filename.c_str(), cv::IMREAD_COLOR);
         int height = frame.rows;
         int width = frame.cols;
@@ -104,10 +129,10 @@ int main(int argc, char *argv[])
             default:
                 FatalError("Network type not allowed!\n");
         }
+
         std::ofstream myfile;
         if(write_dets)
             myfile.open ("det/"+f.l_filename.substr(l_filename.find("000")));
-
 
         // save detections labels
         for(auto d:detected_bbox)
@@ -159,17 +184,11 @@ int main(int argc, char *argv[])
 
     std::cout<<"Done."<<std::endl;
     
-    int classes = 80;
-    int map_points = 101;
-    int map_levels = 10;
-    float map_step = 0.05;
-    float IoU_thresh = 0.5;
-    float conf_thresh = 0.3;
-    bool verbose = false;
-
+    //compute mAP
     double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
+    //compute average precision, recall and f1score
     computeTPFPFN(images,classes,IoU_thresh,conf_thresh);
 
 
