@@ -118,7 +118,12 @@ this will genereate resnet101_cnet.rt and dla34_cnet.rt file that can be used fo
 ## mAP demo
 To compute mAP, precision, recall and f1score, run the map_demo.
 
-The following parameters are needed:
+A validation set is needed. To download COCO_val2017 run (form the root folder): 
+```
+bash download_validation.sh 
+```
+
+To compute the map, the following parameters are needed:
 ```
 ./map_demo <network rt> <network type [y|c]> <labels file path> <config file path>
 ```
@@ -131,5 +136,6 @@ where
 Example:
 
 ```
-./map_demo dla34_cnet.rt c path/to/labelsCOCO_val2017.txt ../demo/config.yaml
+cd build
+./map_demo dla34_cnet.rt c ../demo/COCO_val2017/all_labels.txt ../demo/config.yaml
 ```
