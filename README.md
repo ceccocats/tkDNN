@@ -136,11 +136,6 @@ where
 Example:
 
 ```
-<<<<<<< HEAD
 cd build
 ./map_demo dla34_cnet.rt c ../demo/COCO_val2017/all_labels.txt ../demo/config.yaml
 ```
-=======
-./map_demo dla34_cnet.rt c path/to/labelsCOCO_val2017.txt ../demo/config.yaml
-```
->>>>>>> 6e2ff405f40e640823c1359a42aebe2d28a93820
