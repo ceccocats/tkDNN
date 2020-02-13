@@ -207,9 +207,11 @@ protected:
 
 /**
     Bidirectional LSTM layer
+    
+    implementation info:
     https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
-
-    numlayers = 1 # hardcoded as 1
+    https://github.com/Jeffery-Song/mxnet-test/blob/aab666faad44011f7a67b527b5f6c960367d0422/src/operator/cudnn_rnn-inl.h
+    https://stackoverflow.com/a/38737941
 
     PARAMS (numlayers*2):
         layer0:
@@ -221,7 +223,9 @@ protected:
             ( HIDDEN, ? )  ???
             ( HIDDEN * 8 ) ???
 
-    output shape: ( 2*HIDDEN, INH, INW )
+    OUTPUT shape:
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=True)  ---> (N, 2*HIDDEN, 1, W)   # W is seqLength 
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=False) ---> (N, 2*HIDDEN, 1, 1)
 */
 class LSTM : public Layer {
 
@@ -232,20 +236,28 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-    int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+    const bool bidirectional = 1; /**> is the net bidir */
+    int stateSize = 0; /**> number of hidden states */
+    int seqLen = 0;    /**> number of timesteps */
+    int numLayers = 1; /**> number of internal layers */
 
 protected:
-    cudnnFilterDescriptor_t paramDesc;
-    cudnnTensorDescriptor_t  hiddenStateTensorDesc, cellStateTensorDesc;
-    cudnnRNNDescriptor_t  rnnDesc;
-    cudnnRNNDataDescriptor_t rnnDataDesc;
-    cudnnDropoutDescriptor_t dropDesc;
-    cudnnRNNAlgo_t algo;
+    cudnnRNNDescriptor_t rnnDesc;
+    cudnnDropoutDescriptor_t dropoutDesc;
+    dnnType  *dropout_states_, *work_space_;
 
-    dnnType *hiddenStateData, *cellStateData;
-    dnnType *paramsSpace;
-    void*  workSpace;
-    size_t ws_sizeInBytes;
+    size_t workspace_byte_, reserve_space_byte_, dropout_byte_;
+    int workspace_size_, dropout_size_;
+    
+    std::vector<cudnnTensorDescriptor_t> x_desc_vec_, y_desc_vec_, dx_desc_vec_, dy_desc_vec_;
+    cudnnTensorDescriptor_t hx_desc_, cx_desc_;
+    cudnnTensorDescriptor_t hy_desc_, cy_desc_;
+    cudnnTensorDescriptor_t dhx_desc_, dcx_desc_;
+    cudnnTensorDescriptor_t dhy_desc_, dcy_desc_;
+    dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
+
+    cudnnFilterDescriptor_t w_desc_, dw_desc_;
+    dnnType *w_ptr, *dw_ptr;
 };
 
 
