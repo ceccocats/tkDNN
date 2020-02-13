@@ -230,13 +230,14 @@ protected:
 class LSTM : public Layer {
 
 public:
-    LSTM(Network *net, int hiddensize, std::string fname_weights);
+    LSTM(Network *net, int hiddensize, bool returnSeq, std::string fname_weights);
     virtual ~LSTM();
     virtual layerType_t getLayerType() { return LAYER_LSTM; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     const bool bidirectional = 1; /**> is the net bidir */
+    bool returnSeq = false;       /**> if false return only the result of last timestep */
     int stateSize = 0; /**> number of hidden states */
     int seqLen = 0;    /**> number of timesteps */
     int numLayers = 1; /**> number of internal layers */
