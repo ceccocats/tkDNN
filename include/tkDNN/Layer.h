@@ -246,18 +246,16 @@ protected:
     cudnnDropoutDescriptor_t dropoutDesc;
     dnnType  *dropout_states_, *work_space_;
 
-    size_t workspace_byte_, reserve_space_byte_, dropout_byte_;
+    size_t workspace_byte_, dropout_byte_;
     int workspace_size_, dropout_size_;
     
-    std::vector<cudnnTensorDescriptor_t> x_desc_vec_, y_desc_vec_, dx_desc_vec_, dy_desc_vec_;
+    std::vector<cudnnTensorDescriptor_t> x_desc_vec_, y_desc_vec_;
     cudnnTensorDescriptor_t hx_desc_, cx_desc_;
     cudnnTensorDescriptor_t hy_desc_, cy_desc_;
-    cudnnTensorDescriptor_t dhx_desc_, dcx_desc_;
-    cudnnTensorDescriptor_t dhy_desc_, dcy_desc_;
     dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
 
-    cudnnFilterDescriptor_t w_desc_, dw_desc_;
-    dnnType *w_ptr, *dw_ptr;
+    cudnnFilterDescriptor_t w_desc_;
+    dnnType *w_ptr;
 };
 
 

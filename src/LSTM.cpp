@@ -17,16 +17,12 @@ LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
     // init Tensor Descriptors
     std::vector<cudnnTensorDescriptor_t> x_vec(seqLen);
     std::vector<cudnnTensorDescriptor_t> y_vec(seqLen);
-    std::vector<cudnnTensorDescriptor_t> dx_vec(seqLen);
-    std::vector<cudnnTensorDescriptor_t> dy_vec(seqLen);
 
     int dimA[3];
     int strideA[3];
     for (int i = 0; i < seqLen; i++) {
         checkCUDNN(cudnnCreateTensorDescriptor(&x_vec[i]));
         checkCUDNN(cudnnCreateTensorDescriptor(&y_vec[i]));
-        checkCUDNN(cudnnCreateTensorDescriptor(&dx_vec[i]));
-        checkCUDNN(cudnnCreateTensorDescriptor(&dy_vec[i]));
 
         dimA[0] = batchSize;
         dimA[1] = inputSize;
@@ -36,29 +32,21 @@ LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
         strideA[0] = dimA[2] * dimA[1];
         strideA[1] = dimA[2];
         strideA[2] = 1;
-
         checkCUDNN(cudnnSetTensorNdDescriptor(x_vec[i],
             net->dataType, 3, dimA, strideA));
-        checkCUDNN(cudnnSetTensorNdDescriptor(dx_vec[i],
-            net->dataType, 3, dimA, strideA));
+
         dimA[0] = batchSize;
         dimA[1] = bidirectional ? stateSize*2 : stateSize;
         dimA[2] = 1;
         strideA[0] = dimA[2] * dimA[1];
         strideA[1] = dimA[2];
         strideA[2] = 1;
-
         checkCUDNN(cudnnSetTensorNdDescriptor(y_vec[i],
             net->dataType, 3, dimA, strideA));
-        checkCUDNN(cudnnSetTensorNdDescriptor(dy_vec[i],
-            net->dataType, 3, dimA, strideA));
     }
-
     // apply tensordesc
     x_desc_vec_ = x_vec;
     y_desc_vec_ = y_vec;
-    dx_desc_vec_ = dx_vec;
-    dy_desc_vec_ = dy_vec;
 
 
     // set the state tensors
@@ -72,18 +60,10 @@ LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
     checkCUDNN(cudnnCreateTensorDescriptor(&cx_desc_));
     checkCUDNN(cudnnCreateTensorDescriptor(&hy_desc_));
     checkCUDNN(cudnnCreateTensorDescriptor(&cy_desc_));
-    checkCUDNN(cudnnCreateTensorDescriptor(&dhx_desc_));
-    checkCUDNN(cudnnCreateTensorDescriptor(&dcx_desc_));
-    checkCUDNN(cudnnCreateTensorDescriptor(&dhy_desc_));
-    checkCUDNN(cudnnCreateTensorDescriptor(&dcy_desc_));
     checkCUDNN(cudnnSetTensorNdDescriptor(hx_desc_, net->dataType, 3, dimA, strideA));
     checkCUDNN(cudnnSetTensorNdDescriptor(cx_desc_, net->dataType, 3, dimA, strideA));
     checkCUDNN(cudnnSetTensorNdDescriptor(hy_desc_, net->dataType, 3, dimA, strideA));
     checkCUDNN(cudnnSetTensorNdDescriptor(cy_desc_, net->dataType, 3, dimA, strideA));
-    checkCUDNN(cudnnSetTensorNdDescriptor(dhx_desc_, net->dataType, 3, dimA, strideA));
-    checkCUDNN(cudnnSetTensorNdDescriptor(dcx_desc_, net->dataType, 3, dimA, strideA));
-    checkCUDNN(cudnnSetTensorNdDescriptor(dhy_desc_, net->dataType, 3, dimA, strideA));
-    checkCUDNN(cudnnSetTensorNdDescriptor(dcy_desc_, net->dataType, 3, dimA, strideA));
     // allocate     dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
     checkCuda( cudaMalloc(&hx_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
     checkCuda( cudaMalloc(&cx_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
@@ -130,28 +110,32 @@ LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
 
     // Set param descriptors
     checkCUDNN(cudnnCreateFilterDescriptor(&w_desc_));
-    checkCUDNN(cudnnCreateFilterDescriptor(&dw_desc_));
     int dim_w[3] = {1, 1, 1};
     dim_w[0] = cudnn_params;
     checkCUDNN(cudnnSetFilterNdDescriptor(w_desc_,
         net->dataType, net->tensorFormat, 3, dim_w));
-    checkCUDNN(cudnnSetFilterNdDescriptor(dw_desc_,
-        net->dataType, net->tensorFormat, 3, dim_w));
-    // allocate params dnnType *w_ptr, *dw_ptr;
+    // allocate params dnnType *w_ptr;
     checkCuda( cudaMalloc(&w_ptr, cudnn_params*sizeof(dnnType)) );
-    checkCuda( cudaMalloc(&dw_ptr, cudnn_params*sizeof(dnnType)) );
 
-
+    // set output dim 
     output_dim = input_dim;
     output_dim.c = stateSize*2;
-
+    
     //allocate data for infer result
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }
 
 LSTM::~LSTM() {
+    checkCuda(cudaFree(hx_ptr));
+    checkCuda(cudaFree(cx_ptr));
+    checkCuda(cudaFree(hy_ptr));
+    checkCuda(cudaFree(cy_ptr));
+    checkCuda(cudaFree(w_ptr ));
 
-    checkCuda( cudaFree(dstData) );
+    checkCuda(cudaFree(work_space_    ));
+    checkCuda(cudaFree(dropout_states_));
+
+    checkCuda(cudaFree(dstData));
 }
 
 dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
