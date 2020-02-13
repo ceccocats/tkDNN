@@ -4,9 +4,10 @@
 
 namespace tk { namespace dnn {
 
-LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
+LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weights) :
     Layer(net) {
 
+    this->returnSeq = returnSeq;
     int batchSize = input_dim.n;
     int inputSize = input_dim.c;
     seqLen        = input_dim.w;
@@ -117,12 +118,19 @@ LSTM::LSTM( Network *net, int hiddensize, std::string fname_weights) :
     // allocate params dnnType *w_ptr;
     checkCuda( cudaMalloc(&w_ptr, cudnn_params*sizeof(dnnType)) );
 
+
+    
+    //allocate data for infer result
+    int dstDim = input_dim.n * stateSize*2 * input_dim.h * input_dim.w;
+    checkCuda( cudaMalloc(&dstData, dstDim*sizeof(dnnType)) );
+
     // set output dim 
     output_dim = input_dim;
     output_dim.c = stateSize*2;
-    
-    //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
+    if(!returnSeq) {
+        output_dim.h = 1;
+        output_dim.w = 1;
+    }
 }
 
 LSTM::~LSTM() {
