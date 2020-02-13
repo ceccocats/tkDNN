@@ -9,3 +9,4 @@ build/
 *.tar.gz
 *.weights
 .idea/
+*.hdf5

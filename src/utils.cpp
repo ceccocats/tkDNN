@@ -39,7 +39,8 @@ void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** dat
     *data_h = new dnnType[size];
     if (!dataFile.read ((char*) *data_h, size_b)) 
     {
-        error_s << "Error reading file " << fname; 
+        error_s << "Error reading file " << fname << " with n of float: "<<size;
+        error_s << " seek: "<<seek << " size: "<<size_b<<"\n";
         FatalError(error_s.str());
     }
     
