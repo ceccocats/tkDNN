@@ -9,8 +9,10 @@
 namespace tk { namespace dnn {
 
 enum layerType_t {
+    LAYER_INPUT,
     LAYER_DENSE,
     LAYER_CONV2D,
+    LAYER_LSTM,
     LAYER_ACTIVATION,
     LAYER_FLATTEN,
     LAYER_MULADD,
@@ -47,8 +49,10 @@ public:
     std::string getLayerName() {
         layerType_t type = getLayerType();
         switch(type) {
+            case LAYER_INPUT:       return "Input";
             case LAYER_DENSE:       return "Dense";
             case LAYER_CONV2D:      return "Conv2d";
+            case LAYER_LSTM:        return "LSTM";
             case LAYER_ACTIVATION:  return "Activation";
             case LAYER_FLATTEN:     return "Flatten";
             case LAYER_MULADD:      return "MulAdd";
@@ -106,6 +110,27 @@ public:
 
 
 /**
+    Input layer (it doesnt need weigths)
+*/
+class Input : public Layer {
+
+public:
+
+    Input(Network *net, dataDim_t &dim, dnnType* srcData) : Layer(net) {
+        input_dim = dim;
+        output_dim = dim;
+        dstData = srcData;
+    }
+    virtual ~Input() {}
+    virtual layerType_t getLayerType() { return LAYER_INPUT; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
+        return dstData;
+    }
+};
+
+
+/**
     Dense (full interconnection) layer
 */
 class Dense : public LayerWgs {
@@ -148,6 +173,14 @@ protected:
 
 /**
     Convolutional 2D layer
+
+    WEIGHTS shape: OUTCH, INCH, KH, KW ...
+    BIAS shape: OUTCH
+
+    with BATCHNORM:
+        scales:   OUTCH
+        means:    OUTCH
+        variance: OUTCH
 */
 class Conv2d : public LayerWgs {
 
@@ -168,6 +201,49 @@ protected:
     cudnnConvolutionFwdAlgo_t algo;
     cudnnTensorDescriptor_t biasTensorDesc;
 
+    void*  workSpace;
+    size_t ws_sizeInBytes;
+};
+
+/**
+    Bidirectional LSTM layer
+    https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
+
+    numlayers = 1 # hardcoded as 1
+
+    PARAMS (numlayers*2):
+        layer0:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+        layer2:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+
+    output shape: ( 2*HIDDEN, INH, INW )
+*/
+class LSTM : public Layer {
+
+public:
+    LSTM(Network *net, int hiddensize, std::string fname_weights);
+    virtual ~LSTM();
+    virtual layerType_t getLayerType() { return LAYER_LSTM; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
+
+protected:
+    cudnnFilterDescriptor_t paramDesc;
+    cudnnTensorDescriptor_t  hiddenStateTensorDesc, cellStateTensorDesc;
+    cudnnRNNDescriptor_t  rnnDesc;
+    cudnnRNNDataDescriptor_t rnnDataDesc;
+    cudnnDropoutDescriptor_t dropDesc;
+    cudnnRNNAlgo_t algo;
+
+    dnnType *hiddenStateData, *cellStateData;
+    dnnType *paramsSpace;
     void*  workSpace;
     size_t ws_sizeInBytes;
 };

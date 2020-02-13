@@ -85,6 +85,9 @@ target_link_libraries(test_yolo3_berkeley tkDNN)
 
 add_executable(test_yolo3_flir tests/yolo3_flir/yolo3_flir.cpp)
 target_link_libraries(test_yolo3_flir tkDNN)
+
+add_executable(test_imuodom tests/imuodom/imuodom.cpp)
+target_link_libraries(test_imuodom tkDNN)
 ################################################################################
 
 
