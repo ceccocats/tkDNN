@@ -15,6 +15,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/opencv.hpp"
 
 #include "tkdnn.h"
 #include "sorting.h"
@@ -29,20 +30,24 @@ class CenternetDetection {
 
     private:
         tk::dnn::NetworkRT *netRT = nullptr;
-        dnnType *input_h, *input, *input_d;
+        dnnType *input_d;
 
         int ndets = 0;
         // tk::dnn::Yolo::detection *dets = nullptr;
 
         cv::Mat imageF;
-        cv::Mat bgr[3]; 
+        cv::cuda::GpuMat imageF1_d, imageF2_d;
+        cv::cuda::GpuMat bgr[3]; 
+        // std::vector< cv::cuda::GpuMat > bgr;
 
         // variable to test cnet on dog pictures
         tk::dnn::dataDim_t dim;
         tk::dnn::dataDim_t dim2;
-        cv::Size sz;
+        cv::Size sz, sz_old;
         const char *input_bin = "../tests/resnet101_cnet/debug/input.bin";
 
+        cv::cuda::Stream stream;
+        struct threshold op;
         // pre-process
         tk::dnn::dataDim_t dim_hm; 
         tk::dnn::dataDim_t dim_wh; 
@@ -66,10 +71,15 @@ class CenternetDetection {
         
         float *target_coords;
         
-        cv::Vec<float, 3> mean;
-        cv::Vec<float, 3> stddev;
+        float *mean_d;
+        float *stddev_d;
+
+        float *d_ptrs;
+        
         cv::Mat src;
-        cv::Mat dst;  
+        cv::Mat dst;
+        cv::Mat dst2;  
+        cv::Mat trans, trans2;
         //processing
         float toll = 0.000001;
         int K = 100;
@@ -108,7 +118,6 @@ class CenternetDetection {
          * @return Success of the initialization
          */
         bool init(std::string tensor_path);
-        void testdog();
         cv::Mat draw(cv::Mat &frame);
         void update(cv::Mat &frame);
 
