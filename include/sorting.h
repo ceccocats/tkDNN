@@ -6,14 +6,31 @@
 #include <thrust/gather.h>
 #include <thrust/copy.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/opencv.hpp"
 
 #include "tkdnn.h"
+
+struct threshold : public thrust::binary_function<float,float,float>
+{
+  __host__ __device__
+  float operator()(float x, float y) { 
+    double toll = 1e-6; 
+    if(fabsf(x-y)>toll) 
+        return 0.0f; 
+    else
+        return x; 
+    }
+};
 
 void sort(dnnType *src_begin, dnnType *src_end, int *idsrc);
 void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
             int *topk_inds, float *topk_ys, float *topk_xs);
 void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs, const int size, const int K, const int n_classes);            
-void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out);
+void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev);
+void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op);
 void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, const int wh, int *clses, int *xs, int *ys);
 void topKxyAddOffset(int * ids_begin, const int K, const int size, int *intxs_begin, int *intys_begin, 
                      float *xs_begin, float *ys_begin, dnnType *src_begin, float *src_out, int *ids_out);

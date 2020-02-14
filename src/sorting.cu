@@ -16,10 +16,7 @@ void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
             int *topk_inds, float *topk_ys, float *topk_xs)
 {
     checkCuda( cudaMemcpy(topk_scores, (float *)src_begin, K*sizeof(float), cudaMemcpyDeviceToDevice) );
-    checkCuda( cudaMemcpy(topk_inds, idsrc, K*sizeof(int), cudaMemcpyDeviceToDevice) );
-    // topk_ys_[i*K +count] = (int)(ids2[j] / width);
-    // topk_xs_[i*K +count] = (int)(ids2[j] % width);
-    
+    checkCuda( cudaMemcpy(topk_inds, idsrc, K*sizeof(int), cudaMemcpyDeviceToDevice) );    
 }
 
 __global__ 
@@ -28,7 +25,6 @@ void sortAndTopK_kernel(dnnType *src_begin, int *idsrc, float *topk_scores, int 
 
     thrust::sort_by_key(thrust::device, src_begin + i * size, src_begin + i * size + size, idsrc + i * size, thrust::greater<float>());
     thrust::copy_n(thrust::device, src_begin + i * size, K, topk_scores + i * K);
-    // thrust::copy_n(thrust::device, idsrc + i * size, K, topk_inds + i * K );
     thrust::copy_n(thrust::device, idsrc + i * size, K, topk_inds + i * K );
 }
 
@@ -41,20 +37,23 @@ void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int
    
 }
 
-struct threshold : public thrust::binary_function<float,float,float>
-{
-  __host__ __device__
-  float operator()(float x, float y) { 
-    double toll = 1e-6; 
-    if(fabsf(x-y)>toll) 
-        return 0.0f; 
-    else
-        return x; 
-    }
-};
+__global__
+void normalize_kernel(float *bgr, const int dim, const float *mean, const float *stddev){
+    int i = blockDim.x*blockIdx.x + threadIdx.x;
+    int j = blockIdx.y;
+    bgr[j*(dim)+i] = bgr[j*(dim)+i] - mean[j];
+    bgr[j*(dim)+i] = bgr[j*(dim)+i] / stddev[j];
+    
+}
 
-void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out){
-    struct threshold op;
+void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev)
+{
+    int num_thread = 256;
+    dim3 dimBlock(h*w/num_thread, ch);
+    normalize_kernel<<<dimBlock, num_thread, 0>>>(bgr, h*w, mean, stddev);
+}
+
+void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op){
     thrust::transform(thrust::device, src_begin, src_end, src2_begin, src_out, op);
 }
 
