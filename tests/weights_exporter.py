@@ -24,6 +24,8 @@ def export_layer(name, weights, bias):
         weights = weights.transpose(3,2,0,1)
     elif(weights.ndim == 3):
         weights = weights.transpose(2,1,0)
+    elif(weights.ndim == 2):
+        weights = weights.transpose(1,0)
     else:
         print("Ndim", weights.ndim)
         raise("not implemented with dim" )
@@ -40,12 +42,18 @@ def export_layer(name, weights, bias):
     bin_write(f, bias)
     print ("WEIGHTS saved\n")
 
-def export_bidir(name, weights):
+def export_bidir(name, params):
     print ("########    EXPORT", name, "LAYER    ########")
  
-    for w in weights:
-        print(np.shape(w))
+    f = open(name + ".bin", mode='wb')
 
+
+    for w in params:
+        #w = w.transpose()
+        print(np.shape(w))
+        bin_write(f, w)
+   
+    print("WEIGHTS saved\n")
 
 #https://github.com/fchollet/keras/wiki/Converting-convolution-kernels-from-Theano-to-TensorFlow-and-vice-versa
 if __name__ == '__main__':
@@ -63,6 +71,7 @@ if __name__ == '__main__':
     print("Load model: ", args.model)
     model = load_model(args.model)
     model.summary()
+
 
     weights = model.get_weights()
 
@@ -90,6 +99,7 @@ if __name__ == '__main__':
         elif name.startswith("dense"):
             export_layer(args.output + "/" + name, wgs[0], wgs[1])
         elif name.startswith("bidirectional"):
+            wgs = l.forward_layer.get_weights()
             export_bidir(args.output + "/" + name, wgs)
         else:
             print ("skip:", name, "has no weights")
