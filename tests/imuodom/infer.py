@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     weights = model.get_weights()
 
+    np.random.seed(2)
     x_angle = np.random.rand(1,100,4)
     x_gyro = np.random.rand(1,100,3)
     x_acc = np.random.rand(1,100,3)

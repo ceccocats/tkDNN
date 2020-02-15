@@ -66,10 +66,12 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     checkCUDNN(cudnnSetTensorNdDescriptor(hy_desc_, net->dataType, 3, dimA, strideA));
     checkCUDNN(cudnnSetTensorNdDescriptor(cy_desc_, net->dataType, 3, dimA, strideA));
     // allocate     dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
-    checkCuda( cudaMalloc(&hx_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
-    checkCuda( cudaMalloc(&cx_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
-    checkCuda( cudaMalloc(&hy_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
-    checkCuda( cudaMalloc(&cy_ptr, dimA[0]*dimA[1]*dimA[2]*sizeof(dnnType)) );
+    stateDataDim = dimA[0]*dimA[1]*dimA[2];
+    checkCuda( cudaMalloc(&hx_ptr, stateDataDim*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&cx_ptr, stateDataDim*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&hy_ptr, stateDataDim*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&cy_ptr, stateDataDim*sizeof(dnnType)) );
+    
 
 
     // Create Dropout descriptors // TODO: ??? IS IT NECESSARY ???
@@ -89,7 +91,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     checkCUDNN(cudnnSetRNNDescriptor(net->cudnnHandle, 
         rnnDesc, stateSize, numLayers, dropoutDesc,
         cudnnRNNInputMode_t::CUDNN_LINEAR_INPUT,
-        cudnnDirectionMode_t::CUDNN_BIDIRECTIONAL,
+        (bidirectional ? cudnnDirectionMode_t::CUDNN_BIDIRECTIONAL : cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL),
         cudnnRNNMode_t::CUDNN_LSTM,
         cudnnRNNAlgo_t::CUDNN_RNN_ALGO_STANDARD,
         net->dataType));
@@ -115,22 +117,81 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     dim_w[0] = cudnn_params;
     checkCUDNN(cudnnSetFilterNdDescriptor(w_desc_,
         net->dataType, net->tensorFormat, 3, dim_w));
-    // allocate params dnnType *w_ptr;
-    checkCuda( cudaMalloc(&w_ptr, cudnn_params*sizeof(dnnType)) );
 
-
+    // load params
+    readBinaryFile(fname_weights, cudnn_params, &w_h, &w_ptr);
     
     //allocate data for infer result
-    int dstDim = input_dim.n * stateSize*2 * input_dim.h * input_dim.w;
+    int dstDim = input_dim.n * stateSize*(bidirectional ? 2 : 1) * input_dim.h * input_dim.w;
     checkCuda( cudaMalloc(&dstData, dstDim*sizeof(dnnType)) );
 
     // set output dim 
     output_dim = input_dim;
-    output_dim.c = stateSize*2;
+    output_dim.c = stateSize*(bidirectional ? 2 : 1);
     if(!returnSeq) {
         output_dim.h = 1;
         output_dim.w = 1;
     }
+
+
+
+
+    // Query weight layout
+    cudnnFilterDescriptor_t m_desc;
+    checkCUDNN(cudnnCreateFilterDescriptor(&m_desc));
+    dnnType *p;
+    int n = 8; // lstm layers
+    
+    printCenteredTitle("WEIGHTS", '=', 20);
+    for (int i = 0; i < numLayers*(bidirectional?2:1); ++i) {
+        for (int j = 0; j < n; ++j) {
+            
+            checkCUDNN(cudnnGetRNNLinLayerMatrixParams(net->cudnnHandle, rnnDesc,
+                i, x_desc_vec_[0], w_desc_, 0, j, m_desc, (void**)&p));
+            
+            std::cout << "ptr: " << ((int64_t)(p - NULL))/sizeof(dnnType)<<"\n";
+            
+            cudnnDataType_t t;
+            cudnnTensorFormat_t f;
+            int ndim = 5;
+            int dims[5] = {0, 0, 0, 0, 0};
+            checkCUDNN(cudnnGetFilterNdDescriptor(m_desc, ndim, &t, &f, &ndim, &dims[0]));
+            std::cout << "(layer, linlayer): " <<  i << " " << j << "\n";
+
+            int tot = 1;
+            for (int i = 0; i < ndim; ++i) {
+                std::cout << dims[i] << " ";
+                tot *= dims[i];
+            }
+            std::cout<<"\t-> "<<tot<<"\n\n";
+        }
+    }
+
+    printCenteredTitle("BIAS", '=', 20);
+    for (int i = 0; i < numLayers*(bidirectional?2:1); ++i) {
+        for (int j = 0; j < n; ++j) {
+            checkCUDNN(cudnnGetRNNLinLayerBiasParams(net->cudnnHandle, rnnDesc, 
+                i, x_desc_vec_[0], w_desc_, 0, j, m_desc, (void**)&p));
+
+            std::cout << "ptr: " << ((int64_t)(p - NULL))/sizeof(dnnType)<<"\n";
+
+            cudnnDataType_t t;
+            cudnnTensorFormat_t f;
+            int ndim = 5;
+            int dims[5] = {0, 0, 0, 0, 0};
+            checkCUDNN(cudnnGetFilterNdDescriptor(m_desc, ndim, &t, &f, &ndim, &dims[0]));
+            std::cout << "(layer, linlayer): " <<  i << " " << j << "\n";
+
+            int tot = 1;
+            for (int i = 0; i < ndim; ++i) {
+                std::cout << dims[i] << " ";
+                tot *= dims[i];
+            }
+            std::cout<<"\t-> "<<tot<<"\n\n";
+        }
+    }
+    
+    checkCUDNN(cudnnDestroyFilterDescriptor(m_desc));
 }
 
 LSTM::~LSTM() {
@@ -149,18 +210,23 @@ LSTM::~LSTM() {
 dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
     std::cout<<"LSTM infer\n";
 
+    // reset states
+    checkCuda( cudaMemset(hx_ptr, 0, stateDataDim*sizeof(float)) );	
+    checkCuda( cudaMemset(cx_ptr, 0, stateDataDim*sizeof(float)) );
+
+
     checkCUDNN(cudnnRNNForwardInference(net->cudnnHandle,
         rnnDesc,
-        seqLen,
-        x_desc_vec_.data(),         // input array of desc
+        seqLen,                     // number of time steps (nT)
+        x_desc_vec_.data(),         // input array of desc (nT*nC_in)
         srcData,                    // input pointer
-        hx_desc_,                   // initial hidden state desc    
+        hx_desc_,                   // initial hidden state desc     
         hx_ptr,                     // initial hidden state pointer 
         cx_desc_,                   // initial cell state desc      
         cx_ptr,                     // initial cell state pointer   
         w_desc_,                    // weights desc
         w_ptr,                      // weights pointer
-        y_desc_vec_.data(),         // output desc
+        y_desc_vec_.data(),         // output desc     (nT*nC_out)
         dstData,                    // output pointer
         hy_desc_,                   // final hidden state desc        
         hy_ptr,                     // final hidden state pointer 

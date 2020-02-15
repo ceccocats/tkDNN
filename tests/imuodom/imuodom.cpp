@@ -14,6 +14,9 @@ const char *c2_bin = "../tests/imuodom/layers/conv1d_9.bin";
 const char *c3_bin = "../tests/imuodom/layers/conv1d_10.bin";
 const char *c4_bin = "../tests/imuodom/layers/conv1d_11.bin";
 const char *c5_bin = "../tests/imuodom/layers/conv1d_12.bin";
+const char *l0_bin = "../tests/imuodom/layers/bidirectional_3.bin";
+const char *l1_bin = "../tests/imuodom/layers/bidirectional_4.bin";
+const char *d0_bin = "../tests/imuodom/layers/dense_3.bin";
 
 int main() {
 
@@ -48,8 +51,9 @@ int main() {
     tk::dnn::Layer *concat_l[3] = { &x0_2, &x1_2, &x2_2 };
     tk::dnn::Route concat (&net, concat_l, 3);
 
-    tk::dnn::LSTM lstm0(&net, 128, true, "ciao");
-    tk::dnn::LSTM lstm1(&net, 128, false, "ciao");
+    //tk::dnn::LSTM lstm0(&net, 128, true, l0_bin);
+    //tk::dnn::LSTM lstm1(&net, 128, false, l1_bin);
+    //tk::dnn::Dense d0 (&net, 3, d0_bin);
 
     net.print();
 
@@ -62,10 +66,12 @@ int main() {
     TIMER_STOP
 
     // Print real test
-    std::cout<<"\n==== CHECK RESULT ====\n";
-    dnnType *out;
-    dnnType *out_h;
-    readBinaryFile(output_bin, dim.tot(), &out_h, &out);
-    checkResult(dim.tot(), data, out);
+    //std::cout<<"\n==== CHECK RESULT ====\n";
+    //dnnType *out;
+    //dnnType *out_h;
+    //readBinaryFile(output_bin, dim.tot(), &out_h, &out);
+    //checkResult(dim.tot(), data, out);
+
+    printDeviceVector(100, data);
     return 0;
 }

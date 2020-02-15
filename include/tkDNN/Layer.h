@@ -212,6 +212,7 @@ protected:
     https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
     https://github.com/Jeffery-Song/mxnet-test/blob/aab666faad44011f7a67b527b5f6c960367d0422/src/operator/cudnn_rnn-inl.h
     https://stackoverflow.com/a/38737941
+    https://colah.github.io/posts/2015-08-Understanding-LSTMs/
 
     PARAMS (numlayers*2):
         layer0:
@@ -236,7 +237,7 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-    const bool bidirectional = 1; /**> is the net bidir */
+    const bool bidirectional = false; /**> is the net bidir */
     bool returnSeq = false;       /**> if false return only the result of last timestep */
     int stateSize = 0; /**> number of hidden states */
     int seqLen = 0;    /**> number of timesteps */
@@ -254,9 +255,11 @@ protected:
     cudnnTensorDescriptor_t hx_desc_, cx_desc_;
     cudnnTensorDescriptor_t hy_desc_, cy_desc_;
     dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
+    int stateDataDim;
 
     cudnnFilterDescriptor_t w_desc_;
     dnnType *w_ptr;
+    dnnType *w_h;
 };
 
 
