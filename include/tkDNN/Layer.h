@@ -237,7 +237,7 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-    const bool bidirectional = false; /**> is the net bidir */
+    const bool bidirectional = true; /**> is the net bidir */
     bool returnSeq = false;       /**> if false return only the result of last timestep */
     int stateSize = 0; /**> number of hidden states */
     int seqLen = 0;    /**> number of timesteps */
@@ -260,6 +260,7 @@ protected:
     cudnnFilterDescriptor_t w_desc_;
     dnnType *w_ptr;
     dnnType *w_h;
+    dnnType *wf_ptr, *wb_ptr; // params pointer forward and backward layer
 };
 
 

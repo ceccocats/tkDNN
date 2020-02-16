@@ -2,6 +2,7 @@ import keras
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Input, Dense, Activation, Flatten, Dropout, ELU, Reshape, Lambda, Conv1D
+from keras.layers import Bidirectional, CuDNNLSTM
 from keras.layers.convolutional import Convolution2D, Convolution3D
 from keras.layers.pooling import MaxPooling2D, MaxPooling3D, AveragePooling3D
 from keras.models import Sequential, Model
@@ -17,9 +18,11 @@ def bin_write(f, data):
     f.write(bin)
 
 def create_model():
-    x1 = Input((6, 16), name='x1')
+    x1 = Input((3, 8), name='x1')
     conv = Conv1D(4, 2)(x1)
-    model = Model([x1], [conv])
+    lstm = Bidirectional(CuDNNLSTM(5, return_sequences=True))(conv)    
+    lstm2 = Bidirectional(CuDNNLSTM(5, return_sequences=False))(lstm)    
+    model = Model([x1], [lstm2])
     model.summary()
 
     return model
@@ -30,14 +33,16 @@ if __name__ == '__main__':
     model = create_model()
     model.save("net.hdf5")
 
-    x = np.random.rand(1,1,6,16)
+    np.random.seed(2)
+    x = np.random.rand(1,1,3,8)
     r = model.predict( x[0], batch_size=1)
-    r = np.array([r])
 
+    r = np.array([r])
     x =  x.transpose(0, 3, 1, 2)
-    r =  r.transpose(0, 3, 1, 2)
+    #r =  r.transpose(0, 3, 1, 2)
     print("in: ", np.shape(x))
     print("out: ", np.shape(r))
+    print("output: ", r.tolist())
 
     x = np.array(x.flatten(), dtype=np.float32)
     f = open("input.bin", mode='wb')
