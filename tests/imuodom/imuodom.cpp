@@ -66,7 +66,7 @@ int main() {
 
     TIMER_START
     // Inference
-    data = net.infer(dim, data); dim.print();
+    data = net.infer(dim, data);
     TIMER_STOP
 
     // Print real test
@@ -75,7 +75,9 @@ int main() {
     dnnType *out0_h, *out1_h;
     readBinaryFile(o0_bin, d0.output_dim.tot(), &out0_h, &out0);
     readBinaryFile(o1_bin, d1.output_dim.tot(), &out1_h, &out1);
+    d0.output_dim.print();
     checkResult(d0.output_dim.tot(), d0.dstData, out0);
+    d1.output_dim.print();
     checkResult(d1.output_dim.tot(), d1.dstData, out1);
     return 0;
 }

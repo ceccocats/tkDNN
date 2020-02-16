@@ -207,7 +207,9 @@ protected:
 
 /**
     Bidirectional LSTM layer
-    
+    ONLY BIDIRECTIONAL (TODO: more configurable)
+    currently implemented as 2 inferences: forward and backward (TODO: only 1 cudnn inference)
+
     implementation info:
     https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
     https://github.com/Jeffery-Song/mxnet-test/blob/aab666faad44011f7a67b527b5f6c960367d0422/src/operator/cudnn_rnn-inl.h
@@ -261,6 +263,11 @@ protected:
     dnnType *w_ptr;
     dnnType *w_h;
     dnnType *wf_ptr, *wb_ptr; // params pointer forward and backward layer
+
+    // used during inference
+    dataDim_t one_output_dim; // output dim of as single inference
+    dnnType *srcF, *srcB; // input of single inference 
+    dnnType *dstF, *dstB_NR, *dstB; // output of single inference, dstB_NR = dstB not reversed
 };
 
 
