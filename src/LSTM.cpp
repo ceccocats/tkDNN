@@ -118,11 +118,12 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
         net->dataType, net->tensorFormat, 3, dim_w));
 
     // load params
+    std::cout<<"Reading weights: PARAMS="<<cudnn_params*2<<"\n";
     readBinaryFile(fname_weights, cudnn_params*2, &w_h, &w_ptr);
     // set forward and backward params
     wf_ptr = w_ptr;
     wb_ptr = w_ptr + cudnn_params;
-    std::cout<<"wf: "<<wf_ptr<<" wb "<<wb_ptr<<"\n"; 
+    //std::cout<<"wf: "<<wf_ptr<<" wb "<<wb_ptr<<"\n"; 
 
     // set output dim 
     output_dim = input_dim;
@@ -138,7 +139,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 
     // used during inference
-    dataDim_t  one_output_dim = input_dim;
+    one_output_dim = input_dim;
     one_output_dim.c = stateSize;
     checkCuda( cudaMalloc(&srcF, input_dim.tot()*sizeof(dnnType)) );
     checkCuda( cudaMalloc(&srcB, input_dim.tot()*sizeof(dnnType)) );
