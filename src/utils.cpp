@@ -68,7 +68,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device)
         delete [] vec;
 }
 
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit) {
 
     dnnType *data_h, *correct_h;
     const float eps = 0.02f;
@@ -92,7 +92,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
             diffs += 1;
             if(diffs == 1)
                 std::cout<<"\n";
-            if(diffs < 10)
+            if(diffs < limit)
                 std::cout<<" | [ "<<i<<" ]: "<<data_h[i]<<" "<<correct_h[i]<<"\n";
         }
     }

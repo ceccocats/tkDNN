@@ -42,17 +42,47 @@ def export_layer(name, weights, bias):
     bin_write(f, bias)
     print ("WEIGHTS saved\n")
 
-def export_bidir(name, params):
+def export_bidir(name, params, paramsb):
     print ("########    EXPORT", name, "LAYER    ########")
  
     f = open(name + ".bin", mode='wb')
 
+    print("FORWARD")
+    ker = params[0]
+    rec_ker = params[1]
+    bias = params[2]
+    print ("export kernels: ", np.shape(ker))
+    units = np.shape(ker)[1] // 4
+    bin_write(f, ker[:,:units])
+    bin_write(f, ker[:,units:units*2])
+    bin_write(f, ker[:,units*2:units*3])
+    bin_write(f, ker[:,units*3:])
+    print ("export recurrent kernels: ", np.shape(rec_ker))
+    bin_write(f, rec_ker[:,:units])
+    bin_write(f, rec_ker[:,units:units*2])
+    bin_write(f, rec_ker[:,units*2:units*3])
+    bin_write(f, rec_ker[:,units*3:])
+    print ("export kernels: ", np.shape(ker))
+    bin_write(f, bias)
+    print("WEIGHTS saved\n")
 
-    for w in params:
-        #w = w.transpose()
-        print(np.shape(w))
-        bin_write(f, w)
-   
+    print("BACKWARD")
+    ker = paramsb[0]
+    rec_ker = paramsb[1]
+    bias = paramsb[2]
+    print ("export kernels: ", np.shape(ker))
+    units = np.shape(ker)[1] // 4
+    bin_write(f, ker[:,:units])
+    bin_write(f, ker[:,units:units*2])
+    bin_write(f, ker[:,units*2:units*3])
+    bin_write(f, ker[:,units*3:])
+    print ("export recurrent kernels: ", np.shape(rec_ker))
+    bin_write(f, rec_ker[:,:units])
+    bin_write(f, rec_ker[:,units:units*2])
+    bin_write(f, rec_ker[:,units*2:units*3])
+    bin_write(f, rec_ker[:,units*3:])
+    print ("export kernels: ", np.shape(ker))
+    bin_write(f, bias)
     print("WEIGHTS saved\n")
 
 #https://github.com/fchollet/keras/wiki/Converting-convolution-kernels-from-Theano-to-TensorFlow-and-vice-versa
@@ -100,7 +130,7 @@ if __name__ == '__main__':
             export_layer(args.output + "/" + name, wgs[0], wgs[1])
         elif name.startswith("bidirectional"):
             wgs = l.forward_layer.get_weights()
-            export_bidir(args.output + "/" + name, wgs)
+            export_bidir(args.output + "/" + name, l.forward_layer.get_weights(), l.backward_layer.get_weights())
         else:
             print ("skip:", name, "has no weights")
             continue

@@ -3,14 +3,20 @@
 
 const char *input_bin   = "../tests/simple/input.bin";
 const char *c0_bin      = "../tests/simple/layers/conv1d_1.bin";
+const char *l1_bin      = "../tests/simple/layers/bidirectional_1.bin";
+const char *l2_bin      = "../tests/simple/layers/bidirectional_2.bin";
 const char *output_bin  = "../tests/simple/output.bin";
 
 int main() {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 16, 1, 6);
+    tk::dnn::dataDim_t dim(1, 8, 1, 3);
     tk::dnn::Network net(dim);
     tk::dnn::Conv2d     l0(&net, 4, 1, 2, 1, 1, 0, 0, c0_bin);
+    tk::dnn::LSTM       l1(&net, 5, true, l1_bin);
+    tk::dnn::LSTM       l2(&net, 5, false, l2_bin);
+
+    net.print();
 
     // Load input
     dnnType *data;
