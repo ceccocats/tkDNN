@@ -13,8 +13,6 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     seqLen        = input_dim.w;
     stateSize     = hiddensize;
 
-    std::cout<<"LSTM seqLen: "<<seqLen<<"\n";
-
     // init Tensor Descriptors
     std::vector<cudnnTensorDescriptor_t> x_vec(seqLen);
     std::vector<cudnnTensorDescriptor_t> y_vec(seqLen);
@@ -110,7 +108,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     checkCUDNN(cudnnGetRNNParamsSize(net->cudnnHandle,
         rnnDesc,x_desc_vec_[0], &cudnn_param_size, net->dataType));
     int cudnn_params = cudnn_param_size/sizeof(dnnType);
-    std::cout<<"LSTM params size: "<<cudnn_params << ", bytes: "<<cudnn_param_size<<"\n";
+    //std::cout<<"LSTM params size: "<<cudnn_params << ", bytes: "<<cudnn_param_size<<"\n";
 
     // Set param descriptors
     checkCUDNN(cudnnCreateFilterDescriptor(&w_desc_));
@@ -129,14 +127,24 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     // set output dim 
     output_dim = input_dim;
     output_dim.c = stateSize*(bidirectional ? 2 : 1);
- 
-    //allocate data for infer result
-    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 
+    // if retunseq is disabled only the last timestep is returned
     if(!returnSeq) {
         output_dim.h = 1;
         output_dim.w = 1;
     }
+
+    //allocate data for infer result
+    checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
+
+    // used during inference
+    dataDim_t  one_output_dim = input_dim;
+    one_output_dim.c = stateSize;
+    checkCuda( cudaMalloc(&srcF, input_dim.tot()*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&srcB, input_dim.tot()*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&dstF, one_output_dim.tot()*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&dstB_NR, one_output_dim.tot()*sizeof(dnnType)) );
+    checkCuda( cudaMalloc(&dstB, one_output_dim.tot()*sizeof(dnnType)) );
 
 
     /*
@@ -147,7 +155,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     int n = 8; // lstm layers
     
     printCenteredTitle("WEIGHTS", '=', 20);
-    for (int i = 0; i < numLayers*(bidirectional?2:1); ++i) {
+    for (int i = 0; i < numLayers; ++i) {
         for (int j = 0; j < n; ++j) {
             
             checkCUDNN(cudnnGetRNNLinLayerMatrixParams(net->cudnnHandle, rnnDesc,
@@ -172,7 +180,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     }
 
     printCenteredTitle("BIAS", '=', 20);
-    for (int i = 0; i < numLayers*(bidirectional?2:1); ++i) {
+    for (int i = 0; i < numLayers; ++i) {
         for (int j = 0; j < n; ++j) {
             checkCUDNN(cudnnGetRNNLinLayerBiasParams(net->cudnnHandle, rnnDesc, 
                 i, x_desc_vec_[0], w_desc_, 0, j, m_desc, (void**)&p));
@@ -209,36 +217,26 @@ LSTM::~LSTM() {
     checkCuda(cudaFree(work_space_    ));
     checkCuda(cudaFree(dropout_states_));
 
+    checkCuda(cudaFree(srcF));
+    checkCuda(cudaFree(srcB));
+    checkCuda(cudaFree(dstF));
+    checkCuda(cudaFree(dstB_NR));
+    checkCuda(cudaFree(dstB));
     checkCuda(cudaFree(dstData));
 }
 
 dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
-    std::cout<<"LSTM infer\n";
 
+    // transpose input 
+    matrixTranspose(net->cublasHandle, srcData, srcF, dim.c, dim.h*dim.w*dim.l);
     
-    dnnType *trans;
-    checkCuda( cudaMalloc(&trans, dim.tot()*sizeof(dnnType)));
-    matrixTranspose(net->cublasHandle, srcData, trans, dim.c, dim.h*dim.w*dim.l);
-    srcData = trans;
-
-    // reposition in invered order
-    dnnType *srcBack;
-    checkCuda( cudaMalloc(&srcBack, dim.tot()*sizeof(dnnType)));
+    // build srcB as reversed srcF
     for(int i=0; i<input_dim.w; i++) {
         int off_0 = i*(input_dim.c);
         int off_1 = (i+1)*(input_dim.c);
-        std::cout<<off_0<<" "<<off_1<<"\n";
-        checkCuda( cudaMemcpy(srcBack + dim.tot() - off_1, srcData + off_0, input_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        checkCuda( cudaMemcpy(srcB + dim.tot() - off_1, srcF + off_0, 
+            input_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
     }
-
-
-    dataDim_t singleOutput = input_dim;
-    singleOutput.c = stateSize;
-    dnnType *dstF = dstData;
-    dnnType *dstB = dstData + singleOutput.tot();
-
-    std::cout<<"INPUT:\n";
-    printDeviceVector(input_dim.tot(), srcData);
 
     // forward
     { 
@@ -251,7 +249,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             rnnDesc,
             seqLen,                     // number of time steps (nT)
             x_desc_vec_.data(),         // input array of desc (nT*nC_in)
-            srcData,                    // input pointer
+            srcF,                    // input pointer
             hx_desc_,                   // initial hidden state desc     
             hx_ptr,                     // initial hidden state pointer 
             cx_desc_,                   // initial cell state desc      
@@ -267,11 +265,6 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             work_space_,                // workspace pointer
             workspace_byte_));          // workspace size    
     }
-    std::cout<<"OUTPUT F:\n";
-    printDeviceVector(singleOutput.tot(), dstF);
-
-    std::cout<<"INPUT:\n";
-    printDeviceVector(input_dim.tot(), srcBack);
 
     // backward
     { 
@@ -283,7 +276,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             rnnDesc,
             seqLen,                     // number of time steps (nT)
             x_desc_vec_.data(),         // input array of desc (nT*nC_in)
-            srcBack,                    // input pointer
+            srcB,                    // input pointer
             hx_desc_,                   // initial hidden state desc     
             hx_ptr,                     // initial hidden state pointer 
             cx_desc_,                   // initial cell state desc      
@@ -291,7 +284,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             w_desc_,                    // weights desc
             wb_ptr,                     // weights pointer
             y_desc_vec_.data(),         // output desc     (nT*nC_out)
-            dstB,                       // output pointer
+            dstB_NR,                       // output pointer
             hy_desc_,                   // final hidden state desc        
             hy_ptr,                     // final hidden state pointer 
             cy_desc_,                   // final cell state desc          
@@ -301,38 +294,30 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
     }
 
 
-    // reposition in invered order
-    dnnType *dstBack;
-    checkCuda( cudaMalloc(&dstBack, singleOutput.tot()*sizeof(dnnType)));
-    for(int i=0; i<singleOutput.w; i++) {
-        int off_0 = i*(singleOutput.c);
-        int off_1 = (i+1)*(singleOutput.c);
-        std::cout<<off_0<<" "<<off_1<<"\n";
-        checkCuda( cudaMemcpy(dstBack + singleOutput.tot() - off_1, dstB + off_0, singleOutput.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+    // reverse order of dstB
+    for(int i=0; i<one_output_dim.w; i++) {
+        int off_0 = i*(one_output_dim.c);
+        int off_1 = (i+1)*(one_output_dim.c);
+        checkCuda( cudaMemcpy(dstB + one_output_dim.tot() - off_1, dstB_NR + off_0, 
+            one_output_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
     }    
-    dstB = dstBack;
 
-    std::cout<<"OUTPUT B:\n";
-    printDeviceVector(singleOutput.tot(), dstB);
-    checkCuda( cudaMalloc(&trans, singleOutput.tot()*2*sizeof(dnnType)));
-
+    // if retunseq is disabled only the last timestep is returned
     if(returnSeq) {
         // forward transpose
-        matrixTranspose(net->cublasHandle, dstF, trans, 
-                        singleOutput.h*singleOutput.w*singleOutput.l, singleOutput.c);
+        matrixTranspose(net->cublasHandle, dstF, dstData, 
+                         one_output_dim.h* one_output_dim.w*one_output_dim.l, one_output_dim.c);
         // backward transpose
-        matrixTranspose(net->cublasHandle, dstB, trans + singleOutput.tot(), 
-                        singleOutput.h*singleOutput.w*singleOutput.l, singleOutput.c);    
-        dstData = trans;
+        matrixTranspose(net->cublasHandle, dstB, dstData + one_output_dim.tot(), 
+                         one_output_dim.h* one_output_dim.w*one_output_dim.l, one_output_dim.c);    
     } else {
         // copy last of forward 
-        checkCuda( cudaMemcpy(trans, dstF + singleOutput.tot() - singleOutput.c, singleOutput.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        checkCuda( cudaMemcpy(dstData, dstF + one_output_dim.tot() - one_output_dim.c, 
+            one_output_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
         // copy first of backward
-        checkCuda( cudaMemcpy(trans + singleOutput.c, dstB, singleOutput.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
-        dstData = trans;
+        checkCuda( cudaMemcpy(dstData + one_output_dim.c, dstB,  
+            one_output_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
     }
-
-
 
     dim = output_dim;
     return dstData;
