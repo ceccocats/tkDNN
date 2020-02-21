@@ -37,10 +37,11 @@ bool CenternetDetection::init(std::string tensor_path) {
     coco_class_name = std::vector<std::string>(coco_class_name_, std::end( coco_class_name_ ));
     src = cv::Mat(cv::Size(2,3), CV_32F);
     dst = cv::Mat(cv::Size(2,3), CV_32F);
+    dst2 = cv::Mat(cv::Size(2,3), CV_32F);
+    trans = cv::Mat(cv::Size(3,2), CV_32F);
+    trans2 = cv::Mat(cv::Size(3,2), CV_32F);
     // dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
 
-    checkCuda(cudaMallocHost(&input_h, sizeof(dnnType)*netRT->input_dim.tot()));
-    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
     checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
 
     // dim_hm = tk::dnn::dataDim_t(1, 80, 56, 56, 1);
@@ -94,61 +95,31 @@ bool CenternetDetection::init(std::string tensor_path) {
 
     checkCuda( cudaMallocHost(&target_coords, 4 * K *sizeof(float)) );
 
-    mean << 0.408, 0.447, 0.47;
-    stddev << 0.289, 0.274, 0.278;
+    checkCuda( cudaMalloc(&mean_d, 3 * sizeof(float)) );
+    checkCuda( cudaMalloc(&stddev_d, 3 * sizeof(float)) );
+    float mean[3] = {0.408, 0.447, 0.47};
+    float stddev[3] = {0.289, 0.274, 0.278};
+    
+    checkCuda(cudaMemcpy(mean_d, mean, 3*sizeof(float), cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(stddev_d, stddev, 3*sizeof(float), cudaMemcpyHostToDevice));
+
+    checkCuda( cudaMalloc(&d_ptrs, dim.c * dim.h*dim.w * sizeof(float)) );
+    // mean << 0.408, 0.447, 0.47;
+    // stddev << 0.289, 0.274, 0.278;
 
     // Alloc array used in the kernel 
     checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
     checkCuda( cudaMalloc(&ids_out, K *sizeof(int)) );
     // checkCuda( cudaFree(src_out) );
     // checkCuda( cudaFree(ids_out) );
-
-}
-
-void CenternetDetection::testdog() {
-
-    readBinaryFile(input_bin, dim.tot(), &input_h, &input_d);
-
-    // -------- transofrm compose
-    cv::Mat imageORIG = cv::imread("../../dog.jpg");
-    imageORIG.convertTo(imageF, CV_32FC3, 1/255.0); 
-    sz = imageF.size();
-    std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
-    resize(imageF, imageF, cv::Size(512, 512));
-    const int cropSize = 512;
-    const int offsetW = (imageF.cols - cropSize) / 2;
-    const int offsetH = (imageF.rows - cropSize) / 2;
-    const cv::Rect roi(offsetW, offsetH, cropSize, cropSize);
-    imageF = imageF(roi).clone();
-    std::cout << "Cropped image dimension: " << imageF.cols << " X " << imageF.rows << std::endl;
-
-    mean << 0.485, 0.456, 0.406;
-    stddev << 0.229, 0.224, 0.225;
-    sz = imageF.size();
-    // std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
-    // std::cout<<"mean: "<<mean<<", std: "<<stddev<<std::endl;
-    cv::add(imageF, -mean, imageF);
-    cv::divide(imageF, stddev, imageF);
-    //split channels
-    cv::split(imageF,bgr);//split source
-    dim2 = dim;
-    //write channels
-    for(int i=0; i<dim2.c; i++) {
-        int idx = i*imageF.rows*imageF.cols;
-        int ch = dim2.c-1 -i;
-        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    }
-
-    checkCuda(cudaMemcpyAsync(input_d, input, dim2.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
-
-    printCenteredTitle(" TENSORRT inference ", '=', 30); {
-        dim2.print();
-        TIMER_START
-        netRT->infer(dim2, input_d);
-        TIMER_STOP
-        dim2.print();
-    }
-    // checkResult(dim2.tot(), input_h, input);    
+    dst2.at<float>(0,0)=width * 0.5;
+    dst2.at<float>(0,1)=width * 0.5;
+    dst2.at<float>(1,0)=width * 0.5;
+    dst2.at<float>(1,1)=width * 0.5 +  width * -0.5; 
+    
+    dst2.at<float>(2,0)=dst2.at<float>(1,0) + (-dst2.at<float>(0,1)+dst2.at<float>(1,1) );
+    dst2.at<float>(2,1)=dst2.at<float>(1,1) + (dst2.at<float>(0,0)-dst2.at<float>(1,0) );
+    
 }
 
 cv::Mat CenternetDetection::draw(cv::Mat &imageORIG) {
@@ -196,7 +167,7 @@ cv::Mat CenternetDetection::draw(cv::Mat &imageORIG) {
 void CenternetDetection::update(cv::Mat &imageORIG) {
     
     if(!imageORIG.data) {
-        std::cout<<"YOLO: NO IMAGE DATA\n";
+        std::cout<<"CENTERNET: NO IMAGE DATA\n";
         return;
     }  
     TIMER_START
@@ -211,82 +182,91 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     float scale = 1.0;
     float new_height = sz.height * scale;
     float new_width = sz.width * scale;
-    float c[] = {new_width / 2.0, new_height /2.0};
-    float s[2];
+    if(sz.height != sz_old.height && sz.width != sz_old.width){
+        float c[] = {new_width / 2.0, new_height /2.0};
+        float s[2];
 
-    if(sz.width > sz.height){
-        s[0] = sz.width * 1.0;
-        s[1] = sz.width * 1.0;
+        if(sz.width > sz.height){
+            s[0] = sz.width * 1.0;
+            s[1] = sz.width * 1.0;
+        }
+        else{
+            s[0] = sz.height * 1.0;    
+            s[1] = sz.height * 1.0;    
+        }
+
+        // ----------- get_affine_transform
+        // rot_rad = pi * 0 / 100 --> 0
+        
+        src.at<float>(0,0)=c[0];
+        src.at<float>(0,1)=c[1];
+        src.at<float>(1,0)=c[0];
+        src.at<float>(1,1)=c[1] + s[0] * -0.5;
+        dst.at<float>(0,0)=inp_width * 0.5;
+        dst.at<float>(0,1)=inp_height * 0.5;
+        dst.at<float>(1,0)=inp_width * 0.5;
+        dst.at<float>(1,1)=inp_height * 0.5 +  inp_width * -0.5; 
+        
+        src.at<float>(2,0)=src.at<float>(1,0) + (-src.at<float>(0,1)+src.at<float>(1,1) );
+        src.at<float>(2,1)=src.at<float>(1,1) + (src.at<float>(0,0)-src.at<float>(1,0) );
+        dst.at<float>(2,0)=dst.at<float>(1,0) + (-dst.at<float>(0,1)+dst.at<float>(1,1) );
+        dst.at<float>(2,1)=dst.at<float>(1,1) + (dst.at<float>(0,0)-dst.at<float>(1,0) );
+
+        trans = cv::getAffineTransform( src, dst );
+        end_t = std::chrono::steady_clock::now();
+        std::cout << " TIME gett affine trans: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+        step_t = end_t;
+
+        trans2 = cv::getAffineTransform( dst2, src );
+
+        end_t = std::chrono::steady_clock::now();
+        std::cout << " TIME getAffineTrans 2: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+        step_t = end_t;
     }
-    else{
-        s[0] = sz.height * 1.0;    
-        s[1] = sz.height * 1.0;    
-    }
-
-    // ----------- get_affine_transform
-    // rot_rad = pi * 0 / 100 --> 0
-      
-    src.at<float>(0,0)=c[0];
-    src.at<float>(0,1)=c[1];
-    src.at<float>(1,0)=c[0];
-    src.at<float>(1,1)=c[1] + s[0] * -0.5;
-    dst.at<float>(0,0)=inp_width * 0.5;
-    dst.at<float>(0,1)=inp_height * 0.5;
-    dst.at<float>(1,0)=inp_width * 0.5;
-    dst.at<float>(1,1)=inp_height * 0.5 +  inp_width * -0.5; 
+    sz_old = sz;
+    cv::cuda::GpuMat im_Orig; 
+    im_Orig = cv::cuda::GpuMat(imageORIG);
+    cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
+    checkCuda( cudaDeviceSynchronize() );
     
-    src.at<float>(2,0)=src.at<float>(1,0) + (-src.at<float>(0,1)+src.at<float>(1,1) );
-    src.at<float>(2,1)=src.at<float>(1,1) + (src.at<float>(0,0)-src.at<float>(1,0) );
-    dst.at<float>(2,0)=dst.at<float>(1,0) + (-dst.at<float>(0,1)+dst.at<float>(1,1) );
-    dst.at<float>(2,1)=dst.at<float>(1,1) + (dst.at<float>(0,0)-dst.at<float>(1,0) );
-    
-    cv::Mat trans = cv::getAffineTransform( src, dst );
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME gett affine trans: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
-    
-
-    resize(imageORIG, imageF, cv::Size(new_width, new_height));
-    sz = imageF.size();
+    sz = imageF1_d.size();
     std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
-
-    cv::warpAffine(imageF, imageF, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
+    cv::cuda::warpAffine(imageF1_d, imageF2_d, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
+    checkCuda( cudaDeviceSynchronize() );
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
-
-    sz = imageF.size();
-    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
-    imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
-    
+    imageF2_d.convertTo(imageF1_d, CV_32FC3, 1/255.0); 
+    checkCuda( cudaDeviceSynchronize() );
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME convert: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME convert: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
     dim2 = dim;
-    
-    //split channels
-    cv::split(imageF,bgr);//split source
-    
-    for(int i=0; i<3; i++){
-        bgr[i] = bgr[i] - mean[i];
-        bgr[i] = bgr[i] / stddev[i];
-    }
+    cv::cuda::split(imageF1_d,bgr);//split source
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME split: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
 
-    //write channels
-    for(int i=0; i<dim2.c; i++) {
-        int idx = i*imageF.rows*imageF.cols;
-        int ch = dim2.c-3 +i;
-        // std::cout<<"i: "<<i<<", idx: "<<idx<<", ch: "<<ch<<std::endl;
-        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    }
+    for(int i=0; i<dim.c; i++)
+        checkCuda( cudaMemcpy(d_ptrs + i*dim.h * dim.w, (float*)bgr[i].data, dim.h * dim.w * sizeof(float), cudaMemcpyDeviceToDevice) );
+        
+    normalize(d_ptrs, dim.c, dim.h, dim.w, mean_d, stddev_d);
+    
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME normalize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
 
-    checkCuda(cudaMemcpyAsync(input_d, input, dim2.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(input_d, d_ptrs, dim2.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+    
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME Memcpy to input_d: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
 
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
@@ -295,7 +275,6 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
         TIMER_STOP
         dim2.print();
     }
-    // checkResult(dim2.tot(), input_h, input);
     step_t = std::chrono::steady_clock::now();
     
     // ------------------------------------ process --------------------------------------------
@@ -307,10 +286,10 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     activationSIGMOIDForward(rt_out[0], rt_out[0], dim_hm.tot());
     checkCuda( cudaDeviceSynchronize() );
 
-    subtractWithThreshold(rt_out[0], rt_out[0] + dim_hm.tot(), rt_out[1], rt_out[0]);
+    subtractWithThreshold(rt_out[0], rt_out[0] + dim_hm.tot(), rt_out[1], rt_out[0], op);
 
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME threshold: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME threshold: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     // ----------- nms end
     // ----------- topk  
@@ -327,7 +306,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
             ids_d);
     checkCuda( cudaDeviceSynchronize() );   
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME sort: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME sort: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
 
     topk(rt_out[0], ids_d, K, scores_d,
@@ -335,14 +314,14 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     checkCuda( cudaDeviceSynchronize() );    
 
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME topk: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME topk: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
         
     checkCuda( cudaMemcpy(scores, scores_d, K *sizeof(float), cudaMemcpyDeviceToHost) );
 
     topKxyclasses(topk_inds_d, topk_inds_d+K, K, width, dim_hm.w*dim_hm.h, clses_d, inttopk_xs_d, inttopk_ys_d);
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME topk x y clses 2: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME topk x y clses 2: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
 
     checkCuda( cudaMemcpy(topk_xs_d, (float *)inttopk_xs_d, K*sizeof(float), cudaMemcpyDeviceToDevice) );
@@ -356,7 +335,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     // checkCuda( cudaDeviceSynchronize() );
     
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME add offset: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME add offset: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
     bboxes(topk_inds_d, K, dim_wh.h*dim_wh.w, topk_xs_d, topk_ys_d, rt_out[2], bbx0_d, bbx1_d, bby0_d, bby1_d, src_out, ids_out);
@@ -368,35 +347,13 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     checkCuda( cudaMemcpy(bby1, bby1_d, K * sizeof(float), cudaMemcpyDeviceToHost) ); 
     
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME bboxes: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME bboxes: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
 
     // ---------------------------------- post-process -----------------------------------------
     
     // --------- ctdet_post_process
     // --------- transform_preds 
-    src.at<float>(0,0)=c[0];
-    src.at<float>(0,1)=c[1];
-    src.at<float>(1,0)=c[0];
-    src.at<float>(1,1)=c[1] + s[0] * -0.5;
-    dst.at<float>(0,0)=width * 0.5;
-    dst.at<float>(0,1)=width * 0.5;
-    dst.at<float>(1,0)=width * 0.5;
-    dst.at<float>(1,1)=width * 0.5 +  width * -0.5; 
-    
-    src.at<float>(2,0)=src.at<float>(1,0) + (-src.at<float>(0,1)+src.at<float>(1,1) );
-    src.at<float>(2,1)=src.at<float>(1,1) + (src.at<float>(0,0)-src.at<float>(1,0) );
-    dst.at<float>(2,0)=dst.at<float>(1,0) + (-dst.at<float>(0,1)+dst.at<float>(1,1) );
-    dst.at<float>(2,1)=dst.at<float>(1,1) + (dst.at<float>(0,0)-dst.at<float>(1,0) );
-    
-    
-    cv::Mat trans2(cv::Size(3,2), CV_32F);
-    trans2 = cv::getAffineTransform( dst, src );
-
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME getAffineTrans 2: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
-    step_t = end_t;
-
     cv::Mat new_pt1(cv::Size(1,2), CV_32F);
     cv::Mat new_pt2(cv::Size(1,2), CV_32F); 
 
@@ -420,7 +377,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
         target_coords[i*4+2] = new_pt2.at<float>(0,0);
         target_coords[i*4+3] = new_pt2.at<float>(0,1);
     }
-        
+       
     detected.clear();
     for(int i = 0; i<classes; i++){
         for(int j=0; j<K; j++)
@@ -449,7 +406,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     }
     
     end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME detections: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_t - step_t).count() << " ms" << std::endl;
+    std::cout << " TIME detections: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
 
     std::cout<<"TOTAL: \n";
