@@ -59,7 +59,7 @@ public:
     dataDim_t input_dim;
     dataDim_t getOutputDim();
 
-    bool fp16, dla;
+    bool fp16, dla, int8;
     bool dontLoadWeights;
 };
 

@@ -294,8 +294,6 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
         netRT->infer(dim2, input_d);
         TIMER_STOP
         dim2.print();
-
-        stats.push_back(t_ns);
     }
     // checkResult(dim2.tot(), input_h, input);
     step_t = std::chrono::steady_clock::now();
@@ -456,5 +454,6 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
 
     std::cout<<"TOTAL: \n";
     TIMER_STOP
+    stats.push_back(t_ns);
 }
 }}

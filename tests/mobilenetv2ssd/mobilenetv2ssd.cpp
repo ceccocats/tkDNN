@@ -1,0 +1,448 @@
+#include <iostream>
+#include "tkdnn.h"
+
+const char *output_bin = "../tests/mobilenetv2ssd/debug/regression_headers-5.bin";
+const char *input_bin = "../tests/mobilenetv2ssd/debug/input.bin";
+
+const char *conv0_bin = "../tests/mobilenetv2ssd/layers/base_net-0-0.bin";
+const char *inverted_residual1[]={
+"../tests/mobilenetv2ssd/layers/base_net-1-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-1-conv-3.bin"};
+const char *inverted_residual2[]={
+"../tests/mobilenetv2ssd/layers/base_net-2-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-2-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-2-conv-6.bin"};
+const char *inverted_residual3[]={
+"../tests/mobilenetv2ssd/layers/base_net-3-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-3-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-3-conv-6.bin"};
+const char *inverted_residual4[]={
+"../tests/mobilenetv2ssd/layers/base_net-4-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-4-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-4-conv-6.bin"};
+const char *inverted_residual5[]={
+"../tests/mobilenetv2ssd/layers/base_net-5-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-5-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-5-conv-6.bin"};
+const char *inverted_residual6[]={
+"../tests/mobilenetv2ssd/layers/base_net-6-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-6-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-6-conv-6.bin"};
+const char *inverted_residual7[]={
+"../tests/mobilenetv2ssd/layers/base_net-7-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-7-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-7-conv-6.bin"};
+const char *inverted_residual8[]={
+"../tests/mobilenetv2ssd/layers/base_net-8-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-8-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-8-conv-6.bin"};
+const char *inverted_residual9[]={
+"../tests/mobilenetv2ssd/layers/base_net-9-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-9-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-9-conv-6.bin"};
+const char *inverted_residual10[]={
+"../tests/mobilenetv2ssd/layers/base_net-10-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-10-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-10-conv-6.bin"};
+const char *inverted_residual11[]={
+"../tests/mobilenetv2ssd/layers/base_net-11-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-11-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-11-conv-6.bin"};
+const char *inverted_residual12[]={
+"../tests/mobilenetv2ssd/layers/base_net-12-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-12-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-12-conv-6.bin"};
+const char *inverted_residual13[]={
+"../tests/mobilenetv2ssd/layers/base_net-13-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-13-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-13-conv-6.bin"};
+const char *inverted_residual14[]={
+"../tests/mobilenetv2ssd/layers/base_net-14-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-14-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-14-conv-6.bin"};
+const char *inverted_residual15[]={
+"../tests/mobilenetv2ssd/layers/base_net-15-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-15-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-15-conv-6.bin"};
+const char *inverted_residual16[]={
+"../tests/mobilenetv2ssd/layers/base_net-16-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-16-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-16-conv-6.bin"};
+const char *inverted_residual17[]={
+"../tests/mobilenetv2ssd/layers/base_net-17-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/base_net-17-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/base_net-17-conv-6.bin"};
+
+const char *conv18 = "../tests/mobilenetv2ssd/layers/base_net-18-0.bin";
+
+const char *extras0[]={
+"../tests/mobilenetv2ssd/layers/extras-0-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/extras-0-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/extras-0-conv-6.bin"};
+const char *extras1[]={
+"../tests/mobilenetv2ssd/layers/extras-1-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/extras-1-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/extras-1-conv-6.bin"};
+const char *extras2[]={
+"../tests/mobilenetv2ssd/layers/extras-2-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/extras-2-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/extras-2-conv-6.bin"};
+const char *extras3[]={
+"../tests/mobilenetv2ssd/layers/extras-3-conv-0.bin",
+"../tests/mobilenetv2ssd/layers/extras-3-conv-3.bin",
+"../tests/mobilenetv2ssd/layers/extras-3-conv-6.bin"};
+
+const char *classification_header0[]={
+"../tests/mobilenetv2ssd/layers/classification_headers-0-0.bin",
+"../tests/mobilenetv2ssd/layers/classification_headers-0-3.bin"};
+const char *classification_header1[]={
+"../tests/mobilenetv2ssd/layers/classification_headers-1-0.bin",
+"../tests/mobilenetv2ssd/layers/classification_headers-1-3.bin"};
+const char *classification_header2[]={
+"../tests/mobilenetv2ssd/layers/classification_headers-2-0.bin",
+"../tests/mobilenetv2ssd/layers/classification_headers-2-3.bin"};
+const char *classification_header3[]={
+"../tests/mobilenetv2ssd/layers/classification_headers-3-0.bin",
+"../tests/mobilenetv2ssd/layers/classification_headers-3-3.bin"};
+const char *classification_header4[]={
+"../tests/mobilenetv2ssd/layers/classification_headers-4-0.bin",
+"../tests/mobilenetv2ssd/layers/classification_headers-4-3.bin"};
+
+const char *classification_header5 = "../tests/mobilenetv2ssd/layers/classification_headers-5.bin";
+
+const char *regression_header0[]={
+"../tests/mobilenetv2ssd/layers/regression_headers-0-0.bin",
+"../tests/mobilenetv2ssd/layers/regression_headers-0-3.bin"};
+const char *regression_header1[]={
+"../tests/mobilenetv2ssd/layers/regression_headers-1-0.bin",
+"../tests/mobilenetv2ssd/layers/regression_headers-1-3.bin"};
+const char *regression_header2[]={
+"../tests/mobilenetv2ssd/layers/regression_headers-2-0.bin",
+"../tests/mobilenetv2ssd/layers/regression_headers-2-3.bin"};
+const char *regression_header3[]={
+"../tests/mobilenetv2ssd/layers/regression_headers-3-0.bin",
+"../tests/mobilenetv2ssd/layers/regression_headers-3-3.bin"};
+const char *regression_header4[]={
+"../tests/mobilenetv2ssd/layers/regression_headers-4-0.bin",
+"../tests/mobilenetv2ssd/layers/regression_headers-4-3.bin"};
+
+const char *regression_header5 = "../tests/mobilenetv2ssd/layers/regression_headers-5.bin";
+
+
+
+
+
+int main()
+{
+
+    // Network layout
+    tk::dnn::dataDim_t dim(1, 3, 300, 300, 1);
+    tk::dnn::Network net(dim);
+
+    tk::dnn::Conv2d conv1(&net, 32, 3, 3, 2, 2, 1, 1, conv0_bin, true);
+    tk::dnn::Activation relu3(&net, CUDNN_ACTIVATION_RELU);
+
+    //Inverted Residual 1
+    
+    tk::dnn::Conv2d conv2(&net, 32, 3, 3, 1, 1, 1, 1, inverted_residual1[0], true,false, false,32);
+    tk::dnn::Activation relu5(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d conv3(&net, 16, 1, 1, 1, 1, 0, 0, inverted_residual1[1], true);
+    
+
+    //Inverted Residual 2
+    tk::dnn::Conv2d ir_2_conv1(&net, 96, 1, 1, 1, 1, 0, 0, inverted_residual2[0], true);
+    tk::dnn::Activation relu_2_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_2_conv2(&net, 96, 3, 3, 2, 2, 1, 1, inverted_residual2[1], true, false, false, 96);
+    tk::dnn::Activation relu_2_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_2_conv3(&net, 24, 1, 1, 1, 1, 0, 0, inverted_residual2[2], true);
+
+    //Inverted Residual 3
+    tk::dnn::Layer    *last = &ir_2_conv3;
+    tk::dnn::Conv2d ir_3_conv1(&net, 144, 1, 1, 1, 1, 0, 0, inverted_residual3[0], true);
+    tk::dnn::Activation relu_3_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_3_conv2(&net, 144, 3, 3, 1, 1, 1, 1, inverted_residual3[1], true, false, false, 144);
+    tk::dnn::Activation relu_3_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_3_conv3(&net, 24, 1, 1, 1, 1, 0, 0, inverted_residual3[2], true);
+    
+    tk::dnn::Shortcut s3_0 (&net, last);
+    // //Inverted Residual 4
+    tk::dnn::Conv2d ir_4_conv1(&net, 144, 1, 1, 1, 1, 0, 0, inverted_residual4[0], true);
+    tk::dnn::Activation relu_4_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_4_conv2(&net, 144, 3, 3, 2, 2, 1, 1, inverted_residual4[1], true, false, false, 144);
+    tk::dnn::Activation relu_4_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_4_conv3(&net, 32, 1, 1, 1, 1, 0, 0, inverted_residual4[2], true);
+
+    // // //Inverted Residual 5
+    last = &ir_4_conv3;
+    tk::dnn::Conv2d ir_5_conv1(&net, 192, 1, 1, 1, 1, 0, 0, inverted_residual5[0], true);
+    tk::dnn::Activation relu_5_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_5_conv2(&net, 192, 3, 3, 1, 1, 1, 1, inverted_residual5[1], true, false, false, 192);
+    tk::dnn::Activation relu_5_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_5_conv3(&net, 32, 1, 1, 1, 1, 0, 0, inverted_residual5[2], true);
+    
+    tk::dnn::Shortcut s5_0 (&net, last);
+    // // // //Inverted Residual 6
+    last = &s5_0;
+    tk::dnn::Conv2d ir_6_conv1(&net, 192, 1, 1, 1, 1, 0, 0, inverted_residual6[0], true);
+    tk::dnn::Activation relu_6_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_6_conv2(&net, 192, 3, 3, 1, 1, 1, 1, inverted_residual6[1], true, false, false, 192);
+    tk::dnn::Activation relu_6_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_6_conv3(&net, 32, 1, 1, 1, 1, 0, 0, inverted_residual6[2], true);
+
+    tk::dnn::Shortcut s6_0 (&net, last);
+    //Inverted Residual 7
+    tk::dnn::Conv2d ir_7_conv1(&net, 192, 1, 1, 1, 1, 0, 0, inverted_residual7[0], true);
+    tk::dnn::Activation relu_7_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_7_conv2(&net, 192, 3, 3, 2, 2, 1, 1, inverted_residual7[1], true, false, false, 192);
+    tk::dnn::Activation relu_7_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_7_conv3(&net, 64, 1, 1, 1, 1, 0, 0, inverted_residual7[2], true);
+
+    // //Inverted Residual 8
+    last = &ir_7_conv3;
+    tk::dnn::Conv2d ir_8_conv1(&net, 384, 1, 1, 1, 1, 0, 0, inverted_residual8[0], true);
+    tk::dnn::Activation relu_8_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_8_conv2(&net, 384, 3, 3, 1, 1, 1, 1, inverted_residual8[1], true, false, false, 384);
+    tk::dnn::Activation relu_8_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_8_conv3(&net, 64, 1, 1, 1, 1, 0, 0, inverted_residual8[2], true);
+    
+    tk::dnn::Shortcut s8_0 (&net, last);
+    //Inverted Residual 9
+    last = &s8_0;
+    tk::dnn::Conv2d ir_9_conv1(&net, 384, 1, 1, 1, 1, 0, 0, inverted_residual9[0], true);
+    tk::dnn::Activation relu_9_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_9_conv2(&net, 384, 3, 3, 1, 1, 1, 1, inverted_residual9[1], true, false, false, 384);
+    tk::dnn::Activation relu_9_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_9_conv3(&net, 64, 1, 1, 1, 1, 0, 0, inverted_residual9[2], true);
+
+    tk::dnn::Shortcut s9_0 (&net, last);
+    //Inverted Residual 10
+    last = &s9_0;
+    tk::dnn::Conv2d ir_10_conv1(&net, 384, 1, 1, 1, 1, 0, 0, inverted_residual10[0], true);
+    tk::dnn::Activation relu_10_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_10_conv2(&net, 384, 3, 3, 1, 1, 1, 1, inverted_residual10[1], true, false, false, 384);
+    tk::dnn::Activation relu_10_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_10_conv3(&net, 64, 1, 1, 1, 1, 0, 0, inverted_residual10[2], true);
+
+    tk::dnn::Shortcut s10_0 (&net, last);
+    //Inverted Residual 11
+    tk::dnn::Conv2d ir_11_conv1(&net, 384, 1, 1, 1, 1, 0, 0, inverted_residual11[0], true);
+    tk::dnn::Activation relu_11_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_11_conv2(&net, 384, 3, 3, 1, 1, 1, 1, inverted_residual11[1], true, false, false, 384);
+    tk::dnn::Activation relu_11_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_11_conv3(&net, 96, 1, 1, 1, 1, 0, 0, inverted_residual11[2], true);
+
+    last = &ir_11_conv3;
+    //Inverted Residual 12
+    tk::dnn::Conv2d ir_12_conv1(&net, 576, 1, 1, 1, 1, 0, 0, inverted_residual12[0], true);
+    tk::dnn::Activation relu_12_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_12_conv2(&net, 576, 3, 3, 1, 1, 1, 1, inverted_residual12[1], true, false, false, 576);
+    tk::dnn::Activation relu_12_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_12_conv3(&net, 96, 1, 1, 1, 1, 0, 0, inverted_residual12[2], true);
+
+    tk::dnn::Shortcut s12_0 (&net, last);
+    last = &s12_0;
+    //Inverted Residual 13
+    tk::dnn::Conv2d ir_13_conv1(&net, 576, 1, 1, 1, 1, 0, 0, inverted_residual13[0], true);
+    tk::dnn::Activation relu_13_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_13_conv2(&net, 576, 3, 3, 1, 1, 1, 1, inverted_residual13[1], true, false, false, 576);
+    tk::dnn::Activation relu_13_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_13_conv3(&net, 96, 1, 1, 1, 1, 0, 0, inverted_residual13[2], true);
+
+    tk::dnn::Shortcut s13_0 (&net, last);
+    // //Inverted Residual 14
+    tk::dnn::Conv2d ir_14_conv1(&net, 576, 1, 1, 1, 1, 0, 0, inverted_residual14[0], true);
+    tk::dnn::Activation relu_14_1(&net, CUDNN_ACTIVATION_RELU);    
+    tk::dnn::Conv2d ir_14_conv2(&net, 576, 3, 3, 2, 2, 1, 1, inverted_residual14[1], true, false, false, 576);
+    tk::dnn::Activation relu_14_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_14_conv3(&net, 160, 1, 1, 1, 1, 0, 0, inverted_residual14[2], true);
+
+    // //Inverted Residual 15
+    last = &ir_14_conv3;
+    tk::dnn::Conv2d ir_15_conv1(&net, 960, 1, 1, 1, 1, 0, 0, inverted_residual15[0], true);
+    tk::dnn::Activation relu_15_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_15_conv2(&net, 960, 3, 3, 1, 1, 1, 1, inverted_residual15[1], true, false, false, 960);
+    tk::dnn::Activation relu_15_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_15_conv3(&net, 160, 1, 1, 1, 1, 0, 0, inverted_residual15[2], true);
+
+    tk::dnn::Shortcut s15_0 (&net, last);
+    //Inverted Residual 16
+    last = &s15_0;
+    tk::dnn::Conv2d ir_16_conv1(&net, 960, 1, 1, 1, 1, 0, 0, inverted_residual16[0], true);
+    tk::dnn::Activation relu_16_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_16_conv2(&net, 960, 3, 3, 1, 1, 1, 1, inverted_residual16[1], true, false, false, 960);
+    tk::dnn::Activation relu_16_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_16_conv3(&net, 160, 1, 1, 1, 1, 0, 0, inverted_residual16[2], true);
+
+    tk::dnn::Shortcut s16_0 (&net, last);
+    //Inverted Residual 17
+    tk::dnn::Conv2d ir_17_conv1(&net, 960, 1, 1, 1, 1, 0, 0, inverted_residual17[0], true);
+    tk::dnn::Activation relu_17_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_17_conv2(&net, 960, 3, 3, 1, 1, 1, 1, inverted_residual17[1], true, false, false, 960);
+    tk::dnn::Activation relu_17_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d ir_17_conv3(&net, 320, 1, 1, 1, 1, 0, 0, inverted_residual17[2], true);
+
+    //Conv 18
+    tk::dnn::Conv2d ir_18_conv1(&net, 1280, 1, 1, 1, 1, 0, 0, conv18, true);
+    tk::dnn::Activation relu_18_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer * header_1[1] = {&relu_18_1};
+
+    // //extras Inverted Residual 0
+    tk::dnn::Conv2d e_0_conv1(&net, 256, 1, 1, 1, 1, 0, 0, extras0[0], true);
+    tk::dnn::Activation e_relu_0_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_0_conv2(&net, 256, 3, 3, 2, 2, 1, 1, extras0[1], true, false, false, 256);
+    tk::dnn::Activation e_relu_0_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_0_conv3(&net, 512, 1, 1, 1, 1, 0, 0, extras0[2], true);
+    tk::dnn::Layer * header_2[1] = {&e_0_conv3};
+
+    // //extras Inverted Residual 1
+    tk::dnn::Conv2d e_1_conv1(&net, 128, 1, 1, 1, 1, 0, 0, extras1[0], true);
+    tk::dnn::Activation e_relu_1_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_1_conv2(&net, 128, 3, 3, 2, 2, 1, 1, extras1[1], true, false, false, 128);
+    tk::dnn::Activation e_relu_1_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_1_conv3(&net, 256, 1, 1, 1, 1, 0, 0, extras1[2], true);
+    tk::dnn::Layer * header_3[1] = {&e_1_conv3};
+    
+    //extras Inverted Residual 2
+    tk::dnn::Conv2d e_2_conv1(&net, 128, 1, 1, 1, 1, 0, 0, extras2[0], true);
+    tk::dnn::Activation e_relu_2_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_2_conv2(&net, 128, 3, 3, 2, 2, 1, 1, extras2[1], true, false, false, 128);
+    tk::dnn::Activation e_relu_2_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_2_conv3(&net, 256, 1, 1, 1, 1, 0, 0, extras2[2], true);
+    tk::dnn::Layer * header_4[1] = {&e_2_conv3};
+
+    //extras Inverted Residual 3
+    tk::dnn::Conv2d e_3_conv1(&net, 64, 1, 1, 1, 1, 0, 0, extras3[0], true);
+    tk::dnn::Activation e_relu_3_1(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_3_conv2(&net, 64, 3, 3, 2, 2, 1, 1, extras3[1], true, false, false, 64);
+    tk::dnn::Activation e_relu_3_2(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d e_3_conv3(&net, 64, 1, 1, 1, 1, 0, 0, extras3[2], true);
+    tk::dnn::Layer * header_5[1] = {&e_3_conv3};
+
+    // classification header 0
+    tk::dnn::Layer * header_0[1] = {&relu_14_1};
+    tk::dnn::Route  rout_ch_0(&net, header_0, 1);
+    tk::dnn::Conv2d ch_0_conv1(&net, 576, 3, 3, 1, 1, 1, 1, classification_header0[0], true, false, false, 576,true);
+    tk::dnn::Activation ch_relu_0_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d ch_0_conv2(&net, 126, 1, 1, 1, 1, 0, 0, classification_header0[1], false);
+
+    // // classification header 1
+    tk::dnn::Route  rout_ch_1(&net, header_1, 1);
+    tk::dnn::Conv2d ch_1_conv1(&net, 1280, 3, 3, 1, 1, 1, 1, classification_header1[0], true, false, false, 1280,true);
+    tk::dnn::Activation ch_relu_1_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d ch_1_conv2(&net, 126, 1, 1, 1, 1, 0, 0, classification_header1[1], false);
+
+    // //classification header 2
+    tk::dnn::Route  rout_ch_2(&net, header_2, 1);
+    tk::dnn::Conv2d ch_2_conv1(&net, 512, 3, 3, 1, 1, 1, 1, classification_header2[0], true, false, false, 512, true);
+    tk::dnn::Activation ch_relu_2_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d ch_2_conv2(&net, 126, 1, 1, 1, 1, 0, 0, classification_header2[1], false);
+
+    // //classification header 3
+    tk::dnn::Route  rout_ch_3(&net, header_3, 1);
+    tk::dnn::Conv2d ch_3_conv1(&net, 256, 3, 3, 1, 1, 1, 1, classification_header3[0], true, false, false, 256, true);
+    tk::dnn::Activation ch_relu_3_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d ch_3_conv2(&net, 126, 1, 1, 1, 1, 0, 0, classification_header3[1], false);
+
+    // //classification header 4
+    tk::dnn::Route  rout_ch_4(&net, header_4, 1);
+    tk::dnn::Conv2d ch_4_conv1(&net, 256, 3, 3, 1, 1, 1, 1, classification_header4[0], true, false, false, 256, true);
+    tk::dnn::Activation ch_relu_4_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d ch_4_conv2(&net, 126, 1, 1, 1, 1, 0, 0, classification_header4[1], false);
+
+    // //classification header 5
+    tk::dnn::Route  rout_ch_5(&net, header_5, 1);
+    tk::dnn::Conv2d ch_5_conv(&net, 126, 1, 1, 1, 1, 0, 0, classification_header5, false);
+
+    //regression header 0
+    tk::dnn::Route  rout_rh_0(&net, header_0, 1);
+    tk::dnn::Conv2d rh_0_conv1(&net, 576, 3, 3, 1, 1, 1, 1, regression_header0[0], true, false, false, 576, true);
+    tk::dnn::Activation rh_relu_0_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d rh_0_conv2(&net, 24, 1, 1, 1, 1, 0, 0, regression_header0[1], false);
+
+    // //regression header 1
+    tk::dnn::Route  rout_rh_1(&net, header_1, 1);
+    tk::dnn::Conv2d rh_1_conv1(&net, 1280, 3, 3, 1, 1, 1, 1, regression_header1[0], true, false, false, 1280, true);
+    tk::dnn::Activation rh_relu_1_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d rh_1_conv2(&net, 24, 1, 1, 1, 1, 0, 0, regression_header1[1], false);
+
+    //regression header 2
+    tk::dnn::Route  rout_rh_2(&net, header_2, 1);
+    tk::dnn::Conv2d rh_2_conv1(&net, 512, 3, 3, 1, 1, 1, 1, regression_header2[0], true, false, false, 512, true);
+    tk::dnn::Activation rh_relu_2_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d rh_2_conv2(&net, 24, 1, 1, 1, 1, 0, 0, regression_header2[1], false);
+
+    //regression header 3
+    tk::dnn::Route  rout_rh_3(&net, header_3, 1);
+    tk::dnn::Conv2d rh_3_conv1(&net, 256, 3, 3, 1, 1, 1, 1, regression_header3[0], true, false, false, 256, true);
+    tk::dnn::Activation rh_relu_3_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d rh_3_conv2(&net, 24, 1, 1, 1, 1, 0, 0, regression_header3[1], false);
+
+    //regression header 4
+
+    tk::dnn::Route  rout_rh_4(&net, header_4, 1);
+    tk::dnn::Conv2d rh_4_conv1(&net, 256, 3, 3, 1, 1, 1, 1, regression_header4[0], true, false, false, 256, true);
+    tk::dnn::Activation rh_relu_4_1(&net, CUDNN_ACTIVATION_CLIPPED_RELU,6);
+    tk::dnn::Conv2d rh_4_conv2(&net, 24, 1, 1, 1, 1, 0, 0, regression_header4[1], false);
+
+    //regression header 5
+    tk::dnn::Route  rout_rh_5(&net, header_5, 1);
+    tk::dnn::Conv2d rh_5_conv(&net, 24, 1, 1, 1, 1, 0, 0, regression_header5, false);
+
+    //flatten confidence and flatten locations
+
+    // Load input
+    dnnType *data;
+    dnnType *input_h;
+    readBinaryFile(input_bin, dim.tot(), &input_h, &data);
+    //printDeviceVector(64, data, true);
+
+    //print network model
+    net.print();
+
+    //convert network to tensorRT
+    tk::dnn::NetworkRT netRT(&net, "mobilenetv2ssd.rt");
+
+    
+    tk::dnn::dataDim_t out_dim;
+    out_dim = net.layers[net.num_layers-1]->output_dim;
+    dnnType *cudnn_out, *rt_out;
+
+    tk::dnn::dataDim_t dim1 = dim; //input dim
+    printCenteredTitle(" CUDNN inference ", '=', 30);
+    {
+        dim1.print();
+        TIMER_START
+        net.infer(dim1, data);
+        TIMER_STOP
+        dim1.print();
+    }
+    cudnn_out = net.layers[net.num_layers-1]->dstData;
+
+    printDeviceVector(64, cudnn_out, true);
+
+    tk::dnn::dataDim_t dim2 = dim;
+    printCenteredTitle(" TENSORRT inference ", '=', 30);
+    {
+        dim2.print();
+        TIMER_START
+        netRT.infer(dim2, data);
+        TIMER_STOP
+        dim2.print();
+    }
+    rt_out = (dnnType *)netRT.buffersRT[1];
+
+
+    printCenteredTitle(std::string(" RESNET CHECK RESULTS ").c_str(), '=', 30);
+    dnnType *out, *out_h;
+    int odim = out_dim.tot();
+    readBinaryFile(output_bin, odim, &out_h, &out);
+    std::cout << "CUDNN vs correct";
+    checkResult(odim, cudnn_out, out);
+
+    std::cout << "TRT   vs correct";
+    checkResult(odim, rt_out, out);
+    std::cout << "CUDNN vs TRT    ";
+    checkResult(odim, cudnn_out, rt_out);
+
+    return 0;
+}

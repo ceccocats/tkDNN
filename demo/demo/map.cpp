@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     char * labels_path = "../demo/COCO_val2017/all_labels.txt";
     bool show = false;
     bool write_dets = false;
-    int n_images = 1000;
+    int n_images = 5000;
     
     if(argc > 1)
         net = argv[1]; 

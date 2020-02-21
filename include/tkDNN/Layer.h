@@ -14,6 +14,8 @@ enum layerType_t {
     LAYER_DECONV2D,
     LAYER_DEFORMCONV2D,
     LAYER_ACTIVATION,
+    LAYER_ACTIVATION_CRELU,
+    LAYER_ACTIVATION_LEAKY,
     LAYER_FLATTEN,
     LAYER_MULADD,
     LAYER_POOLING,
@@ -52,22 +54,24 @@ public:
     std::string getLayerName() {
         layerType_t type = getLayerType();
         switch(type) {
-            case LAYER_DENSE:       return "Dense";
-            case LAYER_CONV2D:      return "Conv2d";
-            case LAYER_DECONV2D:    return "DeConv2d";
-            case LAYER_DEFORMCONV2D:return "DeformConv2d";
-            case LAYER_ACTIVATION:  return "Activation";
-            case LAYER_FLATTEN:     return "Flatten";
-            case LAYER_MULADD:      return "MulAdd";
-            case LAYER_POOLING:     return "Pooling";
-            case LAYER_SOFTMAX:     return "Softmax";
-            case LAYER_ROUTE:       return "Route";            
-            case LAYER_REORG:       return "Reorg";
-            case LAYER_SHORTCUT:    return "Shortcut";
-            case LAYER_UPSAMPLE:    return "Upsample";
-            case LAYER_REGION:      return "Region";
-            case LAYER_YOLO:        return "Yolo";
-            default:                return "unknown";
+            case LAYER_DENSE:               return "Dense";
+            case LAYER_CONV2D:              return "Conv2d";
+            case LAYER_DECONV2D:            return "DeConv2d";
+            case LAYER_DEFORMCONV2D:        return "DeformConv2d";
+            case LAYER_ACTIVATION:          return "Activation";
+            case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
+            case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
+            case LAYER_FLATTEN:             return "Flatten";
+            case LAYER_MULADD:              return "MulAdd";
+            case LAYER_POOLING:             return "Pooling";
+            case LAYER_SOFTMAX:             return "Softmax";
+            case LAYER_ROUTE:               return "Route";            
+            case LAYER_REORG:               return "Reorg";
+            case LAYER_SHORTCUT:            return "Shortcut";
+            case LAYER_UPSAMPLE:            return "Upsample";
+            case LAYER_REGION:              return "Region";
+            case LAYER_YOLO:                return "Yolo";
+            default:                        return "unknown";
         }
     }
 
@@ -145,10 +149,18 @@ class Activation : public Layer {
 
 public:
     int act_mode;
+    float ceiling;
 
-    Activation(Network *net, int act_mode); 
+    Activation(Network *net, int act_mode, const float ceiling=0.0); 
     virtual ~Activation();
-    virtual layerType_t getLayerType() { return LAYER_ACTIVATION; };
+    virtual layerType_t getLayerType() { 
+        if(act_mode == CUDNN_ACTIVATION_CLIPPED_RELU)
+            return LAYER_ACTIVATION_CRELU;
+        else if (act_mode == ACTIVATION_LEAKY)
+            return LAYER_ACTIVATION_LEAKY;
+        else
+            return LAYER_ACTIVATION;
+         };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
@@ -165,14 +177,14 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false, int groups = 1);
+                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false, int groups = 1, bool additional_bias=false);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
-    bool deConv;
+    bool deConv, additional_bias;
     int groups;
 
 protected:

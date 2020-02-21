@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "NvInfer.h"
 #include "NetworkRT.h"
+// #include "calibrator.h"
 
 using namespace nvinfer1;
 
@@ -58,6 +59,14 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
             builderRT->setDLACore(0);
         }
+        // if(net->int8 && builderRT->platformHasFastInt8())
+        // {
+        //     dtRT = DataType::kINT8;
+        //     builderRT->setInt8Mode(true);
+        //     Int8EntropyCalibrator calibrator(1, "../demo/images.txt","../demo/yolov3-calibration.table", 416*416*3, 416, 416);
+        //     builderRT->setInt8Calibrator((nvinfer1::IInt8Calibrator * )&calibrator);
+        //     // builderRT->setStrictTypeConstraints(true);
+        // }
        
         //add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
@@ -164,7 +173,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -337,7 +346,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kSIGMOID);
         checkNULL(lRT);
         return lRT;
-    
+    }
+    else if(l->act_mode == CUDNN_ACTIVATION_CLIPPED_RELU) {
+        IPlugin *plugin = new ActivationReLUCeiling(l->ceiling);
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
     } else {
         FatalError("this Activation mode is not yet implemented");
         return NULL;
@@ -535,8 +549,13 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     std::string name(layerName);
     std::cout<<name<<std::endl;
 
-    if(name.find("Activation") == 0) {
+    if(name.find("ActivationLeaky") == 0) {
         ActivationLeakyRT *a = new ActivationLeakyRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
+    if(name.find("ActivationCReLU") == 0) {
+        ActivationReLUCeiling *a = new ActivationReLUCeiling(readBUF<float>(buf));
         a->size = readBUF<int>(buf);
         return a;
     }

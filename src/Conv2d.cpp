@@ -100,7 +100,7 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
                                            &beta, dstTensorDesc, dstData));
     }
 
-    if(!batchnorm) {
+    if(!batchnorm && !additional_bias) { //CHECK WITH IF CORRECT
         // bias
         alpha = dnnType(1);
         beta  = dnnType(1);
@@ -108,23 +108,34 @@ void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
                                    &alpha, biasTensorDesc, bias_d,
                                    &beta, dstTensorDesc, dstData) );
     } else {
-        alpha = dnnType(1);
-        beta  = dnnType(0);
-        checkCUDNN( cudnnBatchNormalizationForwardInference(net->cudnnHandle,
-                                                CUDNN_BATCHNORM_SPATIAL, &alpha, &beta,
-                                                dstTensorDesc, dstData, dstTensorDesc,
-                                                dstData, biasTensorDesc, //same tensor descriptor as bias
-                                                scales_d, bias_d, mean_d, variance_d,
-                                                TKDNN_BN_MIN_EPSILON) );
+        if(additional_bias)
+        {
+            alpha = dnnType(1);
+            beta  = dnnType(1);
+            checkCUDNN( cudnnAddTensor(net->cudnnHandle,
+                                        &alpha, biasTensorDesc, bias2_d,
+                                        &beta, dstTensorDesc, dstData) );
+        }
+        if(batchnorm)
+        {
+            alpha = dnnType(1);
+            beta  = dnnType(0);
+            checkCUDNN( cudnnBatchNormalizationForwardInference(net->cudnnHandle,
+                                                    CUDNN_BATCHNORM_SPATIAL, &alpha, &beta,
+                                                    dstTensorDesc, dstData, dstTensorDesc,
+                                                    dstData, biasTensorDesc, //same tensor descriptor as bias
+                                                    scales_d, bias_d, mean_d, variance_d,
+                                                    TKDNN_BN_MIN_EPSILON) );
+        }
     }
 }
 
 Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm, bool deConv, bool final, int groups) :
+                std::string fname_weights, bool batchnorm, bool deConv, bool final, int groups, bool additional_bias) :
     
     LayerWgs(net, net->getOutputDim().c, out_ch, kernelH, kernelW, 1, 
-             fname_weights, batchnorm, false, final, deConv, groups) {
+             fname_weights, batchnorm, additional_bias, final, deConv, groups) {
     this->kernelH = kernelH;
     this->kernelW = kernelW;
     this->strideH = strideH;
@@ -133,6 +144,7 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     this->paddingW = paddingW;
     this->deConv = deConv;
     this->groups = groups;
+    this->additional_bias = additional_bias;
 
     if(!deConv) {
         output_dim.n = input_dim.n;

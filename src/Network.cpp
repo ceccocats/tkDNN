@@ -22,19 +22,25 @@ Network::Network(dataDim_t input_dim) {
 
     fp16 = false;
     dla = false;
+    int8 = false;
     if(const char* env_p = std::getenv("TKDNN_MODE")) {
         if(strcmp(env_p, "FP16") == 0)
             fp16 = true;
-	else if(strcmp(env_p, "DLA") == 0) {
-    	    dla = true;
-	    fp16 = true;	
-	}
+        else if(strcmp(env_p, "DLA") == 0) {
+            dla = true;
+            fp16 = true;	
+        }
+        else if(strcmp(env_p, "INT8") == 0) {
+            int8 = true;
+        }
     }
    
     if(fp16)
-        std::cout<<COL_REDB<<"!! FP16 INERENCE ENABLED !!"<<COL_END<<"\n";
+        std::cout<<COL_REDB<<"!! FP16 INFERENCE ENABLED !!"<<COL_END<<"\n";
     if(dla)
-        std::cout<<COL_GREENB<<"!! DLA INERENCE ENABLED !!"<<COL_END<<"\n";
+        std::cout<<COL_GREENB<<"!! DLA INFERENCE ENABLED !!"<<COL_END<<"\n";
+    if(int8)
+        std::cout<<COL_ORANGEB<<"!! INT8 INFERENCE ENABLED !!"<<COL_END<<"\n";
 
 
     checkCUDNN( cudnnCreate(&cudnnHandle) );
