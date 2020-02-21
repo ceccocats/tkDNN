@@ -5,6 +5,7 @@
 
 void activationELUForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationLEAKYForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream = cudaStream_t(0));
+void activationReLUCeilingForward(dnnType* srcData, dnnType* dstData, int size, const float ceiling, cudaStream_t stream= cudaStream_t(0));
 void activationLOGISTICForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationSIGMOIDForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream = cudaStream_t(0));
 

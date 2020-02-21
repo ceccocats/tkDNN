@@ -22,7 +22,7 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 find_package(CUDNN REQUIRED)
 
 # compile
-file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/*.cu")
+file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 
@@ -44,7 +44,7 @@ set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRAR
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
-target_link_libraries(tkDNN ${tkdnn_LIBS})
+target_link_libraries(tkDNN ${tkdnn_LIBS} nvinfer_plugin)
 
 #static 
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})
@@ -94,6 +94,8 @@ target_link_libraries(test_yolo3_berkeley tkDNN)
 add_executable(test_yolo3_flir tests/yolo3_flir/yolo3_flir.cpp)
 target_link_libraries(test_yolo3_flir tkDNN)
 
+add_executable(test_mobilenetv2ssd tests/mobilenetv2ssd/mobilenetv2ssd.cpp)
+target_link_libraries(test_mobilenetv2ssd tkDNN)
 
 add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)

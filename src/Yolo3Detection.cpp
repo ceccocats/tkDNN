@@ -63,6 +63,7 @@ bool Yolo3Detection::init(std::string tensor_path) {
 
 void Yolo3Detection::update(cv::Mat &imageORIG) {
 
+    TIMER_START
     if(!imageORIG.data) {
         std::cout<<"YOLO: NO IMAGE DATA\n";
         return;
@@ -100,7 +101,6 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
         stats.push_back(t_ns);
     }
     
-    TIMER_START
     // compute dets
     ndets = 0;
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
@@ -109,7 +109,6 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
         yolo[i]->computeDetections(dets, ndets, netRT->input_dim.w, netRT->input_dim.h, thresh);
     }
     tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
-    TIMER_STOP
 
     // fill detected
     detected.clear();
@@ -148,6 +147,8 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
             detected.push_back(res);
         }
     }
+    TIMER_STOP
+    stats.push_back(t_ns);
 
 }
 
