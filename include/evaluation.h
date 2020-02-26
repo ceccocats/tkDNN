@@ -1,5 +1,5 @@
 #ifndef EVALUATION_H
-#define EVALUATION_H_H
+#define EVALUATION_H
 
 #include <iostream>
 #include <vector>

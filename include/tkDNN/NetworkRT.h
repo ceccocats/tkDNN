@@ -34,6 +34,8 @@ using namespace nvinfer1;
 #include "pluginsRT/ResizeLayerRT.h"
 //#include "pluginsRT/Int8Calibrator.h"
 #include "pluginsRT/DeformableConvRT.h"
+#include "pluginsRT/FlattenConcatRT.h"
+#include "pluginsRT/ReshapeRT.h"
 
 class PluginFactory : IPluginFactory
 {
@@ -83,6 +85,8 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Pooling *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Softmax *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Route *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Flatten *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reshape *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reorg *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);

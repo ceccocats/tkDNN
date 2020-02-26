@@ -179,6 +179,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Softmax*) l);
     if(type == LAYER_ROUTE)
         return convert_layer(input, (Route*) l);
+    if(type == LAYER_FLATTEN)
+        return convert_layer(input, (Flatten*) l);
+    if(type == LAYER_RESHAPE)
+        return convert_layer(input, (Reshape*) l);
     if(type == LAYER_REORG)
         return convert_layer(input, (Reorg*) l);
     if(type == LAYER_REGION)
@@ -389,6 +393,24 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     return lRT;
 }
 
+ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
+
+    IPlugin *plugin = new FlattenConcatRT();
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input, Reshape *l) {
+    // std::cout<<"convert Reshape\n";
+
+    l->output_dim.print();
+    IPlugin *plugin = new ReshapeRT(l->output_dim);
+    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
+
 ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
@@ -594,6 +616,24 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->i_c = readBUF<int>(buf);
         r->i_h = readBUF<int>(buf);
         r->i_w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Flatten") == 0) {
+        FlattenConcatRT *r = new FlattenConcatRT(); 
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        r->rows = readBUF<int>(buf);
+        r->cols = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("Reshape") == 0) {
+
+        dataDim_t new_dim(readBUF<int>(buf), readBUF<int>(buf),readBUF<int>(buf), readBUF<int>(buf));
+        ReshapeRT *r = new ReshapeRT(new_dim); 
+        
         return r;
     } 
 

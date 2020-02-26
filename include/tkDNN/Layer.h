@@ -17,6 +17,7 @@ enum layerType_t {
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
     LAYER_FLATTEN,
+    LAYER_RESHAPE,
     LAYER_MULADD,
     LAYER_POOLING,
     LAYER_SOFTMAX,
@@ -62,6 +63,7 @@ public:
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
             case LAYER_FLATTEN:             return "Flatten";
+            case LAYER_RESHAPE:             return "Reshape";
             case LAYER_MULADD:              return "MulAdd";
             case LAYER_POOLING:             return "Pooling";
             case LAYER_SOFTMAX:             return "Softmax";
@@ -265,6 +267,20 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
+/**
+    Reshape layer
+*/
+class Reshape : public Layer {
+
+public:
+    Reshape(Network *net, dataDim_t new_dim, bool final=false); 
+    virtual ~Reshape();
+    virtual layerType_t getLayerType() { return LAYER_RESHAPE; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+};
+
 
 /**
     MulAdd layer
@@ -329,11 +345,13 @@ protected:
 class Softmax : public Layer {
 
 public:
-    Softmax(Network *net); 
+    Softmax(Network *net, const tk::dnn::dataDim_t* dim=nullptr, bool final=false, const cudnnSoftmaxMode_t mode=CUDNN_SOFTMAX_MODE_CHANNEL); 
     virtual ~Softmax();
     virtual layerType_t getLayerType() { return LAYER_SOFTMAX; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    dataDim_t dim;
+    cudnnSoftmaxMode_t mode;
 };
 
 /**
@@ -343,7 +361,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n); 
+    Route(Network *net, Layer **layers, int layers_n, bool final=false); 
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
@@ -410,6 +428,11 @@ struct box {
     int cl;
     float x, y, w, h;
     float prob;
+
+    void print() 
+    {
+        std::cout<<"x: "<<x<<"\ty: "<<y<<"\tw: "<<w<<"\th: "<<h<<"\tcl: "<<cl<<"\tprob: "<<prob<<std::endl;
+    }
 };
 struct sortable_bbox {
     int index;
