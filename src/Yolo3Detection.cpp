@@ -32,12 +32,13 @@ bool Yolo3Detection::init(std::string tensor_path) {
         num = yRT->num;
 
         // make a yolo layer for interpret predictions
-        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, nullptr); // yolo without input and bias
+        yolo[i] = new tk::dnn::Yolo(nullptr, classes, num, ""); // yolo without input and bias
         yolo[i]->mask_h = new dnnType[num];
         yolo[i]->bias_h = new dnnType[num*3*2];
         memcpy(yolo[i]->mask_h, yRT->mask, sizeof(dnnType)*num);
         memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*3*2);
         yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
+        yolo[i]->classesNames = yRT->classesNames;
     }
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
@@ -137,12 +138,12 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
     cv::split(imageF,bgr);//split source
 
     //write channels
-    int idx = 0;
-    memcpy((void*)&input[idx], (void*)bgr[2].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    idx = imageF.rows*imageF.cols;
-    memcpy((void*)&input[idx], (void*)bgr[1].data, imageF.rows*imageF.cols*sizeof(dnnType));
-    idx *= 2;    
-    memcpy((void*)&input[idx], (void*)bgr[0].data, imageF.rows*imageF.cols*sizeof(dnnType));
+    for(int i=0; i<netRT->input_dim.c; i++) {
+        int idx = i*imageF.rows*imageF.cols;
+        int ch = netRT->input_dim.c-1 -i;
+        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
+    }
+
 
     //DO INFERENCE
     dnnType *rt_out[3]; 
@@ -155,6 +156,8 @@ void Yolo3Detection::update(cv::Mat &imageORIG) {
         netRT->infer(dim, input_d);
         TIMER_STOP
         dim.print();
+    
+        stats.push_back(t_ns);
     }
     
     TIMER_START

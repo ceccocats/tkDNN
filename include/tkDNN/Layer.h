@@ -1,7 +1,8 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-#include <iostream>
+#include<iostream>
+#include<vector>
 #include "utils.h"
 #include "Network.h"
 
@@ -10,10 +11,11 @@ namespace tk
 namespace dnn
 {
 
-enum layerType_t
-{
+enum layerType_t {
+    LAYER_INPUT,
     LAYER_DENSE,
     LAYER_CONV2D,
+    LAYER_LSTM,
     LAYER_ACTIVATION,
     LAYER_FLATTEN,
     LAYER_MULADD,
@@ -52,36 +54,23 @@ public:
     std::string getLayerName()
     {
         layerType_t type = getLayerType();
-        switch (type)
-        {
-        case LAYER_DENSE:
-            return "Dense";
-        case LAYER_CONV2D:
-            return "Conv2d";
-        case LAYER_ACTIVATION:
-            return "Activation";
-        case LAYER_FLATTEN:
-            return "Flatten";
-        case LAYER_MULADD:
-            return "MulAdd";
-        case LAYER_POOLING:
-            return "Pooling";
-        case LAYER_SOFTMAX:
-            return "Softmax";
-        case LAYER_ROUTE:
-            return "Route";
-        case LAYER_REORG:
-            return "Reorg";
-        case LAYER_SHORTCUT:
-            return "Shortcut";
-        case LAYER_UPSAMPLE:
-            return "Upsample";
-        case LAYER_REGION:
-            return "Region";
-        case LAYER_YOLO:
-            return "Yolo";
-        default:
-            return "unknown";
+        switch(type) {
+            case LAYER_INPUT:       return "Input";
+            case LAYER_DENSE:       return "Dense";
+            case LAYER_CONV2D:      return "Conv2d";
+            case LAYER_LSTM:        return "LSTM";
+            case LAYER_ACTIVATION:  return "Activation";
+            case LAYER_FLATTEN:     return "Flatten";
+            case LAYER_MULADD:      return "MulAdd";
+            case LAYER_POOLING:     return "Pooling";
+            case LAYER_SOFTMAX:     return "Softmax";
+            case LAYER_ROUTE:       return "Route";            
+            case LAYER_REORG:       return "Reorg";
+            case LAYER_SHORTCUT:    return "Shortcut";
+            case LAYER_UPSAMPLE:    return "Upsample";
+            case LAYER_REGION:      return "Region";
+            case LAYER_YOLO:        return "Yolo";
+            default:                return "unknown";
         }
     }
 
@@ -97,8 +86,8 @@ class LayerWgs : public Layer
 {
 
 public:
-    LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
-             const char *fname_weights, bool batchnorm = false);
+    LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt, 
+             std::string fname_weights, bool batchnorm = false); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -125,13 +114,34 @@ public:
 };
 
 /**
+    Input layer (it doesnt need weigths)
+*/
+class Input : public Layer {
+
+public:
+
+    Input(Network *net, dataDim_t &dim, dnnType* srcData) : Layer(net) {
+        input_dim = dim;
+        output_dim = dim;
+        dstData = srcData;
+    }
+    virtual ~Input() {}
+    virtual layerType_t getLayerType() { return LAYER_INPUT; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
+        return dstData;
+    }
+};
+
+
+/**
     Dense (full interconnection) layer
 */
 class Dense : public LayerWgs
 {
 
 public:
-    Dense(Network *net, int out_ch, const char *fname_weights);
+    Dense(Network *net, int out_ch, std::string fname_weights); 
     virtual ~Dense();
     virtual layerType_t getLayerType() { return LAYER_DENSE; };
 
@@ -168,14 +178,22 @@ protected:
 
 /**
     Convolutional 2D layer
+
+    WEIGHTS shape: OUTCH, INCH, KH, KW ...
+    BIAS shape: OUTCH
+
+    with BATCHNORM:
+        scales:   OUTCH
+        means:    OUTCH
+        variance: OUTCH
 */
 class Conv2d : public LayerWgs
 {
 
 public:
-    Conv2d(Network *net, int out_ch, int kernelH, int kernelW,
-           int strideH, int strideW, int paddingH, int paddingW,
-           const char *fname_weights, bool batchnorm = false);
+    Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
+                int strideH, int strideW, int paddingH, int paddingW,
+                std::string fname_weights, bool batchnorm = false); 
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -192,6 +210,72 @@ protected:
     void *workSpace;
     size_t ws_sizeInBytes;
 };
+
+/**
+    Bidirectional LSTM layer
+    ONLY BIDIRECTIONAL (TODO: more configurable)
+    currently implemented as 2 inferences: forward and backward (TODO: only 1 cudnn inference)
+
+    implementation info:
+    https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
+    https://github.com/Jeffery-Song/mxnet-test/blob/aab666faad44011f7a67b527b5f6c960367d0422/src/operator/cudnn_rnn-inl.h
+    https://stackoverflow.com/a/38737941
+    https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+
+    PARAMS (numlayers*2):
+        layer0:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+        layer2:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+
+    OUTPUT shape:
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=True)  ---> (N, 2*HIDDEN, 1, W)   # W is seqLength 
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=False) ---> (N, 2*HIDDEN, 1, 1)
+*/
+class LSTM : public Layer {
+
+public:
+    LSTM(Network *net, int hiddensize, bool returnSeq, std::string fname_weights);
+    virtual ~LSTM();
+    virtual layerType_t getLayerType() { return LAYER_LSTM; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    const bool bidirectional = true; /**> is the net bidir */
+    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    int stateSize = 0; /**> number of hidden states */
+    int seqLen = 0;    /**> number of timesteps */
+    int numLayers = 1; /**> number of internal layers */
+
+protected:
+    cudnnRNNDescriptor_t rnnDesc;
+    cudnnDropoutDescriptor_t dropoutDesc;
+    dnnType  *dropout_states_, *work_space_;
+
+    size_t workspace_byte_, dropout_byte_;
+    int workspace_size_, dropout_size_;
+    
+    std::vector<cudnnTensorDescriptor_t> x_desc_vec_, y_desc_vec_;
+    cudnnTensorDescriptor_t hx_desc_, cx_desc_;
+    cudnnTensorDescriptor_t hy_desc_, cy_desc_;
+    dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
+    int stateDataDim;
+
+    cudnnFilterDescriptor_t w_desc_;
+    dnnType *w_ptr;
+    dnnType *w_h;
+    dnnType *wf_ptr, *wb_ptr; // params pointer forward and backward layer
+
+    // used during inference
+    dataDim_t one_output_dim; // output dim of as single inference
+    dnnType *srcF, *srcB; // input of single inference 
+    dnnType *dstF, *dstB_NR, *dstB; // output of single inference, dstB_NR = dstB not reversed
+};
+
 
 /**
     Flatten layer
@@ -384,13 +468,14 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, const char *fname_weights);
+    Yolo(Network *net, int classes, int num, std::string fname_weights);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
     int classes, num;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
+    std::vector<std::string> classesNames;
 
     virtual dnnType *infer(dataDim_t &dim, dnnType *srcData);
     int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
@@ -422,8 +507,8 @@ class RegionInterpret
 {
 
 public:
-    RegionInterpret(dataDim_t input_dim, dataDim_t output_dim,
-                    int classes, int coords, int num, float thresh, const char *fname_weights);
+    RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
+                    int classes, int coords, int num, float thresh, std::string fname_weights);
     ~RegionInterpret();
 
     dataDim_t input_dim, output_dim;

@@ -15,3 +15,5 @@ build/
 *.tar.gz
 *.weights
 *.zip
+.idea/
+*.hdf5

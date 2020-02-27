@@ -46,6 +46,9 @@ public:
     // this is filled with results
     std::vector<tk::dnn::box> detected;
 
+        // keep track of inference times (ms)
+        std::vector<double> stats;
+
     Yolo3Detection() {}
 
     virtual ~Yolo3Detection() {}
@@ -58,6 +61,15 @@ public:
     bool init(std::string tensor_path);
     void addBorders(cv::Mat &imageORIG, cv::Mat &imageWBorders, int &top, int &left);
     void update(cv::Mat &frame);
+
+
+    tk::dnn::Yolo* getYoloLayer(int n=0) {
+        if(n<3)
+            return yolo[n];
+        else 
+            return nullptr;
+    }
+
 };
 
 } // namespace dnn

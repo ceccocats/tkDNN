@@ -35,7 +35,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
-    //std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
+    std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
     networkRT = builderRT->createNetwork();
 
     if(!fileExist(name)) {
@@ -51,7 +51,6 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
         }
-        /*
         if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
             builderRT->setFp16Mode(true);
@@ -59,7 +58,6 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
             builderRT->setDLACore(0);
         }
-        */
        
         //add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
@@ -276,10 +274,19 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
 
     if(l->act_mode == ACTIVATION_LEAKY) {
         //std::cout<<"New plugin LEAKY\n";
+        
+#if NV_TENSORRT_MAJOR < 6                
+        // plugin version
         IPlugin *plugin = new ActivationLeakyRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
+#else 
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
+        lRT->setAlpha(0.1);
+        checkNULL(lRT);
+        return lRT;
+#endif
 
     } else if(l->act_mode == CUDNN_ACTIVATION_RELU) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
@@ -340,14 +347,21 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"convert Shortcut\n";
 
     //std::cout<<"New plugin Shortcut\n";
+    
     ITensor *back_tens = tensors[l->backLayer];
+    /*
+    // plugin version
     IPlugin *plugin = new ShortcutRT();
-
     ITensor **inputs = new ITensor*[2];
     inputs[0] = input;
     inputs[1] = back_tens; 
     IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
+    */
+
+    IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
+    checkNULL(lRT);
+    
     return lRT;
 }
 
@@ -460,6 +474,15 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
             r->mask[i] = readBUF<dnnType>(buf);
         for(int i=0; i<3*2*r->num; i++)
             r->bias[i] = readBUF<dnnType>(buf);
+
+		// save classes names
+        r->classesNames.resize(r->classes);
+		for(int i=0; i<r->classes; i++) {
+            char tmp[YOLORT_CLASSNAME_W];
+			for(int j=0; j<YOLORT_CLASSNAME_W; j++)
+				tmp[j] = readBUF<char>(buf);
+            r->classesNames[i] = std::string(tmp);
+		}
 
         yolos[n_yolos++] = r;
         return r;

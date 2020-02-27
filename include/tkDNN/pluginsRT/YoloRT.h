@@ -1,6 +1,8 @@
 #include<cassert>
 #include "../kernels.h"
 
+#define YOLORT_CLASSNAME_W 256
+
 class YoloRT : public IPlugin {
 
 
@@ -16,6 +18,7 @@ public:
         if(yolo != nullptr) {
             memcpy(mask, yolo->mask_h, sizeof(dnnType)*num);
             memcpy(bias, yolo->bias_h, sizeof(dnnType)*num*3*2);
+			classesNames = yolo->classesNames;
         }
 	}
 
@@ -72,7 +75,7 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 5*sizeof(int) + num*sizeof(dnnType) + num*3*2*sizeof(dnnType);
+		return 5*sizeof(int) + num*sizeof(dnnType) + num*3*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
 	}
 
 	virtual void serialize(void* buffer) override {
@@ -86,10 +89,20 @@ public:
     		tk::dnn::writeBUF(buf, mask[i]);
         for(int i=0; i<3*2*num; i++)
     		tk::dnn::writeBUF(buf, bias[i]);
+
+		// save classes names
+		for(int i=0; i<classes; i++) {
+			char tmp[YOLORT_CLASSNAME_W];
+			strcpy(tmp, classesNames[i].c_str());
+			for(int j=0; j<YOLORT_CLASSNAME_W; j++) {
+				tk::dnn::writeBUF(buf, tmp[j]);
+			}
+		}
 	}
 
 	int c, h, w;
     int classes, num;
+	std::vector<std::string> classesNames;
 
     dnnType *mask;
     dnnType *bias;

@@ -21,7 +21,7 @@ bool fileExist(const char *fname) {
 }
 
 
-void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** data_d, int seek)
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek)
 {
     std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
     std::stringstream error_s;
@@ -39,7 +39,8 @@ void readBinaryFile(const char* fname, int size, dnnType** data_h, dnnType** dat
     *data_h = new dnnType[size];
     if (!dataFile.read ((char*) *data_h, size_b)) 
     {
-        error_s << "Error reading file " << fname; 
+        error_s << "Error reading file " << fname << " with n of float: "<<size;
+        error_s << " seek: "<<seek << " size: "<<size_b<<"\n";
         FatalError(error_s.str());
     }
     
@@ -67,7 +68,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device)
         delete [] vec;
 }
 
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit) {
 
     dnnType *data_h, *correct_h;
     const float eps = 0.02f;
@@ -91,7 +92,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
             diffs += 1;
             if(diffs == 1)
                 std::cout<<"\n";
-            if(diffs < 10)
+            if(diffs < limit)
                 std::cout<<" | [ "<<i<<" ]: "<<data_h[i]<<" "<<correct_h[i]<<"\n";
         }
     }

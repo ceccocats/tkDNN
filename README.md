@@ -11,7 +11,7 @@ this branch actually work on every NVIDIA GPU that support the dependencies:
 ## Dependencies
 
 ```
-sudo apt install libgdal-dev libeigen3-dev python-matplotlib libyaml-cpp-dev libcereal-dev
+sudo apt install libgdal-dev libeigen3-dev python-matplotlib libyaml-cpp-dev libcereal-dev python2.7-dev
 ```
 
 ## Workflow
@@ -27,6 +27,7 @@ Build with cmake
 mkdir build
 cd build
 cmake ..
+# use -DTEST_DATA=False to skip dataset download
 make
 ```
 during the cmake configuration it will be dowloaded the weights needed for running
@@ -54,5 +55,4 @@ this will genereate a yolo3_berkeley.rt file that can be used for live detection
 ./yolo3_demo                               # launch detection on a demo video
 ./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
 ```
-
-
+![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)

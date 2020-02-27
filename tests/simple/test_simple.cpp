@@ -2,23 +2,21 @@
 #include "tkdnn.h"
 
 const char *input_bin   = "../tests/simple/input.bin";
-const char *c0_bin      = "../tests/simple/layers/c0.bin";
-const char *c1_bin      = "../tests/simple/layers/c1.bin";
-const char *d2_bin      = "../tests/simple/layers/d2.bin";
+const char *c0_bin      = "../tests/simple/layers/conv1d_1.bin";
+const char *l1_bin      = "../tests/simple/layers/bidirectional_1.bin";
+const char *l2_bin      = "../tests/simple/layers/bidirectional_2.bin";
 const char *output_bin  = "../tests/simple/output.bin";
 
 int main() {
 
     // Network layout
-    tk::dnn::dataDim_t dim(1, 1, 10, 10, 1);
+    tk::dnn::dataDim_t dim(1, 8, 1, 3);
     tk::dnn::Network net(dim);
-    tk::dnn::Conv2d     l0(&net, 2, 4, 4, 2, 2, 0, 0, c0_bin);
-    tk::dnn::Activation l1(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     l2(&net, 4, 2, 2, 1, 1, 0, 0, c1_bin);
-    tk::dnn::Activation l3(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Flatten    l4(&net);
-    tk::dnn::Dense      l5(&net, 4, d2_bin);
-    tk::dnn::Activation l6(&net, CUDNN_ACTIVATION_RELU);
+    tk::dnn::Conv2d     l0(&net, 4, 1, 2, 1, 1, 0, 0, c0_bin);
+    tk::dnn::LSTM       l1(&net, 5, true, l1_bin);
+    tk::dnn::LSTM       l2(&net, 5, false, l2_bin);
+
+    net.print();
 
     // Load input
     dnnType *data;

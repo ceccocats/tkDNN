@@ -9,10 +9,9 @@ namespace tk
 namespace dnn
 {
 
-LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
-                   int kh, int kw, int kl,
-                   const char *fname_weights, bool batchnorm) : Layer(net)
-{
+LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
+                   int kh, int kw, int kl, 
+                   std::string fname_weights, bool batchnorm) : Layer(net) {
 
     this->inputs = inputs;
     this->outputs = outputs;

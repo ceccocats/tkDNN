@@ -30,6 +30,7 @@ std::string obj_class[10]{"person", "car", "truck", "bus", "motor", "bike", "rid
 //mutex for some opencv operations
 std::mutex mutex_cv;
 Show_t updates;
+bool SAVE_RESULT = false;
 
 void sig_handler(int signo)
 {
@@ -302,6 +303,14 @@ void *computationTask(void *x_void_ptr)
     // float prob;
     cv::Scalar intensity;
 
+
+    // cv::VideoWriter resultVideo;
+    // if(SAVE_RESULT) {
+    //     int w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    //     int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    //     resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
+    // }
+
     cv::Mat frame;
     cv::Mat frame_crop;
     cv::Mat dnn_input;
@@ -546,6 +555,9 @@ int main(int argc, char *argv[])
     {
         yolo[i].init(par.net);
         yolo[i].thresh = 0.25;    
+        
+        // if(SAVE_RESULT)
+        //     resultVideo << frame;
     }
     // tk::dnn::Yolo3Detection yolo;
     // yolo.init(net);

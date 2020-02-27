@@ -11,18 +11,24 @@
 
 namespace tk { namespace dnn {
 
-Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) : 
+Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights) : 
     Layer(net) {
     
     this->classes = classes;
     this->num = num;
 
     // load anchors
-    if(fname_weights != nullptr) {
+    if(fname_weights != "") {
         int seek = 0;
         readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
         seek += num;
         readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
+    }
+
+    // init default classes name
+    classesNames.clear();
+    for(int i=0; i<classes; i++) {
+        classesNames.push_back(std::to_string(i));
     }
 
     // same

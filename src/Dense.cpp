@@ -7,8 +7,8 @@ namespace tk
 namespace dnn
 {
 
-Dense::Dense(Network *net, int out_ch, const char *fname_weights) : LayerWgs(net, net->getOutputDim().tot(), out_ch, 1, 1, 1, fname_weights)
-{
+Dense::Dense(Network *net, int out_ch, std::string fname_weights) : 
+    LayerWgs(net, net->getOutputDim().tot(), out_ch, 1, 1, 1, fname_weights) {
 
     output_dim.n = 1;
     output_dim.c = out_ch;
