@@ -1,3 +1,6 @@
+#ifndef YOLODETECTION_H
+#define YOLODETECTION_H
+
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>     /* srand, rand */
@@ -66,3 +69,5 @@ class Yolo3Detection {
 };
 
 }}
+
+#endif /* YOLODETECTION_H*/
