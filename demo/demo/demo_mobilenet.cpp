@@ -3,12 +3,7 @@
 #include <stdlib.h> /* srand, rand */
 #include <unistd.h>
 #include <mutex>
-#include "utils.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include "MobilenetDetection.h"
 
