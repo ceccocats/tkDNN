@@ -56,7 +56,7 @@ class Yolo3Detection {
          * @return Success of the initialization
          */
         bool init(std::string tensor_path);
-
+        cv::Mat draw(cv::Mat &frame);
         void update(cv::Mat &frame);
 
         tk::dnn::Yolo* getYoloLayer(int n=0) {
