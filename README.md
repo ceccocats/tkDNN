@@ -82,8 +82,8 @@ rm yolo3_berkeley.rt		 # be sure to delete(or move) old tensorRT files
 ```
 this will genereate a yolo3_berkeley.rt file that can be used for live detection:
 ```
-./yolo3_demo                               # launch detection on a demo video
-./yolo3_demo yolo3_berkeley.rt /dev/video0 # launch detection on device 0
+./demo                                 # launch detection on a demo video
+./demo yolo3_berkeley.rt /dev/video0 y # launch detection on device 0
 ```
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
@@ -110,9 +110,9 @@ rm dla34_cnet.rt		     # be sure to delete(or move) old tensorRT files
 
 this will genereate resnet101_cnet.rt and dla34_cnet.rt file that can be used for live detection:
 ```
-./centernet_demo                               # launch detection on a demo video
-./centernet_demo resnet101_cnet.rt /dev/video0 # launch detection on device 0
-./centernet_demo dla34_cnet.rt /dev/video0     # launch detection on device 0
+./demo dla34_cnet.rt ../demo/yolo_test.mp4 c    # launch detection on a demo video
+./demo resnet101_cnet.rt /dev/video0 c          # launch detection on device 0
+./demo dla34_cnet.rt /dev/video0 c              # launch detection on device 0
 ```
 
 ## mAP demo
