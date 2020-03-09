@@ -1,5 +1,6 @@
 #include<iostream>
 #include "tkdnn.h"
+#include "tkDNN/ImuOdom.h"
 
 const char *i0_bin   = "../tests/imuodom/layers/input0.bin";
 const char *i1_bin   = "../tests/imuodom/layers/input1.bin";
@@ -18,7 +19,13 @@ const char *l1_bin = "../tests/imuodom/layers/bidirectional_4.bin";
 const char *d0_bin = "../tests/imuodom/layers/dense_3.bin";
 const char *d1_bin = "../tests/imuodom/layers/dense_4.bin";
 
+
 int main() {
+
+    tk::dnn::ImuOdom ImuNet;
+    ImuNet.init("../tests/imuodom/layers/");
+
+    const int N = 19513;
 
     // Network layout
     tk::dnn::dataDim_t dim0(1, 4, 1, 100);
@@ -28,56 +35,39 @@ int main() {
     // Load input
     dnnType *i0_d, *i1_d, *i2_d;
     dnnType *i0_h, *i1_h, *i2_h;
-    readBinaryFile(i0_bin, dim0.tot(), &i0_h, &i0_d);
-    readBinaryFile(i1_bin, dim1.tot(), &i1_h, &i1_d);
-    readBinaryFile(i2_bin, dim2.tot(), &i2_h, &i2_d);
-
-    tk::dnn::Network   net(dim0);
-    tk::dnn::Input     x0  (&net, dim0, i0_d);
-    tk::dnn::Conv2d    x0_0(&net, 128, 1, 11, 1, 1, 0, 0, c0_bin);
-    tk::dnn::Conv2d    x0_1(&net, 128, 1, 11, 1, 1, 0, 0, c1_bin);
-    tk::dnn::Pooling   x0_2(&net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
-
-    tk::dnn::Input     x1  (&net, dim1, i1_d);
-    tk::dnn::Conv2d    x1_0(&net, 128, 1, 11, 1, 1, 0, 0, c2_bin);
-    tk::dnn::Conv2d    x1_1(&net, 128, 1, 11, 1, 1, 0, 0, c3_bin);
-    tk::dnn::Pooling   x1_2(&net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
-
-    tk::dnn::Input     x2  (&net, dim2, i2_d);
-    tk::dnn::Conv2d    x2_0(&net, 128, 1, 11, 1, 1, 0, 0, c4_bin);
-    tk::dnn::Conv2d    x2_1(&net, 128, 1, 11, 1, 1, 0, 0, c5_bin);
-    tk::dnn::Pooling   x2_2(&net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
-
-    tk::dnn::Layer *concat_l[3] = { &x0_2, &x1_2, &x2_2 };
-    tk::dnn::Route concat (&net, concat_l, 3);
-
-    tk::dnn::LSTM lstm0(&net, 128, true, l0_bin);
-    tk::dnn::LSTM lstm1(&net, 128, false, l1_bin);
-
-    tk::dnn::Dense d0 (&net, 3, d0_bin);
-
-    tk::dnn::Layer *lstm1_l[1] = { &lstm1 };
-    tk::dnn::Route lstm1_link (&net, lstm1_l, 1);
-    tk::dnn::Dense d1 (&net, 4, d1_bin);
-    net.print();
+    readBinaryFile(i0_bin, dim0.tot()*N, &i0_h, &i0_d);
+    readBinaryFile(i1_bin, dim1.tot()*N, &i1_h, &i1_d);
+    readBinaryFile(i2_bin, dim2.tot()*N, &i2_h, &i2_d);
 
     dnnType *data;
     tk::dnn::dataDim_t dim;
 
-    TIMER_START
-    // Inference
-    data = net.infer(dim, data);
-    TIMER_STOP
-
-    // Print real test
-    std::cout<<"\n==== CHECK RESULT ====\n";
     dnnType *out0, *out1;
     dnnType *out0_h, *out1_h;
-    readBinaryFile(o0_bin, d0.output_dim.tot(), &out0_h, &out0);
-    readBinaryFile(o1_bin, d1.output_dim.tot(), &out1_h, &out1);
-    d0.output_dim.print();
-    checkResult(d0.output_dim.tot(), d0.dstData, out0);
-    d1.output_dim.print();
-    checkResult(d1.output_dim.tot(), d1.dstData, out1);
+    readBinaryFile(o0_bin, ImuNet.odim0.tot()*N, &out0_h, &out0);
+    readBinaryFile(o1_bin, ImuNet.odim1.tot()*N, &out1_h, &out1);
+
+    for(int i=0; i<N; i++) {
+        TIMER_START
+
+        // Inference
+        ImuNet.update(i0_h, i1_h, i2_h);
+
+        TIMER_STOP
+
+        // Print real test
+        printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
+
+        //ImuNet.odim0.print();
+        checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
+        //ImuNet.odim1.print();
+        checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
+
+        i0_h += ImuNet.dim0.tot();
+        i1_h += ImuNet.dim1.tot();
+        i2_h += ImuNet.dim2.tot();
+        out0 += ImuNet.odim0.tot();
+        out1 += ImuNet.odim1.tot();
+    }
     return 0;
 }

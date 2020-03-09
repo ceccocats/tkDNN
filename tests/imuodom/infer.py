@@ -8,6 +8,7 @@ import os
 import random
 import struct
 from keras.models import Sequential, Model
+import pickle
 
 def bin_write(f, data):
     data = data.flatten()
@@ -24,15 +25,23 @@ if __name__ == '__main__':
     print("Load model: ", "ferrariS1.hdf5")
     model = load_model("ferrariS1.hdf5")
     model.summary()
-
     weights = model.get_weights()
 
-    np.random.seed(2)
-    x_angle = np.random.rand(1,100,4)
-    x_gyro = np.random.rand(1,100,3)
-    x_acc = np.random.rand(1,100,3)
+    indata = pickle.load(open("input.pk", 'rb'))
+    outdata = pickle.load(open("output.pk", 'rb'))
 
-    [yhat_delta_p, yhat_delta_q] = model.predict([x_angle, x_gyro, x_acc], batch_size=1, verbose=1)
+    x_angle = indata[0]
+    x_gyro = indata[1]
+    x_acc = indata[2]
+    
+    [yhat_delta_p, yhat_delta_q] = model.predict(indata, batch_size=1, verbose=1)
+    predictdata = [yhat_delta_p, yhat_delta_q]
+
+    error = outdata[0] - predictdata[0]
+    print("error delta_p: ", error.sum())
+    error = outdata[1] - predictdata[1]
+    print("error delta_q: ", error.sum())
+
 
     #layer_name = 'dense_4'
     #intermediate_layer_model = Model(inputs=model.input,
@@ -45,9 +54,9 @@ if __name__ == '__main__':
     x_acc = np.array([x_acc])
     #intermediate_output = np.array([intermediate_output])
 
-    x_angle =  x_angle.transpose(0, 3, 1, 2)
-    x_gyro =  x_gyro.transpose(0, 3, 1, 2)
-    x_acc =  x_acc.transpose(0, 3, 1, 2)
+    x_angle =  x_angle.transpose(1, 3, 0, 2)
+    x_gyro =  x_gyro.transpose(1, 3, 0, 2)
+    x_acc =  x_acc.transpose(1, 3, 0, 2)
     #intermediate_output = intermediate_output.transpose(0, 3, 1, 2)
     #print("Aggregate:")
     #print(intermediate_output.tolist())

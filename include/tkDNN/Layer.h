@@ -125,6 +125,7 @@ public:
     virtual layerType_t getLayerType() { return LAYER_INPUT; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
+        dim = output_dim;
         return dstData;
     }
 };
@@ -368,7 +369,8 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 public:
-    Layer **layers;  //ids of layers to be merged
+    static const int MAX_LAYERS = 32;
+    Layer *layers[MAX_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
 };
 
