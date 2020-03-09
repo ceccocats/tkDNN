@@ -47,21 +47,26 @@ int main() {
     readBinaryFile(o0_bin, ImuNet.odim0.tot()*N, &out0_h, &out0);
     readBinaryFile(o1_bin, ImuNet.odim1.tot()*N, &out1_h, &out1);
 
-    for(int i=0; i<N; i++) {
-        TIMER_START
+    
+    std::ofstream path("path.txt");
 
+    for(int i=0; i<N; i++) {
+        std::cout<<"i: "<<i<<"\n";
+        //TIMER_START
         // Inference
         ImuNet.update(i0_h, i1_h, i2_h);
+        //TIMER_STOP
 
-        TIMER_STOP
+        // log path
+        path<<ImuNet.odomPOS(0)<<" "<<ImuNet.odomPOS(1)<<" "<< ImuNet.odomPOS(2)<<"\n";
+        path.flush();
 
         // Print real test
-        printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
-
+        //printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
         //ImuNet.odim0.print();
-        checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
+        //checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
         //ImuNet.odim1.print();
-        checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
+        //checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
 
         i0_h += ImuNet.dim0.tot();
         i1_h += ImuNet.dim1.tot();

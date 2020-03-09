@@ -35,6 +35,9 @@ class ImuOdom {
         // output eigen CPU
         Eigen::MatrixXf deltaP, deltaQ;
 
+        Eigen::MatrixXd odomPOS, odomROT;
+        Eigen::Isometry3f tf = Eigen::Isometry3f::Identity();
+
         ImuOdom() {}
 
         virtual ~ImuOdom() {}
@@ -101,8 +104,11 @@ class ImuOdom {
             odim0 = d0->output_dim;
             odim1 = d1->output_dim;
 
-            deltaP.resize(1, odim0.tot());
-            deltaQ.resize(1, odim1.tot());
+            deltaP.resize(odim0.tot(), 1);
+            deltaQ.resize(odim1.tot(), 1);
+
+            odomPOS = Eigen::MatrixXd::Zero(3, 1); 
+            odomROT = Eigen::MatrixXd::Identity(3, 3);
         }
 
         void update(dnnType *x0, dnnType *x1, dnnType *x2) {
@@ -116,7 +122,20 @@ class ImuOdom {
             net->infer(dim, nullptr);
 
             checkCuda( cudaMemcpy(deltaP.data(), o0_d, odim0.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost) );
-            checkCuda( cudaMemcpy(deltaQ.data(), o1_d, odim1.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost) );            
+            checkCuda( cudaMemcpy(deltaQ.data(), o1_d, odim1.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost) ); 
+
+            // compute odom
+            Eigen::Quaterniond q;
+            q.w() = deltaQ(0);
+            q.x() = deltaQ(1);
+            q.y() = deltaQ(2);
+            q.z() = deltaQ(3);    
+            odomPOS = odomPOS + odomROT*deltaP.cast<double>();
+            odomROT = odomROT * q.normalized().toRotationMatrix();
+
+            // compose tf
+            tf.matrix().block(0, 0, 3, 3) = odomROT.cast<float>();
+            tf.matrix().block(0, 3, 3, 1) = odomPOS.cast<float>();
         }
 
 };
