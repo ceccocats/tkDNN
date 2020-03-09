@@ -10,3 +10,4 @@ build/
 *.weights
 .idea/
 *.hdf5
+*.pk

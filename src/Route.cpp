@@ -7,9 +7,15 @@ namespace tk { namespace dnn {
 
 Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
 
-    this->layers = layers;
+    // copy input layers
+    if(layers_n > MAX_LAYERS) {
+        FatalError("ROUTE: reached max number of input layers");
+    }
+    for(int i=0; i<layers_n; i++) {
+        this->layers[i] = layers[i];
+    }
     this->layers_n = layers_n;
-
+    
     //get dims
     output_dim.l = 1;
     output_dim.c = 0;
