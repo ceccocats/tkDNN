@@ -1,4 +1,9 @@
 #include "CenternetDetection.h"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/cudawarping.hpp>
+#include <opencv2/cudaarithm.hpp>
+
+
 
 namespace tk { namespace dnn {
 
@@ -226,7 +231,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     sz_old = sz;
     cv::cuda::GpuMat im_Orig; 
     im_Orig = cv::cuda::GpuMat(imageORIG);
-    // cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
+    cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
     checkCuda( cudaDeviceSynchronize() );
     
     sz = imageF1_d.size();
@@ -235,7 +240,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
-    // cv::cuda::warpAffine(imageF1_d, imageF2_d, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
+    cv::cuda::warpAffine(imageF1_d, imageF2_d, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
     checkCuda( cudaDeviceSynchronize() );
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
@@ -248,7 +253,7 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     step_t = end_t;
     
     dim2 = dim;
-    // cv::cuda::split(imageF1_d,bgr);//split source
+    cv::cuda::split(imageF1_d,bgr);//split source
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME split: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
