@@ -34,7 +34,15 @@ int main(int argc, char *argv[])
     char * labels_path = "../demo/COCO_val2017/all_labels.txt";
     bool show = false;
     bool write_dets = false;
+    bool write_res_on_file = true;
     int n_images = 5000;
+
+    std::ofstream times;
+    if(write_res_on_file)
+    {
+	times.open ("times.csv", std::ios_base::app);
+	times<<net<<";";
+    }
     
     if(argc > 1)
         net = argv[1]; 
@@ -91,6 +99,7 @@ int main(int argc, char *argv[])
 
         //inference 
         detected_bbox.clear();
+	TIMER_START
         switch(ntype)
         {
             case 'y':
@@ -104,6 +113,9 @@ int main(int argc, char *argv[])
             default:
                 FatalError("Network type not allowed!\n");
         }
+	TIMER_STOP
+	if(write_res_on_file)
+	    times<<t_ns<<";";
 
         std::ofstream myfile;
         if(write_dets)
@@ -168,11 +180,17 @@ int main(int argc, char *argv[])
                 IoU_thresh, conf_thresh, verbose);
     
     //compute mAP
-    double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose);
+    double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
     //compute average precision, recall and f1score
-    computeTPFPFN(images,classes,IoU_thresh,conf_thresh);
+    computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net);
+
+    if(write_res_on_file)
+    {
+	times<<"\n";
+        times.close();
+    }
 
 
     return 0;

@@ -115,6 +115,9 @@ target_link_libraries(test_dla34_cnet tkDNN)
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
 
+add_executable(map_demo demo/demo/map.cpp)
+target_link_libraries(map_demo tkDNN)
+
 add_executable(demo demo/demo/demo.cpp)
 target_link_libraries(demo tkDNN)
 
