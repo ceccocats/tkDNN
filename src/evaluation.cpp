@@ -1,4 +1,5 @@
 #include "evaluation.h"
+#include <fstream>
 
 
 void BoundingBox::clear()
@@ -283,27 +284,51 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
     return mean_average_precision;
 }
 
-double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh, const float conf_thresh, const int map_points, const float map_step, const int map_levels, const bool verbose)
+double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh, const float conf_thresh, const int map_points, const float map_step, const int map_levels, const bool verbose, const bool write_on_file, std::string net)
 {
-    double AP = 0;
+    std::ofstream out_file;
+    if(write_on_file)
+    {
+	out_file.open("map.csv", std::ios_base::app);
+        out_file<<net<<";";
+    }
+
+    double AP = 0, cur_AP = 0;
     float IoU_thresh = i_IoU_thresh;
     for(int i=0; i<map_levels; ++i)
     {
         for(auto& img:images)
             for(auto & d:img.det)
                 d.clear();
-        AP += computeMap(images,classes,IoU_thresh,conf_thresh,map_points, verbose);
+        cur_AP = computeMap(images,classes,IoU_thresh,conf_thresh,map_points, verbose);
+	if(write_on_file)
+	    out_file<<cur_AP<<";";
+	AP += cur_AP;
         IoU_thresh +=map_step;
     }
     AP/=map_levels;
+
+    if(write_on_file)
+    {
+	out_file<<AP<<"\n";
+	out_file.close();
+    }
     return AP;
 }
 
-void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, bool verbose)
+void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, bool verbose, const bool write_on_file, std::string net)
 {
+
+    std::ofstream out_file;
+    if(write_on_file)
+    {
+	out_file.open("pr.csv", std::ios_base::app);
+        out_file<<net<<";";
+    }
+
     std::vector<int> truth_classes_count(classes,0);
     std::vector<int> dets_classes_count(classes,0);
-    std::vector<PR> pr( classes);
+    std::vector<PR> pr(classes);
     
     for(auto &img:images)
     {
@@ -355,6 +380,8 @@ void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_
 
     double avg_precision = 0, avg_recall = 0, f1_score = 0;
 
+
+    int TP = 0, FP = 0, FN = 0;
     for(size_t i=0; i<classes; i++)
     {
         pr[i].precision = (pr[i].tp + pr[i].fp) > 0 ? (double)pr[i].tp / (double)(pr[i].tp +pr[i].fp) : 0;
@@ -364,11 +391,21 @@ void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_
             // std::cout<<i<<"\t"<<pr[i].tp<<"\t"<<pr[i].fp<<"\t"<<pr[i].fn<<"\t"<<pr[i].precision<<"\t"<<pr[i].recall<<std::endl;
         avg_precision += pr[i].precision;
         avg_recall += pr[i].recall;
+
+	TP += pr[i].tp;
+	FP += pr[i].fp;
+	FN += pr[i].fn;
     }
     avg_precision /= classes;
     avg_recall /= classes;
 
     f1_score = avg_precision + avg_recall > 0 ? 2 * ( avg_precision * avg_recall ) / ( avg_precision + avg_recall ) : 0;
+
+    if(write_on_file)
+    {
+	out_file<<TP<<";"<<FP<<";"<<FN<<";"<<avg_precision<<";"<<avg_recall<<";"<<f1_score<<"\n";
+	out_file.close();
+    }
 
     std::cout<<"avg precision: "<<avg_precision<<"\tavg recall: "<<avg_recall<<"\tavg f1 score:"<<f1_score<<std::endl;
 

@@ -52,8 +52,8 @@ void readParams(char* config_filename, int& classes, int& map_points,
                 float& conf_thresh, bool& verbose);
 
 double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh=0.3, const int map_points=101, const bool verbose=false);
-double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh=0.5, const float conf_thresh=0.3, const int map_points=101, const float map_step=0.05, const int map_levels=10, const bool verbose=false);
+double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh=0.5, const float conf_thresh=0.3, const int map_points=101, const float map_step=0.05, const int map_levels=10, const bool verbose=false, const bool write_on_file = false, std::string net = "");
 
-void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh=0.5, const float conf_thresh=0.3, bool verbose=false);
+void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh=0.5, const float conf_thresh=0.3, bool verbose=false, const bool write_on_file=false, std::string net="");
 
 #endif /*EVALUATION_H*/

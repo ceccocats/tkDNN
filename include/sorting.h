@@ -1,3 +1,6 @@
+#ifndef SORTING_H
+#define SORTING_H
+
 #include <thrust/sort.h>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
@@ -32,3 +35,5 @@ void topKxyAddOffset(int * ids_begin, const int K, const int size, int *intxs_be
                      float *xs_begin, float *ys_begin, dnnType *src_begin, float *src_out, int *ids_out);
 void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 
             dnnType *src_begin, float *bbx0, float *bbx1, float *bby0, float *bby1, float *src_out, int *ids_out);
+
+#endif /*SORTING_H*/

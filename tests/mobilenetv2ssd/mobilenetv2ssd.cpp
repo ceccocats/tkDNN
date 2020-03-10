@@ -1,10 +1,6 @@
 #include <iostream>
 #include "tkdnn.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 const char *output_bin1 = "../tests/mobilenetv2ssd/debug/classification_headers-5.bin";
 const char *output_bin2 = "../tests/mobilenetv2ssd/debug/regression_headers-5.bin";

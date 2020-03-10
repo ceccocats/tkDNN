@@ -60,6 +60,37 @@ bool Yolo3Detection::init(std::string tensor_path) {
     return true;
 } 
 
+cv::Mat Yolo3Detection::draw(cv::Mat &imageORIG) {
+
+    tk::dnn::box b;
+    int x0, w, x1, y0, h, y1;
+    int objClass;
+    std::string det_class;
+    float prob;
+    int baseline = 0;
+    float fontScale = 0.5;
+    int thickness = 2;   
+    // draw dets
+    for(int i=0; i<detected.size(); i++) {
+        b           = detected[i];
+        x0   		= b.x;
+        x1   		= b.x + b.w;
+        y0   		= b.y;
+        y1   		= b.y + b.h;
+        det_class 	= getYoloLayer()->classesNames[b.cl];
+        prob    	= b.prob;
+
+        // std::cout<<det_class<<" ("<<prob<<"): "<<x0<<" "<<y0<<" "<<x1<<" "<<y1<<"\n";
+        // draw rectangle
+        cv::rectangle(imageORIG, cv::Point(x0, y0), cv::Point(x1, y1), colors[b.cl], 2); 
+
+        // draw label
+        cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
+        cv::rectangle(imageORIG, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), colors[b.cl], -1);                      
+        cv::putText(imageORIG, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
+    }
+    return imageORIG;
+}
 
 void Yolo3Detection::update(cv::Mat &imageORIG) {
 
