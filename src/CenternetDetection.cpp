@@ -1,3 +1,6 @@
+#ifndef CENTERNETDETECTION_H
+#define CENTERNETDETECTION_H
+
 #include "CenternetDetection.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/cudawarping.hpp>
@@ -419,3 +422,5 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     stats.push_back(t_ns);
 }
 }}
+
+#endif /*CENTERNETDETECTION_H*/

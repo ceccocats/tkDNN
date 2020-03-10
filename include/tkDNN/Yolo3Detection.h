@@ -1,3 +1,6 @@
+#ifndef YOLODETECTION_H
+#define YOLODETECTION_H
+
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>     /* srand, rand */
@@ -34,7 +37,7 @@ class Yolo3Detection {
         int classes = 0;
         int num = 0;
         int n_masks = 0;
-        float thresh = 0.3;
+        float thresh = 0.05;
         cv::Scalar colors[256];
 
         // this is filled with results
@@ -53,7 +56,7 @@ class Yolo3Detection {
          * @return Success of the initialization
          */
         bool init(std::string tensor_path);
-
+        cv::Mat draw(cv::Mat &frame);
         void update(cv::Mat &frame);
 
         tk::dnn::Yolo* getYoloLayer(int n=0) {
@@ -66,3 +69,5 @@ class Yolo3Detection {
 };
 
 }}
+
+#endif /* YOLODETECTION_H*/
