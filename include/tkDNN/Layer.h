@@ -321,12 +321,13 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
+    bool test;
     tkdnnPoolingMode_t pool_mode;
 
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
             int paddingH = 0, int paddingW = 0,
-            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false); 
+            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false, bool test=false); 
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
@@ -473,7 +474,7 @@ public:
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 1024;
+    static const int MAX_DETECTIONS = 4096;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
     static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
 };
