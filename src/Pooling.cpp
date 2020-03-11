@@ -7,7 +7,7 @@ namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   int paddingH, int paddingW,
-                  tkdnnPoolingMode_t pool_mode, bool final) : 
+                  tkdnnPoolingMode_t pool_mode, bool final, bool test) : 
     Layer(net, final) {
 
     this->winH = winH;
@@ -17,6 +17,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->pool_mode = pool_mode;
     this->paddingH = paddingH;
     this->paddingW = paddingW;
+    this->test = test;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
@@ -111,11 +112,22 @@ dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
         poolDst = tmpOutputData;
     }
 
-    dnnType alpha = dnnType(1);
-    dnnType beta = dnnType(0);
-    checkCUDNN( cudnnPoolingForward(net->cudnnHandle, poolingDesc,
-                &alpha, srcTensorDesc, poolSrc,
-                &beta, dstTensorDesc, poolDst) );
+    
+
+    if(this->test)
+    {
+        MaxPoolingForward(poolSrc, poolDst, dim.n, dim.c, dim.h, dim.w, this->strideH, this->strideW, this->winH, this->winH-1);
+    }
+    else
+    {
+        dnnType alpha = dnnType(1);
+        dnnType beta = dnnType(0);
+        checkCUDNN( cudnnPoolingForward(net->cudnnHandle, poolingDesc,
+                    &alpha, srcTensorDesc, poolSrc,
+                    &beta, dstTensorDesc, poolDst) );
+        
+    }
+    
 
     //update dim
     dim = output_dim;
