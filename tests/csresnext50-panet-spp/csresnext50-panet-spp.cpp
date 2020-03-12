@@ -339,7 +339,7 @@ int main()
     tk::dnn::Conv2d c83(&net, 512, 1, 1, 1, 1, 0, 0, c83_bin, true);
     tk::dnn::Activation a83(&net, tk::dnn::ACTIVATION_LEAKY);
 
-    // //SPP
+    //SPP
     tk::dnn::Pooling p84(&net, 5, 5, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
     tk::dnn::Layer *r85_layers[1] = {&a83};
     tk::dnn::Route r85(&net, r85_layers, 1);
@@ -351,7 +351,7 @@ int main()
     tk::dnn::Pooling p88(&net, 13, 13, 1, 1, 12, 12, tk::dnn::POOLING_MAX, false, true);
     tk::dnn::Layer *r89_layers[4] = {&p88, &p86, &p84, &a83};
     tk::dnn::Route r89(&net, r89_layers, 4);
-    // //END SPP
+    //END SPP
 
     tk::dnn::Conv2d c90(&net, 512, 1, 1, 1, 1, 0, 0, c90_bin, true);
     tk::dnn::Activation a90(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -454,17 +454,15 @@ int main()
     tk::dnn::Conv2d c136(&net, 255, 1, 1, 1, 1, 0, 0, c136_bin, false);
     tk::dnn::Yolo yolo137(&net, classes, 3, g137_bin);
 
-    
+    yolo[0] = &yolo115;
+    yolo[1] = &yolo126;
+    yolo[2] = &yolo137;
 
-    // yolo[0] = &yolo115;
-    // yolo[1] = &yolo126;
-    // yolo[2] = &yolo137;
-
-    // // fill classes names
-    // for (int i = 0; i < 3; i++)
-    // {
-    //     yolo[i]->classesNames = {"person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
-    // }
+    // fill classes names
+    for (int i = 0; i < 3; i++)
+    {
+        yolo[i]->classesNames = {"person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
+    }
 
     // Load input
     dnnType *data;
@@ -475,13 +473,13 @@ int main()
     net.print();
 
     // //convert network to tensorRT
-    // tk::dnn::NetworkRT netRT(&net, "csresnext50-panet-spp.rt");
+    tk::dnn::NetworkRT netRT(&net, "csresnext50-panet-spp.rt");
 
     // the network have 3 outputs
-    // tk::dnn::dataDim_t out_dim[3];
-    // for (int i = 0; i < 3; i++)
-    //     out_dim[i] = yolo[i]->output_dim;
-    // dnnType *cudnn_out[3], *rt_out[3];
+    tk::dnn::dataDim_t out_dim[3];
+    for (int i = 0; i < 3; i++)
+        out_dim[i] = yolo[i]->output_dim;
+    dnnType *cudnn_out[3], *rt_out[3];
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30);
@@ -492,69 +490,62 @@ int main()
         TIMER_STOP
         dim1.print();
     }
-    dnnType *cudnn_out = net.layers[net.num_layers-1]->dstData;
-    tk::dnn::dataDim_t out_dim = net.layers[net.num_layers-1]->output_dim;
-    dnnType *out1, *out1_h;
-    int odim1 = out_dim.tot();
-    readBinaryFile(output_bin, odim1, &out1_h, &out1);
-    std::cout << "CUDNN vs correct" << std::endl;
-    // printDeviceVector(odim1, cudnn_out);
-    checkResult(odim1, cudnn_out, out1);
+    
+    for (int i = 0; i < 3; i++)
+        cudnn_out[i] = yolo[i]->dstData;
 
-    // for (int i = 0; i < 3; i++)
-    //     cudnn_out[i] = yolo[i]->dstData;
+    printCenteredTitle(" compute detections ", '=', 30);
+    TIMER_START
+    int ndets = 0;
+    tk::dnn::Yolo::detection *dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
+    for (int i = 0; i < 3; i++)
+        yolo[i]->computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, 0.5);
+    tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
 
-    // printCenteredTitle(" compute detections ", '=', 30);
-    // TIMER_START
-    // int ndets = 0;
-    // tk::dnn::Yolo::detection *dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
-    // for (int i = 0; i < 3; i++)
-    //     yolo[i]->computeDetections(dets, ndets, net.input_dim.w, net.input_dim.h, 0.5);
-    // tk::dnn::Yolo::mergeDetections(dets, ndets, classes);
+    for (int j = 0; j < ndets; j++)
+    {
+        tk::dnn::Yolo::box b = dets[j].bbox;
+        int x0 = (b.x - b.w / 2.);
+        int x1 = (b.x + b.w / 2.);
+        int y0 = (b.y - b.h / 2.);
+        int y1 = (b.y + b.h / 2.);
 
-    // for (int j = 0; j < ndets; j++)
-    // {
-    //     tk::dnn::Yolo::box b = dets[j].bbox;
-    //     int x0 = (b.x - b.w / 2.);
-    //     int x1 = (b.x + b.w / 2.);
-    //     int y0 = (b.y - b.h / 2.);
-    //     int y1 = (b.y + b.h / 2.);
+        int cl = 0;
+        for (int c = 0; c < classes; ++c)
+        {
+            float prob = dets[j].prob[c];
+            if (prob > 0)
+                cl = c;
+        }
+        std::cout << cl << ": " << x0 << " " << y0 << " " << x1 << " " << y1 << "\n";
+    }
+    TIMER_STOP
 
-    //     int cl = 0;
-    //     for (int c = 0; c < classes; ++c)
-    //     {
-    //         float prob = dets[j].prob[c];
-    //         if (prob > 0)
-    //             cl = c;
-    //     }
-    //     std::cout << cl << ": " << x0 << " " << y0 << " " << x1 << " " << y1 << "\n";
-    // }
-    // TIMER_STOP
+    tk::dnn::dataDim_t dim2 = dim;
+    printCenteredTitle(" TENSORRT inference ", '=', 30);
+    {
+        dim2.print();
+        TIMER_START
+        netRT.infer(dim2, data);
+        TIMER_STOP
+        dim2.print();
+    }
 
-    // tk::dnn::dataDim_t dim2 = dim;
-    // printCenteredTitle(" TENSORRT inference ", '=', 30);
-    // {
-    //     dim2.print();
-    //     TIMER_START
-    //     netRT.infer(dim2, data);
-    //     TIMER_STOP
-    //     dim2.print();
-    // }
-    // for (int i = 0; i < 3; i++)
-    //     rt_out[i] = (dnnType *)netRT.buffersRT[i + 1];
+    for (int i = 0; i < 3; i++)
+        rt_out[i] = (dnnType *)netRT.buffersRT[i + 1];
 
-    // for (int i = 0; i < 3; i++)
-    // {
-    //     printCenteredTitle((std::string(" YOLO ") + std::to_string(i) + " CHECK RESULTS ").c_str(), '=', 30);
-    //     dnnType *out, *out_h;
-    //     int odim = out_dim[i].tot();
-    //     readBinaryFile(output_bins[i], odim, &out_h, &out);
-    //     std::cout << "CUDNN vs correct";
-    //     checkResult(odim, cudnn_out[i], out);
-    //     std::cout << "TRT   vs correct";
-    //     checkResult(odim, rt_out[i], out);
-    //     std::cout << "CUDNN vs TRT    ";
-    //     checkResult(odim, cudnn_out[i], rt_out[i]);
-    // }
+    for (int i = 0; i < 3; i++)
+    {
+        printCenteredTitle((std::string(" YOLO ") + std::to_string(i) + " CHECK RESULTS ").c_str(), '=', 30);
+        dnnType *out, *out_h;
+        int odim = out_dim[i].tot();
+        readBinaryFile(output_bins[i], odim, &out_h, &out);
+        std::cout << "CUDNN vs correct";
+        checkResult(odim, cudnn_out[i], out);
+        std::cout << "TRT   vs correct";
+        checkResult(odim, rt_out[i], out);
+        std::cout << "CUDNN vs TRT    ";
+        checkResult(odim, cudnn_out[i], rt_out[i]);
+    }
     return 0;
 }

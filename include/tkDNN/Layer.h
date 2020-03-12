@@ -321,7 +321,7 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
-    bool test;
+    bool maxpoolfixedsize;
     tkdnnPoolingMode_t pool_mode;
 
     Pooling(Network *net, int winH, int winW, 
@@ -474,7 +474,7 @@ public:
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 4096;
+    static const int MAX_DETECTIONS = 1024;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
     static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
 };
