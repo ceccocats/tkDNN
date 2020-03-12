@@ -36,6 +36,7 @@ using namespace nvinfer1;
 #include "pluginsRT/DeformableConvRT.h"
 #include "pluginsRT/FlattenConcatRT.h"
 #include "pluginsRT/ReshapeRT.h"
+#include "pluginsRT/MaxPoolingFixedSizeRT.h"
 
 class PluginFactory : IPluginFactory
 {

@@ -7,7 +7,7 @@ namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   int paddingH, int paddingW,
-                  tkdnnPoolingMode_t pool_mode, bool final, bool test) : 
+                  tkdnnPoolingMode_t pool_mode, bool final, bool maxpoolfixedsize) : 
     Layer(net, final) {
 
     this->winH = winH;
@@ -17,7 +17,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->pool_mode = pool_mode;
     this->paddingH = paddingH;
     this->paddingW = paddingW;
-    this->test = test;
+    this->maxpoolfixedsize = maxpoolfixedsize;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
@@ -114,7 +114,7 @@ dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
 
     
 
-    if(this->test)
+    if(this->maxpoolfixedsize)
     {
         MaxPoolingForward(poolSrc, poolDst, dim.n, dim.c, dim.h, dim.w, this->strideH, this->strideW, this->winH, this->winH-1);
     }
