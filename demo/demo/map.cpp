@@ -37,13 +37,6 @@ int main(int argc, char *argv[])
     bool write_res_on_file = true;
     int n_images = 5000;
 
-    std::ofstream times;
-    if(write_res_on_file)
-    {
-	times.open ("times.csv", std::ios_base::app);
-	times<<net<<";";
-    }
-    
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
@@ -52,6 +45,15 @@ int main(int argc, char *argv[])
         labels_path = argv[3]; 
     if(argc > 4)
         config_filename = argv[4]; 
+
+
+    std::ofstream times;
+    if(write_res_on_file)
+    {
+        times.open ("times.csv", std::ios_base::app);
+        times<<net<<";";
+    }
+
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;

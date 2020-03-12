@@ -97,7 +97,7 @@ class CenternetDetection {
         int classes = 80;
         int num = 0;
         int n_masks = 0;
-        float thresh = 0.3;
+        float thresh = 0.0;
         cv::Scalar colors[256];
 
         // this is filled with results
