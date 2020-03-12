@@ -103,6 +103,9 @@ target_link_libraries(test_mobilenetv2ssd tkDNN)
 add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)
 
+add_executable(test_csresnext50-panet-spp tests/csresnext50-panet-spp/csresnext50-panet-spp.cpp)
+target_link_libraries(test_csresnext50-panet-spp tkDNN)
+
 add_executable(test_resnet101_cnet tests/resnet101_cnet/resnet101_cnet.cpp)
 target_link_libraries(test_resnet101_cnet tkDNN)
 

@@ -321,12 +321,13 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
+    bool maxpoolfixedsize;
     tkdnnPoolingMode_t pool_mode;
 
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
             int paddingH = 0, int paddingW = 0,
-            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false); 
+            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false, bool test=false); 
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 

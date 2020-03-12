@@ -4,7 +4,10 @@
 class ShortcutRT : public IPlugin {
 
 public:
-	ShortcutRT() {
+	ShortcutRT(tk::dnn::dataDim_t bdim) {
+		this->bc = bdim.c;
+		this->bh = bdim.h;
+		this->bw = bdim.w;
 	}
 
 	~ShortcutRT(){
@@ -44,22 +47,27 @@ public:
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
 		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
-		shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, c, h, w, 1, stream);
+		shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, bc, bh, bw, 1, stream);
 
 		return 0;
 	}
 
 
 	virtual size_t getSerializationSize() override {
-		return 3*sizeof(int);
+		return 6*sizeof(int);
 	}
 
 	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer);
+		tk::dnn::writeBUF(buf, bc);
+		tk::dnn::writeBUF(buf, bh);
+		tk::dnn::writeBUF(buf, bw);
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
+		
 	}
 
 	int c, h, w;
+	int bc, bh, bw;
 };

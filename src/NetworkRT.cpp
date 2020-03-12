@@ -304,23 +304,36 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE) ptype = PoolingType::kAVERAGE;
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE_EXCLUDE_PADDING) ptype = PoolingType::kMAX_AVERAGE_BLEND;
 
-
-    if(l->paddingH == 0 && l->paddingW == 0  && l->input_dim.h == l->output_dim.h && l->input_dim.w == l->output_dim.w)
+    if(l->maxpoolfixedsize)
     {
-      IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h+1,l->output_dim.w+1 );
-      IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
-      checkNULL(lRT);
-      lRT->setName( "Resize" );
-
-      input = lRT->getOutput(0);
+        IPlugin *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);
+        
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        
+        checkNULL(lRT);
+        lRT->setName( "MaxPoolingFixedSize" );
+        return lRT;
     }
+    else
+    {
+        if(l->paddingH == 0 && l->paddingW == 0  && l->input_dim.h == l->output_dim.h && l->input_dim.w == l->output_dim.w)
+        {
+            IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h+1,l->output_dim.w+1 );
+            IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+            checkNULL(lRT);
+            lRT->setName( "Resize" );
 
-    IPoolingLayer *lRT = networkRT->addPooling(*input, ptype, DimsHW{l->winH, l->winW});
-    checkNULL(lRT);
+            input = lRT->getOutput(0);
+        }
 
-    lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
-    lRT->setStride(DimsHW{l->strideH, l->strideW});
-    return lRT;
+        IPoolingLayer *lRT = networkRT->addPooling(*input, ptype, DimsHW{l->winH, l->winW});
+        checkNULL(lRT);
+
+        lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
+        lRT->setStride(DimsHW{l->strideH, l->strideW});
+        return lRT;
+        
+    }  
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
@@ -437,18 +450,18 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"New plugin Shortcut\n";
     
     ITensor *back_tens = tensors[l->backLayer];
-    /*
+    
     // plugin version
-    IPlugin *plugin = new ShortcutRT();
+    IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim);
     ITensor **inputs = new ITensor*[2];
     inputs[0] = input;
     inputs[1] = back_tens; 
     IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
-    */
+    
 
-    IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
-    checkNULL(lRT);
+    // IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
+    // checkNULL(lRT);
     
     return lRT;
 }
@@ -602,12 +615,30 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     } 
 
     if(name.find("Shortcut") == 0) {
-        ShortcutRT *r = new ShortcutRT();
+        tk::dnn::dataDim_t bdim;
+        bdim.c = readBUF<int>(buf);
+        bdim.h = readBUF<int>(buf);
+        bdim.w = readBUF<int>(buf);
+        bdim.l = 1;
+
+        ShortcutRT *r = new ShortcutRT(bdim);
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
         return r;
     } 
+
+    if(name.find("Pooling") == 0) {
+        MaxPoolFixedSizeRT *r = new MaxPoolFixedSizeRT( readBUF<int>(buf), //c
+                                                        readBUF<int>(buf), //h
+                                                        readBUF<int>(buf), //w
+                                                        readBUF<int>(buf), //n
+                                                        readBUF<int>(buf), //strideH
+                                                        readBUF<int>(buf), //strideW
+                                                        readBUF<int>(buf), //winSize
+                                                        readBUF<int>(buf)); //padding
+        return r;
+    }
 
     if(name.find("Resize") == 0) {
         ResizeLayerRT *r = new ResizeLayerRT(readBUF<int>(buf), //o_c
