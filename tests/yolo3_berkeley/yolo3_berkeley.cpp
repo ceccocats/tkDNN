@@ -10,11 +10,12 @@ int main() {
 
     // create yolo3 model
     std::string bin_path  = "../tests/yolo3_berkeley";
+    downloadWeightsifDoNotExist("../tests/yolo3_berkeley/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/o5cHa4AjTKS64oD/download");
     int classes = 10;
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
-    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/o5cHa4AjTKS64oD/download");
+    
 
     // fill classes names
     for(int i=0; i<3; i++) {
