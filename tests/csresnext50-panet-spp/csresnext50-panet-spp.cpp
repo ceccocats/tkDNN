@@ -121,6 +121,8 @@ int main()
     std::string g126_bin = bin_path + "/layers/g126.bin";
     std::string g137_bin = bin_path + "/layers/g137.bin";
 
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/Kcs4xBozwY4wFx8/download");
+
     tk::dnn::Conv2d c0(&net, 64, 7, 7, 2, 2, 3, 3, c0_bin, true);
     tk::dnn::Activation a0(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Pooling p1(&net, 2, 2, 2, 2, 0,0,  tk::dnn::POOLING_MAX);

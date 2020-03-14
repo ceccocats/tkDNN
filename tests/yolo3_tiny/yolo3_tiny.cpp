@@ -1,4 +1,5 @@
 #include<iostream>
+// #include<cstdlib>
 #include "tkdnn.h"
 
 const char *input_bin  = "../tests/yolo3_tiny/layers/input.bin";
@@ -22,6 +23,8 @@ const char *g23_bin    = "../tests/yolo3_tiny/layers/g23.bin";
 const char *output_bin = "../tests/yolo3_tiny/debug/layer23_out.bin";
 
 int main() {
+
+    downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tiny", "https://cloud.hipert.unimore.it/s/LMcSHtWaLeps8yN/download");
 
     int classes = 80;
 

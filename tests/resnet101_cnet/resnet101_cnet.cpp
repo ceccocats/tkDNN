@@ -185,6 +185,7 @@ const char *output_bin[]={
 
 int main()
 {
+    downloadWeightsifDoNotExist(input_bin, "../tests/resnet101_cnet", "https://cloud.hipert.unimore.it/s/B6mj33k7beECXsY/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);

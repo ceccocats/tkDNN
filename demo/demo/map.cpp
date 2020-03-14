@@ -46,6 +46,13 @@ int main(int argc, char *argv[])
     if(argc > 4)
         config_filename = argv[4]; 
 
+    if(!fileExist(config_filename))
+        FatalError("Wrong config file path.");
+    if(!fileExist(net))
+        FatalError("Wrong net file path.");
+    if(!fileExist(labels_path))
+        FatalError("Wrong labels file path.");
+
 
     std::ofstream times;
     if(write_res_on_file)
@@ -90,6 +97,9 @@ int main(int argc, char *argv[])
         convertFilename(f.i_filename, "labels", "images", ".txt", ".jpg");
 
         // read frame
+        if(!fileExist(f.i_filename.c_str()))
+            FatalError("Wrong image file path.");
+
         cv::Mat frame = cv::imread(f.i_filename.c_str(), cv::IMREAD_COLOR);
         int height = frame.rows;
         int width = frame.cols;
