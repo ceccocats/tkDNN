@@ -1,5 +1,4 @@
 #include<iostream>
-#include "tkdnn.h"
 #include "tkDNN/ImuOdom.h"
 
 const char *i0_bin   = "../tests/imuodom/layers/input0.bin";
