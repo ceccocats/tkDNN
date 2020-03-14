@@ -14,6 +14,8 @@ int main() {
     int classes = 3;
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
+    
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/62DECncmF6bMMiH/download");
 
     // fill classes names
     for(int i=0; i<3; i++) {

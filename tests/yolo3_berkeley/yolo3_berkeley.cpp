@@ -14,6 +14,8 @@ int main() {
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/o5cHa4AjTKS64oD/download");
+
     // fill classes names
     for(int i=0; i<3; i++) {
         yolo[i]->classesNames = {"person", "car", "truck", "bus", "motor", "bike", "rider", "traffic light", "traffic sign", "train"};

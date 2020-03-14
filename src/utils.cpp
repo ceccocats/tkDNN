@@ -20,6 +20,19 @@ bool fileExist(const char *fname) {
     return true;
 }
 
+void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url)
+{
+    if(!fileExist(input_bin.c_str()))
+    {
+        std::string wget_cmd = "wget " + weights_url + " -O " + test_folder + "/weights.zip"; 
+        std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
+        std::string rm_cmd = "rm " + test_folder + "/weights.zip";
+        system(wget_cmd.c_str());
+        system(unzip_cmd.c_str());
+        system(rm_cmd.c_str());
+    }
+}
+
 
 void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek, bool skipLoad)
 {

@@ -14,6 +14,8 @@ int main() {
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/o27NDzSAartbyc4/download");
+
     // Load input
     dnnType *data;
     dnnType *input_h;

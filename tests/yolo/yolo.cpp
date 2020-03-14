@@ -30,6 +30,8 @@ const char *output_bin = "../tests/yolo/layers/output.bin";
 
 int main() {
 
+    downloadWeightsifDoNotExist(input_bin, "../tests/yolo", "https://cloud.hipert.unimore.it/s/nf4PJ3k8bxBETwL/download");
+
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 608, 608, 1);
     tk::dnn::Network net(dim);
