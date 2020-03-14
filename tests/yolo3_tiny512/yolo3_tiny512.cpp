@@ -52,7 +52,7 @@ int main() {
 
     tk::dnn::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
 
     tk::dnn::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c12_bin, true);
     tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);

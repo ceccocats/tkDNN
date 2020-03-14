@@ -306,33 +306,19 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 
     if(l->maxpoolfixedsize)
     {
-        IPlugin *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);
-        
+        IPlugin *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);        
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
-        
         checkNULL(lRT);
-        lRT->setName( "MaxPoolingFixedSize" );
         return lRT;
     }
     else
     {
-        if(l->paddingH == 0 && l->paddingW == 0  && l->input_dim.h == l->output_dim.h && l->input_dim.w == l->output_dim.w)
-        {
-            IPlugin *plugin = new ResizeLayerRT( l->output_dim.c,l->output_dim.h+1,l->output_dim.w+1 );
-            IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
-            checkNULL(lRT);
-            lRT->setName( "Resize" );
-
-            input = lRT->getOutput(0);
-        }
-
         IPoolingLayer *lRT = networkRT->addPooling(*input, ptype, DimsHW{l->winH, l->winW});
         checkNULL(lRT);
 
         lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT->setStride(DimsHW{l->strideH, l->strideW});
         return lRT;
-        
     }  
 }
 
@@ -450,20 +436,24 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"New plugin Shortcut\n";
     
     ITensor *back_tens = tensors[l->backLayer];
-    
-    // plugin version
-    IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim);
-    ITensor **inputs = new ITensor*[2];
-    inputs[0] = input;
-    inputs[1] = back_tens; 
-    IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
-    checkNULL(lRT);
-    
 
-    // IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
-    // checkNULL(lRT);
-    
-    return lRT;
+    if(l->backLayer->output_dim.c == l->output_dim.c)
+    {
+        IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else
+    {
+        // plugin version
+        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim);
+        ITensor **inputs = new ITensor*[2];
+        inputs[0] = input;
+        inputs[1] = back_tens; 
+        IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
