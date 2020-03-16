@@ -85,6 +85,9 @@ target_link_libraries(test_yolo3_coco4 tkDNN)
 add_executable(test_yolo3 tests/yolo3/yolo3.cpp)
 target_link_libraries(test_yolo3 tkDNN)
 
+add_executable(test_yolo3_512 tests/yolo3_512/yolo3_512.cpp)
+target_link_libraries(test_yolo3_512 tkDNN)
+
 add_executable(test_yolo3_tiny tests/yolo3_tiny/yolo3_tiny.cpp)
 target_link_libraries(test_yolo3_tiny tkDNN)
 
