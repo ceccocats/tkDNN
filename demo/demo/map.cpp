@@ -13,6 +13,7 @@
 
 #include "Yolo3Detection.h"
 #include "CenternetDetection.h"
+#include "MobilenetDetection.h"
 
 #include "evaluation.h"
 
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
+    tk::dnn::MobilenetDetection mbnet;    
     
     switch(ntype)
     {
@@ -72,6 +74,9 @@ int main(int argc, char *argv[])
             break;
         case 'c':
             cnet.init(net);
+            break;
+        case 'm':
+            mbnet.init(net, 512, 81);
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
@@ -121,6 +126,18 @@ int main(int argc, char *argv[])
             case 'c':
                 cnet.update(dnn_input);
                 detected_bbox = cnet.detected;
+                break;
+            case 'm':
+                mbnet.update(dnn_input);
+                detected_bbox = mbnet.detected;
+                for(auto& d:detected_bbox)
+                {
+                    d.x = d.x;
+                    d.y = d.y;
+                    d.w = d.w - d.x; //in mobilenet b.w represents x1
+                    d.h = d.h - d.y; //in mobilenet b.h repsresnts y1
+                    d.cl = d.cl -1; //remove background class
+                }
                 break;
             default:
                 FatalError("Network type not allowed!\n");
