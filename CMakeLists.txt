@@ -103,6 +103,9 @@ target_link_libraries(test_yolo3_flir tkDNN)
 add_executable(test_mobilenetv2ssd tests/mobilenetv2ssd/mobilenetv2ssd.cpp)
 target_link_libraries(test_mobilenetv2ssd tkDNN)
 
+add_executable(test_mobilenetv2ssd512 tests/mobilenetv2ssd512/mobilenetv2ssd512.cpp)
+target_link_libraries(test_mobilenetv2ssd512 tkDNN)
+
 add_executable(test_resnet101 tests/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)
 
