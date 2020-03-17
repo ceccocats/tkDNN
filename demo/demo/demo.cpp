@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
             cnet.init(net);
             break;
         case 'm':
-            mbnet.init(net);
+            mbnet.init(net, 512, 81);
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");

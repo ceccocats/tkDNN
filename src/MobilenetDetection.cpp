@@ -15,7 +15,7 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
     n_priors = 0;
     for (int i = 0; i < n_specs; i++)
     {
-        n_priors += specs[i].feature_size * specs[i].feature_size * 6;
+        n_priors += specs[i].featureSize * specs[i].featureSize * 6;
     }
 
     // std::cout<<"n priors: "<<n_priors<<std::endl;
@@ -28,18 +28,18 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
     int min, max;
     for (int i = 0; i < n_specs; i++)
     {
-        scale = (float)image_size / (float)specs[i].shrinkage;
-        min = specs[i].box_height > specs[i].box_width ? specs[i].box_width : specs[i].box_height;
-        max = specs[i].box_height < specs[i].box_width ? specs[i].box_width : specs[i].box_height;
-        for (int j = 0; j < specs[i].feature_size; j++)
+        scale = (float)imageSize / (float)specs[i].shrinkage;
+        min = specs[i].boxHeight > specs[i].boxWidth ? specs[i].boxWidth : specs[i].boxHeight;
+        max = specs[i].boxHeight < specs[i].boxWidth ? specs[i].boxWidth : specs[i].boxHeight;
+        for (int j = 0; j < specs[i].featureSize; j++)
         {
-            for (int k = 0; k < specs[i].feature_size; k++)
+            for (int k = 0; k < specs[i].featureSize; k++)
             {
                 //small sized square box
                 size = min;
                 x_center = (k + 0.5f) / scale;
                 y_center = (j + 0.5f) / scale;
-                h = w = (float)size / (float)image_size;
+                h = w = (float)size / (float)imageSize;
 
                 priors[i_prio * N_COORDS + 0] = x_center;
                 priors[i_prio * N_COORDS + 1] = y_center;
@@ -49,7 +49,7 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
 
                 //big sized square box
                 size = sqrt(max * min);
-                h = w = (float)size / (float)image_size;
+                h = w = (float)size / (float)imageSize;
 
                 priors[i_prio * N_COORDS + 0] = x_center;
                 priors[i_prio * N_COORDS + 1] = y_center;
@@ -59,7 +59,7 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
 
                 //change h/w ratio of the small sized box
                 size = min;
-                h = w = size / (float)image_size;
+                h = w = size / (float)imageSize;
                 ratio = sqrt(specs[i].ratio1);
                 priors[i_prio * N_COORDS + 0] = x_center;
                 priors[i_prio * N_COORDS + 1] = y_center;
@@ -103,15 +103,15 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
     }
 }
 
-void MobilenetDetection::convert_locatios_to_boxes_and_center(float *priors, const int n_priors, float *locations, const float center_variance, const float size_variance)
+void MobilenetDetection::convert_locatios_to_boxes_and_center(float *priors, const int n_priors, float *locations, const float centerVariance, const float sizeVariance)
 {
     float cur_x, cur_y;
     for (int i = 0; i < n_priors; i++)
     {
-        locations[i * N_COORDS + 0] = locations[i * N_COORDS + 0] * center_variance * priors[i * N_COORDS + 2] + priors[i * N_COORDS + 0];
-        locations[i * N_COORDS + 1] = locations[i * N_COORDS + 1] * center_variance * priors[i * N_COORDS + 3] + priors[i * N_COORDS + 1];
-        locations[i * N_COORDS + 2] = exp(locations[i * N_COORDS + 2] * size_variance) * priors[i * N_COORDS + 2];
-        locations[i * N_COORDS + 3] = exp(locations[i * N_COORDS + 3] * size_variance) * priors[i * N_COORDS + 3];
+        locations[i * N_COORDS + 0] = locations[i * N_COORDS + 0] * centerVariance * priors[i * N_COORDS + 2] + priors[i * N_COORDS + 0];
+        locations[i * N_COORDS + 1] = locations[i * N_COORDS + 1] * centerVariance * priors[i * N_COORDS + 3] + priors[i * N_COORDS + 1];
+        locations[i * N_COORDS + 2] = exp(locations[i * N_COORDS + 2] * sizeVariance) * priors[i * N_COORDS + 2];
+        locations[i * N_COORDS + 3] = exp(locations[i * N_COORDS + 3] * sizeVariance) * priors[i * N_COORDS + 3];
 
         cur_x = locations[i * N_COORDS + 0];
         cur_y = locations[i * N_COORDS + 1];
@@ -221,16 +221,38 @@ float MobilenetDetection::get_color2(int c, int x, int max)
     return r;
 }
 
-void MobilenetDetection::init(std::string tensor_path)
+void MobilenetDetection::init(std::string tensor_path, int input_size, int n_classes)
 {
+    this->imageSize = input_size;
+    this->classes = n_classes;
+
     const int n_SSDSpec = 6;
     SSDSpec specs[6];
-    specs[0].setAll(19, 16, 60, 105, 2, 3);
-    specs[1].setAll(10, 32, 105, 150, 2, 3);
-    specs[2].setAll(5, 64, 150, 195, 2, 3);
-    specs[3].setAll(3, 100, 195, 240, 2, 3);
-    specs[4].setAll(2, 150, 240, 285, 2, 3);
-    specs[5].setAll(1, 300, 285, 330, 2, 3);
+
+
+    if(input_size == 300)
+    {
+        specs[0].setAll(19, 16, 60, 105, 2, 3);
+        specs[1].setAll(10, 32, 105, 150, 2, 3);
+        specs[2].setAll(5, 64, 150, 195, 2, 3);
+        specs[3].setAll(3, 100, 195, 240, 2, 3);
+        specs[4].setAll(2, 150, 240, 285, 2, 3);
+        specs[5].setAll(1, 300, 285, 330, 2, 3);
+    }
+    else if(input_size == 512)
+    {
+        specs[0].setAll(32, 16, 60, 105, 2, 3);
+        specs[1].setAll(16, 32, 105, 150, 2, 3);
+        specs[2].setAll(8, 64, 150, 195, 2, 3);
+        specs[3].setAll(4, 100, 195, 240, 2, 3);
+        specs[4].setAll(2, 150, 240, 285, 2, 3);
+        specs[5].setAll(1, 300, 285, 330, 2, 3);
+    }  
+    else
+    {
+        FatalError("Input size for mobilenet not supported");
+    }
+     
 
     generate_ssd_priors(specs, n_SSDSpec);
 
@@ -242,7 +264,7 @@ void MobilenetDetection::init(std::string tensor_path)
     locations_h = (float *)malloc(N_COORDS * n_priors * sizeof(float));
     confidences_h = (float *)malloc(n_priors * classes * sizeof(float));
 
-    dim = tk::dnn::dataDim_t(1, 3, input_w, input_h, 1);
+    dim = tk::dnn::dataDim_t(1, 3, imageSize, imageSize, 1);
 
     for (int c = 0; c < classes; c++)
     {
@@ -253,11 +275,39 @@ void MobilenetDetection::init(std::string tensor_path)
         colors[c] = cv::Scalar(int(255.0 * b), int(255.0 * g), int(255.0 * r));
     }
 
-    const char *voc_class_name_[] = {
+    if(classes == 21)
+    {
+        const char *classes_names_[] = {
         "BACKGROUND", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
         "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike",
         "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"};
-    voc_class_name = std::vector<std::string>(voc_class_name_, std::end(voc_class_name_));
+        classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
+
+    }
+    else if (classes == 81)
+    {
+        const char *classes_names_[] = {
+        "BACKGROUND", "person" , "bicycle" , "car" , "motorbike" , "aeroplane" , "bus" ,
+        "train" , "truck" , "boat" , "traffic light" , "fire hydrant" , "stop sign" , 
+        "parking meter" , "bench" , "bird" , "cat" , "dog" , "horse" , "sheep" , "cow" , 
+        "elephant" , "bear" , "zebra" , "giraffe" , "backpack" , "umbrella" , "handbag" , 
+        "tie" , "suitcase" , "frisbee" , "skis" , "snowboard" , "sports ball" , "kite" , 
+        "baseball bat" , "baseball glove" , "skateboard" , "surfboard" , "tennis racket" , 
+        "bottle" , "wine glass" , "cup" , "fork" , "knife" , "spoon" , "bowl" , "banana" , 
+        "apple" , "sandwich" , "orange" , "broccoli" , "carrot" , "hot dog" , "pizza" , 
+        "donut" , "cake" , "chair" , "sofa" , "pottedplant" , "bed" , "diningtable" , 
+        "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , 
+        "cell phone" , "microwave" , "oven" , "toaster" , "sink" , "refrigerator" , 
+        "book" , "clock" , "vase" , "scissors" , "teddy bear" , "hair drier" , "toothbrush"};
+        classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
+
+    }
+    else
+    {
+        FatalError("Number of classes not supported for mobilenet");
+    }
+    
+    
 }
 
 cv::Mat MobilenetDetection::draw()
@@ -266,7 +316,7 @@ cv::Mat MobilenetDetection::draw()
     for (size_t i = 0; i < detected.size(); i++)
     {
         b = detected[i];
-        std::string det_class = voc_class_name[b.cl];
+        std::string det_class = classesNames[b.cl];
         cv::rectangle(origImg, cv::Point(b.x, b.y), cv::Point(b.w, b.h), colors[b.cl], 2);
         // draw label
         cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
@@ -319,8 +369,8 @@ void MobilenetDetection::update(cv::Mat &img)
     checkCuda(cudaMemcpy(locations_h, loc, N_COORDS * n_priors * sizeof(float), cudaMemcpyDeviceToHost));
 
     //postprocess
-    convert_locatios_to_boxes_and_center(priors, n_priors, locations_h, center_variance, size_variance);
-    detected = postprocess(locations_h, confidences_h, n_priors, conf_thresh, classes, iou_threshold, sz.width, sz.height);
+    convert_locatios_to_boxes_and_center(priors, n_priors, locations_h, centerVariance, sizeVariance);
+    detected = postprocess(locations_h, confidences_h, n_priors, confThresh, classes, iouThreshold, sz.width, sz.height);
 
     TIMER_STOP
     stats.push_back(t_ns);

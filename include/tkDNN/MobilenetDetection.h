@@ -15,31 +15,31 @@
 
 struct SSDSpec
 {
-    int feature_size = 0;
+    int featureSize = 0;
     int shrinkage = 0;
-    int box_width = 0;
-    int box_height = 0;
+    int boxWidth = 0;
+    int boxHeight = 0;
     int ratio1 = 0;
     int ratio2 = 0;
 
     SSDSpec() {}
 
-    SSDSpec(int feature_size, int shrinkage, int box_width, int box_height, int ratio1, int ratio2) : feature_size(feature_size), shrinkage(shrinkage), box_width(box_width), box_height(box_height),
+    SSDSpec(int feature_size, int shrinkage, int box_width, int box_height, int ratio1, int ratio2) : featureSize(feature_size), shrinkage(shrinkage), boxWidth(box_width), boxHeight(box_height),
                                                                                                       ratio1(ratio1), ratio2(ratio2) {}
 
     void setAll(int feature_size, int shrinkage, int box_width, int box_height, int ratio1, int ratio2)
     {
-        this->feature_size = feature_size;
+        this->featureSize = feature_size;
         this->shrinkage = shrinkage;
-        this->box_width = box_width;
-        this->box_height = box_height;
+        this->boxWidth = box_width;
+        this->boxHeight = box_height;
         this->ratio1 = ratio1;
         this->ratio2 = ratio2;
     }
 
     void print()
     {
-        std::cout << "fsize: " << feature_size << "\tshrinkage: " << shrinkage << "\t box W:" << box_width << "\tbox H: " << box_height << "\t x ratio:" << ratio1 << "\t y ratio:" << ratio2 << std::endl;
+        std::cout << "fsize: " << featureSize << "\tshrinkage: " << shrinkage << "\t box W:" << boxWidth << "\tbox H: " << boxHeight << "\t x ratio:" << ratio1 << "\t y ratio:" << ratio2 << std::endl;
     }
 };
 
@@ -54,14 +54,12 @@ class MobilenetDetection
 private:
     tk::dnn::NetworkRT *netRT = nullptr;
 
-    int classes = 21;
-    float iou_threshold = 0.45;
-    float center_variance = 0.1;
-    float size_variance = 0.2;
-    float conf_thresh = 0.4;
-    int input_h = 300;
-    int input_w = 300;
-    int image_size = 300;
+    int classes;
+    float iouThreshold = 0.45;
+    float centerVariance = 0.1;
+    float sizeVariance = 0.2;
+    float confThresh = 0.4;
+    int imageSize;
 
     float *priors = nullptr;
     int n_priors = 0;
@@ -91,7 +89,7 @@ private:
     float get_color2(int c, int x, int max);
 
     cv::Scalar colors[256];
-    std::vector<std::string> voc_class_name;
+    std::vector<std::string> classesNames;
 
 public:
     // keep track of inference times (ms)
@@ -101,7 +99,7 @@ public:
     MobilenetDetection() {}
     ~MobilenetDetection() {}
 
-    void init(std::string tensor_path);
+    void init(std::string tensor_path, int input_size, int n_classes);
     cv::Mat draw();
     void update(cv::Mat &img);
 };
