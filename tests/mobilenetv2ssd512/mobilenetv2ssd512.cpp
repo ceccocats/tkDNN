@@ -445,8 +445,6 @@ int main()
     tk::dnn::Reshape reshape_conf2(&net, newdim_c);
 
     tk::dnn::Softmax sm_1(&net, &newdim_c, true);
-    // tk::dnn::Flatten fl_l_7(&net);
-    // tk::dnn::Reshape reshape_conf3(&net,dim_resh, true);
     tk::dnn::Layer *conf = &sm_1;
 
     //concat locations

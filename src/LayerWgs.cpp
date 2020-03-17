@@ -59,6 +59,14 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
     float2half(data_d, data16_d, w_size);
     cudaMemcpy(data16_h, data16_d, w_size*sizeof(__half), cudaMemcpyDeviceToHost);
 
+    if(additional_bias){
+        int b2_size = outputs;
+        bias216_h = new __half[b2_size];
+        cudaMalloc(&bias216_d, w_size*sizeof(__half));
+        float2half(bias2_d, bias216_d, b2_size);
+        cudaMemcpy(bias216_h, bias216_d, b2_size*sizeof(__half), cudaMemcpyDeviceToHost);
+    }
+
     int b_size = outputs;
     bias16_h = new __half[b_size];
     cudaMalloc(&bias16_d, w_size*sizeof(__half));

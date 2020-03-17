@@ -114,6 +114,7 @@ public:
     //fp16
     __half *data16_h, *bias16_h;
     __half *data16_d, *bias16_d;
+    __half *bias216_h, *bias216_d;
 
     __half *power16_h,    *power16_d;
     __half *scales16_h,   *scales16_d;

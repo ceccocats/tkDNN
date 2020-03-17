@@ -226,10 +226,11 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     // printf("%d %d %d %d %d\n", l->kernelH, l->kernelW, l->inputs, l->outputs, l->batchnorm);
 
 
-    void *data_b, *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
+    void *data_b, *bias_b, *bias2_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {
         data_b     = l->data16_h;    
         bias_b     = l->bias16_h;
+        bias2_b    = l->bias216_h;
         power_b    = l->power16_h;
         mean_b     = l->mean16_h;
         variance_b = l->variance16_h;
@@ -237,6 +238,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     } else {
         data_b     = l->data_h;    
         bias_b     = l->bias_h;
+        bias2_b    = l->bias2_h;
         power_b    = l->power_h;
         mean_b     = l->mean_h;
         variance_b = l->variance_h;
@@ -248,8 +250,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     Weights b;
     if(!l->batchnorm)
         b = { dtRT, bias_b, l->outputs};
-    else
-        b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
+    else{
+        if (l->additional_bias)
+            b = { dtRT, bias2_b, l->outputs}; 
+        else
+            b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
+    }
 
     ILayer *lRT = nullptr;
     if(!l->deConv) {
@@ -652,7 +658,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
 
     if(name.find("Reshape") == 0) {
 
-        dataDim_t new_dim(readBUF<int>(buf), readBUF<int>(buf),readBUF<int>(buf), readBUF<int>(buf));
+        dataDim_t new_dim;
+        new_dim.n = readBUF<int>(buf);
+        new_dim.c = readBUF<int>(buf);
+        new_dim.h = readBUF<int>(buf);
+        new_dim.w = readBUF<int>(buf);
         ReshapeRT *r = new ReshapeRT(new_dim); 
         
         return r;
