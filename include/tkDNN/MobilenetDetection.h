@@ -8,6 +8,9 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "opencv2/opencv.hpp"
+
+
 #include "tkdnn.h"
 
 #define N_COORDS 4
@@ -65,7 +68,7 @@ private:
     int n_priors = 0;
 
     cv::Mat origImg;
-    cv::Mat bgr[3];
+    
 
     float *input, *input_d;
     float *locations_h, *confidences_h;
@@ -85,6 +88,7 @@ private:
     void generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp = true);
     void convert_locatios_to_boxes_and_center(float *priors, const int n_priors, float *locations, const float center_variance, const float size_variance);
     float iou(const tk::dnn::box &a, const tk::dnn::box &b);
+    void preprocess(const bool gpu = true);
     std::vector<tk::dnn::box> postprocess(float *locations, float *confidences, const int n_values, const float threshold, const int n_classes, const float iou_thresh, const int width, const int height);
     float get_color2(int c, int x, int max);
 
