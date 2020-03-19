@@ -326,6 +326,50 @@ cv::Mat MobilenetDetection::draw()
     return origImg;
 }
 
+
+void MobilenetDetection::preprocess(const bool gpu)
+{
+    std::cout<<"preprocess"<<std::endl;
+    if(gpu){
+        cv::cuda::GpuMat im_Orig; 
+        cv::cuda::GpuMat frame_resize, frame_nomean, frame_scaled;
+
+        im_Orig = cv::cuda::GpuMat(origImg);
+        cv::cuda::resize (im_Orig, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h)); 
+
+        // resize(origImg, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+        frame_resize.convertTo(frame_nomean, CV_32FC3, 1, -127);
+        frame_nomean.convertTo(frame_scaled, CV_32FC3, 1 / 128.0, 0);
+
+        //copy image into tensor and copy it into GPU
+        cv::cuda::GpuMat bgr[3];
+        cv::cuda::split(frame_scaled, bgr);
+
+        for(int i=0; i < netRT->input_dim.c; i++){
+            int idx = i * frame_scaled.rows * frame_scaled.cols;
+            checkCuda( cudaMemcpy((void *)&input_d[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
+        }
+    }
+    else{
+        //resize image, remove mean, divide by std
+        cv::Mat frame_resize, frame_nomean, frame_scaled;
+        resize(origImg, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+        frame_resize.convertTo(frame_nomean, CV_32FC3, 1, -127);
+        frame_nomean.convertTo(frame_scaled, CV_32FC3, 1 / 128.0, 0);
+
+        //copy image into tensor and copy it into GPU
+        cv::Mat bgr[3];
+        cv::split(frame_scaled, bgr);
+        for (int i = 0; i < netRT->input_dim.c; i++){
+            int idx = i * frame_scaled.rows * frame_scaled.cols;
+            memcpy((void *)&input[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols * sizeof(dnnType));
+        }
+        checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+    }
+    
+
+}
+
 void MobilenetDetection::update(cv::Mat &img)
 {
     TIMER_START
@@ -335,20 +379,8 @@ void MobilenetDetection::update(cv::Mat &img)
     origImg = img;
     cv::Size sz = origImg.size();
 
-    //resize image, remove mean, divide by std
-    cv::Mat frame_resize, frame_nomean, frame_scaled;
-    resize(origImg, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-    frame_resize.convertTo(frame_nomean, CV_32FC3, 1, -127);
-    frame_nomean.convertTo(frame_scaled, CV_32FC3, 1 / 128.0, 0);
-
-    //copy image into tensor and copy it into GPU
-    cv::split(frame_scaled, bgr);
-    for (int i = 0; i < netRT->input_dim.c; i++)
-    {
-        int idx = i * frame_scaled.rows * frame_scaled.cols;
-        memcpy((void *)&input[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols * sizeof(dnnType));
-    }
-    checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+    //preprocess
+    preprocess();
 
     //do inference
     tk::dnn::dataDim_t dim2 = dim;
