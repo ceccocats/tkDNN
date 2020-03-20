@@ -280,10 +280,10 @@ cv::Mat MobilenetDetection::draw()
     return origImg;
 }
 
-void MobilenetDetection::preprocess(const bool gpu)
+void MobilenetDetection::preprocess()
 {
     std::cout<<"preprocess"<<std::endl;
-    if(gpu){
+#ifdef OPENCV_CUDA
         //move original image on GPU
         cv::cuda::GpuMat im_Orig, frame_resize, frame_nomean, frame_scaled;
         im_Orig = cv::cuda::GpuMat(origImg);
@@ -301,8 +301,7 @@ void MobilenetDetection::preprocess(const bool gpu)
             int idx = i * frame_scaled.rows * frame_scaled.cols;
             checkCuda( cudaMemcpy((void *)&input_d[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
         }
-    }
-    else{
+#else
         //resize image, remove mean, divide by std
         cv::Mat frame_resize, frame_nomean, frame_scaled;
         resize(origImg, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
@@ -317,7 +316,7 @@ void MobilenetDetection::preprocess(const bool gpu)
             memcpy((void *)&input[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols * sizeof(dnnType));
         }
         checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
-    }
+#endif
 }
 
 void MobilenetDetection::update(cv::Mat &img)

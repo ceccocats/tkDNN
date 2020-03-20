@@ -83,7 +83,7 @@ private:
     void generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp = true);
     void convert_locatios_to_boxes_and_center();
     float iou(const tk::dnn::box &a, const tk::dnn::box &b);
-    void preprocess(const bool gpu = true);
+    void preprocess();
     std::vector<tk::dnn::box> postprocess(const int width, const int height);
     float get_color2(int c, int x, int max);
 
