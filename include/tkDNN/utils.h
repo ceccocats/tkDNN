@@ -14,7 +14,6 @@
 
 #define dnnType float
 
-#define OPENCV_CUDA
 
 // Colored output
 #define COL_END "\033[0m"
@@ -96,6 +95,7 @@ void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string
 void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0, bool skipLoad = false);
 int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true);
 void printDeviceVector(int size, dnnType* vec_d, bool device = true);
+float getColor(const int c, const int x, const int max);
 void resize(int size, dnnType **data);
 
 void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, int rows, int cols);
