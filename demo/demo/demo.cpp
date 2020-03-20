@@ -31,24 +31,33 @@ int main(int argc, char *argv[]) {
     char ntype = 'y';
     if(argc > 3)
         ntype = argv[3][0]; 
+    int n_classes = 80;
+    if(argc > 4)
+        n_classes = atoi(argv[4]); 
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
-    tk::dnn::MobilenetDetection mbnet;    
+    tk::dnn::MobilenetDetection mbnet;  
+
+    tk::dnn::DetectionNN *detNN;  
+
     switch(ntype)
     {
         case 'y':
-            yolo.init(net);
+            detNN = &yolo;
             break;
         case 'c':
-            cnet.init(net);
+            detNN = &cnet;
             break;
         case 'm':
-            mbnet.init(net, 512, 81);
+            detNN = &mbnet;
+            n_classes++;
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
     }
+
+    detNN->init(net, n_classes);
 
     gRun = true;
 
@@ -79,25 +88,11 @@ int main(int argc, char *argv[]) {
  
         // this will be resized to the net format
         dnn_input = frame.clone();
-        // TODO: async infer
-        switch(ntype)
-        {
-            case 'y':
-                yolo.update(dnn_input);
-                frame = yolo.draw(frame);
-                break;
-            case 'c':
-                cnet.update(dnn_input);
-                frame = cnet.draw(dnn_input);
-                break;
-            case 'm':
-                mbnet.update(dnn_input);
-                frame = mbnet.draw();
-                break;
-            default:
-                FatalError("Network type not allowed!\n");
-        }
-                
+        
+        //inference
+        detNN->update(dnn_input);
+        frame = detNN->draw(frame);
+
         cv::imshow("detection", frame);
         cv::waitKey(1);
         if(SAVE_RESULT)
@@ -106,32 +101,13 @@ int main(int argc, char *argv[]) {
 
     std::cout<<"detection end\n";   
     double mean = 0; 
-    switch(ntype)
-    {
-        case 'y':
-            std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-            std::cout<<"Min: "<<*std::min_element(yolo.stats.begin(), yolo.stats.end())<<" ms\n";    
-            std::cout<<"Max: "<<*std::max_element(yolo.stats.begin(), yolo.stats.end())<<" ms\n";    
-            for(int i=0; i<yolo.stats.size(); i++) mean += yolo.stats[i]; mean /= yolo.stats.size();
-            std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;  
-            break;
-        case 'c':
-            std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-            std::cout<<"Min: "<<*std::min_element(cnet.stats.begin(), cnet.stats.end())<<" ms\n";    
-            std::cout<<"Max: "<<*std::max_element(cnet.stats.begin(), cnet.stats.end())<<" ms\n";    
-            for(int i=0; i<cnet.stats.size(); i++) mean += cnet.stats[i]; mean /= cnet.stats.size();
-            std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;
-            break;
-        case 'm':
-            std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-            std::cout<<"Min: "<<*std::min_element(mbnet.stats.begin(), mbnet.stats.end())<<" ms\n";    
-            std::cout<<"Max: "<<*std::max_element(mbnet.stats.begin(), mbnet.stats.end())<<" ms\n";    
-            for(int i=0; i<mbnet.stats.size(); i++) mean += mbnet.stats[i]; mean /= mbnet.stats.size();
-            std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
-            break;
-        default:
-            FatalError("Network type not allowed!\n");
-    }
+    
+    std::cout<<COL_GREENB<<"\n\nTime stats:\n";
+    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
+    for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
+    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    
 
     return 0;
 }

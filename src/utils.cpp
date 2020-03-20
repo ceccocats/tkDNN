@@ -129,6 +129,18 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
     return diffs;
 }
 
+float getColor(const int c, const int x, const int max)
+{
+    float _colors[6][3] = { {1,0,1}, {0,0,1},{0,1,1},{0,1,0},{1,1,0},{1,0,0} };
+    float ratio = ((float)x/max)*5;
+    int i = floor(ratio);
+    int j = ceil(ratio);
+    ratio -= i;
+    float r = (1-ratio) * _colors[i % 6][c % 3] + ratio*_colors[j % 6][c % 3];
+    return r;
+}
+
+
 void resize(int size, dnnType **data)
 {
     if (*data != NULL)

@@ -4,14 +4,12 @@ bool boxProbCmp(const tk::dnn::box &a, const tk::dnn::box &b){
     return (a.prob > b.prob);
 }
 
-namespace tk{
-namespace dnn{
+namespace tk{ namespace dnn{
 
 void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp)
 {
     nPriors = 0;
-    for (int i = 0; i < n_specs; i++)
-    {
+    for (int i = 0; i < n_specs; i++){
         nPriors += specs[i].featureSize * specs[i].featureSize * 6;
     }
 
@@ -131,71 +129,17 @@ float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b)
     return iou;
 }
 
-std::vector<tk::dnn::box> MobilenetDetection::postprocess(const int width, const int height)
+bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes)
 {
-    float *conf_per_class;
-    std::vector<tk::dnn::box> detections;
-    for (int i = 1; i < classes; i++){
-        conf_per_class = &confidences_h[i * nPriors];
-        std::vector<tk::dnn::box> boxes;
-        for (int j = 0; j < nPriors; j++){
 
-            if (conf_per_class[j] > confThreshold){
-                tk::dnn::box b;
-                b.cl = i;
-                b.prob = conf_per_class[j];
-                b.x = locations_h[j * N_COORDS + 0];
-                b.y = locations_h[j * N_COORDS + 1];
-                b.w = locations_h[j * N_COORDS + 2];
-                b.h = locations_h[j * N_COORDS + 3];
+    std::cout<<"MobilenetDetection Init"<<std::endl;
+    netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
+    imageSize = netRT->input_dim.h;
+    classes = n_classes;
 
-                boxes.push_back(b);
-            }
-        }
-        std::sort(boxes.begin(), boxes.end(), boxProbCmp);
+    SSDSpec specs[N_SSDSPEC];
 
-        std::vector<tk::dnn::box> remaining;
-        while (boxes.size() > 0){
-            remaining.clear();
-
-            tk::dnn::box b;
-            b.cl = boxes[0].cl;
-            b.prob = boxes[0].prob;
-            b.x = boxes[0].x * width;
-            b.y = boxes[0].y * height;
-            b.w = boxes[0].w * width;
-            b.h = boxes[0].h * height;
-            detections.push_back(b);
-            for (size_t j = 1; j < boxes.size(); j++){
-                if (iou(boxes[0], boxes[j]) <= IoUThreshold){
-                    remaining.push_back(boxes[j]);
-                }
-            }
-            boxes = remaining;
-        }
-    }
-    return detections;
-}
-
-float MobilenetDetection::get_color2(int c, int x, int max)
-{
-    float ratio = ((float)x / max) * 5;
-    int i = floor(ratio);
-    int j = ceil(ratio);
-    ratio -= i;
-    float r = (1 - ratio) * __colors[i % 6][c % 3] + ratio * __colors[j % 6][c % 3];
-    return r;
-}
-
-void MobilenetDetection::init(std::string tensor_path, int input_size, int n_classes)
-{
-    this->imageSize = input_size;
-    this->classes = n_classes;
-
-    const int n_SSDSpec = 6;
-    SSDSpec specs[6];
-
-    if(input_size == 300){
+    if(imageSize == 300){
         specs[0].setAll(19, 16, 60, 105, 2, 3);
         specs[1].setAll(10, 32, 105, 150, 2, 3);
         specs[2].setAll(5, 64, 150, 195, 2, 3);
@@ -203,7 +147,7 @@ void MobilenetDetection::init(std::string tensor_path, int input_size, int n_cla
         specs[4].setAll(2, 150, 240, 285, 2, 3);
         specs[5].setAll(1, 300, 285, 330, 2, 3);
     }
-    else if(input_size == 512){
+    else if(imageSize == 512){
         specs[0].setAll(32, 16, 60, 105, 2, 3);
         specs[1].setAll(16, 32, 105, 150, 2, 3);
         specs[2].setAll(8, 64, 150, 195, 2, 3);
@@ -215,23 +159,21 @@ void MobilenetDetection::init(std::string tensor_path, int input_size, int n_cla
         FatalError("Input size for mobilenet not supported");
     }
 
-    generate_ssd_priors(specs, n_SSDSpec);
+    generate_ssd_priors(specs, N_SSDSPEC);
 
-    netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
-
+#ifndef OPENCV_CUDA
     checkCuda(cudaMallocHost(&input, sizeof(dnnType) * netRT->input_dim.tot()));
+#endif
     checkCuda(cudaMalloc(&input_d, sizeof(dnnType) * netRT->input_dim.tot()));
 
     locations_h = (float *)malloc(N_COORDS * nPriors * sizeof(float));
     confidences_h = (float *)malloc(nPriors * classes * sizeof(float));
 
-    dim = tk::dnn::dataDim_t(1, 3, imageSize, imageSize, 1);
-
     for (int c = 0; c < classes; c++){
         int offset = c * 123457 % classes;
-        float r = get_color2(2, offset, classes);
-        float g = get_color2(1, offset, classes);
-        float b = get_color2(0, offset, classes);
+        float r = getColor(2, offset, classes);
+        float g = getColor(1, offset, classes);
+        float b = getColor(0, offset, classes);
         colors[c] = cv::Scalar(int(255.0 * b), int(255.0 * g), int(255.0 * r));
     }
 
@@ -263,99 +205,151 @@ void MobilenetDetection::init(std::string tensor_path, int input_size, int n_cla
     else{
         FatalError("Number of classes not supported for mobilenet");
     }
+    return 1;
 }
 
-cv::Mat MobilenetDetection::draw()
-{
-    tk::dnn::box b;
-    for (size_t i = 0; i < detected.size(); i++){
-        b = detected[i];
-        std::string det_class = classesNames[b.cl];
-        cv::rectangle(origImg, cv::Point(b.x, b.y), cv::Point(b.w, b.h), colors[b.cl], 2);
-        // draw label
-        cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
-        cv::rectangle(origImg, cv::Point(b.x, b.y), cv::Point((b.x + textSize.width - 2), (b.y - textSize.height - 2)), colors[b.cl], -1);
-        cv::putText(origImg, det_class, cv::Point(b.x, (b.y - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
-    }
-    return origImg;
-}
-
-void MobilenetDetection::preprocess()
+void MobilenetDetection::preprocess(cv::Mat &frame)
 {
     std::cout<<"preprocess"<<std::endl;
 #ifdef OPENCV_CUDA
         //move original image on GPU
-        cv::cuda::GpuMat im_Orig, frame_resize, frame_nomean, frame_scaled;
-        im_Orig = cv::cuda::GpuMat(origImg);
+        cv::cuda::GpuMat orig_img, frame_nomean;
+        orig_img = cv::cuda::GpuMat(frame);
 
         //resize image, remove mean, divide by std
-        cv::cuda::resize (im_Orig, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h)); 
-        frame_resize.convertTo(frame_nomean, CV_32FC3, 1, -127);
-        frame_nomean.convertTo(frame_scaled, CV_32FC3, 1 / 128.0, 0);
+        cv::cuda::resize (orig_img, orig_img, cv::Size(netRT->input_dim.w, netRT->input_dim.h)); 
+        orig_img.convertTo(frame_nomean, CV_32FC3, 1, -127);
+        frame_nomean.convertTo(imagePreproc, CV_32FC3, 1 / 128.0, 0);
 
         //copy image into tensors
-        cv::cuda::GpuMat bgr[3];
-        cv::cuda::split(frame_scaled, bgr);
+        cv::cuda::split(imagePreproc, bgr);
 
         for(int i=0; i < netRT->input_dim.c; i++){
-            int idx = i * frame_scaled.rows * frame_scaled.cols;
-            checkCuda( cudaMemcpy((void *)&input_d[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
+            int idx = i * imagePreproc.rows * imagePreproc.cols;
+            checkCuda( cudaMemcpy((void *)&input_d[idx], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
         }
 #else
         //resize image, remove mean, divide by std
-        cv::Mat frame_resize, frame_nomean, frame_scaled;
-        resize(origImg, frame_resize, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-        frame_resize.convertTo(frame_nomean, CV_32FC3, 1, -127);
-        frame_nomean.convertTo(frame_scaled, CV_32FC3, 1 / 128.0, 0);
+        cv::Mat frame_nomean;
+        resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+        frame.convertTo(frame_nomean, CV_32FC3, 1, -127);
+        frame_nomean.convertTo(imagePreproc, CV_32FC3, 1 / 128.0, 0);
 
         //copy image into tensor and copy it into GPU
-        cv::Mat bgr[3];
-        cv::split(frame_scaled, bgr);
+        cv::split(imagePreproc, bgr);
         for (int i = 0; i < netRT->input_dim.c; i++){
-            int idx = i * frame_scaled.rows * frame_scaled.cols;
-            memcpy((void *)&input[idx], (void *)bgr[i].data, frame_scaled.rows * frame_scaled.cols * sizeof(dnnType));
+            int idx = i * imagePreproc.rows * imagePreproc.cols;
+            memcpy((void *)&input[idx], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols * sizeof(dnnType));
         }
         checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
 #endif
 }
 
-void MobilenetDetection::update(cv::Mat &img)
+void MobilenetDetection::update(cv::Mat &frame)
 {
     TIMER_START
     detected.clear();
 
-    //save origin image
-    origImg = img;
-    cv::Size sz = origImg.size();
+    originalSize = frame.size();
 
     //preprocess
-    preprocess();
+    preprocess(frame);
 
     //do inference
-    tk::dnn::dataDim_t dim2 = dim;
+    tk::dnn::dataDim_t dim = tk::dnn::dataDim_t(1, 3, imageSize, imageSize, 1);;
     printCenteredTitle(" TENSORRT inference ", '=', 30);
     {
-        dim2.print();
+        dim.print();
         TIMER_START
-        netRT->infer(dim2, input_d);
+        netRT->infer(dim, input_d);
         TIMER_STOP
-        dim2.print();
+        dim.print();
     }
 
     //get confidences and locations_h
-    conf = (dnnType *)netRT->buffersRT[3];
-    loc = (dnnType *)netRT->buffersRT[4];
-
-    checkCuda(cudaMemcpy(confidences_h, conf, nPriors * classes * sizeof(float), cudaMemcpyDeviceToHost));
-    checkCuda(cudaMemcpy(locations_h, loc, N_COORDS * nPriors * sizeof(float), cudaMemcpyDeviceToHost));
+    dnnType *rt_out[2];
+    rt_out[0] = (dnnType *)netRT->buffersRT[3];
+    rt_out[1] = (dnnType *)netRT->buffersRT[4];
 
     //postprocess
-    convert_locatios_to_boxes_and_center();
-    detected = postprocess(sz.width, sz.height);
+    postprocess(rt_out, 2);
 
     TIMER_STOP
     stats.push_back(t_ns);
 }
+
+
+void MobilenetDetection::postprocess(dnnType **rt_out, const int n_out)
+{
+    checkCuda(cudaMemcpy(confidences_h, rt_out[0], nPriors * classes * sizeof(float), cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(locations_h, rt_out[1], N_COORDS * nPriors * sizeof(float), cudaMemcpyDeviceToHost));
+    convert_locatios_to_boxes_and_center();
+
+    int width =  originalSize.width;
+    int height =  originalSize.height;
+
+    float *conf_per_class;
+    for (int i = 1; i < classes; i++){
+        conf_per_class = &confidences_h[i * nPriors];
+        std::vector<tk::dnn::box> boxes;
+        for (int j = 0; j < nPriors; j++){
+
+            if (conf_per_class[j] > confThreshold){
+                tk::dnn::box b;
+                b.cl = i;
+                b.prob = conf_per_class[j];
+                b.x = locations_h[j * N_COORDS + 0];
+                b.y = locations_h[j * N_COORDS + 1];
+                b.w = locations_h[j * N_COORDS + 2];
+                b.h = locations_h[j * N_COORDS + 3];
+
+                boxes.push_back(b);
+            }
+        }
+        std::sort(boxes.begin(), boxes.end(), boxProbCmp);
+
+        std::vector<tk::dnn::box> remaining;        
+        while (boxes.size() > 0){
+            remaining.clear();
+
+            tk::dnn::box b;
+            b.cl = boxes[0].cl;
+            b.prob = boxes[0].prob;
+            b.x = boxes[0].x * width;
+            b.y = boxes[0].y * height;
+            b.w = boxes[0].w * width;
+            b.h = boxes[0].h * height;
+            detected.push_back(b);
+            for (size_t j = 1; j < boxes.size(); j++){
+                if (iou(boxes[0], boxes[j]) <= IoUThreshold){
+                    remaining.push_back(boxes[j]);
+                }
+            }
+            boxes = remaining;
+        }
+    }
+}
+
+
+cv::Mat MobilenetDetection::draw(cv::Mat &frame)
+{
+    int baseline = 0;
+    float font_scale = 0.5;
+    int thickness = 2;
+    
+    tk::dnn::box b;
+    for (size_t i = 0; i < detected.size(); i++){
+        b = detected[i];
+        std::string det_class = classesNames[b.cl];
+        cv::rectangle(frame, cv::Point(b.x, b.y), cv::Point(b.w, b.h), colors[b.cl], 2);
+        // draw label
+        cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
+        cv::rectangle(frame, cv::Point(b.x, b.y), cv::Point((b.x + text_size.width - 2), (b.y - text_size.height - 2)), colors[b.cl], -1);
+        cv::putText(frame, det_class, cv::Point(b.x, (b.y - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
+    }
+    return frame;
+}
+
 
 } // namespace dnn
 } // namespace tk
