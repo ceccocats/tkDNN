@@ -14,6 +14,8 @@
 
 #define dnnType float
 
+#define OPENCV_CUDA
+
 // Colored output
 #define COL_END "\033[0m"
 

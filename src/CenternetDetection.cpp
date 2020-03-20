@@ -103,6 +103,8 @@ bool CenternetDetection::init(std::string tensor_path) {
 
     checkCuda( cudaMallocHost(&target_coords, 4 * K *sizeof(float)) );
 
+#ifdef OPENCV_CUDA
+
     checkCuda( cudaMalloc(&mean_d, 3 * sizeof(float)) );
     checkCuda( cudaMalloc(&stddev_d, 3 * sizeof(float)) );
     float mean[3] = {0.408, 0.447, 0.47};
@@ -110,6 +112,11 @@ bool CenternetDetection::init(std::string tensor_path) {
     
     checkCuda(cudaMemcpy(mean_d, mean, 3*sizeof(float), cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(stddev_d, stddev, 3*sizeof(float), cudaMemcpyHostToDevice));
+#else
+    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
+    mean << 0.408, 0.447, 0.47;
+    stddev << 0.289, 0.274, 0.278;
+#endif
 
     checkCuda( cudaMalloc(&d_ptrs, dim.c * dim.h*dim.w * sizeof(float)) );
     // mean << 0.408, 0.447, 0.47;
@@ -130,7 +137,7 @@ bool CenternetDetection::init(std::string tensor_path) {
     
 }
 
-cv::Mat CenternetDetection::draw(cv::Mat &imageORIG) {
+cv::Mat CenternetDetection::draw(cv::Mat &imageOrig) {
 
     tk::dnn::box b;
     int x0, w, x1, y0, h, y1;
@@ -158,33 +165,30 @@ cv::Mat CenternetDetection::draw(cv::Mat &imageORIG) {
         y1 = b.y + h;
         objClass = b.cl;
         det_class = coco_class_name[objClass];
-        cv::rectangle(imageORIG, cv::Point(x0, y0), cv::Point(x1, y1), colors[objClass], 2);
+        cv::rectangle(imageOrig, cv::Point(x0, y0), cv::Point(x1, y1), colors[objClass], 2);
         // draw label
         cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
-        cv::rectangle(imageORIG, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), colors[b.cl], -1);
-        cv::putText(imageORIG, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
+        cv::rectangle(imageOrig, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), colors[b.cl], -1);
+        cv::putText(imageOrig, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255), thickness);
         
     }
-    return imageORIG;
+    return imageOrig;
     // cv::namedWindow("cnet", cv::WINDOW_NORMAL);
     // cv::imshow("cnet", imageOrig);
     // cv::waitKey(10000);
 }
 
 
-void CenternetDetection::update(cv::Mat &imageORIG) {
-    
-    if(!imageORIG.data) {
-        std::cout<<"CENTERNET: NO IMAGE DATA\n";
-        return;
-    }  
-    TIMER_START
+void CenternetDetection::preprocess()
+{
+
     auto start_t = std::chrono::steady_clock::now();
     auto step_t = std::chrono::steady_clock::now();
     auto end_t = std::chrono::steady_clock::now();
-    // -----------------------------------pre-process ------------------------------------------
+
+     // -----------------------------------pre-process ------------------------------------------
     // it will resize the images to `224 x 224` in GETTING_STARTED.md
-    cv::Size sz = imageORIG.size();
+    cv::Size sz = imageOrig.size();
     std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
     
     float scale = 1.0;
@@ -232,9 +236,12 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
         step_t = end_t;
     }
     sz_old = sz;
+#ifdef OPENCV_CUDA
     cv::cuda::GpuMat im_Orig; 
-    im_Orig = cv::cuda::GpuMat(imageORIG);
-    // cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
+    cv::cuda::GpuMat imageF1_d, imageF2_d;
+        
+    im_Orig = cv::cuda::GpuMat(imageOrig);
+    cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
     checkCuda( cudaDeviceSynchronize() );
     
     sz = imageF1_d.size();
@@ -243,11 +250,9 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
     
-    // cv::cuda::warpAffine(imageF1_d, imageF2_d, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
+    cv::cuda::warpAffine(imageF1_d, imageF2_d, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
     checkCuda( cudaDeviceSynchronize() );
-    end_t = std::chrono::steady_clock::now();
-    std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
-    step_t = end_t;
+    
     
     imageF2_d.convertTo(imageF1_d, CV_32FC3, 1/255.0); 
     checkCuda( cudaDeviceSynchronize() );
@@ -256,7 +261,8 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     step_t = end_t;
     
     dim2 = dim;
-    // cv::cuda::split(imageF1_d,bgr);//split source
+    cv::cuda::GpuMat bgr[3]; 
+    cv::cuda::split(imageF1_d,bgr);//split source
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME split: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
@@ -275,6 +281,69 @@ void CenternetDetection::update(cv::Mat &imageORIG) {
     end_t = std::chrono::steady_clock::now();
     std::cout << " TIME Memcpy to input_d: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     step_t = end_t;
+#else
+ 
+    cv::Mat imageF;
+    resize(imageOrig, imageF, cv::Size(new_width, new_height));
+    sz = imageF.size();
+    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
+
+    cv::Mat trans = cv::getAffineTransform( src, dst );
+    cv::warpAffine(imageF, imageF, trans, cv::Size(inp_width, inp_height), cv::INTER_LINEAR );
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME warpAffine: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
+
+    sz = imageF.size();
+    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
+    imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
+    end_t = std::chrono::steady_clock::now();
+    std::cout << " TIME convertto: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
+    step_t = end_t;
+
+    dim2 = dim;
+
+    //split channels
+    cv::Mat bgr[3]; 
+    cv::split(imageF,bgr);//split source
+
+    for(int i=0; i<3; i++){
+        bgr[i] = bgr[i] - mean[i];
+        bgr[i] = bgr[i] / stddev[i];
+    }
+
+    //write channels
+    for(int i=0; i<dim2.c; i++) {
+        int idx = i*imageF.rows*imageF.cols;
+        int ch = dim2.c-3 +i;
+        // std::cout<<"i: "<<i<<", idx: "<<idx<<", ch: "<<ch<<std::endl;
+        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
+    }
+
+    checkCuda(cudaMemcpyAsync(input_d, input, dim2.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
+
+
+
+#endif
+
+}
+
+void CenternetDetection::update(cv::Mat &image_orig) {
+    
+    imageOrig = image_orig;
+    if(!imageOrig.data) {
+        std::cout<<"CENTERNET: NO IMAGE DATA\n";
+        return;
+    }  
+    TIMER_START
+    auto start_t = std::chrono::steady_clock::now();
+    auto step_t = std::chrono::steady_clock::now();
+    auto end_t = std::chrono::steady_clock::now();
+   
+    preprocess();
 
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();

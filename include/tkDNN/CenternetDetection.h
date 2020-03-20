@@ -35,9 +35,7 @@ class CenternetDetection {
         int ndets = 0;
         // tk::dnn::Yolo::detection *dets = nullptr;
 
-        cv::Mat imageF;
-        cv::cuda::GpuMat imageF1_d, imageF2_d;
-        cv::cuda::GpuMat bgr[3]; 
+        cv::Mat imageOrig;        
         // std::vector< cv::cuda::GpuMat > bgr;
 
         // variable to test cnet on dog pictures
@@ -71,8 +69,16 @@ class CenternetDetection {
         
         float *target_coords;
         
-        float *mean_d;
-        float *stddev_d;
+        
+
+        #ifdef OPENCV_CUDA
+            float *mean_d;
+            float *stddev_d;
+        #else
+            cv::Vec<float, 3> mean;
+            cv::Vec<float, 3> stddev;
+            dnnType *input;
+        #endif
 
         float *d_ptrs;
         
@@ -88,6 +94,8 @@ class CenternetDetection {
         // pointer used in the kernels
         float *src_out;
         int *ids_out;
+
+        void preprocess();
     public:
         dnnType *rt_out[4];
 
@@ -97,7 +105,7 @@ class CenternetDetection {
         int classes = 80;
         int num = 0;
         int n_masks = 0;
-        float thresh = 0.0;
+        float thresh = 0.3;
         cv::Scalar colors[256];
 
         // this is filled with results
