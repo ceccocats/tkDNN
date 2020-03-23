@@ -43,6 +43,8 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
         float b = getColor(0, offset, classes);
         colors[c] = cv::Scalar(int(255.0*b), int(255.0*g), int(255.0*r));
     }
+
+    classesNames = getYoloLayer()->classesNames;
     return true;
 } 
 
@@ -60,7 +62,6 @@ void Yolo3Detection::preprocess(cv::Mat &frame)
 
     //write channels
     for(int i=0; i<netRT->input_dim.c; i++) {
-        std::cout<<"copio il channel"<<i<<std::endl;
         int idx = i*imagePreproc.rows*imagePreproc.cols;
         int ch = netRT->input_dim.c-1 -i;
         checkCuda( cudaMemcpy((void*)&input_d[idx], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType), cudaMemcpyDeviceToDevice));
@@ -122,8 +123,6 @@ void Yolo3Detection::postprocess(dnnType **rt_out, const int n_out)
     float x_ratio =  float(originalSize.width) / float(netRT->input_dim.w);
     float y_ratio =  float(originalSize.height) / float(netRT->input_dim.h);
 
-    std::cout<<"RATIO:"<<x_ratio<<" "<<y_ratio<<std::endl;
-
     // compute dets
     nDets = 0;
     for(int i=0; i<n_out; i++) {
@@ -166,37 +165,8 @@ void Yolo3Detection::postprocess(dnnType **rt_out, const int n_out)
             detected.push_back(res);
         }
     }
-    std::cout<<"N detections: "<<detected.size()<<std::endl;
 }
 
-cv::Mat Yolo3Detection::draw(cv::Mat &frame) 
-{
-    tk::dnn::box b;
-    int x0, w, x1, y0, h, y1;
-    int objClass;
-    std::string det_class;
-    int baseline = 0;
-    float font_scale = 0.5;
-    int thickness = 2;   
-    // draw dets
-    for(int i=0; i<detected.size(); i++) {
-        b           = detected[i];
-        x0   		= b.x;
-        x1   		= b.x + b.w;
-        y0   		= b.y;
-        y1   		= b.y + b.h;
-        det_class 	= getYoloLayer()->classesNames[b.cl];
-
-        // draw rectangle
-        cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), colors[b.cl], 2); 
-
-        // draw label
-        cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
-        cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + text_size.width - 2), (y0 - text_size.height - 2)), colors[b.cl], -1);                      
-        cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
-    }
-    return frame;
-}
 
 tk::dnn::Yolo* Yolo3Detection::getYoloLayer(int n) 
 {

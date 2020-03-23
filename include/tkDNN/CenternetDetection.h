@@ -19,8 +19,6 @@ namespace tk { namespace dnn {
 class CenternetDetection : public DetectionNN
 {
 private:
-    std::vector<std::string> classesNames;
-
     tk::dnn::dataDim_t dim;
     tk::dnn::dataDim_t dim2;
     tk::dnn::dataDim_t dim_hm; 
@@ -79,7 +77,6 @@ public:
     void preprocess(cv::Mat &frame);
     void update(cv::Mat &frame);
     void postprocess(dnnType **rt_out, const int n_out);
-    cv::Mat draw(cv::Mat &frame);
 };
 
 
