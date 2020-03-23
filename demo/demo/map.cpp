@@ -38,6 +38,14 @@ int main(int argc, char *argv[])
     bool write_res_on_file = true;
     int n_images = 5000;
 
+    bool verbose;
+    int classes, map_points, map_levels;
+    float map_step, IoU_thresh, conf_thresh;
+
+    //read mAP parameters
+    readParams( config_filename, classes,  map_points, map_levels, map_step, 
+                IoU_thresh, conf_thresh, verbose);
+
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
@@ -62,25 +70,31 @@ int main(int argc, char *argv[])
         times<<net<<";";
     }
 
-
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
-    tk::dnn::MobilenetDetection mbnet;    
+    tk::dnn::MobilenetDetection mbnet;
+
+    tk::dnn::DetectionNN *detNN;  
+
+    int n_classes = classes;   
     
     switch(ntype)
     {
         case 'y':
-            yolo.init(net);
+            detNN = &yolo;
             break;
         case 'c':
-            cnet.init(net);
+            detNN = &cnet;
             break;
         case 'm':
-            mbnet.init(net, 81);
+            detNN = &mbnet;
+            n_classes++;
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
     }
+
+    detNN->init(net, n_classes);
 
     std::ifstream all_labels(labels_path);
     std::string l_filename;
@@ -115,36 +129,18 @@ int main(int argc, char *argv[])
         dnn_input = frame.clone();
 
         //inference 
+        
+	    TIMER_START
+        
         detected_bbox.clear();
-	TIMER_START
-        switch(ntype)
-        {
-            case 'y':
-                yolo.update(dnn_input);
-                detected_bbox = yolo.detected;
-                break;
-            case 'c':
-                cnet.update(dnn_input);
-                detected_bbox = cnet.detected;
-                break;
-            case 'm':
-                mbnet.update(dnn_input);
-                detected_bbox = mbnet.detected;
-                for(auto& d:detected_bbox)
-                {
-                    d.x = d.x;
-                    d.y = d.y;
-                    d.w = d.w - d.x; //in mobilenet b.w represents x1
-                    d.h = d.h - d.y; //in mobilenet b.h repsresnts y1
-                    d.cl = d.cl -1; //remove background class
-                }
-                break;
-            default:
-                FatalError("Network type not allowed!\n");
-        }
-	TIMER_STOP
-	if(write_res_on_file)
-	    times<<t_ns<<";";
+        detNN->update(dnn_input);
+        frame = detNN->draw(frame);
+        detected_bbox = detNN->detected;
+        
+        TIMER_STOP
+
+        if(write_res_on_file)
+	        times<<t_ns<<";";
 
         std::ofstream myfile;
         if(write_dets)
@@ -200,13 +196,7 @@ int main(int argc, char *argv[])
 
     std::cout<<"Done."<<std::endl;
 
-    bool verbose;
-    int classes, map_points, map_levels;
-    float map_step, IoU_thresh, conf_thresh;
-
-    //read mAP parameters
-    readParams( config_filename, classes,  map_points, map_levels, map_step, 
-                IoU_thresh, conf_thresh, verbose);
+    
     
     //compute mAP
     double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net);

@@ -26,7 +26,6 @@ public:
     void preprocess(cv::Mat &frame);
     void update(cv::Mat &frame);
     void postprocess(dnnType **rt_out, const int n_out);
-    cv::Mat draw(cv::Mat &frame);
 };
 
 

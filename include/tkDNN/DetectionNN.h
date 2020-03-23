@@ -49,6 +49,7 @@ class DetectionNN {
 
         std::vector<tk::dnn::box> detected; /*bounding boxes in output*/
         std::vector<double> stats; /*keeps track of inference times (ms)*/
+        std::vector<std::string> classesNames;
 
         DetectionNN() {};
         ~DetectionNN(){};
@@ -70,9 +71,9 @@ class DetectionNN {
         virtual void preprocess(cv::Mat &frame) = 0;
 
         /**
-         * This method performs the inference of the NN.
+         * This method performs the whole detection of the NN.
          * 
-         * @param frame to run inference on.
+         * @param frame to run detection on.
          */
         virtual void update(cv::Mat &frame) = 0;
 
@@ -91,7 +92,36 @@ class DetectionNN {
          * @param orginal frame to draw bounding box on.
          * @return frame with boundig boxes.
          */
-        virtual cv::Mat draw(cv::Mat &frame) = 0;
+        cv::Mat draw(cv::Mat &frame) 
+        {
+            tk::dnn::box b;
+            int x0, w, x1, y0, h, y1;
+            int objClass;
+            std::string det_class;
+
+            int baseline = 0;
+            float font_scale = 0.5;
+            int thickness = 2;   
+            // draw dets
+            for(int i=0; i<detected.size(); i++) {
+                b           = detected[i];
+                x0   		= b.x;
+                x1   		= b.x + b.w;
+                y0   		= b.y;
+                y1   		= b.y + b.h;
+                det_class 	= classesNames[b.cl];
+
+                // draw rectangle
+                cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), colors[b.cl], 2); 
+
+                // draw label
+                cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
+                cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + text_size.width - 2), (y0 - text_size.height - 2)), colors[b.cl], -1);                      
+                cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
+            }
+            return frame;
+        }
+
 };
 
 }}

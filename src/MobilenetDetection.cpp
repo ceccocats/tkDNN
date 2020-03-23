@@ -131,8 +131,7 @@ float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b)
 
 bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes)
 {
-
-    std::cout<<"MobilenetDetection Init"<<std::endl;
+    std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
     imageSize = netRT->input_dim.h;
     classes = n_classes;
@@ -179,7 +178,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
 
     if(classes == 21){
         const char *classes_names_[] = {
-        "BACKGROUND", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
+        "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
         "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike",
         "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"};
         classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
@@ -187,7 +186,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
     }
     else if (classes == 81){
         const char *classes_names_[] = {
-        "BACKGROUND", "person" , "bicycle" , "car" , "motorbike" , "aeroplane" , "bus" ,
+        "person" , "bicycle" , "car" , "motorbike" , "aeroplane" , "bus" ,
         "train" , "truck" , "boat" , "traffic light" , "fire hydrant" , "stop sign" , 
         "parking meter" , "bench" , "bird" , "cat" , "dog" , "horse" , "sheep" , "cow" , 
         "elephant" , "bear" , "zebra" , "giraffe" , "backpack" , "umbrella" , "handbag" , 
@@ -210,7 +209,6 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
 
 void MobilenetDetection::preprocess(cv::Mat &frame)
 {
-    std::cout<<"preprocess"<<std::endl;
 #ifdef OPENCV_CUDA
         //move original image on GPU
         cv::cuda::GpuMat orig_img, frame_nomean;
@@ -248,8 +246,10 @@ void MobilenetDetection::preprocess(cv::Mat &frame)
 void MobilenetDetection::update(cv::Mat &frame)
 {
     TIMER_START
-    detected.clear();
-
+    if(!frame.data) {
+        std::cout<<"MOBILENET: NO IMAGE DATA\n";
+        return;
+    } 
     originalSize = frame.size();
 
     //preprocess
@@ -271,6 +271,7 @@ void MobilenetDetection::update(cv::Mat &frame)
     rt_out[0] = (dnnType *)netRT->buffersRT[3];
     rt_out[1] = (dnnType *)netRT->buffersRT[4];
 
+    detected.clear();
     //postprocess
     postprocess(rt_out, 2);
 
@@ -313,12 +314,12 @@ void MobilenetDetection::postprocess(dnnType **rt_out, const int n_out)
             remaining.clear();
 
             tk::dnn::box b;
-            b.cl = boxes[0].cl;
+            b.cl = boxes[0].cl -1 ;             //remove background class
             b.prob = boxes[0].prob;
-            b.x = boxes[0].x * width;
+            b.x = boxes[0].x * width; 
             b.y = boxes[0].y * height;
-            b.w = boxes[0].w * width;
-            b.h = boxes[0].h * height;
+            b.w = boxes[0].w * width - b.x;     //convert from x1 to width
+            b.h = boxes[0].h * height - b.y;    //convert from y1 to height
             detected.push_back(b);
             for (size_t j = 1; j < boxes.size(); j++){
                 if (iou(boxes[0], boxes[j]) <= IoUThreshold){
@@ -328,26 +329,6 @@ void MobilenetDetection::postprocess(dnnType **rt_out, const int n_out)
             boxes = remaining;
         }
     }
-}
-
-
-cv::Mat MobilenetDetection::draw(cv::Mat &frame)
-{
-    int baseline = 0;
-    float font_scale = 0.5;
-    int thickness = 2;
-    
-    tk::dnn::box b;
-    for (size_t i = 0; i < detected.size(); i++){
-        b = detected[i];
-        std::string det_class = classesNames[b.cl];
-        cv::rectangle(frame, cv::Point(b.x, b.y), cv::Point(b.w, b.h), colors[b.cl], 2);
-        // draw label
-        cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
-        cv::rectangle(frame, cv::Point(b.x, b.y), cv::Point((b.x + text_size.width - 2), (b.y - text_size.height - 2)), colors[b.cl], -1);
-        cv::putText(frame, det_class, cv::Point(b.x, (b.y - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
-    }
-    return frame;
 }
 
 

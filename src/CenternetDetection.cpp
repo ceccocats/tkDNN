@@ -131,7 +131,7 @@ void CenternetDetection::preprocess(cv::Mat &frame)
     // auto step_t = std::chrono::steady_clock::now();
     // auto end_t = std::chrono::steady_clock::now();
     cv::Size sz = originalSize;
-    std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
+    // std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
     cv::Size sz_old;
     float scale = 1.0;
     float new_height = sz.height * scale;
@@ -186,7 +186,7 @@ void CenternetDetection::preprocess(cv::Mat &frame)
     checkCuda( cudaDeviceSynchronize() );
     
     sz = imageF1_d.size();
-    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
+    // std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;
@@ -226,7 +226,7 @@ void CenternetDetection::preprocess(cv::Mat &frame)
     cv::Mat imageF;
     resize(frame, imageF, cv::Size(new_width, new_height));
     sz = imageF.size();
-    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
+    // std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME resize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;
@@ -238,7 +238,7 @@ void CenternetDetection::preprocess(cv::Mat &frame)
     // step_t = end_t;
 
     sz = imageF.size();
-    std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
+    // std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME convertto: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
@@ -423,37 +423,6 @@ void CenternetDetection::postprocess(dnnType **rt_out, const int n_out)
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME detections: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;
-}
-
-cv::Mat CenternetDetection::draw(cv::Mat &frame)
-{
-    tk::dnn::box b;
-    int x0, w, x1, y0, h, y1;
-    int objClass;
-    std::string det_class;
-    int baseline = 0;
-    float font_scale = 0.5;
-    int thickness = 2;   
-
-    int num_detected = detected.size();
-    for (int i = 0; i < num_detected; i++){
-        b = detected[i];
-        x0 = b.x;
-        w = b.w;
-        x1 = b.x + w;
-        y0 = b.y;
-        h = b.h;
-        y1 = b.y + h;
-        objClass = b.cl;
-        det_class = classesNames[objClass];
-        cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), colors[objClass], 2);
-        // draw label
-        cv::Size textSize = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
-        cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + textSize.width - 2), (y0 - textSize.height - 2)), colors[b.cl], -1);
-        cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
-        
-    }
-    return frame;
 }
 
 

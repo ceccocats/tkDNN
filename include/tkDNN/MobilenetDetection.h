@@ -53,7 +53,7 @@ private:
     int nPriors = 0;
     float *locations_h, *confidences_h;
 
-    std::vector<std::string> classesNames;
+    
 
     void generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp = true);
     void convert_locatios_to_boxes_and_center();
@@ -69,7 +69,6 @@ public:
     void preprocess(cv::Mat &frame);
     void update(cv::Mat &frame);
     void postprocess(dnnType **rt_out, const int n_out);
-    cv::Mat draw(cv::Mat &frame);
 };
 
 
