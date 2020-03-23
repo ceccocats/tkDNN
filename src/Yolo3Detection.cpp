@@ -62,9 +62,10 @@ void Yolo3Detection::preprocess(cv::Mat &frame)
 
     //write channels
     for(int i=0; i<netRT->input_dim.c; i++) {
-        int idx = i*imagePreproc.rows*imagePreproc.cols;
+        int size = imagePreproc.rows * imagePreproc.cols;
         int ch = netRT->input_dim.c-1 -i;
-        checkCuda( cudaMemcpy((void*)&input_d[idx], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        bgr[ch].download(bgr_h); //TODO: don't copy back on CPU
+        checkCuda( cudaMemcpy(input_d + i*size, (float*)bgr_h.data, size*sizeof(dnnType), cudaMemcpyHostToDevice));
     }
 #else
     cv::resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
@@ -77,7 +78,7 @@ void Yolo3Detection::preprocess(cv::Mat &frame)
     for(int i=0; i<netRT->input_dim.c; i++) {
         int idx = i*imagePreproc.rows*imagePreproc.cols;
         int ch = netRT->input_dim.c-1 -i;
-        memcpy((void*)&input[idx], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));
+        memcpy((void*)&input[idx], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));     
     }
     checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
 #endif
@@ -96,6 +97,9 @@ void Yolo3Detection::update(cv::Mat &frame)
 
     //do inference
     tk::dnn::dataDim_t dim = netRT->input_dim;
+
+    // printDeviceVector(netRT->input_dim.tot()*sizeof(dnnType),input_d);
+    
     
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     {

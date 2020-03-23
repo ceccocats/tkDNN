@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <signal.h>
-#include <stdlib.h>     /* srand, rand */
+#include <stdlib.h>    
 #include <unistd.h>
 #include <mutex>
 #include "utils.h"
@@ -14,7 +14,7 @@
 
 #include "tkdnn.h"
 
-// #define OPENCV_CUDA //if OPENCV has been compiled with CUDA and contrib.
+#define OPENCV_CUDA //if OPENCV has been compiled with CUDA and contrib.
 
 namespace tk { namespace dnn {
 

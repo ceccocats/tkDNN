@@ -17,6 +17,8 @@ private:
     tk::dnn::Yolo* yolo[3];
 
     tk::dnn::Yolo* getYoloLayer(int n=0);
+
+    cv::Mat bgr_h;
     
 public:
     Yolo3Detection() {};
