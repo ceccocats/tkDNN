@@ -42,10 +42,6 @@ int main(int argc, char *argv[])
     int classes, map_points, map_levels;
     float map_step, IoU_thresh, conf_thresh;
 
-    //read mAP parameters
-    readParams( config_filename, classes,  map_points, map_levels, map_step, 
-                IoU_thresh, conf_thresh, verbose);
-
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
@@ -62,6 +58,9 @@ int main(int argc, char *argv[])
     if(!fileExist(labels_path))
         FatalError("Wrong labels file path.");
 
+    //read mAP parameters
+    readParams( config_filename, classes,  map_points, map_levels, map_step,
+                IoU_thresh, conf_thresh, verbose);
 
     std::ofstream times;
     if(write_res_on_file)
