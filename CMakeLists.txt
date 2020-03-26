@@ -41,7 +41,7 @@ find_package(yaml-cpp REQUIRED)
 file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS} nvinfer_plugin)
@@ -88,11 +88,17 @@ target_link_libraries(test_yolo3 tkDNN)
 add_executable(test_yolo3_512 tests/yolo3_512/yolo3_512.cpp)
 target_link_libraries(test_yolo3_512 tkDNN)
 
+add_executable(test_yolo3_512tp tests/yolo3_512tp/yolo3_512tp.cpp)
+target_link_libraries(test_yolo3_512tp tkDNN)
+
 add_executable(test_yolo3_tiny tests/yolo3_tiny/yolo3_tiny.cpp)
 target_link_libraries(test_yolo3_tiny tkDNN)
 
 add_executable(test_yolo3_tiny512 tests/yolo3_tiny512/yolo3_tiny512.cpp)
 target_link_libraries(test_yolo3_tiny512 tkDNN)
+
+add_executable(test_yolo3_tiny512tp tests/yolo3_tiny512tp/yolo3_tiny512tp.cpp)
+target_link_libraries(test_yolo3_tiny512tp tkDNN)
 
 add_executable(test_yolo3_berkeley tests/yolo3_berkeley/yolo3_berkeley.cpp)
 target_link_libraries(test_yolo3_berkeley tkDNN)
