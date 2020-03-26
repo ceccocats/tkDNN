@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "NvInfer.h"
 #include "NetworkRT.h"
-// #include "calibrator.h"
+#include "Int8Calibrator.h"
 
 using namespace nvinfer1;
 
@@ -38,8 +38,16 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
     std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
     networkRT = builderRT->createNetwork();
-
+    configRT = builderRT->createBuilderConfig();
+    
     if(!fileExist(name)) {
+        // Calibrator life time needs to last until after the engine is built.
+        std::unique_ptr<IInt8EntropyCalibrator> calibrator;
+
+        configRT->setAvgTimingIterations(1);
+        configRT->setMinTimingIterations(1);
+        configRT->setMaxWorkspaceSize(1 << 30);
+        configRT->setFlag(BuilderFlag::kDEBUG);
 
         //input and dataType
         dataDim_t dim = net->layers[0]->input_dim;
@@ -51,6 +59,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
+            configRT->setFlag(BuilderFlag::kFP16);
         }
         if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
@@ -59,16 +68,21 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
             builderRT->setDLACore(0);
         }
-        // if(net->int8 && builderRT->platformHasFastInt8())
-        // {
-        //     dtRT = DataType::kINT8;
-        //     builderRT->setInt8Mode(true);
-        //     Int8EntropyCalibrator calibrator(1, "../demo/images.txt","../demo/yolov3-calibration.table", 416*416*3, 416, 416);
-        //     builderRT->setInt8Calibrator((nvinfer1::IInt8Calibrator * )&calibrator);
-        //     // builderRT->setStrictTypeConstraints(true);
-        // }
-       
-        //add input layer
+        if(net->int8 && builderRT->platformHasFastInt8()){
+            // dtRT = DataType::kINT8;
+            // builderRT->setInt8Mode(true);
+            configRT->setFlag(BuilderFlag::kINT8);
+            BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951) 
+                                            "/home/xavier/Documents/tkDNN/demo/COCO_val2017/all_images.txt", 
+                                            "/home/xavier/Documents/tkDNN/demo/COCO_val2017/all_labels.txt");
+            std::string modelName = name;
+            calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
+                                            "./" + modelName.substr(0, modelName.find('.')) + "-calibration.table", 
+                                            "data"));
+            configRT->setInt8Calibrator(calibrator.get());
+        }
+        
+        // add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
@@ -77,6 +91,10 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         for(int i=0; i<net->num_layers; i++) {
             Layer *l = net->layers[i];
             ILayer *Ilay = convert_layer(input, l);
+            if(net->int8 && builderRT->platformHasFastInt8())
+            {
+                Ilay->setPrecision(DataType::kINT8);
+            }
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
             
             input = Ilay->getOutput(0);
@@ -94,7 +112,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         networkRT->markOutput(*input);
 
         std::cout<<"Building tensorRT cuda engine...\n";
-        engineRT = builderRT->buildCudaEngine(*networkRT);
+        engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")
         // we don't need the network any more
