@@ -32,7 +32,6 @@ using namespace nvinfer1;
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
 #include "pluginsRT/ResizeLayerRT.h"
-//#include "pluginsRT/Int8Calibrator.h"
 #include "pluginsRT/DeformableConvRT.h"
 #include "pluginsRT/FlattenConcatRT.h"
 #include "pluginsRT/ReshapeRT.h"
@@ -56,6 +55,7 @@ public:
     nvinfer1::IBuilder *builderRT;
     nvinfer1::IRuntime *runtimeRT;
     nvinfer1::INetworkDefinition *networkRT; 
+    nvinfer1::IBuilderConfig *configRT;
     
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
