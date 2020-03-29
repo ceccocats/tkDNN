@@ -97,7 +97,7 @@ cd pytorch-ssd
 conda env create -f env_mobv2ssd.yml
 python run_ssd_live_demo.py mb2-ssd-lite <pth-model-fil> <labels-file>
 ```
-### Run the demo
+## Run the demo
 
 To run the an object detection demo follow these steps (example with yolov3):
 ```
