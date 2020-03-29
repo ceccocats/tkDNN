@@ -38,7 +38,7 @@ If TEST_DATA is not set to False, weights needed to run some tests will be autom
 
 ## Workflow
 Steps needed to do inference on tkDNN with a custom neural network. 
-* Build and train a NN model with your favourite framework.
+* Build and train a NN model with your favorite framework.
 * Export weights and bias for each layer and save them in a binary file (one for layer).
 * Export outputs for each layer and save them in a binary file (one for layer).
 * Create a new test and define the network, layer by layer using the weights extracted and the output to check the results. 
@@ -53,10 +53,10 @@ Weights are essential for any network to run inference. For each test a folder o
         |---- layers/ (folder containing a binary file for each layer with the corresponding wieghts and bias)
         |---- debug/  (folder containing a binary file for each layer with the corresponding outputs)
 ```
-Therefore, once the weights have been exported, the folders layers ans debug should be placed in the corresponding test.
+Therefore, once the weights have been exported, the folders layers and debug should be placed in the corresponding test.
 
 ### 1)Export weights from darknet
-To export weights for NN that are defined in darknet framework, use [this](https://github.com/ceccocats/darknet) fork of darknet and follow these step to obtain a correct debug and layers folder, ready for tkDNN.
+To export weights for NNs that are defined in darknet framework, use [this](https://github.com/ceccocats/darknet) fork of darknet and follow these steps to obtain a correct debug and layers folder, ready for tkDNN.
 
 ```
 git clone https://github.com/ceccocats/darknet
@@ -89,7 +89,7 @@ python demo.py --input_res 512 --arch dla_34 ctdet --demo /path/to/image/or/fold
 ```
 ### 4)Export weights for MobileNetSSD
 
-To get the weights needed to run Mobilenet tests use [this](https://github.com/mive93/pytorch-ssd) fork of the a Pytorch implementation of SSD network. 
+To get the weights needed to run Mobilenet tests use [this](https://github.com/mive93/pytorch-ssd) fork of a Pytorch implementation of SSD network. 
 
 ```
 git clone https://github.com/mive93/pytorch-ssd
@@ -130,9 +130,9 @@ To compute the map, the following parameters are needed:
 ./map_demo <network rt> <network type [y|c|m]> <labels file path> <config file path>
 ```
 where 
-* ```<network rt>```: rt file of a choosen network on wich compute the mAP.
+* ```<network rt>```: rt file of a chosen network on which compute the mAP.
 * ```<network type [y|c|m]>```: type of network. Right now only y(yolo), c(centernet) and m(mobilenet) are allowed
-* ```<labels file path>```: path to a text file containing all the paths of the groundtruth labels. It is important that all the labels of the groundtruth are in a folder called 'labels'. In the folder containing the folder 'labels' there should be also a folder 'images', containing all the groundtruth images having the same same as the labels. To better understand, if there is a label path/to/labels/000001.txt there should be a corresponding image path/to/images/000001.jpg. 
+* ```<labels file path>```: path to a text file containing all the paths of the ground-truth labels. It is important that all the labels of the ground-truth are in a folder called 'labels'. In the folder containing the folder 'labels' there should be also a folder 'images', containing all the ground-truth images having the same same as the labels. To better understand, if there is a label path/to/labels/000001.txt there should be a corresponding image path/to/images/000001.jpg. 
 * ```<config file path>```: path to a yaml file with the parameters needed for the mAP computation, similar to demo/config.yaml
 
 Example:
