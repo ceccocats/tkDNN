@@ -73,8 +73,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             // builderRT->setInt8Mode(true);
             configRT->setFlag(BuilderFlag::kINT8);
             BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951) 
-                                            "/home/xavier/Documents/tkDNN/demo/COCO_val2017/all_images.txt", 
-                                            "/home/xavier/Documents/tkDNN/demo/COCO_val2017/all_labels.txt");
+                                            net->fileImgList, net->fileLabelList);
             std::string modelName = name;
             calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
                                             "./" + modelName.substr(0, modelName.find('.')) + "-calibration.table", 

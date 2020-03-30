@@ -34,6 +34,12 @@ Network::Network(dataDim_t input_dim) {
             int8 = true;
         }
     }
+    if(const char* env_p = std::getenv("TKDNN_CALIB_IMG_PATH"))
+        fileImgList = env_p;
+    
+    if(const char* env_p = std::getenv("TKDNN_CALIB_LABEL_PATH"))
+        fileLabelList = env_p;
+    
    
     if(fp16)
         std::cout<<COL_REDB<<"!! FP16 INFERENCE ENABLED !!"<<COL_END<<"\n";

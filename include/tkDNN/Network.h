@@ -1,6 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include <string>
 #include "utils.h"
 
 namespace tk { namespace dnn {
@@ -62,6 +63,8 @@ public:
 
     bool fp16, dla, int8;
     bool dontLoadWeights;
+    std::string fileImgList;
+    std::string fileLabelList;
 };
 
 }}
