@@ -31,7 +31,7 @@ int main() {
     net.print();
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "yolo3.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("yolo3"));
 
     // the network have 3 outputs
     tk::dnn::dataDim_t out_dim[3];

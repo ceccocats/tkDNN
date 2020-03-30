@@ -467,7 +467,7 @@ int main()
     net.print();
 
     // convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "mobilenetv2ssd.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("mobilenetv2ssd"));
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30);

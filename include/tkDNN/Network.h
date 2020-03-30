@@ -47,6 +47,7 @@ public:
 
     bool addLayer(Layer *l);
     void print();
+    const char *getNetworkRTName(char *network_name);
 
     cudnnDataType_t dataType;
     cudnnTensorFormat_t tensorFormat;
