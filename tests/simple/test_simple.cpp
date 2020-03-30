@@ -32,7 +32,7 @@ int main() {
     std::cout<<"\n";
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "simple.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("simple"));
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 

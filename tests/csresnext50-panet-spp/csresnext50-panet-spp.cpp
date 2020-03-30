@@ -475,7 +475,7 @@ int main()
     net.print();
 
     // //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "csresnext50-panet-spp.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("csresnext50-panet-spp"));
 
     // the network have 3 outputs
     tk::dnn::dataDim_t out_dim[3];

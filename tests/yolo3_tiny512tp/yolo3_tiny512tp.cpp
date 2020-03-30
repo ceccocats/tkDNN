@@ -89,7 +89,7 @@ int main() {
     net.print();
 
     // convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, "yolo3_tiny512tp.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("yolo3_tiny512tp"));
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 

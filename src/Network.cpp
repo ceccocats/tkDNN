@@ -114,6 +114,34 @@ void Network::print() {
     printCenteredTitle("", '=', 60);
     std::cout<<"\n";
 }
+const char *Network::getNetworkRTName(char *network_name){
+    int network_name_len = strlen(network_name);
+    char *RTName = (char *)malloc((network_name_len + 9)*sizeof(char));
+    if (fp16){
+        strcat(RTName, network_name);
+        strcat(RTName, "_fp16.rt");
+        RTName[network_name_len + 7] = '\0';
+    }
+    else if (dla){
+        strcat(RTName, network_name);
+        strcat(RTName, "_dla.rt");
+        RTName[network_name_len + 6] = '\0';
+    }
+        
+    else if (int8){
+        strcat(RTName, network_name);
+        strcat(RTName, "_int8.rt");
+        RTName[network_name_len + 8] = '\0';
+    }
+        
+    else{
+        strcat(RTName, network_name);
+        strcat(RTName, "_fp32.rt");
+        RTName[network_name_len + 8] = '\0';
+    }
+        
+    return RTName;
+}
 
 
 }}

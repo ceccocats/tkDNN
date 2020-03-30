@@ -22,7 +22,7 @@ int main() {
     tk::dnn::Dense      l6(&net, 10, d3_bin);
     tk::dnn::Softmax    l7(&net);
 
-    tk::dnn::NetworkRT netRT(&net, "mnist.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("mnist"));
 
     // Load input
     dnnType *data;
