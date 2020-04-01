@@ -84,52 +84,20 @@ void Yolo3Detection::preprocess(cv::Mat &frame)
 #endif
 }
 
-void Yolo3Detection::update(cv::Mat &frame)
+void Yolo3Detection::postprocess()
 {
-    TIMER_START
-    if(!frame.data) {
-        std::cout<<"YOLO: NO IMAGE DATA\n";
-        return;
-    }   
-
-    originalSize = frame.size();
-    preprocess(frame);
-
-    //do inference
-    tk::dnn::dataDim_t dim = netRT->input_dim;
-
-    // printDeviceVector(netRT->input_dim.tot()*sizeof(dnnType),input_d);
-    
-    
-    printCenteredTitle(" TENSORRT inference ", '=', 30); 
-    {
-        dim.print();
-        TIMER_START
-        netRT->infer(dim, input_d);
-        TIMER_STOP
-        dim.print();
-    }
-
     //get yolo outputs
     dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
         rt_out[i] = (dnnType*)netRT->buffersRT[i+1];
     }
 
-    postprocess(rt_out, netRT->pluginFactory->n_yolos);
-        
-    TIMER_STOP
-    stats.push_back(t_ns);
-}
-
-void Yolo3Detection::postprocess(dnnType **rt_out, const int n_out)
-{
     float x_ratio =  float(originalSize.width) / float(netRT->input_dim.w);
     float y_ratio =  float(originalSize.height) / float(netRT->input_dim.h);
 
     // compute dets
     nDets = 0;
-    for(int i=0; i<n_out; i++) {
+    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
         yolo[i]->dstData = rt_out[i];
         yolo[i]->computeDetections(dets, nDets, netRT->input_dim.w, netRT->input_dim.h, confThreshold);
     }

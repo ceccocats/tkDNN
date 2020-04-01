@@ -67,8 +67,7 @@ public:
 
     bool init(const std::string& tensor_path, const int n_classes);
     void preprocess(cv::Mat &frame);
-    void update(cv::Mat &frame);
-    void postprocess(dnnType **rt_out, const int n_out);
+    void postprocess();
 };
 
 

@@ -42,6 +42,9 @@ int main(int argc, char *argv[])
     int classes, map_points, map_levels;
     float map_step, IoU_thresh, conf_thresh;
 
+    double vm_total = 0, rss_total = 0;
+    double vm, rss;
+
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
@@ -62,11 +65,12 @@ int main(int argc, char *argv[])
     readParams( config_filename, classes,  map_points, map_levels, map_step,
                 IoU_thresh, conf_thresh, verbose);
 
-    std::ofstream times;
+    std::ofstream times, memory;
     if(write_res_on_file)
     {
-        times.open ("times.csv", std::ios_base::app);
-        times<<net<<";";
+        times.open("times"+std::string(net)+".csv");
+        memory.open("memory.csv", std::ios_base::app);
+        memory<<net<<";";
     }
 
     tk::dnn::Yolo3Detection yolo;
@@ -76,6 +80,7 @@ int main(int argc, char *argv[])
     tk::dnn::DetectionNN *detNN;  
 
     int n_classes = classes;   
+    
     
     switch(ntype)
     {
@@ -95,6 +100,8 @@ int main(int argc, char *argv[])
 
     detNN->init(net, n_classes);
 
+    
+
     std::ifstream all_labels(labels_path);
     std::string l_filename;
     std::vector<Frame> images;
@@ -105,7 +112,8 @@ int main(int argc, char *argv[])
     if(show)
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
 
-    for (int images_done=0 ; std::getline(all_labels, l_filename) && images_done < n_images ; ++images_done) 
+    int images_done;
+    for (images_done=0 ; std::getline(all_labels, l_filename) && images_done < n_images ; ++images_done) 
     {
         std::cout <<COL_ORANGEB<< "Images done:\t" << images_done<< "\n"<<COL_END;
 
@@ -129,18 +137,11 @@ int main(int argc, char *argv[])
 
         //inference 
         
-	    TIMER_START
-        
         detected_bbox.clear();
-        detNN->update(dnn_input);
+        detNN->update(dnn_input, write_res_on_file, &times);
         frame = detNN->draw(frame);
         detected_bbox = detNN->detected;
         
-        TIMER_STOP
-
-        if(write_res_on_file)
-	        times<<t_ns<<";";
-
         std::ofstream myfile;
         if(write_dets)
             myfile.open ("det/"+f.l_filename.substr(l_filename.find("000")));
@@ -191,6 +192,13 @@ int main(int argc, char *argv[])
             cv::imshow("detection", frame);
             cv::waitKey(0);
         }
+
+        
+        getMemUsage(vm, rss);
+        vm_total += vm;
+        rss_total += rss;
+
+        
     }
 
     std::cout<<"Done."<<std::endl;
@@ -204,10 +212,13 @@ int main(int argc, char *argv[])
     //compute average precision, recall and f1score
     computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net);
 
+    std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
+
     if(write_res_on_file)
     {
-	times<<"\n";
+        memory<<vm_total/images_done/1024.0<<";"<<rss_total/images_done/1024.0<<"\n";
         times.close();
+        memory.close();
     }
 
 

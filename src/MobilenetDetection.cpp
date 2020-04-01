@@ -243,45 +243,15 @@ void MobilenetDetection::preprocess(cv::Mat &frame)
 #endif
 }
 
-void MobilenetDetection::update(cv::Mat &frame)
+void MobilenetDetection::postprocess()
 {
-    TIMER_START
-    if(!frame.data) {
-        std::cout<<"MOBILENET: NO IMAGE DATA\n";
-        return;
-    } 
-    originalSize = frame.size();
-
-    //preprocess
-    preprocess(frame);
-
-    //do inference
-    tk::dnn::dataDim_t dim = tk::dnn::dataDim_t(1, 3, imageSize, imageSize, 1);;
-    printCenteredTitle(" TENSORRT inference ", '=', 30);
-    {
-        dim.print();
-        TIMER_START
-        netRT->infer(dim, input_d);
-        TIMER_STOP
-        dim.print();
-    }
-
     //get confidences and locations_h
     dnnType *rt_out[2];
     rt_out[0] = (dnnType *)netRT->buffersRT[3];
     rt_out[1] = (dnnType *)netRT->buffersRT[4];
 
     detected.clear();
-    //postprocess
-    postprocess(rt_out, 2);
 
-    TIMER_STOP
-    stats.push_back(t_ns);
-}
-
-
-void MobilenetDetection::postprocess(dnnType **rt_out, const int n_out)
-{
     checkCuda(cudaMemcpy(confidences_h, rt_out[0], nPriors * classes * sizeof(float), cudaMemcpyDeviceToHost));
     checkCuda(cudaMemcpy(locations_h, rt_out[1], N_COORDS * nPriors * sizeof(float), cudaMemcpyDeviceToHost));
     convert_locatios_to_boxes_and_center();

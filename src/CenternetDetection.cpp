@@ -264,40 +264,14 @@ void CenternetDetection::preprocess(cv::Mat &frame)
 #endif
 }
 
-void CenternetDetection::update(cv::Mat &frame) 
+void CenternetDetection::postprocess()
 {
-    originalSize = frame.size();
-    if(!frame.data) {
-        std::cout<<"CENTERNET: NO IMAGE DATA\n";
-        return;
-    }  
-    TIMER_START
-   
-    preprocess(frame);
-
-    printCenteredTitle(" TENSORRT inference ", '=', 30); {
-        dim2.print();
-        TIMER_START
-        netRT->infer(dim2, input_d);
-        TIMER_STOP
-        dim2.print();
-    }
-
     dnnType *rt_out[4];
     rt_out[0] = (dnnType *)netRT->buffersRT[1];
     rt_out[1] = (dnnType *)netRT->buffersRT[2];
     rt_out[2] = (dnnType *)netRT->buffersRT[3]; 
     rt_out[3] = (dnnType *)netRT->buffersRT[4]; 
 
-    postprocess(rt_out, 4);
-
-    // std::cout<<"TOTAL: \n";
-    TIMER_STOP
-    stats.push_back(t_ns);
-}
-
-void CenternetDetection::postprocess(dnnType **rt_out, const int n_out)
-{
     // auto start_t = std::chrono::steady_clock::now();
     // auto step_t = std::chrono::steady_clock::now();
     // auto end_t = std::chrono::steady_clock::now();
