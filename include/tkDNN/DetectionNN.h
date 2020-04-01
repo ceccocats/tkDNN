@@ -46,6 +46,20 @@ class DetectionNN {
         dnnType *input;
 #endif
 
+        /**
+         * This method preprocess the image, before feeding it to the NN.
+         *
+         * @param original frame to adapt for inference.
+         */
+        virtual void preprocess(cv::Mat &frame) = 0;
+
+        /**
+         * This method postprocess the output of the NN to obtain the correct 
+         * boundig boxes. 
+         * 
+         */
+        virtual void postprocess() = 0;
+
     public:
         int classes = 0;
         float confThreshold = 0.3; /*threshold on the confidence of the boxes*/
@@ -67,27 +81,47 @@ class DetectionNN {
         virtual bool init(const std::string& tensor_path, const int n_classes=80) = 0;
         
         /**
-         * This method preprocess the image, before feeding it to the NN.
-         *
-         * @param original frame to adapt for inference.
-         */
-        virtual void preprocess(cv::Mat &frame) = 0;
-
-        /**
          * This method performs the whole detection of the NN.
          * 
          * @param frame to run detection on.
+         * @param if set to true, preprocess, inference and postprocess times 
+         *        are saved on a csv file, otherwise not.
          */
-        virtual void update(cv::Mat &frame) = 0;
+        void update(cv::Mat &frame, bool save_times=false, std::ofstream *times=nullptr){
+            if(!frame.data)
+                FatalError("No image data feed to detection");
 
-        /**
-         * This method postprocess the output of the NN to obtain the correct 
-         * boundig boxes. 
-         * 
-         * @param outputs of the inference
-         * @param number of outputs of the inference
-         */
-        virtual void postprocess(dnnType **rt_out, const int n_out) = 0;
+            if(save_times && times==nullptr)
+                FatalError("save_times set to true, but no valid ofstream given");
+
+            originalSize = frame.size();
+            printCenteredTitle(" TENSORRT detection ", '=', 30); 
+            {
+                TIMER_START
+                preprocess(frame);
+                TIMER_STOP
+                if(save_times) *times<<t_ns<<";";
+            }
+
+            //do inference
+            tk::dnn::dataDim_t dim = netRT->input_dim;
+            {
+                dim.print();
+                TIMER_START
+                netRT->infer(dim, input_d);
+                TIMER_STOP
+                dim.print();
+                stats.push_back(t_ns);
+                if(save_times) *times<<t_ns<<";";
+            }
+
+            {
+                TIMER_START
+                postprocess();
+                TIMER_STOP
+                if(save_times) *times<<t_ns<<"\n";
+            }
+        }      
 
         /**
          * Method to draw boundixg boxes and labels on a frame.

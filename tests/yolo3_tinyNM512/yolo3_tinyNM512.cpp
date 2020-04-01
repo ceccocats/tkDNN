@@ -1,29 +1,29 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo3_tiny512/layers/input.bin";
-const char *c0_bin     = "../tests/yolo3_tiny512/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo3_tiny512/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo3_tiny512/layers/c4.bin";
-const char *c6_bin     = "../tests/yolo3_tiny512/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo3_tiny512/layers/c8.bin";
-const char *c10_bin    = "../tests/yolo3_tiny512/layers/c10.bin";
-const char *c12_bin    = "../tests/yolo3_tiny512/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo3_tiny512/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo3_tiny512/layers/c14.bin";
-const char *c15_bin    = "../tests/yolo3_tiny512/layers/c15.bin";
-const char *c18_bin    = "../tests/yolo3_tiny512/layers/c18.bin";
-const char *c21_bin    = "../tests/yolo3_tiny512/layers/c21.bin";
-const char *c22_bin    = "../tests/yolo3_tiny512/layers/c22.bin";
-const char *g16_bin    = "../tests/yolo3_tiny512/layers/g16.bin";
-const char *g23_bin    = "../tests/yolo3_tiny512/layers/g23.bin";
-// const char *output_bin = "../tests/yolo3_tiny512/layers/output.bin";
+const char *input_bin  = "../tests/yolo3_tinyNM512/layers/input.bin";
+const char *c0_bin     = "../tests/yolo3_tinyNM512/layers/c0.bin";
+const char *c2_bin     = "../tests/yolo3_tinyNM512/layers/c2.bin";
+const char *c4_bin     = "../tests/yolo3_tinyNM512/layers/c4.bin";
+const char *c6_bin     = "../tests/yolo3_tinyNM512/layers/c6.bin";
+const char *c8_bin     = "../tests/yolo3_tinyNM512/layers/c8.bin";
+const char *c10_bin    = "../tests/yolo3_tinyNM512/layers/c10.bin";
+const char *c11_bin    = "../tests/yolo3_tinyNM512/layers/c11.bin";
+const char *c12_bin    = "../tests/yolo3_tinyNM512/layers/c12.bin";
+const char *c13_bin    = "../tests/yolo3_tinyNM512/layers/c13.bin";
+const char *c14_bin    = "../tests/yolo3_tinyNM512/layers/c14.bin";
+const char *c17_bin    = "../tests/yolo3_tinyNM512/layers/c17.bin";
+const char *c20_bin    = "../tests/yolo3_tinyNM512/layers/c20.bin";
+const char *c21_bin    = "../tests/yolo3_tinyNM512/layers/c21.bin";
+const char *g15_bin    = "../tests/yolo3_tinyNM512/layers/g15.bin";
+const char *g22_bin    = "../tests/yolo3_tinyNM512/layers/g22.bin";
+// const char *output_bin = "../tests/yolo3_tinyNM512/layers/output.bin";
 
-const char *output_bin = "../tests/yolo3_tiny512/debug/layer23_out.bin";
+const char *output_bin = "../tests/yolo3_tinyNM512/debug/layer22_out.bin";
 
 int main() {
     
-    downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tiny512", "https://cloud.hipert.unimore.it/s/wRW9nmkibSe5HoS/download");
+    // downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tinyNM512", "https://cloud.hipert.unimore.it/s/wRW9nmkibSe5HoS/download");
     
     int classes = 80;
 
@@ -54,33 +54,32 @@ int main() {
 
     tk::dnn::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
 
-    tk::dnn::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c12_bin, true);
+    tk::dnn::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c11_bin, true);
     tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);
 
-    tk::dnn::Conv2d     c13(&net, 256, 1, 1, 1, 1, 0, 0, c13_bin, true);
+    tk::dnn::Conv2d     c13(&net, 256, 1, 1, 1, 1, 0, 0, c12_bin, true);
     tk::dnn::Activation a13(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c14(&net, 512, 3, 3, 1, 1, 1, 1, c14_bin, true);
+    tk::dnn::Conv2d     c14(&net, 512, 3, 3, 1, 1, 1, 1, c13_bin, true);
     tk::dnn::Activation a14(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c15(&net, 255, 1, 1, 1, 1, 0, 0, c15_bin, false);
+    tk::dnn::Conv2d     c15(&net, 255, 1, 1, 1, 1, 0, 0, c14_bin, false);
 
-    tk::dnn::Yolo     yolo0  (&net, classes, 2, g16_bin);
+    tk::dnn::Yolo     yolo0  (&net, classes, 2, g15_bin);
 
     tk::dnn::Layer *m17_layers[1] = { &a13 };
     tk::dnn::Route      m17  (&net, m17_layers, 1);
-    tk::dnn::Conv2d     c18(&net, 128, 1, 1, 1, 1, 0, 0, c18_bin, true);
+    tk::dnn::Conv2d     c18(&net, 128, 1, 1, 1, 1, 0, 0, c17_bin, true);
     tk::dnn::Activation a18(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Upsample   u19  (&net, 2);
 
     tk::dnn::Layer *m20_layers[2] = { &u19, &a8 };
     tk::dnn::Route      m20  (&net, m20_layers, 2);
 
-    tk::dnn::Conv2d     c21(&net, 256, 3, 3, 1, 1, 1, 1, c21_bin, true);
+    tk::dnn::Conv2d     c21(&net, 256, 3, 3, 1, 1, 1, 1, c20_bin, true);
     tk::dnn::Activation a21(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d     c22(&net, 255, 1, 1, 1, 1, 0, 0, c22_bin, false);
+    tk::dnn::Conv2d     c22(&net, 255, 1, 1, 1, 1, 0, 0, c21_bin, false);
 
-    tk::dnn::Yolo     yolo1  (&net, classes, 2, g23_bin);
+    tk::dnn::Yolo     yolo1  (&net, classes, 2, g22_bin);
 
     // Load input
     dnnType *data;
@@ -91,7 +90,7 @@ int main() {
     net.print();
 
     // convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("yolo3_tiny512"));
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("yolo3_tinyNM512"));
 
     dnnType *out_data, *out_data2; // cudnn output, tensorRT output
 

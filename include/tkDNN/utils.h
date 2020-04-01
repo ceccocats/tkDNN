@@ -12,6 +12,10 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+#include <unistd.h>
+#include <ios>
+
+
 #define dnnType float
 
 
@@ -102,4 +106,6 @@ void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, 
 
 void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData, 
                     dnnType* add_vector, int dim, dnnType mul);
+
+void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
 #endif //UTILS_H
