@@ -23,7 +23,7 @@ const char *output_bin = "../tests/yolo3_tiny512/debug/layer23_out.bin";
 
 int main() {
     
-    downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tiny512", "https://cloud.hipert.unimore.it/s/wRW9nmkibSe5HoS/download");
+    downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tiny512", "https://cloud.hipert.unimore.it/s/8Zt6bHwHADqP4JC/download");
     
     int classes = 80;
 

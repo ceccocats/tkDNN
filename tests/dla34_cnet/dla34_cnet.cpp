@@ -103,7 +103,7 @@ const char *output_bin[]={
 int main()
 {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/dla34_cnet", "https://cloud.hipert.unimore.it/s/8AjXdgCeRzCa5AF/download");
+    downloadWeightsifDoNotExist(input_bin, "../tests/dla34_cnet", "https://cloud.hipert.unimore.it/s/5qpxTcCPn4b79wX/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);
