@@ -8,18 +8,16 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
-#include "NvInfer.h"
-
 #include <fstream>
 #include <iomanip>
+#include <signal.h>
+#include <stdlib.h>    
+#include <unistd.h>
+#include <mutex>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/dnn/dnn.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-#include "tkdnn.h"
+#include "NvInfer.h"
 #include "utils.h"
+#include "tkdnn.h"
 
 class BatchStream
 {

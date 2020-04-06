@@ -1,5 +1,10 @@
 #include "Int8BatchStream.h"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/dnn/dnn.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, const std::string& fileimglist, const std::string& filelabellist)
 {
     mBatchSize = batchSize;
