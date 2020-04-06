@@ -1,0 +1,61 @@
+#ifndef EVALUATION_H
+#define EVALUATION_H
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#include <yaml-cpp/yaml.h>
+
+#include "tkdnn.h"
+
+namespace tk { namespace dnn {
+struct BoundingBox : public tk::dnn::box
+{
+    friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
+    int uniqueTruthIndex = -1;
+    int truthFlag = 0;
+    float maxIoU = 0;
+
+    void clear();
+};
+
+std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
+bool boxComparison (const BoundingBox& a,const BoundingBox& b) ;
+
+struct Frame
+{
+    std::string lFilename;
+    std::string iFilename;
+    std::vector<BoundingBox> gt;
+    std::vector<BoundingBox> det;
+
+    void print() const;
+};
+
+struct PR 
+{
+    double precision = 0;
+    double recall = 0;
+    int tp = 0, fp = 0, fn = 0;
+
+    void print();
+};
+
+float boxOverlap(float x1, float w1, float x2, float w2);
+float boxIntersection(const BoundingBox &a, const BoundingBox &b);
+float boxUnion(const BoundingBox &a, const BoundingBox &b);
+float boxIoU(const BoundingBox &a, const BoundingBox &b);
+
+void readmAPParams(char* config_filename, int& classes, int& map_points, 
+                int& map_levels, float& map_step, float& IoU_thresh, 
+                float& conf_thresh, bool& verbose);
+
+double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh=0.3, const int map_points=101, const bool verbose=false);
+double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh=0.5, const float conf_thresh=0.3, const int map_points=101, const float map_step=0.05, const int map_levels=10, const bool verbose=false, const bool write_on_file = false, std::string net = "");
+
+void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh=0.5, const float conf_thresh=0.3, bool verbose=false, const bool write_on_file=false, std::string net="");
+
+}}
+#endif /*EVALUATION_H*/
+
