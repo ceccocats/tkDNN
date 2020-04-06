@@ -11,13 +11,16 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/cudawarping.hpp>
-#include <opencv2/cudaarithm.hpp>
-
 
 #include "tkdnn.h"
 
-#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+//#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+
+#ifdef OPENCV_CUDACONTRIB
+#include <opencv2/cudawarping.hpp>
+#include <opencv2/cudaarithm.hpp>
+#endif
+
 
 namespace tk { namespace dnn {
 
