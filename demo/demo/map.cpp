@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         FatalError("Wrong labels file path.");
 
     //read mAP parameters
-    readParams( config_filename, classes,  map_points, map_levels, map_step,
+    tk::dnn::readmAPParams( config_filename, classes,  map_points, map_levels, map_step,
                 IoU_thresh, conf_thresh, verbose);
 
     std::ofstream times, memory;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 
     std::ifstream all_labels(labels_path);
     std::string l_filename;
-    std::vector<Frame> images;
+    std::vector<tk::dnn::Frame> images;
     std::vector<tk::dnn::box> detected_bbox;
 
     std::cout<<"Reading groundtruth and generating detections"<<std::endl;
@@ -117,16 +117,16 @@ int main(int argc, char *argv[])
     {
         std::cout <<COL_ORANGEB<< "Images done:\t" << images_done<< "\n"<<COL_END;
 
-        Frame f;
-        f.l_filename = l_filename;
-        f.i_filename = l_filename;
-        convertFilename(f.i_filename, "labels", "images", ".txt", ".jpg");
+        tk::dnn::Frame f;
+        f.lFilename = l_filename;
+        f.iFilename = l_filename;
+        convertFilename(f.iFilename, "labels", "images", ".txt", ".jpg");
 
         // read frame
-        if(!fileExist(f.i_filename.c_str()))
+        if(!fileExist(f.iFilename.c_str()))
             FatalError("Wrong image file path.");
 
-        cv::Mat frame = cv::imread(f.i_filename.c_str(), cv::IMREAD_COLOR);
+        cv::Mat frame = cv::imread(f.iFilename.c_str(), cv::IMREAD_COLOR);
         int height = frame.rows;
         int width = frame.cols;
 
@@ -144,14 +144,14 @@ int main(int argc, char *argv[])
         
         std::ofstream myfile;
         if(write_dets)
-            myfile.open ("det/"+f.l_filename.substr(l_filename.find("000")));
+            myfile.open ("det/"+f.lFilename.substr(f.lFilename.find("000")));
 
         // save detections labels
         for(auto d:detected_bbox)
         {
             //convert detected bb in the same format as label
             //<x_center>/<image_width> <y_center>/<image_width> <width>/<image_width> <height>/<image_width>
-            BoundingBox b;
+            tk::dnn::BoundingBox b;
             b.x = (d.x + d.w/2) / width;
             b.y = (d.y + d.h/2) / height;
             b.w = d.w / width;
@@ -175,10 +175,10 @@ int main(int argc, char *argv[])
         for(std::string line; std::getline(labels, line); )
         {
             std::istringstream in(line); 
-            BoundingBox b;
+            tk::dnn::BoundingBox b;
             in >> b.cl >> b.x >> b.y >> b.w >> b.h;  
             b.prob = 1;
-            b.truth_flag = 1;
+            b.truthFlag = 1;
             f.gt.push_back(b);
 
             if(show)// draw rectangle for groundtruth
@@ -206,11 +206,11 @@ int main(int argc, char *argv[])
     
     
     //compute mAP
-    double AP = computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net);
+    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
     //compute average precision, recall and f1score
-    computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net);
+    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net);
 
     std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
 
