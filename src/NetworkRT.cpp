@@ -74,9 +74,19 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             configRT->setFlag(BuilderFlag::kINT8);
             BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951) 
                                             net->fileImgList, net->fileLabelList);
-            std::string modelName = name;
+            
+            /* The calibTableFilePath contains the path+filename of the calibration table.
+             * Each calibration table can be found in the corresponding network folder (../Test/*).
+             * Each network is located in a folder with the same name as the network.
+             * If the folder has a different name, the calibration table is saved in build/ folder.
+             */
+            std::string calib_table_name = "../tests/"+ net->networkName + "/" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
+            std::string calib_table_path = "../tests/"+ net->networkName;
+            if(!fileExist((const char *)calib_table_path.c_str()))
+                calib_table_name = "./" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
+
             calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
-                                            "./" + modelName.substr(0, modelName.find('.')) + "-calibration.table", 
+                                            calib_table_name, 
                                             "data"));
             configRT->setInt8Calibrator(calibrator.get());
         }
