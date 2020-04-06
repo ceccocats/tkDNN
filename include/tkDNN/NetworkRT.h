@@ -55,8 +55,9 @@ public:
     nvinfer1::IBuilder *builderRT;
     nvinfer1::IRuntime *runtimeRT;
     nvinfer1::INetworkDefinition *networkRT; 
+#if NV_TENSORRT_MAJOR >= 6  
     nvinfer1::IBuilderConfig *configRT;
-    
+#endif
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
 
