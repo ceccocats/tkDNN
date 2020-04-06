@@ -151,9 +151,11 @@ rm yolo3_INT8.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
 ./demo yolo3_INT8.rt ../demo/yolo_test.mp4 y
 ```
-N.b. Using INT8 inference will lead to some errors in the results (first or second decimal). 
+N.b. Using INT8 inference will lead to some errors in the results. 
 
-N.b. The network test script is very slow: it call the INT8 calibrator. 
+N.b. The test will be slower: this is due to the INT8 calibration, which may take some time to complete. 
+
+N.b. INT8 calibration requires TensorRT version greater than or equal to 6.0
 
 ## mAP demo
 
