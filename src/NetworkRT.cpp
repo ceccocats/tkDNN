@@ -38,9 +38,12 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
     std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
     networkRT = builderRT->createNetwork();
-    configRT = builderRT->createBuilderConfig();
+#if NV_TENSORRT_MAJOR >= 6                
+        configRT = builderRT->createBuilderConfig();
+#endif
     
     if(!fileExist(name)) {
+#if NV_TENSORRT_MAJOR >= 6                
         // Calibrator life time needs to last until after the engine is built.
         std::unique_ptr<IInt8EntropyCalibrator> calibrator;
 
@@ -48,7 +51,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         configRT->setMinTimingIterations(1);
         configRT->setMaxWorkspaceSize(1 << 30);
         configRT->setFlag(BuilderFlag::kDEBUG);
-
+#endif
         //input and dataType
         dataDim_t dim = net->layers[0]->input_dim;
         dtRT = DataType::kFLOAT;
@@ -59,7 +62,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
             builderRT->setHalf2Mode(true);
+#if NV_TENSORRT_MAJOR >= 6                
             configRT->setFlag(BuilderFlag::kFP16);
+#endif
         }
         if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
@@ -68,6 +73,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
             builderRT->setDLACore(0);
         }
+#if NV_TENSORRT_MAJOR >= 6                
         if(net->int8 && builderRT->platformHasFastInt8()){
             // dtRT = DataType::kINT8;
             // builderRT->setInt8Mode(true);
@@ -90,6 +96,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
                                             "data"));
             configRT->setInt8Calibrator(calibrator.get());
         }
+#endif
         
         // add input layer
         ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
@@ -100,10 +107,12 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         for(int i=0; i<net->num_layers; i++) {
             Layer *l = net->layers[i];
             ILayer *Ilay = convert_layer(input, l);
+#if NV_TENSORRT_MAJOR >= 6                
             if(net->int8 && builderRT->platformHasFastInt8())
             {
                 Ilay->setPrecision(DataType::kINT8);
             }
+#endif
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
             
             input = Ilay->getOutput(0);
@@ -121,7 +130,11 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         networkRT->markOutput(*input);
 
         std::cout<<"Building tensorRT cuda engine...\n";
+#if NV_TENSORRT_MAJOR >= 6                
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
+#else 
+        engineRT = builderRT->buildCudaEngine(*networkRT);
+#endif
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")
         // we don't need the network any more
