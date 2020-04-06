@@ -121,17 +121,18 @@ void Network::print() {
     std::cout<<"\n";
 }
 const char *Network::getNetworkRTName(char *network_name){
+    networkName = network_name;
     int network_name_len = strlen(network_name);
     char *RTName = (char *)malloc((network_name_len + 9)*sizeof(char));
     if (fp16){
         strcpy(RTName, network_name);
         strcat(RTName, "_fp16.rt");
-        RTName[network_name_len + 7] = '\0';
+        RTName[network_name_len + 8] = '\0';
     }
     else if (dla){
         strcpy(RTName, network_name);
         strcat(RTName, "_dla.rt");
-        RTName[network_name_len + 6] = '\0';
+        RTName[network_name_len + 7] = '\0';
     }
         
     else if (int8){
@@ -145,7 +146,7 @@ const char *Network::getNetworkRTName(char *network_name){
         strcat(RTName, "_fp32.rt");
         RTName[network_name_len + 8] = '\0';
     }
-        
+    networkNameRT = RTName;
     return RTName;
 }
 

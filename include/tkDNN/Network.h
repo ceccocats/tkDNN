@@ -65,6 +65,9 @@ public:
     bool dontLoadWeights;
     std::string fileImgList;
     std::string fileLabelList;
+    std::string networkName;
+    std::string networkNameRT;
+    
 };
 
 }}
