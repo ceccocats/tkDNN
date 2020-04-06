@@ -43,7 +43,7 @@ private:
     
     float *target_coords;
 
-    #ifdef OPENCV_CUDA
+    #ifdef OPENCV_CUDACONTRIB
         float *mean_d;
         float *stddev_d;
     #else

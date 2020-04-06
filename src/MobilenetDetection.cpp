@@ -160,7 +160,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
 
     generate_ssd_priors(specs, N_SSDSPEC);
 
-#ifndef OPENCV_CUDA
+#ifndef OPENCV_CUDACONTRIB
     checkCuda(cudaMallocHost(&input, sizeof(dnnType) * netRT->input_dim.tot()));
 #endif
     checkCuda(cudaMalloc(&input_d, sizeof(dnnType) * netRT->input_dim.tot()));
@@ -209,7 +209,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
 
 void MobilenetDetection::preprocess(cv::Mat &frame)
 {
-#ifdef OPENCV_CUDA
+#ifdef OPENCV_CUDACONTRIB
         //move original image on GPU
         cv::cuda::GpuMat orig_img, frame_nomean;
         orig_img = cv::cuda::GpuMat(frame);
