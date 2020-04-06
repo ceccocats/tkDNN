@@ -17,7 +17,7 @@
 
 #include "tkdnn.h"
 
-#define OPENCV_CUDA //if OPENCV has been compiled with CUDA and contrib.
+#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
 namespace tk { namespace dnn {
 
@@ -37,7 +37,7 @@ class DetectionNN {
 
         cv::Scalar colors[256];
 
-#ifdef OPENCV_CUDA
+#ifdef OPENCV_CUDACONTRIB
         cv::cuda::GpuMat bgr[3];
         cv::cuda::GpuMat imagePreproc;
 #else

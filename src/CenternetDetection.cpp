@@ -91,7 +91,7 @@ bool CenternetDetection::init(const std::string& tensor_path, const int n_classe
 
     checkCuda( cudaMallocHost(&target_coords, 4 * K *sizeof(float)) );
 
-#ifdef OPENCV_CUDA
+#ifdef OPENCV_CUDACONTRIB
 
     checkCuda( cudaMalloc(&mean_d, 3 * sizeof(float)) );
     checkCuda( cudaMalloc(&stddev_d, 3 * sizeof(float)) );
@@ -177,7 +177,7 @@ void CenternetDetection::preprocess(cv::Mat &frame)
         // step_t = end_t;
     }
     sz_old = sz;
-#ifdef OPENCV_CUDA
+#ifdef OPENCV_CUDACONTRIB
     cv::cuda::GpuMat im_Orig; 
     cv::cuda::GpuMat imageF1_d, imageF2_d;
         

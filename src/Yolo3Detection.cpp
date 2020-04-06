@@ -30,7 +30,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
     }
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
-#ifndef OPENCV_CUDA
+#ifndef OPENCV_CUDACONTRIB
     checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
 #endif
     checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
@@ -50,7 +50,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
 
 void Yolo3Detection::preprocess(cv::Mat &frame)
 {
-#ifdef OPENCV_CUDA
+#ifdef OPENCV_CUDACONTRIB
     cv::cuda::GpuMat orig_img, img_resized;
     orig_img = cv::cuda::GpuMat(frame);
     cv::cuda::resize(orig_img, img_resized, cv::Size(netRT->input_dim.w, netRT->input_dim.h));

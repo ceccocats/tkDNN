@@ -4,6 +4,7 @@ The main goal of this project is to exploit NVIDIA boards as much as possible to
 
 ## Index
 * [Dependencies](#dependencies)
+* [About OpenCV](#about-opencv)
 * [How to compile this repo](#how-to-compile-this-repo)
 * [Workflow](#workflow)
 * [How to export weights](#how-to-export-weights)
@@ -22,6 +23,13 @@ This branch works on every NVIDIA GPU that supports the dependencies:
 * TENSORRT 6.01
 * OPENCV 4.1
 * yaml-cpp 0.5.2 (sudo apt install libyaml-cpp-dev)
+
+## About OpenCV
+To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh```. It will download and compile OpenCV in Download folder.
+```
+bash install_OpenCV4.sh
+```
+When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
 ## How to compile this repo
 Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (1.15 or above). 
