@@ -11,7 +11,7 @@
 
 #include "DetectionNN.h"
 
-#include "sorting.h"
+#include "kernelsThrust.h"
 
 
 namespace tk { namespace dnn { 
