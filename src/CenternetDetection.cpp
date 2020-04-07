@@ -1,9 +1,7 @@
 #include "CenternetDetection.h"
 
-#include "CenternetDetection.h"
 
 namespace tk { namespace dnn {
-
 
 bool CenternetDetection::init(const std::string& tensor_path, const int n_classes)
 {

@@ -1,20 +1,21 @@
+#include "kernelsThrust.h"
 
-#include "sorting.h"
 
-void sort(dnnType *src_begin, dnnType *src_end, int *idsrc)
-{
+void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op){
+    thrust::transform(thrust::device, src_begin, src_end, src2_begin, src_out, op);
+}
+
+void sort(dnnType *src_begin, dnnType *src_end, int *idsrc){
     thrust::sort_by_key(thrust::device,
         src_begin, src_end, idsrc,
         thrust::greater<float>());
-
     // thrust::stable_sort_by_key(thrust::device,
     //     src_begin, src_end, idsrc,
     //     thrust::greater<float>());
 }
 
 void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
-            int *topk_inds, float *topk_ys, float *topk_xs)
-{
+            int *topk_inds, float *topk_ys, float *topk_xs){
     checkCuda( cudaMemcpy(topk_scores, (float *)src_begin, K*sizeof(float), cudaMemcpyDeviceToDevice) );
     checkCuda( cudaMemcpy(topk_inds, idsrc, K*sizeof(int), cudaMemcpyDeviceToDevice) );    
 }
@@ -22,39 +23,15 @@ void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
 __global__ 
 void sortAndTopK_kernel(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs,const int size, const int K){
     int i = blockDim.x*blockIdx.x + threadIdx.x;
-
     thrust::sort_by_key(thrust::device, src_begin + i * size, src_begin + i * size + size, idsrc + i * size, thrust::greater<float>());
     thrust::copy_n(thrust::device, src_begin + i * size, K, topk_scores + i * K);
     thrust::copy_n(thrust::device, idsrc + i * size, K, topk_inds + i * K );
 }
 
-void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs, const int size, const int K, const int n_classes)
-{
+void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs, const int size, const int K, const int n_classes){
     int blocks = n_classes;
     int threads = 1;
-    
-    sortAndTopK_kernel<<<blocks, threads, 0>>>(src_begin, idsrc, topk_scores, topk_inds, topk_ys, topk_xs, size, K);
-   
-}
-
-__global__
-void normalize_kernel(float *bgr, const int dim, const float *mean, const float *stddev){
-    int i = blockDim.x*blockIdx.x + threadIdx.x;
-    int j = blockIdx.y;
-    bgr[j*(dim)+i] = bgr[j*(dim)+i] - mean[j];
-    bgr[j*(dim)+i] = bgr[j*(dim)+i] / stddev[j];
-    
-}
-
-void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev)
-{
-    int num_thread = 256;
-    dim3 dimBlock(h*w/num_thread, ch);
-    normalize_kernel<<<dimBlock, num_thread, 0>>>(bgr, h*w, mean, stddev);
-}
-
-void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op){
-    thrust::transform(thrust::device, src_begin, src_end, src2_begin, src_out, op);
+    sortAndTopK_kernel<<<blocks, threads, 0>>>(src_begin, idsrc, topk_scores, topk_inds, topk_ys, topk_xs, size, K);   
 }
 
 void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, const int wh, int *clses, int *xs, int *ys){    
@@ -62,7 +39,6 @@ void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, co
     thrust::transform(thrust::device, ids_begin, ids_end, thrust::make_constant_iterator(wh), ids_begin, thrust::modulus<int>());
     thrust::transform(thrust::device, ids_begin, ids_end, thrust::make_constant_iterator(size), ys, thrust::divides<int>());
     thrust::transform(thrust::device, ids_begin, ids_end, thrust::make_constant_iterator(size), xs, thrust::modulus<int>());
-    
 }
 
 void topKxyAddOffset(int * ids_begin, const int K, const int size, 
