@@ -45,6 +45,10 @@ do
         echo -e "${ORANGE}Test INT8${NC}"
 	fi
 
+    ./test_imuodom &>> $out_file
+    res_imuodom=$?
+    print_output $res_imuodom test_imuodom
+
     ./test_resnet101_cnet &>> $out_file
     res_resnet101_cnet=$?
     print_output $res_resnet101_cnet test_resnet101_cnet
