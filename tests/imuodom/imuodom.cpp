@@ -26,7 +26,7 @@ int main() {
     tk::dnn::ImuOdom ImuNet;
     ImuNet.init("../tests/imuodom/layers/");
 
-    const int N = 19513;
+    const int N = 10000; //19513;
 
     // Network layout
     tk::dnn::dataDim_t dim0(1, 4, 1, 100);
@@ -63,11 +63,11 @@ int main() {
         path.flush();
 
         // Print real test
-        //printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
-        //ImuNet.odim0.print();
-        //checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
-        //ImuNet.odim1.print();
-        //checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
+        printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
+        ImuNet.odim0.print();
+        checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
+        ImuNet.odim1.print();
+        checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
 
         i0_h += ImuNet.dim0.tot();
         i1_h += ImuNet.dim1.tot();
@@ -75,5 +75,7 @@ int main() {
         out0 += ImuNet.odim0.tot();
         out1 += ImuNet.odim1.tot();
     }
+
+    system("cat path.txt | gnuplot -p -e \"set datafile separator ' '; plot '-'\"");
     return 0;
 }
