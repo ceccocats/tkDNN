@@ -66,9 +66,24 @@ int main(int argc, char *argv[])
                 IoU_thresh, conf_thresh, verbose);
 
     std::ofstream times, memory;
+    std::string name;
     if(write_res_on_file)
     {
-        times.open("times"+std::string(net)+".csv");
+        std::string str = net;
+	name = net;
+	std::string delim = "/";
+	std::size_t current, previous = 0;
+	current = str.find(delim);
+        if (current != std::string::npos) {
+            while (current != std::string::npos) {
+                name = str.substr(previous, current - previous);
+                previous = current + 1;
+                current = str.find(delim, previous);
+            }
+            name = str.substr(previous, current - previous);
+	}
+        std::cout<<"name: "<<name<<std::endl;
+        times.open("times"+name+".csv");
         memory.open("memory.csv", std::ios_base::app);
         memory<<net<<";";
     }
@@ -206,12 +221,11 @@ int main(int argc, char *argv[])
     
     
     //compute mAP
-    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net);
+    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, name);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
     //compute average precision, recall and f1score
-    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net);
-
+    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, name);
     std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
 
     if(write_res_on_file)
