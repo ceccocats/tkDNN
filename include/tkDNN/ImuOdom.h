@@ -109,6 +109,8 @@ class ImuOdom {
 
             odomPOS = Eigen::MatrixXd::Zero(3, 1); 
             odomROT = Eigen::MatrixXd::Identity(3, 3);
+
+            return true;
         }
 
         void update(dnnType *x0, dnnType *x1, dnnType *x2) {
