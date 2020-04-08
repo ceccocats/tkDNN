@@ -6,8 +6,7 @@ bool boxProbCmp(const tk::dnn::box &a, const tk::dnn::box &b){
 
 namespace tk{ namespace dnn{
 
-void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp)
-{
+void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_specs, bool clamp){
     nPriors = 0;
     for (int i = 0; i < n_specs; i++){
         nPriors += specs[i].featureSize * specs[i].featureSize * 6;
@@ -86,8 +85,7 @@ void MobilenetDetection::generate_ssd_priors(const SSDSpec *specs, const int n_s
     }
 }
 
-void MobilenetDetection::convert_locatios_to_boxes_and_center()
-{
+void MobilenetDetection::convert_locatios_to_boxes_and_center(){
     float cur_x, cur_y;
     for (int i = 0; i < nPriors; i++){
         locations_h[i * N_COORDS + 0] = locations_h[i * N_COORDS + 0] * centerVariance * priors[i * N_COORDS + 2] + priors[i * N_COORDS + 0];
@@ -105,8 +103,7 @@ void MobilenetDetection::convert_locatios_to_boxes_and_center()
     }
 }
 
-float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b)
-{
+float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b){
     float max_x = a.x > b.x ? a.x : b.x;
     float max_y = a.y > b.y ? a.y : b.y;
     float min_w = a.w < b.w ? a.w : b.w;
@@ -129,8 +126,7 @@ float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b)
     return iou;
 }
 
-bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes)
-{
+bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
     imageSize = netRT->input_dim.h;
@@ -207,8 +203,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
     return 1;
 }
 
-void MobilenetDetection::preprocess(cv::Mat &frame)
-{
+void MobilenetDetection::preprocess(cv::Mat &frame){
 #ifdef OPENCV_CUDACONTRIB
         //move original image on GPU
         cv::cuda::GpuMat orig_img, frame_nomean;
@@ -243,8 +238,7 @@ void MobilenetDetection::preprocess(cv::Mat &frame)
 #endif
 }
 
-void MobilenetDetection::postprocess()
-{
+void MobilenetDetection::postprocess(){
     //get confidences and locations_h
     dnnType *rt_out[2];
     rt_out[0] = (dnnType *)netRT->buffersRT[3];

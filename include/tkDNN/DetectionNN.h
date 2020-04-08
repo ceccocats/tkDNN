@@ -24,12 +24,6 @@
 
 namespace tk { namespace dnn {
 
-enum networkType_t{
-    NETWORK_YOLO3,
-    NETWORK_MOBILENETSSDLITE,
-    NETWORK_CENTERNET
-};
-
 class DetectionNN {
 
     protected:
@@ -52,7 +46,7 @@ class DetectionNN {
         /**
          * This method preprocess the image, before feeding it to the NN.
          *
-         * @param original frame to adapt for inference.
+         * @param frame original frame to adapt for inference.
          */
         virtual void preprocess(cv::Mat &frame) = 0;
 
@@ -78,7 +72,8 @@ class DetectionNN {
          * Method used to inialize the class, allocate memory and compute 
          * needed data.
          * 
-         * @param path to the rt file og the NN.
+         * @param tensor_path path to the rt file og the NN.
+         * @param n_classes number of classes for the given dataset.
          * @return true if everything is correct, false otherwise.
          */
         virtual bool init(const std::string& tensor_path, const int n_classes=80) = 0;
@@ -86,9 +81,10 @@ class DetectionNN {
         /**
          * This method performs the whole detection of the NN.
          * 
-         * @param frame to run detection on.
-         * @param if set to true, preprocess, inference and postprocess times 
+         * @param frame frame to run detection on.
+         * @param save_times if set to true, preprocess, inference and postprocess times 
          *        are saved on a csv file, otherwise not.
+         * @param times pointer to the output stream where to write times
          */
         void update(cv::Mat &frame, bool save_times=false, std::ofstream *times=nullptr){
             if(!frame.data)
@@ -129,11 +125,10 @@ class DetectionNN {
         /**
          * Method to draw boundixg boxes and labels on a frame.
          * 
-         * @param orginal frame to draw bounding box on.
+         * @param frame orginal frame to draw bounding box on.
          * @return frame with boundig boxes.
          */
-        cv::Mat draw(cv::Mat &frame) 
-        {
+        cv::Mat draw(cv::Mat &frame) {
             tk::dnn::box b;
             int x0, w, x1, y0, h, y1;
             int objClass;

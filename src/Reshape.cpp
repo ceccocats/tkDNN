@@ -24,11 +24,8 @@ Reshape::~Reshape() {
 
 dnnType* Reshape::infer(dataDim_t &dim, dnnType* srcData) {
 
-    //transpose per channel
-
+    //just copies the data and changes the output dim
     checkCuda( cudaMemcpy(dstData, srcData, dim.n*dim.c*dim.h*dim.w*sizeof(dnnType), cudaMemcpyDeviceToDevice));
-
-    //update data dimensions    
     dim = output_dim;
 
     return dstData;
