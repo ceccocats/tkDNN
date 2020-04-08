@@ -12,12 +12,6 @@ public:
 					int o_n, int o_c, int o_h, int o_w, 
 					tk::dnn::DeformConv2d *deformable = nullptr) {
 		this->chunk_dim = chunk_dim;
-		// int dst_dim = conv_dim.tot();
-		// std::cout<<"conv_dim: \n";
-		// conv_dim.print();
-		// if (dst_dim % 3 != 0 )
-		// 	std::cout<<"take attention\n\n";
-		// this->chunk_dim = dst_dim/3;
 		this->kh = kh;
 		this->kw = kw;
 		this->sh = sh;
@@ -53,13 +47,11 @@ public:
             checkCuda( cudaMemcpy(ones_d2, deformable->ones_d2, sizeof(dnnType)*dim_ones, cudaMemcpyDeviceToDevice) );
 		}
 		stat = cublasCreate(&handle);
-		if (stat != CUBLAS_STATUS_SUCCESS) {
-			printf ("CUBLAS initialization failed\n");
-			return;
-  		}
+		if (stat != CUBLAS_STATUS_SUCCESS)
+			FatalError("CUBLAS initialization failed\n");
 	}
 
-	~DeformableConvRT(){
+	~DeformableConvRT() {
 		checkCuda( cudaFree(data_d) );
 		checkCuda( cudaFree(bias2_d) );
 		checkCuda( cudaFree(ones_d1) );
@@ -77,24 +69,13 @@ public:
 		return DimsCHW{defRT->output_dim.c, defRT->output_dim.h, defRT->output_dim.w};
 	}
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		// i_n = 1;
-		// i_c = inputDims[0].d[0];
-		// i_h = inputDims[0].d[1];
-		// i_w = inputDims[0].d[2];
-		// o_n = 1;
-		// o_c = outputDims[0].d[0];
-		// o_h = outputDims[0].d[1];
-		// o_w = outputDims[0].d[2];
-	}
+	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override { }
 
 	int initialize() override {
-
 		return 0;
 	}
 
-	virtual void terminate() override {
-	}
+	virtual void terminate() override { }
 
 	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
 		return 0;
@@ -111,7 +92,7 @@ public:
 		activationSIGMOIDForward(mask, mask, chunk_dim);
 	
 		// deformable convolution
-		dcn_v2_cuda_forward(stat, handle, 
+		dcnV2CudaForward(stat, handle, 
                          	srcData, data_d,
 							bias2_d, ones_d1,
 							offset, mask,
@@ -204,7 +185,6 @@ public:
 	dnnType * offset;
 	dnnType * mask;
 	dnnType *ones_d2;
-	
 	
 	tk::dnn::DeformConv2d *defRT;
 };
