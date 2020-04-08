@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <algorithm>
 #include <cstring>
+#include <string>
+#include <iostream> 
 #include "kernels.h"
 #include <errno.h>
 
@@ -17,8 +19,7 @@ inline int GET_BLOCKS(const int N)
 
 
 __device__ float dmcn_im2col_bilinear(const float *bottom_data, const int data_width,
-  const int height, const int width, float h, float w)
-{
+  const int height, const int width, float h, float w) {
 int h_low = floor(h);
 int w_low = floor(w);
 int h_high = h_low + 1;
@@ -44,8 +45,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
   const int height, const int width,
   const int batch_size, const int num_channels, const int deformable_group,
   const int height_col, const int width_col,
-  float *data_col)
-{
+  float *data_col) {
   CUDA_KERNEL_LOOP(index, n)
   {
     //If n is a power of 2, ( i / n ) is equivalent to ( i ≫ log2 n ) and ( i % n ) is equivalent to ( i & n - 1 ).
@@ -77,11 +77,9 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
     const float *data_mask_ptr = data_mask + add_ptr;
 
     #pragma unroll
-    for (int i = 0; i < 3; ++i)
-    {
+    for (int i = 0; i < 3; ++i) {
       #pragma unroll
-      for (int j = 0; j < 3; ++j)
-      {
+      for (int j = 0; j < 3; ++j) {
         const int iter_member = (i * 3 + j);
         // const int data_offset_h_ptr = ((2 * (i * kernel_w + j)) * height_col + h_col) * width_col + w_col;
         const int data_offset_h_ptr = first_member + s_col2 * iter_member;
@@ -99,8 +97,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
         const float w_im = offset_w + w_in + j;
         //if (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) {
         float val = static_cast<float>(0);
-        if (h_im < height && w_im < width && h_im > -1 && w_im > -1)
-        {
+        if (h_im < height && w_im < width && h_im > -1 && w_im > -1) {
           //const float map_h = i * dilation_h + offset_h;
           //const float map_w = j * dilation_w + offset_w;
           //const int cur_height = height - h_in;
@@ -116,7 +113,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
   }
 }
 
-__global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
+__global__ void modulated_deformable_im2col_gpu_kernel_general_version(const int n,
   const float *data_im, const float *data_offset, const float *data_mask,
   const int height, const int width, const int kernel_h, const int kernel_w,
   const int pad_h, const int pad_w,
@@ -125,12 +122,10 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
   const int channel_per_deformable_group,
   const int batch_size, const int num_channels, const int deformable_group,
   const int height_col, const int width_col,
-  float *data_col)
-{
+  float *data_col) {
   CUDA_KERNEL_LOOP(index, n)
   {
     //If n is a power of 2, ( i / n ) is equivalent to ( i ≫ log2 n ) and ( i % n ) is equivalent to ( i & n - 1 ).
-    // printf("--- %d %d %d %d %d %d %d %d\n",kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w);
     const int ind_on_w = index / width_col;
     const int ind_on_w_on_h = ind_on_w / height_col; 
     const int kk = kernel_h * kernel_w;
@@ -160,11 +155,9 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
     const float *data_mask_ptr = data_mask + add_ptr;
     
     #pragma unroll
-    for (int i = 0; i < kernel_h; ++i)
-    {
+    for (int i = 0; i < kernel_h; ++i) {
       #pragma unroll
-      for (int j = 0; j < kernel_w; ++j)
-      {
+      for (int j = 0; j < kernel_w; ++j) {
         const int iter_member = (i * kernel_w + j);
         // const int data_offset_h_ptr = ((2 * (i * kernel_w + j)) * height_col + h_col) * width_col + w_col;
         const int data_offset_h_ptr = first_member + s_col2 * iter_member;
@@ -182,8 +175,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
         const float w_im = offset_w + w_in + j * dilation_w;
         //if (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) {
         float val = static_cast<float>(0);
-        if (h_im < height && w_im < width && h_im > -1 && w_im > -1)
-        {
+        if (h_im < height && w_im < width && h_im > -1 && w_im > -1) {
           //const float map_h = i * dilation_h + offset_h;
           //const float map_w = j * dilation_w + offset_w;
           //const int cur_height = height - h_in;
@@ -199,8 +191,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel2(const int n,
   }
 }
 
-
-void modulated_deformable_im2col_cuda(cudaStream_t stream,
+void modulatedDeformableIm2colCuda(cudaStream_t stream,
   const float* data_im, const float* data_offset, const float* data_mask,
   const int batch_size, const int channels, const int height_im, const int width_im, 
   const int height_col, const int width_col,
@@ -216,13 +207,10 @@ void modulated_deformable_im2col_cuda(cudaStream_t stream,
   
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess)
-  {
-    printf("error in modulated_deformable_im2col_cuda: %s\n", cudaGetErrorString(err));
-  }
-
+    FatalError("error in modulatedDeformableIm2colCuda: " + std::string(cudaGetErrorString(err)) + "\n");
 }
 
-void modulated_deformable_im2col_cuda2(cudaStream_t stream,
+void modulatedDeformableIm2colCudaGeneralVersion(cudaStream_t stream,
   const float* data_im, const float* data_offset, const float* data_mask,
   const int batch_size, const int channels, const int height_im, const int width_im, 
   const int height_col, const int width_col, const int kernel_h, const int kenerl_w,
@@ -232,7 +220,7 @@ void modulated_deformable_im2col_cuda2(cudaStream_t stream,
   // num_axes should be smaller than block size
   const int channel_per_deformable_group = channels / deformable_group;
   const int num_kernels = channels * batch_size * height_col * width_col;
-  modulated_deformable_im2col_gpu_kernel2
+  modulated_deformable_im2col_gpu_kernel_general_version
       <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS,
           0, stream>>>(
       num_kernels, data_im, data_offset, data_mask, height_im, width_im, kernel_h, kenerl_w,
@@ -241,13 +229,10 @@ void modulated_deformable_im2col_cuda2(cudaStream_t stream,
   
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess)
-  {
-    printf("error in modulated_deformable_im2col_cuda: %s\n", cudaGetErrorString(err));
-  }
-
+    FatalError("error in modulatedDeformableIm2colCudaGeneralVersion: " + std::string(cudaGetErrorString(err)) + "\n");
 }
 
-void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle, 
+void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle, 
                          float *input, float *weight,
                          float *bias, float *ones,
                          float *offset, float *mask,
@@ -266,7 +251,6 @@ void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle,
   const int height = in_h;
   const int width = in_w;
 
-
   const int channels_out = out_c;
 
   const int height_out = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
@@ -282,17 +266,15 @@ void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle,
               n, m, k, &alpha, 
               ones, k, bias, k, 
               &beta, output, n);
-  if (stat != CUBLAS_STATUS_SUCCESS) {
-      printf ("CUBLAS initialization failed\n");
-      return ;
-  }
+  if (stat != CUBLAS_STATUS_SUCCESS)
+    FatalError("CUBLAS initialization failed\n");
 
-  modulated_deformable_im2col_cuda(stream,
+  modulatedDeformableIm2colCuda(stream,
                                     input, offset,
                                     mask,
                                     1, channels, height, width,
                                     height_out, width_out, deformable_group, columns);
-  // modulated_deformable_im2col_cuda2(stream,
+  // modulatedDeformableIm2colCudaGeneralVersion(stream,
   //                                   input, offset,
   //                                   mask,
   //                                   1, channels, height, width,
@@ -310,8 +292,7 @@ void dcn_v2_cuda_forward(cublasStatus_t stat, cublasHandle_t handle,
               columns, n, weight, k, 
               &beta, output, n);
 
-  if (stat != CUBLAS_STATUS_SUCCESS) {
-      printf ("CUBLAS initialization failed\n");
-      return ;
-  }
+  if (stat != CUBLAS_STATUS_SUCCESS)
+    FatalError("CUBLAS initialization failed\n");
+
 }
