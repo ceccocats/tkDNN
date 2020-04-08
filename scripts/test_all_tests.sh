@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd build
-# rm *rt
+rm *rt
 
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -32,9 +32,9 @@ print_output $res_yolo3 test_yolo3
 res_yolo3_flir=$?
 print_output $res_yolo3_flir test_yolo3_flir
 
-# ./test_yolo3_512 &>> $out_file
-# res_yolo3_512=$?
-# print_output $res_yolo3_512 test_yolo3_512
+./test_yolo3_512 &>> $out_file
+res_yolo3_512=$?
+print_output $res_yolo3_512 test_yolo3_512
 
 ./test_yolo3_tiny &>> $out_file
 res_yolo3_tiny=$?
@@ -68,20 +68,20 @@ print_output $res_mnist test_mnist
 res_yolo=$?
 print_output $res_yolo test_yolo
 
-# ./test_yolo3_berkeley &>> $out_file
-# res_yolo3_berkeley=$?
-# print_output $res_yolo3_berkeley test_yolo3_berkeley
+./test_yolo3_berkeley &>> $out_file
+res_yolo3_berkeley=$?
+print_output $res_yolo3_berkeley test_yolo3_berkeley
 
 ./test_yolo_voc &>> $out_file
 res_yolo_voc=$?
 print_output $res_yolo_voc test_yolo_voc
 
-# ./test_dla34_cnet &>> $out_file
-# res_dla34_cnet=$?
-# print_output $res_dla34_cnet test_dla34_cnet
+./test_dla34_cnet &>> $out_file
+res_dla34_cnet=$?
+print_output $res_dla34_cnet test_dla34_cnet
 
-# ./test_yolo3_coco4 &>> $out_file
-# res_yolo3_coco4=$?
-# print_output $res_yolo3_coco4 test_yolo3_coco4
+./test_yolo3_coco4 &>> $out_file
+res_yolo3_coco4=$?
+print_output $res_yolo3_coco4 test_yolo3_coco4
 
 echo "If errors occured, check logfile $out_file" 
