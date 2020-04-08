@@ -133,7 +133,7 @@ void CenternetDetection::preprocess(cv::Mat &frame){
     float new_height = sz.height * scale;
     float new_width = sz.width * scale;
     if(sz.height != sz_old.height && sz.width != sz_old.width){
-        float c[] = {new_width / 2.0, new_height /2.0};
+        float c[] = {new_width / 2.0f, new_height /2.0f};
         float s[2];
 
         if(sz.width > sz.height){

@@ -120,7 +120,7 @@ void Network::print() {
     printCenteredTitle("", '=', 60);
     std::cout<<"\n";
 }
-const char *Network::getNetworkRTName(char *network_name){
+const char *Network::getNetworkRTName(const char *network_name){
     networkName = network_name;
     int network_name_len = strlen(network_name);
     char *RTName = (char *)malloc((network_name_len + 9)*sizeof(char));
