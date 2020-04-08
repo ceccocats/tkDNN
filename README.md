@@ -27,7 +27,7 @@ This branch works on every NVIDIA GPU that supports the dependencies:
 ## About OpenCV
 To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh```. It will download and compile OpenCV in Download folder.
 ```
-bash install_OpenCV4.sh
+bash scripts/install_OpenCV4.sh
 ```
 When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
@@ -163,7 +163,7 @@ To compute mAP, precision, recall and f1score, run the map_demo.
 
 A validation set is needed. To download COCO_val2017 run (form the root folder): 
 ```
-bash download_validation.sh 
+bash scripts/download_validation.sh 
 ```
 To compute the map, the following parameters are needed:
 ```
