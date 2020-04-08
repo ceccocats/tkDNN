@@ -21,6 +21,8 @@ const char *d1_bin = "../tests/imuodom/layers/dense_4.bin";
 
 int main() {
 
+    downloadWeightsifDoNotExist(i0_bin, "../tests/imuodom", "https://cloud.hipert.unimore.it/s/ZAy34K5w2ixED6x/download");
+    
     tk::dnn::ImuOdom ImuNet;
     ImuNet.init("../tests/imuodom/layers/");
 
