@@ -5,96 +5,89 @@ import numpy as np
 import argparse
 import tensorflow as tf
 import os
-import msgpack
-import lmdb
 import random
+import struct
+from keras.models import Sequential, Model
 
-def export_dense(name, weights, bias):
-    print "########    EXPORT", name, "LAYER    ########"
-    print "Original weighs:"
-    print weights
-    print bias, "\n"
+def bin_write(f, data):
+    data = data.flatten()
+    fmt = 'f'*len(data)
+    bin = struct.pack(fmt, *data)
+    f.write(bin)
 
-    #input, filters
-    I, C = np.shape(weights) 
-    B = np.shape(bias)
-    print "w shape: ", I, C
-    print "b shape: ", B
+def export_layer(name, weights, bias):
+    print ("########    EXPORT", name, "LAYER    ########")
 
-    wgs = [ [ j[i] for j in weights ]  for i in xrange(C) ]
-    wgs = np.array(wgs, dtype=np.float32)
-    
-    print "REPOSITIONED WEIGHTS:"
-    print wgs
+    print("wgs pretranpose: ", np.shape(weights))
+    # convert NHWC to NCHW
+    if(weights.ndim == 4):
+        weights = weights.transpose(3,2,0,1)
+    elif(weights.ndim == 3):
+        weights = weights.transpose(2,1,0)
+    elif(weights.ndim == 2):
+        weights = weights.transpose(1,0)
+    else:
+        print("Ndim", weights.ndim)
+        raise("not implemented with dim" )
 
+    print("weights: ", np.shape(weights))
+    print("bias: ", np.shape(bias))
+
+    weights = np.array(weights.flatten(), dtype=np.float32)
     bias = np.array(bias, dtype=np.float32)
-    wgs.tofile(name + ".bin", format="f")
-    bias.tofile(name + ".bias.bin", format="f")
-    print "WEIGHTS saved\n"
+    print(len(weights) + len(bias))
 
-def export_conv2d(name, weights, bias):
-    print "########    EXPORT", name, "LAYER    ########"
-    print "Original weighs:"
-    print weights
-    print bias, "\n"
-  
-    # height, width, input, filters
-    H, W, N, C = np.shape(weights) 
-    B = np.shape(bias)
-    print "w shape: ", N, C, H, W
-    print "b shape: ", B
+    f = open(name + ".bin", mode='wb')
+    bin_write(f, weights)
+    bin_write(f, bias)
+    print ("WEIGHTS saved\n")
 
-    wgs = weights.transpose()
-    wgs = wgs.transpose(0, 1, 3, 2)
-    print "Final shape:", np.shape(wgs)    
-    wgs = np.array(wgs.flatten(), dtype=np.float32)
-    
-    print "REPOSITIONED WEIGHTS:"
-    print wgs
+def export_bidir(name, params, paramsb):
+    print ("########    EXPORT", name, "LAYER    ########")
+ 
+    f = open(name + ".bin", mode='wb')
 
-    bias = np.array(bias, dtype=np.float32)
+    print("FORWARD")
+    ker = params[0]
+    rec_ker = params[1]
+    bias = params[2]
+    print ("export kernels: ", np.shape(ker))
+    units = np.shape(ker)[1] // 4
+    bin_write(f, ker[:,:units])
+    bin_write(f, ker[:,units:units*2])
+    bin_write(f, ker[:,units*2:units*3])
+    bin_write(f, ker[:,units*3:])
+    print ("export recurrent kernels: ", np.shape(rec_ker))
+    bin_write(f, rec_ker[:,:units])
+    bin_write(f, rec_ker[:,units:units*2])
+    bin_write(f, rec_ker[:,units*2:units*3])
+    bin_write(f, rec_ker[:,units*3:])
+    print ("export kernels: ", np.shape(ker))
+    bin_write(f, bias)
+    print("WEIGHTS saved\n")
 
-    wgs.tofile(name + ".bin", format="f")
-    bias.tofile(name + ".bias.bin", format="f")
-    print "WEIGHTS saved\n"
-
-def export_conv3d(name, weights, bias):
-    print "########    EXPORT", name, "LAYER    ########"
-    print "Original weighs:"
-    print weights
-    print bias, "\n"
-  
-    print np.shape(weights)
-    # height, width, input, thickness, filters
-    H, W, T, N, C = np.shape(weights) 
-    B = np.shape(bias)
-    print "w shape: ", T, C, H, W   #thickness is number of images for cudnn
-    print "b shape: ", B
-
-    wgs = weights.transpose()
-    wgs = wgs.transpose(0, 1, 4, 3, 2)
-    print "Final shape:", np.shape(wgs)    
-    wgs = np.array(wgs.flatten(), dtype=np.float32)
-    
-    print "REPOSITIONED WEIGHTS:"
-    print wgs
-
-    bias = np.array(bias, dtype=np.float32)
-
-    wgs.tofile(name + ".bin", format="f")
-    bias.tofile(name + ".bias.bin", format="f")
-    print "WEIGHTS saved\n"
-
-
-def get_session(gpu_fraction=0.5):
-    gpu_options = tf.GPUOptions(allow_growth=True) 
-        #per_process_gpu_memory_fraction=gpu_fraction)
-    return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-
+    print("BACKWARD")
+    ker = paramsb[0]
+    rec_ker = paramsb[1]
+    bias = paramsb[2]
+    print ("export kernels: ", np.shape(ker))
+    units = np.shape(ker)[1] // 4
+    bin_write(f, ker[:,:units])
+    bin_write(f, ker[:,units:units*2])
+    bin_write(f, ker[:,units*2:units*3])
+    bin_write(f, ker[:,units*3:])
+    print ("export recurrent kernels: ", np.shape(rec_ker))
+    bin_write(f, rec_ker[:,:units])
+    bin_write(f, rec_ker[:,units:units*2])
+    bin_write(f, rec_ker[:,units*2:units*3])
+    bin_write(f, rec_ker[:,units*3:])
+    print ("export kernels: ", np.shape(ker))
+    bin_write(f, bias)
+    print("WEIGHTS saved\n")
 
 #https://github.com/fchollet/keras/wiki/Converting-convolution-kernels-from-Theano-to-TensorFlow-and-vice-versa
 if __name__ == '__main__':
-    KTF.set_session(get_session())
+    print("DATA FORMAT: ", keras.backend.image_data_format())
 
     parser = argparse.ArgumentParser(description='KERAS WEIGHTS EXPORTER TO CUDNN')
     parser.add_argument('model',type=str,
@@ -103,31 +96,43 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    print "DATA FORMAT: ", keras.backend.image_data_format()
+    print("DATA FORMAT: ", keras.backend.image_data_format())
     
-    print "Load model: ", args.model
+    print("Load model: ", args.model)
     model = load_model(args.model)
+    model.summary()
+
+
     weights = model.get_weights()
 
     ws = np.shape(weights)
-    print "Weights shape:", ws
+    print("Weights shape:", ws)
 
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
-    num = 0
+
     name_num = 0
     for l in model.layers:
-        name = l.name        
+        print("\n\nNAME: ", l.name)
+        print("input: ", l.input_shape, " output: ", l.output_shape)
+        wgs = l.get_weights()
+        print("wgs num: ", len(wgs))
+
+        name = l.name 
         if name.startswith("conv3d"):
-            export_conv3d(args.output + "/conv" + str(name_num), weights[num], weights[num+1])
+            export_layer(args.output + "/" + name, wgs[0], wgs[1])
         elif name.startswith("conv2d"):
-            export_conv2d(args.output + "/conv" + str(name_num), weights[num], weights[num+1])
+            export_layer(args.output + "/" + name, wgs[0], wgs[1])
+        elif name.startswith("conv1d"):
+            export_layer(args.output + "/" + name, wgs[0], wgs[1])     
         elif name.startswith("dense"):
-            export_dense(args.output + "/dense" + str(name_num), weights[num], weights[num+1])
+            export_layer(args.output + "/" + name, wgs[0], wgs[1])
+        elif name.startswith("bidirectional"):
+            wgs = l.forward_layer.get_weights()
+            export_bidir(args.output + "/" + name, l.forward_layer.get_weights(), l.backward_layer.get_weights())
         else:
-            print "skip:", name, "has no weights"
+            print ("skip:", name, "has no weights")
             continue
-        name_num += 1
-        num += 2
+
 

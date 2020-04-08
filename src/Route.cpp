@@ -7,11 +7,14 @@ namespace tk { namespace dnn {
 
 Route::Route(Network *net, Layer **layers, int layers_n, bool final) : Layer(net, final) {
 
-    this->layers_n = layers_n;
-    if(layers_n > MAX_INPUT_LAYERS)
-        FatalError("Route: MAX INPUT LAYERS overload");
-    for(int i=0; i<layers_n; i++)
+    // copy input layers
+    if(layers_n > MAX_LAYERS) {
+        FatalError("ROUTE: reached max number of input layers");
+    }
+    for(int i=0; i<layers_n; i++) {
         this->layers[i] = layers[i];
+    }
+    this->layers_n = layers_n;
     
     //get dims
     output_dim.l = 1;
