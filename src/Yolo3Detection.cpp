@@ -48,8 +48,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
     return true;
 } 
 
-void Yolo3Detection::preprocess(cv::Mat &frame)
-{
+void Yolo3Detection::preprocess(cv::Mat &frame){
 #ifdef OPENCV_CUDACONTRIB
     cv::cuda::GpuMat orig_img, img_resized;
     orig_img = cv::cuda::GpuMat(frame);
@@ -84,8 +83,7 @@ void Yolo3Detection::preprocess(cv::Mat &frame)
 #endif
 }
 
-void Yolo3Detection::postprocess()
-{
+void Yolo3Detection::postprocess(){
     //get yolo outputs
     dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
@@ -140,8 +138,7 @@ void Yolo3Detection::postprocess()
 }
 
 
-tk::dnn::Yolo* Yolo3Detection::getYoloLayer(int n) 
-{
+tk::dnn::Yolo* Yolo3Detection::getYoloLayer(int n) {
     if(n<3)
         return yolo[n];
     else 

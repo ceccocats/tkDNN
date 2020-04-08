@@ -3,29 +3,7 @@
 
 namespace tk { namespace dnn {
 
-void BoundingBox::clear()
-{
-    uniqueTruthIndex = -1;
-    truthFlag = 0;
-    maxIoU = 0;
-}
-
-bool boxComparison (const BoundingBox& a,const BoundingBox& b) 
-{ 
-    return (a.prob>b.prob); 
-}
-
-std::ostream& operator<<(std::ostream& os, const BoundingBox& bb)
-{
-    os <<"w: "<< bb.w << ", h: "<< bb.h << ", x: "<< bb.x << ", y: "<< bb.y <<
-         ", cat: "<< bb.cl << ", conf: "<< bb.prob<< ", truth: "<< 
-         bb.truthFlag<< ", assignedGT: "<< bb.uniqueTruthIndex<< 
-         ", maxIoU: "<< bb.maxIoU<<"\n";
-    return os;
-}
-
-void Frame::print() const
-{
+void Frame::print() const{
     std::cout<<"labels filename: "<<lFilename<<std::endl;
     std::cout<<"image filename: "<<iFilename<<std::endl;
     std::cout<<"GT: "<<std::endl;
@@ -34,52 +12,13 @@ void Frame::print() const
     for(auto d: det) std::cout<<d;
 }
 
-void PR::print()
-{
+void PR::print(){
     std::cout<<"precision: "<<precision<<" recall: "<<recall<<" tp: "<<tp<<" fp:"<<fp<<" fn:"<<fn<<std::endl;
 }
 
-float boxOverlap(float x1, float w1, float x2, float w2)
-{
-    float l1 = x1 - w1/2;
-    float l2 = x2 - w2/2;
-    float left = l1 > l2 ? l1 : l2;
-    float r1 = x1 + w1/2;
-    float r2 = x2 + w2/2;
-    float right = r1 < r2 ? r1 : r2;
-    return right - left;
-}
-
-float boxIntersection(const BoundingBox &a, const BoundingBox &b)
-{
-    float w = boxOverlap(a.x, a.w, b.x, b.w);
-    float h = boxOverlap(a.y, a.h, b.y, b.h);
-    if(w < 0 || h < 0) 
-        return 0;
-    float area = w*h;
-    return area;
-}
-
-float boxUnion(const BoundingBox &a, const BoundingBox &b)
-{
-    float i = boxIntersection(a, b);
-    float u = a.w*a.h + b.w*b.h - i;
-    return u;
-}
-
-float boxIoU(const BoundingBox &a, const BoundingBox &b)
-{
-    float I = boxIntersection(a, b);
-    float U = boxUnion(a, b);
-    if (I == 0 || U == 0) 
-        return 0;
-    return I / U;
-}
-
-void readmAPParams(char* config_filename, int& classes, int& map_points, 
-                int& map_levels, float& map_step, float& IoU_thresh, 
-                float& conf_thresh, bool& verbose)
-{
+void readmAPParams( char* config_filename, int& classes, int& map_points, 
+                    int& map_levels, float& map_step, float& IoU_thresh, 
+                    float& conf_thresh, bool& verbose) {
     YAML::Node config   = YAML::LoadFile(config_filename);
     classes     = config["classes"].as<int>();
     map_points  = config["map_points"].as<int>();
@@ -88,12 +27,12 @@ void readmAPParams(char* config_filename, int& classes, int& map_points,
     IoU_thresh  = config["IoU_thresh"].as<float>();
     conf_thresh = config["conf_thresh"].as<float>();
     verbose     = config["verbose"].as<bool>();
-
 }
 
 /* Credits to https://github.com/AlexeyAB/darknet/blob/master/src/detector.c*/
-double computeMap(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, const int map_points, const bool verbose)
-{
+double computeMap(  std::vector<Frame> &images,const int classes, 
+                    const float IoU_thresh, const float conf_thresh, 
+                    const int map_points, const bool verbose) {
     if(verbose)
         for(auto img:images)
             img.print();
@@ -132,15 +71,13 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
                 float maxIoU = 0;
                 int truth_index = -1;
                 for(size_t j=0; j<img.gt.size(); j++){
-                    float currentIoU = boxIoU(img.det[i], img.gt[j]);
+                    float currentIoU = img.det[i].IoU(img.gt[j]);
                     if(currentIoU > maxIoU && img.det[i].cl == img.gt[j].cl){
                         maxIoU = currentIoU;                    
                         truth_index = j;
                     }
                 }
-                // std::cout<<"det i:"<<i<<" maxIoU:"<<maxIoU<<" tIndex:"<<truth_index<<std::endl;
                 if(truth_index > -1 && maxIoU > IoU_thresh){
-                    // std::cout<<"(INSIDE) IoU thresh:"<<IoU_thresh<<" maxIoU:"<<maxIoU<<" maxIoU > IoU_thresh:"<<(maxIoU > IoU_thresh)<<std::endl;
                     img.det[i].uniqueTruthIndex = truth_index + gt_checked;
                     img.det[i].truthFlag = 1;
                     img.det[i].maxIoU = maxIoU;
@@ -262,8 +199,11 @@ double computeMap(std::vector<Frame> &images,const int classes,const float IoU_t
     return mean_average_precision;
 }
 
-double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const float i_IoU_thresh, const float conf_thresh, const int map_points, const float map_step, const int map_levels, const bool verbose, const bool write_on_file, std::string net)
-{
+double computeMapNIoULevels(std::vector<Frame> &images,const int classes, 
+                            const float i_IoU_thresh, const float conf_thresh, 
+                            const int map_points, const float map_step, 
+                            const int map_levels, const bool verbose, 
+                            const bool write_on_file, std::string net) {
     std::ofstream out_file;
     if(write_on_file){
 	out_file.open("map.csv", std::ios_base::app);
@@ -272,15 +212,18 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const f
 
     double AP = 0, cur_AP = 0;
     float IoU_thresh = i_IoU_thresh;
+
     for(int i=0; i<map_levels; ++i){
+        //clear detection-grounthuth matching
         for(auto& img:images)
             for(auto & d:img.det)
                 d.clear();
+        //compute mAP for the new IoU threshold
         cur_AP = computeMap(images,classes,IoU_thresh,conf_thresh,map_points, verbose);
-	if(write_on_file)
-	    out_file<<cur_AP<<";";
-	AP += cur_AP;
-        IoU_thresh +=map_step;
+	    if(write_on_file)
+	        out_file<<cur_AP<<";";
+	    AP += cur_AP;
+            IoU_thresh +=map_step;
     }
     AP/=map_levels;
 
@@ -291,8 +234,9 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,const f
     return AP;
 }
 
-void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_thresh, const float conf_thresh, bool verbose, const bool write_on_file, std::string net)
-{
+void computeTPFPFN( std::vector<Frame> &images,const int classes,    
+                    const float IoU_thresh, const float conf_thresh, 
+                    bool verbose, const bool write_on_file, std::string net) {
 
     std::ofstream out_file;
     if(write_on_file){
@@ -304,11 +248,10 @@ void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_
     std::vector<int> dets_classes_count(classes,0);
     std::vector<PR> pr(classes);
     
+    //compute TP, FP, FN for each image, for each class
     for(auto &img:images){
-        for(auto& tc: truth_classes_count)
-            tc = 0;
-        for(auto& dc: dets_classes_count)
-            dc = 0;
+        for(auto& tc: truth_classes_count) tc = 0;
+        for(auto& dc: dets_classes_count) dc = 0;
 
         std::vector<bool> det_assigned(img.det.size(), false);
         for(size_t j=0; j<img.gt.size(); j++){
@@ -317,7 +260,7 @@ void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_
             int det_index = -1;
             for(size_t i=0; i<img.det.size(); i++){
                 if(img.det[i].prob > conf_thresh){               
-                    float currentIoU = boxIoU(img.det[i], img.gt[j]);
+                    float currentIoU = img.det[i].IoU(img.gt[j]);
                     if(currentIoU > maxIoU && img.det[i].cl == img.gt[j].cl && !det_assigned[i]){
                         maxIoU = currentIoU;                    
                         det_index = i;
@@ -344,16 +287,14 @@ void computeTPFPFN(std::vector<Frame> &images,const int classes,const float IoU_
         }
     }
 
+    //count all TP, FP, FN and compute precsion, recall and f1-score
     double avg_precision = 0, avg_recall = 0, f1_score = 0;
-
-
     int TP = 0, FP = 0, FN = 0;
     for(size_t i=0; i<classes; i++){
         pr[i].precision = (pr[i].tp + pr[i].fp) > 0 ? (double)pr[i].tp / (double)(pr[i].tp +pr[i].fp) : 0;
         pr[i].recall = (pr[i].tp + pr[i].fn) > 0 ? (double)pr[i].tp / (double)(pr[i].tp +pr[i].fn) : 0;
         if(verbose)
             std::cout<<"Class "<<i<<"\tTP: "<<pr[i].tp<<"\tFP: "<<pr[i].fp<<"\tFN: "<<pr[i].fn<<"\tprecision: "<<pr[i].precision<<"\trecall: "<<pr[i].recall<<std::endl;
-            // std::cout<<i<<"\t"<<pr[i].tp<<"\t"<<pr[i].fp<<"\t"<<pr[i].fn<<"\t"<<pr[i].precision<<"\t"<<pr[i].recall<<std::endl;
         avg_precision += pr[i].precision;
         avg_recall += pr[i].recall;
 

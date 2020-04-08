@@ -20,10 +20,8 @@ bool fileExist(const char *fname) {
     return true;
 }
 
-void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url)
-{
-    if(!fileExist(input_bin.c_str()))
-    {
+void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url){
+    if(!fileExist(input_bin.c_str())){
         std::string wget_cmd = "wget " + weights_url + " -O " + test_folder + "/weights.zip"; 
         std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
         std::string rm_cmd = "rm " + test_folder + "/weights.zip";
@@ -34,8 +32,7 @@ void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string
 }
 
 
-void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek, bool skipLoad)
-{
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek, bool skipLoad){
     int size_b = size*sizeof(dnnType);
     *data_h = new dnnType[size];
 
@@ -65,8 +62,7 @@ void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** dat
     checkCuda( cudaMemcpy(*data_d, *data_h, size_b, cudaMemcpyHostToDevice) );
 }
 
-void printDeviceVector(int size, dnnType* vec_d, bool device)
-{
+void printDeviceVector(int size, dnnType* vec_d, bool device){
     dnnType *vec;
     if(device) {
         vec = new dnnType[size];
@@ -129,8 +125,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
     return diffs;
 }
 
-float getColor(const int c, const int x, const int max)
-{
+float getColor(const int c, const int x, const int max){
     float _colors[6][3] = { {1,0,1}, {0,0,1},{0,1,1},{0,1,0},{1,1,0},{1,0,0} };
     float ratio = ((float)x/max)*5;
     int i = floor(ratio);
@@ -141,8 +136,7 @@ float getColor(const int c, const int x, const int max)
 }
 
 
-void resize(int size, dnnType **data)
-{
+void resize(int size, dnnType **data){
     if (*data != NULL)
         checkCuda( cudaFree(*data) );
     checkCuda( cudaMalloc(data, size*sizeof(dnnType)) );
@@ -170,8 +164,7 @@ void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData,
 }
 
 
-void getMemUsage(double& vm_usage_kb, double& resident_set_kb)
-{
+void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
    using std::ios_base;
    using std::ifstream;
    using std::string;
@@ -202,8 +195,7 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb)
    resident_set_kb = rss * page_size_kb;
 }
 
-void removePathAndExtension(const std::string &full_string, std::string &name)
-{
+void removePathAndExtension(const std::string &full_string, std::string &name){
     name = full_string;
     std::string tmp_str = full_string;
 	std::string slash = "/";

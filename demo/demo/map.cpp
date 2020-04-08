@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     bool show = false;
     bool write_dets = false;
     bool write_res_on_file = true;
-    int n_images = 50;
+    int n_images = 5000;
 
     bool verbose;
     int classes, map_points, map_levels;
