@@ -5,8 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, const std::string& fileimglist, const std::string& filelabellist)
-{
+BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, const std::string& fileimglist, const std::string& filelabellist) {
     mBatchSize = batchSize;
     mMaxBatches = maxBatches;
     mDims = nvinfer1::DimsNCHW{ dim.n, dim.c, dim.h, dim.w };
@@ -25,22 +24,19 @@ BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, 
     reset(0);
 }
 
-void BatchStream::reset(int firstBatch)
-{
+void BatchStream::reset(int firstBatch) {
     mBatchCount = 0;
     mFileCount = 0;
     mFileBatchPos = mDims.n();
     skip(firstBatch);
 }
 
-bool BatchStream::next()
-{
+bool BatchStream::next() {
     std::cout<<"Next batch: "<<mBatchCount<<" of "<<mMaxBatches<<"\n";
     if (mBatchCount == mMaxBatches-1)
         return false;
 
-    for (int csize = 1, batchPos = 0; batchPos < mBatchSize; batchPos += csize, mFileBatchPos += csize)
-    {
+    for (int csize = 1, batchPos = 0; batchPos < mBatchSize; batchPos += csize, mFileBatchPos += csize) {
         assert(mFileBatchPos > 0 && mFileBatchPos <= mDims.n());
         if (mFileBatchPos == mDims.n() && !update())
             return false;
@@ -53,10 +49,8 @@ bool BatchStream::next()
     return true;
 }
 
-void BatchStream::skip(int skipCount)
-{
-    if (mBatchSize >= mDims.n() && mBatchSize%mDims.n() == 0 && mFileBatchPos == mDims.n())
-    {
+void BatchStream::skip(int skipCount) {
+    if (mBatchSize >= mDims.n() && mBatchSize%mDims.n() == 0 && mFileBatchPos == mDims.n()) {
         mFileCount += skipCount * mBatchSize / mDims.n();
         return;
     }
@@ -67,8 +61,7 @@ void BatchStream::skip(int skipCount)
     mBatchCount = x;
 }
 
-void BatchStream::readInListFile(const std::string& dataFilePath, std::vector<std::string>& mListIn)
-{
+void BatchStream::readInListFile(const std::string& dataFilePath, std::vector<std::string>& mListIn) {
     // dataFilePath contains the list of image paths
     int count = 0;
     FILE* f = fopen(dataFilePath.c_str(), "r");
@@ -76,8 +69,8 @@ void BatchStream::readInListFile(const std::string& dataFilePath, std::vector<st
         FatalError("failed to open " + dataFilePath);
     
     char str[512];
-    while (fgets(str, 512, f) != NULL){
-        for (int i = 0; str[i] != '\0'; ++i){
+    while (fgets(str, 512, f) != NULL) {
+        for (int i = 0; str[i] != '\0'; ++i) {
             if (str[i] == '\n'){
                 str[i] = '\0';
                 break;
@@ -91,8 +84,7 @@ void BatchStream::readInListFile(const std::string& dataFilePath, std::vector<st
     fclose(f);
 }
 
-void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res, bool fixshape)
-{
+void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res, bool fixshape) {
     // unaltered original DsImage
     cv::Mat m_OrigImage;
     // letterboxed DsImage given to the network as input
@@ -104,7 +96,7 @@ void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res
 
     int m_Height = m_OrigImage.rows;
     int m_Width = m_OrigImage.cols;
-    if(fixshape){
+    if(fixshape) {
         m_Height = mHeight;
         m_Width = mWidth;
     }
@@ -138,22 +130,18 @@ void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res
     res.assign(m_LetterboxImage.begin<float>(), m_LetterboxImage.end<float>());
 }
 
-void BatchStream::readLabels(std::string inputFileName, std::vector<float>& ris)
-{
+void BatchStream::readLabels(std::string inputFileName, std::vector<float>& ris) {
     std::ifstream is(inputFileName.c_str());
     //read only the first number: the image sub-portion class
     while (true) {
         float val;
-        // Read
 		is >> val;
-        // Check
         if (!is) {
             break;
         }
-        // Use
         // insert the first number and skip all others
         ris.push_back(val);
-        while( true ){
+        while( true ) {
             char c;
             is >> c;
             if (is.peek() == '\n') //detect "\n"
@@ -162,8 +150,7 @@ void BatchStream::readLabels(std::string inputFileName, std::vector<float>& ris)
     }
 }
 
-bool BatchStream::update()
-{
+bool BatchStream::update() {
     std::string imgFileName = mListImg[mFileCount];
     std::string labelFileName = mListLabel[mFileCount];
     mFileCount++;
