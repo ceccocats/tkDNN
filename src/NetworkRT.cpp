@@ -36,7 +36,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
+#if NV_TENSORRT_MAJOR >= 5
     std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
+#endif
     networkRT = builderRT->createNetwork();
 #if NV_TENSORRT_MAJOR >= 6                
         configRT = builderRT->createBuilderConfig();
@@ -66,6 +68,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             configRT->setFlag(BuilderFlag::kFP16);
 #endif
         }
+#if NV_TENSORRT_MAJOR >= 5
         if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
             builderRT->setFp16Mode(true);
@@ -73,6 +76,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDefaultDeviceType(DeviceType::kDLA);
             builderRT->setDLACore(0);
         }
+#endif
 #if NV_TENSORRT_MAJOR >= 6                
         if(net->int8 && builderRT->platformHasFastInt8()){
             // dtRT = DataType::kINT8;
