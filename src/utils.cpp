@@ -32,43 +32,41 @@ void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string
 }
 
 
-void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek, bool skipLoad){
+void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek)
+{
+    std::ifstream dataFile (fname, std::ios::in | std::ios::binary);
+    std::stringstream error_s;
+    if (!dataFile)
+    {
+        error_s << "Error opening file " << fname; 
+        FatalError(error_s.str());
+    }
+
+    if(seek != 0) {
+        dataFile.seekg(seek*sizeof(dnnType), dataFile.cur);
+    }
+
     int size_b = size*sizeof(dnnType);
     *data_h = new dnnType[size];
-
-    if(!skipLoad) {
-        std::ifstream dataFile(fname, std::ios::in | std::ios::binary);
-        std::stringstream error_s;
-        if (!dataFile) {
-            error_s << "Error opening file " << fname;
-            FatalError(error_s.str());
-        }
-
-        if (seek != 0) {
-            dataFile.seekg(seek * sizeof(dnnType), dataFile.cur);
-        }
-
-        // printf("data_h %d size_b %d\n", *data_h,size_b);
-        if (!dataFile.read((char *) *data_h, size_b)) {
-            
-            error_s << "Error reading file " << fname;
-            FatalError(error_s.str());
-        }
-    } else {
-        std::cout<<COL_RED<<"WARNING: skipping data load, this should only used in debug\n"<<COL_END;
+    if (!dataFile.read ((char*) *data_h, size_b)) 
+    {
+        error_s << "Error reading file " << fname << " with n of float: "<<size;
+        error_s << " seek: "<<seek << " size: "<<size_b<<"\n";
+        FatalError(error_s.str());
     }
     
     checkCuda( cudaMalloc(data_d, size_b) );
     checkCuda( cudaMemcpy(*data_d, *data_h, size_b, cudaMemcpyHostToDevice) );
 }
 
+
 void printDeviceVector(int size, dnnType* vec_d, bool device){
     dnnType *vec;
     if(device) {
         vec = new dnnType[size];
-        cudaDeviceSynchronize();
-        cudaMemcpy(vec, vec_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
-        cudaDeviceSynchronize();
+        checkCuda(cudaDeviceSynchronize());
+        checkCuda(cudaMemcpy(vec, vec_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost));
+        checkCuda(cudaDeviceSynchronize());
     } else {
         vec = vec_d;
     }
@@ -82,7 +80,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device){
         delete [] vec;
 }
 
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit) {
 
     dnnType *data_h, *correct_h;
     const float eps = 0.02f;
@@ -90,10 +88,11 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
     if(device) {
         data_h = new dnnType[size];
         correct_h = new dnnType[size];
-        cudaDeviceSynchronize();
-        cudaMemcpy(data_h, data_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
-        cudaMemcpy(correct_h, correct_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost);
-        cudaDeviceSynchronize();
+        checkCuda(cudaDeviceSynchronize());
+        checkCuda(cudaMemcpy(data_h, data_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost));
+        checkCuda(cudaMemcpy(correct_h, correct_d, size*sizeof(dnnType), cudaMemcpyDeviceToHost));
+        checkCuda(cudaDeviceSynchronize());
+
     } else {
         data_h = data_d;
         correct_h = correct_d;
@@ -105,7 +104,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device) {
             diffs += 1;
             if(diffs == 1)
                 std::cout<<"\n";
-            if(diffs < 10)
+            if(diffs < limit)
                 std::cout<<" | [ "<<i<<" ]: "<<data_h[i]<<" "<<correct_h[i]<<"\n";
         }
     }

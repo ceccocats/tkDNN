@@ -9,10 +9,12 @@
 namespace tk { namespace dnn {
 
 enum layerType_t {
+    LAYER_INPUT,
     LAYER_DENSE,
     LAYER_CONV2D,
     LAYER_DECONV2D,
     LAYER_DEFORMCONV2D,
+    LAYER_LSTM,
     LAYER_ACTIVATION,
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
@@ -55,10 +57,12 @@ public:
     std::string getLayerName() {
         layerType_t type = getLayerType();
         switch(type) {
+            case LAYER_INPUT:               return "Input";
             case LAYER_DENSE:               return "Dense";
             case LAYER_CONV2D:              return "Conv2d";
             case LAYER_DECONV2D:            return "DeConv2d";
             case LAYER_DEFORMCONV2D:        return "DeformConv2d";
+            case LAYER_LSTM:                return "LSTM";
             case LAYER_ACTIVATION:          return "Activation";
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
@@ -124,6 +128,28 @@ public:
 
 
 /**
+    Input layer (it doesnt need weigths)
+*/
+class Input : public Layer {
+
+public:
+
+    Input(Network *net, dataDim_t &dim, dnnType* srcData) : Layer(net) {
+        input_dim = dim;
+        output_dim = dim;
+        dstData = srcData;
+    }
+    virtual ~Input() {}
+    virtual layerType_t getLayerType() { return LAYER_INPUT; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
+        dim = output_dim;
+        return dstData;
+    }
+};
+
+
+/**
     Dense (full interconnection) layer
 */
 class Dense : public LayerWgs {
@@ -174,6 +200,14 @@ protected:
 
 /**
     Convolutional 2D layer
+
+    WEIGHTS shape: OUTCH, INCH, KH, KW ...
+    BIAS shape: OUTCH
+
+    with BATCHNORM:
+        scales:   OUTCH
+        means:    OUTCH
+        variance: OUTCH
 */
 class Conv2d : public LayerWgs {
 
@@ -201,6 +235,71 @@ protected:
     void inferCUDNN(dnnType* srcData, bool back = false);
     void*  workSpace;
     size_t ws_sizeInBytes;
+};
+
+/**
+    Bidirectional LSTM layer
+    ONLY BIDIRECTIONAL (TODO: more configurable)
+    currently implemented as 2 inferences: forward and backward (TODO: only 1 cudnn inference)
+
+    implementation info:
+    https://github.com/jiangnanhugo/seq2seq_cuda/blob/e4dbdcfa0517c972bfd4beea9f11a5233954093c/src/rnn.cpp
+    https://github.com/Jeffery-Song/mxnet-test/blob/aab666faad44011f7a67b527b5f6c960367d0422/src/operator/cudnn_rnn-inl.h
+    https://stackoverflow.com/a/38737941
+    https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+
+    PARAMS (numlayers*2):
+        layer0:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+        layer2:
+            ( INCH, ? )    ???
+            ( HIDDEN, ? )  ???
+            ( HIDDEN * 8 ) ???
+
+    OUTPUT shape:
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=True)  ---> (N, 2*HIDDEN, 1, W)   # W is seqLength 
+        (N, C, 1, W) ---> LSTM(HIDDEN, returnSeq=False) ---> (N, 2*HIDDEN, 1, 1)
+*/
+class LSTM : public Layer {
+
+public:
+    LSTM(Network *net, int hiddensize, bool returnSeq, std::string fname_weights);
+    virtual ~LSTM();
+    virtual layerType_t getLayerType() { return LAYER_LSTM; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    const bool bidirectional = true; /**> is the net bidir */
+    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    int stateSize = 0; /**> number of hidden states */
+    int seqLen = 0;    /**> number of timesteps */
+    int numLayers = 1; /**> number of internal layers */
+
+protected:
+    cudnnRNNDescriptor_t rnnDesc;
+    cudnnDropoutDescriptor_t dropoutDesc;
+    dnnType  *dropout_states_, *work_space_;
+
+    size_t workspace_byte_, dropout_byte_;
+    int workspace_size_, dropout_size_;
+    
+    std::vector<cudnnTensorDescriptor_t> x_desc_vec_, y_desc_vec_;
+    cudnnTensorDescriptor_t hx_desc_, cx_desc_;
+    cudnnTensorDescriptor_t hy_desc_, cy_desc_;
+    dnnType *hx_ptr, *cx_ptr, *hy_ptr, *cy_ptr;
+    int stateDataDim;
+
+    cudnnFilterDescriptor_t w_desc_;
+    dnnType *w_ptr;
+    dnnType *w_h;
+    dnnType *wf_ptr, *wb_ptr; // params pointer forward and backward layer
+
+    // used during inference
+    dataDim_t one_output_dim; // output dim of as single inference
+    dnnType *srcF, *srcB; // input of single inference 
+    dnnType *dstF, *dstB_NR, *dstB; // output of single inference, dstB_NR = dstB not reversed
 };
 
 
@@ -370,8 +469,8 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
 public:
-    static const int MAX_INPUT_LAYERS = 16;
-    Layer *layers[MAX_INPUT_LAYERS];  //ids of layers to be merged
+    static const int MAX_LAYERS = 32;
+    Layer *layers[MAX_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
 };
 
