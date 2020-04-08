@@ -19,8 +19,6 @@
 
 #include <map>
 
-
-
 void convertFilename(std::string &filename,const std::string l_folder, const std::string i_folder, const std::string l_ext,const std::string i_ext)
 {
     filename.replace(filename.find(l_folder),l_folder.length(),i_folder);
@@ -36,7 +34,7 @@ int main(int argc, char *argv[])
     bool show = false;
     bool write_dets = false;
     bool write_res_on_file = true;
-    int n_images = 5000;
+    int n_images = 50;
 
     bool verbose;
     int classes, map_points, map_levels;
@@ -66,24 +64,12 @@ int main(int argc, char *argv[])
                 IoU_thresh, conf_thresh, verbose);
 
     std::ofstream times, memory;
-    std::string name;
-    if(write_res_on_file)
-    {
-        std::string str = net;
-	name = net;
-	std::string delim = "/";
-	std::size_t current, previous = 0;
-	current = str.find(delim);
-        if (current != std::string::npos) {
-            while (current != std::string::npos) {
-                name = str.substr(previous, current - previous);
-                previous = current + 1;
-                current = str.find(delim, previous);
-            }
-            name = str.substr(previous, current - previous);
-	}
-        std::cout<<"name: "<<name<<std::endl;
-        times.open("times"+name+".csv");
+    std::string net_name;
+    removePathAndExtension(net, net_name);
+    std::cout<<"Network: "<<net_name<<std::endl;
+
+    if(write_res_on_file){
+        times.open("times_"+net_name+".csv");
         memory.open("memory.csv", std::ios_base::app);
         memory<<net<<";";
     }
@@ -97,8 +83,7 @@ int main(int argc, char *argv[])
     int n_classes = classes;   
     
     
-    switch(ntype)
-    {
+    switch(ntype){
         case 'y':
             detNN = &yolo;
             break;
@@ -110,12 +95,10 @@ int main(int argc, char *argv[])
             n_classes++;
             break;
         default:
-        FatalError("Network type not allowed (3rd parameter)\n");
+            FatalError("Network type not allowed (3rd parameter)\n");
     }
 
     detNN->init(net, n_classes);
-
-    
 
     std::ifstream all_labels(labels_path);
     std::string l_filename;
@@ -128,8 +111,7 @@ int main(int argc, char *argv[])
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
 
     int images_done;
-    for (images_done=0 ; std::getline(all_labels, l_filename) && images_done < n_images ; ++images_done) 
-    {
+    for (images_done=0 ; std::getline(all_labels, l_filename) && images_done < n_images ; ++images_done) {
         std::cout <<COL_ORANGEB<< "Images done:\t" << images_done<< "\n"<<COL_END;
 
         tk::dnn::Frame f;
@@ -162,8 +144,7 @@ int main(int argc, char *argv[])
             myfile.open ("det/"+f.lFilename.substr(f.lFilename.find("000")));
 
         // save detections labels
-        for(auto d:detected_bbox)
-        {
+        for(auto d:detected_bbox){
             //convert detected bb in the same format as label
             //<x_center>/<image_width> <y_center>/<image_width> <width>/<image_width> <height>/<image_width>
             tk::dnn::BoundingBox b;
@@ -187,8 +168,7 @@ int main(int argc, char *argv[])
 
         // read and save groundtruth labels
         std::ifstream labels(l_filename);
-        for(std::string line; std::getline(labels, line); )
-        {
+        for(std::string line; std::getline(labels, line); ){
             std::istringstream in(line); 
             tk::dnn::BoundingBox b;
             in >> b.cl >> b.x >> b.y >> b.w >> b.h;  
@@ -202,39 +182,31 @@ int main(int argc, char *argv[])
       
         images.push_back(f);
         
-        if(show)
-        {
+        if(show){
             cv::imshow("detection", frame);
             cv::waitKey(0);
         }
 
-        
         getMemUsage(vm, rss);
         vm_total += vm;
         rss_total += rss;
 
         
     }
+    std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
 
-    std::cout<<"Done."<<std::endl;
-
-    
-    
     //compute mAP
-    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, name);
+    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,conf_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net_name);
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
     //compute average precision, recall and f1score
-    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, name);
-    std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
+    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,conf_thresh, verbose, write_res_on_file, net_name);
 
-    if(write_res_on_file)
-    {
+    if(write_res_on_file){
         memory<<vm_total/images_done/1024.0<<";"<<rss_total/images_done/1024.0<<"\n";
         times.close();
         memory.close();
     }
-
 
     return 0;
 }
