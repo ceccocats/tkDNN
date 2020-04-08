@@ -201,3 +201,30 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb)
    vm_usage_kb     = vsize / 1024.0;  
    resident_set_kb = rss * page_size_kb;
 }
+
+void removePathAndExtension(const std::string &full_string, std::string &name)
+{
+    name = full_string;
+    std::string tmp_str = full_string;
+	std::string slash = "/";
+    std::string dot = ".";
+    std::size_t current, previous = 0;
+
+    //remove path /path/to/
+	current = tmp_str.find(slash);
+    if (current != std::string::npos) {
+        while (current != std::string::npos) {
+            name = tmp_str.substr(previous, current - previous);
+            previous = current + 1;
+            current = tmp_str.find(slash, previous);
+        }
+        name = tmp_str.substr(previous, current - previous);
+    }
+    // remove extension
+    current = name.find(dot);
+    previous = 0;
+    if (current != std::string::npos) 
+        name = name.substr(previous, current);
+    
+    // std::cout<<"full string: "<<full_string<<" name: "<<name<<std::endl;
+}
