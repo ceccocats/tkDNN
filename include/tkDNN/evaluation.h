@@ -31,7 +31,7 @@ struct PR
     void print();
 };
 
-void readmAPParams( char* config_filename, int& classes, int& map_points, 
+void readmAPParams( const char* config_filename, int& classes, int& map_points, 
                     int& map_levels, float& map_step, float& IoU_thresh, 
                     float& conf_thresh, bool& verbose);
 
