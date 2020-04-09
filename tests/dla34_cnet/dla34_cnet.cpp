@@ -501,6 +501,7 @@ int main()
 
     tk::dnn::Layer *outs[3] = { hm, wh, reg }; 
     int out_count = 1;
+    int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
     for(int i=0; i<3; i++) {
         printCenteredTitle((std::string(" RESNET CHECK RESULTS ") + std::to_string(i) + " ").c_str(), '=', 30);
         
@@ -517,13 +518,12 @@ int main()
         if(i==0)
             out_count ++;
 
-        std::cout << "CUDNN vs correct";
-        checkResult(odim, cudnn_out, out);
-        std::cout << "TRT   vs correct";
-        checkResult(odim, rt_out, out);
-        std::cout << "CUDNN vs TRT    ";
-        checkResult(odim, cudnn_out, rt_out);
-    }    
-
-    return 0;
+        std::cout<<"CUDNN vs correct"; 
+        ret_cudnn |= checkResult(odim, cudnn_out, out) == 0 ? 0: ERROR_CUDNN;
+        std::cout<<"TRT   vs correct"; 
+        ret_tensorrt |= checkResult(odim, rt_out, out) == 0 ? 0 : ERROR_TKDNN;
+        std::cout<<"CUDNN vs TRT    "; 
+        ret_cudnn_tensorrt |= checkResult(odim, cudnn_out, rt_out) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
+    }
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

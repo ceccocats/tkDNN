@@ -339,12 +339,12 @@ int main()
     int odim = out_dim.tot();
     readBinaryFile(output_bin, odim, &out_h, &out);
 
-    std::cout << "CUDNN vs correct";
-    checkResult(odim, cudnn_out, out);
-    std::cout << "TRT   vs correct";
-    checkResult(odim, rt_out, out);
-    std::cout << "CUDNN vs TRT    ";
-    checkResult(odim, cudnn_out, rt_out);
+    std::cout<<"CUDNN vs correct"; 
+    int ret_cudnn = checkResult(odim, cudnn_out, out) == 0 ? 0: ERROR_CUDNN;
+    std::cout<<"TRT   vs correct"; 
+    int ret_tensorrt = checkResult(odim, rt_out, out) == 0 ? 0 : ERROR_TKDNN;
+    std::cout<<"CUDNN vs TRT    "; 
+    int ret_cudnn_tensorrt = checkResult(odim, cudnn_out, rt_out) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
-    return 0;
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

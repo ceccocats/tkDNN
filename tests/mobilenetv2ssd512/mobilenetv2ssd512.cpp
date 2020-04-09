@@ -506,17 +506,19 @@ int main()
     dnnType *out2, *out2_h;
     int odim2 = out_dim2.tot();
     readBinaryFile(output_bin2, odim2, &out2_h, &out2);
+    int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
+    
     std::cout << "CUDNN vs correct" << std::endl;
-    checkResult(odim1, cudnn_out1, out1);
-    checkResult(odim2, cudnn_out2, out2);
+    ret_cudnn |= checkResult(odim1, cudnn_out1, out1) == 0 ? 0 : ERROR_CUDNN;
+    ret_cudnn |= checkResult(odim2, cudnn_out2, out2) == 0 ? 0 : ERROR_CUDNN;
 
     std::cout << "TRT   vs correct" << std::endl;
-    checkResult(odim1, rt_out1, out1);
-    checkResult(odim2, rt_out2, out2);
+    ret_tensorrt |= checkResult(odim1, rt_out1, out1) == 0 ? 0 : ERROR_TKDNN;
+    ret_tensorrt |= checkResult(odim2, rt_out2, out2) == 0 ? 0 : ERROR_TKDNN;
 
     std::cout << "CUDNN vs TRT    " << std::endl;
-    checkResult(odim1, cudnn_out1, rt_out1);
-    checkResult(odim2, cudnn_out2, rt_out2);
+    ret_cudnn_tensorrt |= checkResult(odim1, cudnn_out1, rt_out1) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
+    ret_cudnn_tensorrt |= checkResult(odim2, cudnn_out2, rt_out2) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
     std::cout << "---------------------------------------------------" << std::endl;
     std::cout << "Confidence CUDNN" << std::endl;
@@ -532,8 +534,8 @@ int main()
     std::cout << "---------------------------------------------------" << std::endl;
 
     std::cout << "CUDNN vs TRT    " << std::endl;
-    checkResult(conf->output_dim.tot(), conf->dstData, rt_out3);
-    checkResult(loc->output_dim.tot(), loc->dstData, rt_out4);
+    ret_cudnn_tensorrt |= checkResult(conf->output_dim.tot(), conf->dstData, rt_out3) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
+    ret_cudnn_tensorrt |= checkResult(loc->output_dim.tot(), loc->dstData, rt_out4) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
-    return 0;
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

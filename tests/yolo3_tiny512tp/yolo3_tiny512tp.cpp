@@ -52,7 +52,7 @@ int main() {
 
     tk::dnn::Conv2d     c10(&net, 512, 3, 3, 1, 1, 1, 1, c10_bin, true);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
+    tk::dnn::Pooling    p11(&net, 2, 2, 1, 1,0,0, tk::dnn::POOLING_MAX_FIXEDSIZE);
 
     tk::dnn::Conv2d     c12(&net, 1024, 3, 3, 1, 1, 1, 1, c12_bin, true);
     tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -115,9 +115,13 @@ int main() {
     dnnType *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
-    std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
-    std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
-    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
-    
-    return 0;
+
+    std::cout<<"CUDNN vs correct"; 
+    int ret_cudnn = checkResult(out_dim, out_data, out) == 0 ? 0: ERROR_CUDNN;
+    std::cout<<"TRT   vs correct"; 
+    int ret_tensorrt = checkResult(out_dim, out_data2, out) == 0 ? 0 : ERROR_TKDNN;
+    std::cout<<"CUDNN vs TRT    "; 
+    int ret_cudnn_tensorrt = checkResult(out_dim, out_data, out_data2) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
+
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

@@ -72,17 +72,17 @@ class ImuOdom {
             tk::dnn::Input   *x0   = new tk::dnn::Input  (net, dim0, i0_d);
             tk::dnn::Conv2d  *x0_0 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c0_bin);
             tk::dnn::Conv2d  *x0_1 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c1_bin);
-            tk::dnn::Pooling *x0_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
+            tk::dnn::Pooling *x0_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3 , 0, 0, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
 
             tk::dnn::Input   *x1   = new tk::dnn::Input  (net, dim1, i1_d);
             tk::dnn::Conv2d  *x1_0 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c2_bin);
             tk::dnn::Conv2d  *x1_1 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c3_bin);
-            tk::dnn::Pooling *x1_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
+            tk::dnn::Pooling *x1_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3, 0, 0, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
 
             tk::dnn::Input   *x2   = new tk::dnn::Input  (net, dim2, i2_d);
             tk::dnn::Conv2d  *x2_0 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c4_bin);
             tk::dnn::Conv2d  *x2_1 = new tk::dnn::Conv2d (net, 128, 1, 11, 1, 1, 0, 0, c5_bin);
-            tk::dnn::Pooling *x2_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
+            tk::dnn::Pooling *x2_2 = new tk::dnn::Pooling(net, 1, 3, 1, 3, 0, 0, tk::dnn::tkdnnPoolingMode_t::POOLING_MAX);
 
             tk::dnn::Layer *concat_l[3] = { x0_2, x1_2, x2_2 };
             tk::dnn::Route *concat = new tk::dnn::Route(net, concat_l, 3);

@@ -407,8 +407,9 @@ protected:
 */
 typedef enum {
     POOLING_MAX     = 0,
-    POOLING_AVERAGE = 1,                  // count for average includes padded values
-    POOLING_AVERAGE_EXCLUDE_PADDING = 2   // count for average does not include padded values
+    POOLING_AVERAGE = 1,                    // count for average includes padded values
+    POOLING_AVERAGE_EXCLUDE_PADDING = 2,    // count for average does not include padded values
+    POOLING_MAX_FIXEDSIZE = 100             // max pool darknet fashion
 } tkdnnPoolingMode_t;
 
 /**
@@ -421,13 +422,13 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
-    bool maxpoolfixedsize;
+    bool size;
     tkdnnPoolingMode_t pool_mode;
 
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
             int paddingH = 0, int paddingW = 0,
-            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false, bool test=false); 
+            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false); 
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 

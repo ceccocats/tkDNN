@@ -354,7 +354,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE) ptype = PoolingType::kAVERAGE;
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_AVERAGE_EXCLUDE_PADDING) ptype = PoolingType::kMAX_AVERAGE_BLEND;
 
-    if(l->maxpoolfixedsize)
+    if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE)
     {
         IPlugin *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);        
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);

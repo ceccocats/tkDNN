@@ -116,9 +116,12 @@ int main() {
     dnnType *out, *out_h;
     int out_dim = net.getOutputDim().tot();
     readBinaryFile(output_bin, out_dim, &out_h, &out);
-    std::cout<<"CUDNN vs correct"; checkResult(out_dim, out_data, out);
-    std::cout<<"TRT   vs correct"; checkResult(out_dim, out_data2, out);
-    std::cout<<"CUDNN vs TRT    "; checkResult(out_dim, out_data, out_data2);
-    
-    return 0;
+    std::cout<<"CUDNN vs correct"; 
+    int ret_cudnn = checkResult(out_dim, out_data, out) == 0 ? 0: ERROR_CUDNN;
+    std::cout<<"TRT   vs correct"; 
+    int ret_tensorrt = checkResult(out_dim, out_data2, out) == 0 ? 0 : ERROR_TKDNN;
+    std::cout<<"CUDNN vs TRT    "; 
+    int ret_cudnn_tensorrt = checkResult(out_dim, out_data, out_data2) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
+
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

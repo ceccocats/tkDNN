@@ -342,15 +342,15 @@ int main()
     tk::dnn::Activation a83(&net, tk::dnn::ACTIVATION_LEAKY);
 
     //SPP
-    tk::dnn::Pooling p84(&net, 5, 5, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
+    tk::dnn::Pooling p84(&net, 5, 5, 1, 1,0,0, tk::dnn::POOLING_MAX_FIXEDSIZE);
     tk::dnn::Layer *r85_layers[1] = {&a83};
     tk::dnn::Route r85(&net, r85_layers, 1);
 
-    tk::dnn::Pooling p86(&net, 9, 9, 1, 1,0,0, tk::dnn::POOLING_MAX, false, true);
+    tk::dnn::Pooling p86(&net, 9, 9, 1, 1,0,0, tk::dnn::POOLING_MAX_FIXEDSIZE);
     tk::dnn::Layer *r87_layers[1] = {&a83};
     tk::dnn::Route r87(&net, r87_layers, 1);
 
-    tk::dnn::Pooling p88(&net, 13, 13, 1, 1, 12, 12, tk::dnn::POOLING_MAX, false, true);
+    tk::dnn::Pooling p88(&net, 13, 13, 1, 1, 12, 12, tk::dnn::POOLING_MAX_FIXEDSIZE);
     tk::dnn::Layer *r89_layers[4] = {&p88, &p86, &p84, &a83};
     tk::dnn::Route r89(&net, r89_layers, 4);
     //END SPP
@@ -536,18 +536,19 @@ int main()
     for (int i = 0; i < 3; i++)
         rt_out[i] = (dnnType *)netRT.buffersRT[i + 1];
 
+    int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
     for (int i = 0; i < 3; i++)
     {
         printCenteredTitle((std::string(" YOLO ") + std::to_string(i) + " CHECK RESULTS ").c_str(), '=', 30);
         dnnType *out, *out_h;
         int odim = out_dim[i].tot();
         readBinaryFile(output_bins[i], odim, &out_h, &out);
-        std::cout << "CUDNN vs correct";
-        checkResult(odim, cudnn_out[i], out);
-        std::cout << "TRT   vs correct";
-        checkResult(odim, rt_out[i], out);
-        std::cout << "CUDNN vs TRT    ";
-        checkResult(odim, cudnn_out[i], rt_out[i]);
+        std::cout<<"CUDNN vs correct"; 
+        ret_cudnn |= checkResult(odim, cudnn_out[i], out) == 0 ? 0: ERROR_CUDNN;
+        std::cout<<"TRT   vs correct"; 
+        ret_tensorrt |= checkResult(odim, rt_out[i], out) == 0 ? 0 : ERROR_TKDNN;
+        std::cout<<"CUDNN vs TRT    "; 
+        ret_cudnn_tensorrt |= checkResult(odim, cudnn_out[i], rt_out[i]) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     }
-    return 0;
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }
