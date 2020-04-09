@@ -32,9 +32,9 @@ int main() {
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);
 	tk::dnn::Network net(dim);
     tk::dnn::Conv2d     l0(&net, 20, 5, 5, 1, 1, 0, 0, c0_bin);
-    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
-    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Dense      l4(&net, 500, d2_bin);
     tk::dnn::Activation l5(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Dense      l6(&net, 10, d3_bin);

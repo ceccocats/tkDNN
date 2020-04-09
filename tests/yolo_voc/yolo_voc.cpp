@@ -38,11 +38,11 @@ int main() {
 
     tk::dnn::Conv2d     c0 (&net, 32, 3, 3, 1, 1, 1, 1,   c0_bin, true);
     tk::dnn::Activation a0 (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p1 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p1 (&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c2 (&net, 64, 3, 3, 1, 1, 1, 1,   c2_bin, true);
     tk::dnn::Activation a2 (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p3 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p3 (&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c4 (&net, 128, 3, 3, 1, 1, 1, 1,  c4_bin, true);
     tk::dnn::Activation a4 (&net, tk::dnn::ACTIVATION_LEAKY);
@@ -50,7 +50,7 @@ int main() {
     tk::dnn::Activation a5 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c6 (&net, 128, 3, 3, 1, 1, 1, 1,  c6_bin, true);
     tk::dnn::Activation a6 (&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p7 (&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p7 (&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c8 (&net, 256, 3, 3, 1, 1, 1, 1,  c8_bin, true);
     tk::dnn::Activation a8 (&net, tk::dnn::ACTIVATION_LEAKY);
@@ -58,7 +58,7 @@ int main() {
     tk::dnn::Activation a9 (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c10(&net, 256, 3, 3, 1, 1, 1, 1,  c10_bin, true);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p11(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p11(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c12(&net, 512, 3, 3, 1, 1, 1, 1,  c12_bin, true);
     tk::dnn::Activation a12(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -70,7 +70,7 @@ int main() {
     tk::dnn::Activation a15(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d     c16(&net, 512, 3, 3, 1, 1, 1, 1,  c16_bin, true); 
     tk::dnn::Activation a16(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling    p17(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    p17(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d     c18(&net, 1024, 3, 3, 1, 1, 1, 1, c18_bin, true);
     tk::dnn::Activation a18(&net, tk::dnn::ACTIVATION_LEAKY);
