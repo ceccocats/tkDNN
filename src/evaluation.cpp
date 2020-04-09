@@ -16,7 +16,7 @@ void PR::print(){
     std::cout<<"precision: "<<precision<<" recall: "<<recall<<" tp: "<<tp<<" fp:"<<fp<<" fn:"<<fn<<std::endl;
 }
 
-void readmAPParams( char* config_filename, int& classes, int& map_points, 
+void readmAPParams( const char* config_filename, int& classes, int& map_points, 
                     int& map_levels, float& map_step, float& IoU_thresh, 
                     float& conf_thresh, bool& verbose) {
     YAML::Node config   = YAML::LoadFile(config_filename);

@@ -28,9 +28,9 @@ void convertFilename(std::string &filename,const std::string l_folder, const std
 int main(int argc, char *argv[]) 
 {
     char ntype = 'y';
-    char *config_filename = "../demo/config.yaml";
-    char * net = "yolo3.rt";
-    char * labels_path = "../demo/COCO_val2017/all_labels.txt";
+    const char *config_filename = "../demo/config.yaml";
+    const char * net = "yolo3.rt";
+    const char * labels_path = "../demo/COCO_val2017/all_labels.txt";
     bool show = false;
     bool write_dets = false;
     bool write_res_on_file = true;
