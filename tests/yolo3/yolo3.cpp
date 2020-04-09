@@ -91,7 +91,7 @@ int main() {
         std::cout<<"CUDNN vs correct"; 
         ret_cudnn |= checkResult(odim, cudnn_out[i], out) == 0 ? 0: ERROR_CUDNN;
         std::cout<<"TRT   vs correct"; 
-        ret_tensorrt |= checkResult(odim, rt_out[i], out) == 0 ? 0 : ERROR_TKDNN;
+        ret_tensorrt |= checkResult(odim, rt_out[i], out) == 0 ? 0 : ERROR_TENSORRT;
         std::cout<<"CUDNN vs TRT    "; 
         ret_cudnn_tensorrt |= checkResult(odim, cudnn_out[i], rt_out[i]) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     }

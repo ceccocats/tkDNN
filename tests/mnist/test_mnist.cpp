@@ -10,6 +10,8 @@ const char *output_bin   = "../tests/mnist/output.bin";
 
 int main() {
 
+    downloadWeightsifDoNotExist(input_bin, "../tests/mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
+
     // Network layout
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);
     tk::dnn::Network net(dim);
@@ -58,7 +60,7 @@ int main() {
     //printDeviceVector(10, out_data);
 
     std::cout<<"\n======= CHECK RESULT =======\n";
-    checkResult(dim.tot(), out_data, out_data2);
+    int ret_tensorrt = checkResult(dim.tot(), out_data, out_data2) == 0 ? 0 : ERROR_TENSORRT;
 
  /*
     // Print real test
@@ -68,5 +70,5 @@ int main() {
     readBinaryFile(output_bin, dim.tot(), &out_h, &out);
     printDeviceVector(dim.tot(), out);
 */ 
-    return 0;
+    return ret_tensorrt;
 }

@@ -517,8 +517,8 @@ int main()
     ret_cudnn |= checkResult(odim2, cudnn_out2, out2) == 0 ? 0 : ERROR_CUDNN;
 
     std::cout << "TRT   vs correct" << std::endl;
-    ret_tensorrt |= checkResult(odim1, rt_out1, out1) == 0 ? 0 : ERROR_TKDNN;
-    ret_tensorrt |= checkResult(odim2, rt_out2, out2) == 0 ? 0 : ERROR_TKDNN;
+    ret_tensorrt |= checkResult(odim1, rt_out1, out1) == 0 ? 0 : ERROR_TENSORRT;
+    ret_tensorrt |= checkResult(odim2, rt_out2, out2) == 0 ? 0 : ERROR_TENSORRT;
 
     std::cout << "CUDNN vs TRT    " << std::endl;
     ret_cudnn_tensorrt |= checkResult(odim1, cudnn_out1, rt_out1) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
