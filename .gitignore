@@ -11,3 +11,4 @@ build/
 .idea/
 *.hdf5
 *.pk
+*.table
