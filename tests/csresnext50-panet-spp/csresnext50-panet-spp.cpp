@@ -125,7 +125,7 @@ int main()
 
     tk::dnn::Conv2d c0(&net, 64, 7, 7, 2, 2, 3, 3, c0_bin, true);
     tk::dnn::Activation a0(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Pooling p1(&net, 2, 2, 2, 2, 0,0,  tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling p1(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
 
     tk::dnn::Conv2d c2(&net, 128, 1, 1, 1, 1, 0, 0, c2_bin, true);
     tk::dnn::Activation a2(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -342,11 +342,11 @@ int main()
     tk::dnn::Activation a83(&net, tk::dnn::ACTIVATION_LEAKY);
 
     //SPP
-    tk::dnn::Pooling p84(&net, 5, 5, 1, 1,0,0, tk::dnn::POOLING_MAX_FIXEDSIZE);
+    tk::dnn::Pooling p84(&net, 5, 5, 1, 1, 0, 0, tk::dnn::POOLING_MAX_FIXEDSIZE);
     tk::dnn::Layer *r85_layers[1] = {&a83};
     tk::dnn::Route r85(&net, r85_layers, 1);
 
-    tk::dnn::Pooling p86(&net, 9, 9, 1, 1,0,0, tk::dnn::POOLING_MAX_FIXEDSIZE);
+    tk::dnn::Pooling p86(&net, 9, 9, 1, 1, 0, 0, tk::dnn::POOLING_MAX_FIXEDSIZE);
     tk::dnn::Layer *r87_layers[1] = {&a83};
     tk::dnn::Route r87(&net, r87_layers, 1);
 

@@ -427,8 +427,8 @@ public:
 
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
-            int paddingH = 0, int paddingW = 0,
-            tkdnnPoolingMode_t pool_mode = POOLING_MAX);
+            int paddingH, int paddingW,
+            tkdnnPoolingMode_t pool_mode);
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
