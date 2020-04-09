@@ -7,8 +7,8 @@ namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   int paddingH, int paddingW,
-                  tkdnnPoolingMode_t pool_mode, bool final) : 
-    Layer(net, final) {
+                  tkdnnPoolingMode_t pool_mode) : 
+    Layer(net) {
 
     this->winH = winH;
     this->winW = winW;

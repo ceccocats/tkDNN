@@ -8,7 +8,7 @@ namespace tk { namespace dnn {
 
 LayerWgs::LayerWgs(Network *net, int inputs, int outputs, 
                    int kh, int kw, int kl, 
-                   std::string fname_weights, bool batchnorm, bool additional_bias, bool final, bool deConv, int groups) : Layer(net, final) {
+                   std::string fname_weights, bool batchnorm, bool additional_bias, bool deConv, int groups) : Layer(net) {
     inputs = inputs/groups;
         
     this->inputs  = inputs;

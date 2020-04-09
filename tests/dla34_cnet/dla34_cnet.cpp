@@ -448,24 +448,27 @@ int main()
     // hm
     tk::dnn::Conv2d     *hm_conv1 = new tk::dnn::Conv2d(&net, 256, 3, 3, 1, 1, 1, 1, hm_conv1_bin, false);
     tk::dnn::Activation *hm_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *hm = new tk::dnn::Conv2d(&net, 80, 1, 1, 1, 1, 0, 0, hm_conv2_bin, false, false, true);
+    tk::dnn::Conv2d     *hm = new tk::dnn::Conv2d(&net, 80, 1, 1, 1, 1, 0, 0, hm_conv2_bin, false);
+    hm->setFinal();
     int kernel = 3; 
     int pad = (kernel - 1)/2;
     tk::dnn::Activation *hm_sig      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_SIGMOID);
-    tk::dnn::Pooling  *hmax                 = new tk::dnn::Pooling(&net, kernel, kernel, 1, 1, pad, pad, tk::dnn::POOLING_MAX, true);
+    tk::dnn::Pooling  *hmax                 = new tk::dnn::Pooling(&net, kernel, kernel, 1, 1, pad, pad, tk::dnn::POOLING_MAX);
+    hmax->setFinal();
 
     // // wh
     tk::dnn::Route    *route_1_0             = new tk::dnn::Route(&net, route_1_0_layers, 1);
     tk::dnn::Conv2d     *wh_conv1 = new tk::dnn::Conv2d(&net, 256, 3, 3, 1, 1, 1, 1, wh_conv1_bin, false);
     tk::dnn::Activation *wh_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *wh = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, wh_conv2_bin, false, false, true);        
+    tk::dnn::Conv2d     *wh = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, wh_conv2_bin, false);        
+    wh->setFinal();
     
     // // reg
     tk::dnn::Route    *route_2_0             = new tk::dnn::Route(&net, route_1_0_layers, 1);
     tk::dnn::Conv2d     *reg_conv1 = new tk::dnn::Conv2d(&net, 256, 3, 3, 1, 1, 1, 1, reg_conv1_bin, false);
     tk::dnn::Activation *reg_relu1      = new tk::dnn::Activation(&net, CUDNN_ACTIVATION_RELU);
-    tk::dnn::Conv2d     *reg = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, reg_conv2_bin, false, false, true);
-
+    tk::dnn::Conv2d     *reg = new tk::dnn::Conv2d(&net, 2, 1, 1, 1, 1, 0, 0, reg_conv2_bin, false);
+    reg->setFinal();
 
     // Load input
     dnnType *data;
