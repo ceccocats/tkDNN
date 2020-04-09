@@ -25,6 +25,8 @@ class Logger : public ILogger
 
 int main() {
 
+	downloadWeightsifDoNotExist(input_bin, "../tests/mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
+
     std::cout<<"\n==== CUDNN ====\n";
     // Network layout
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);

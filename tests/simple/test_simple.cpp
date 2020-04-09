@@ -65,7 +65,7 @@ int main() {
     // std::cout<<"CUDNN vs correct"; 
     // int ret_cudnn = checkResult(out_dim, out_data, out) == 0 ? 0: ERROR_CUDNN;
     // std::cout<<"TRT   vs correct"; 
-    // int ret_tensorrt = checkResult(out_dim, out_data2, out) == 0 ? 0 : ERROR_TKDNN;
+    // int ret_tensorrt = checkResult(out_dim, out_data2, out) == 0 ? 0 : ERROR_TENSORRT;
     std::cout<<"CUDNN vs TRT    "; 
     int ret_cudnn_tensorrt = checkResult(out_dim, out_data, out_data2) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 

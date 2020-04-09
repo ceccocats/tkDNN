@@ -32,13 +32,13 @@ function print_output {
 out_file=results.log
 rm $out_file
 
-modes=( 1 ) # only FP32
-# modes=( 1 2 ) # FP32 and FP16
+# modes=( 1 ) # only FP32
+modes=( 1 2 ) # FP32 and FP16
 # modes=( 1 2 3 ) # FP32, FP16 and INT8
 
 for i in "${modes[@]}"
 do
-    rm *rt
+    # rm *rt
     if [ $i -eq 1 ]
     then
         export TKDNN_MODE=FP32

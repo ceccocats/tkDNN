@@ -95,7 +95,7 @@
 
 typedef enum {
   ERROR_CUDNN = 2,
-  ERROR_TKDNN = 4,
+  ERROR_TENSORRT = 4,
   ERROR_CUDNNvsTENSORRT = 8    
 } resultError_t;
 

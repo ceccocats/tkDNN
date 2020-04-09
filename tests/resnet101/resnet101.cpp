@@ -330,7 +330,7 @@ int main()
     std::cout<<"CUDNN vs correct"; 
     int ret_cudnn = checkResult(odim, cudnn_out, out) == 0 ? 0: ERROR_CUDNN;
     std::cout<<"TRT   vs correct"; 
-    int ret_tensorrt = checkResult(odim, rt_out, out) == 0 ? 0 : ERROR_TKDNN;
+    int ret_tensorrt = checkResult(odim, rt_out, out) == 0 ? 0 : ERROR_TENSORRT;
     std::cout<<"CUDNN vs TRT    "; 
     int ret_cudnn_tensorrt = checkResult(odim, cudnn_out, rt_out) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
