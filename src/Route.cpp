@@ -5,7 +5,7 @@
 
 namespace tk { namespace dnn {
 
-Route::Route(Network *net, Layer **layers, int layers_n, bool final) : Layer(net, final) {
+Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
 
     // copy input layers
     if(layers_n > MAX_LAYERS) {

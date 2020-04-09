@@ -139,7 +139,7 @@ int main()
     // //1-1
     tk::dnn::Conv2d c5(&net, 128, 1, 1, 1, 1, 0, 0, c5_bin, true);
     tk::dnn::Activation a5(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c6(&net, 128, 3, 3, 1, 1, 1, 1, c6_bin, true, false, false, 32, false);
+    tk::dnn::Conv2d c6(&net, 128, 3, 3, 1, 1, 1, 1, c6_bin, true, false, 32, false);
     tk::dnn::Activation a6(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c7(&net, 128, 1, 1, 1, 1, 0, 0, c7_bin, true);
 
@@ -149,7 +149,7 @@ int main()
     //1-2
     tk::dnn::Conv2d c9(&net, 128, 1, 1, 1, 1, 0, 0, c9_bin, true);
     tk::dnn::Activation a9(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c10(&net, 128, 3, 3, 1, 1, 1, 1, c10_bin, true, false, false, 32);
+    tk::dnn::Conv2d c10(&net, 128, 3, 3, 1, 1, 1, 1, c10_bin, true, false, 32);
     tk::dnn::Activation a10(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c11(&net, 128, 1, 1, 1, 1, 0, 0, c11_bin, true);
 
@@ -159,7 +159,7 @@ int main()
     //1-3
     tk::dnn::Conv2d c13(&net, 128, 1, 1, 1, 1, 0, 0, c13_bin, true);
     tk::dnn::Activation a13(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c14(&net, 128, 3, 3, 1, 1, 1, 1, c14_bin, true, false, false, 32);
+    tk::dnn::Conv2d c14(&net, 128, 3, 3, 1, 1, 1, 1, c14_bin, true, false, 32);
     tk::dnn::Activation a14(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c15(&net, 128, 1, 1, 1, 1, 0, 0, c15_bin, true);
 
@@ -175,7 +175,7 @@ int main()
 
     tk::dnn::Conv2d c19(&net, 256, 1, 1, 1, 1, 0, 0, c19_bin, true);
     tk::dnn::Activation a19(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c20(&net, 256, 3, 3, 2, 2, 1, 1, c20_bin, true, false, false, 32);
+    tk::dnn::Conv2d c20(&net, 256, 3, 3, 2, 2, 1, 1, c20_bin, true, false, 32);
     tk::dnn::Activation a20(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c21(&net, 256, 1, 1, 1, 1, 0, 0, c21_bin, true);
 
@@ -187,7 +187,7 @@ int main()
     //2-1
     tk::dnn::Conv2d c24(&net, 256, 1, 1, 1, 1, 0, 0, c24_bin, true);
     tk::dnn::Activation a24(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c25(&net, 256, 3, 3, 1, 1, 1, 1, c25_bin, true, false, false, 32);
+    tk::dnn::Conv2d c25(&net, 256, 3, 3, 1, 1, 1, 1, c25_bin, true, false, 32);
     tk::dnn::Activation a25(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c26(&net, 256, 1, 1, 1, 1, 0, 0, c26_bin, true);
 
@@ -197,7 +197,7 @@ int main()
     //2-2
     tk::dnn::Conv2d c28(&net, 256, 1, 1, 1, 1, 0, 0, c28_bin, true);
     tk::dnn::Activation a28(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c29(&net, 256, 3, 3, 1, 1, 1, 1, c29_bin, true, false, false, 32);
+    tk::dnn::Conv2d c29(&net, 256, 3, 3, 1, 1, 1, 1, c29_bin, true, false, 32);
     tk::dnn::Activation a29(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c30(&net, 256, 1, 1, 1, 1, 0, 0, c30_bin, true);
 
@@ -207,7 +207,7 @@ int main()
     //2-3
     tk::dnn::Conv2d c32(&net, 256, 1, 1, 1, 1, 0, 0, c32_bin, true);
     tk::dnn::Activation a32(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c33(&net, 256, 3, 3, 1, 1, 1, 1, c33_bin, true, false, false, 32);
+    tk::dnn::Conv2d c33(&net, 256, 3, 3, 1, 1, 1, 1, c33_bin, true, false, 32);
     tk::dnn::Activation a33(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c34(&net, 256, 1, 1, 1, 1, 0, 0, c34_bin, true);
 
@@ -223,7 +223,7 @@ int main()
 
     tk::dnn::Conv2d c38(&net, 512, 1, 1, 1, 1, 0, 0, c38_bin, true);
     tk::dnn::Activation a38(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c39(&net, 512, 3, 3, 2, 2, 1, 1, c39_bin, true, false, false, 32);
+    tk::dnn::Conv2d c39(&net, 512, 3, 3, 2, 2, 1, 1, c39_bin, true, false, 32);
     tk::dnn::Activation a39(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c40(&net, 512, 1, 1, 1, 1, 0, 0, c40_bin, true);
 
@@ -235,7 +235,7 @@ int main()
     //3-1
     tk::dnn::Conv2d c43(&net, 512, 1, 1, 1, 1, 0, 0, c43_bin, true);
     tk::dnn::Activation a43(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c44(&net, 512, 3, 3, 1, 1, 1, 1, c44_bin, true, false, false, 32);
+    tk::dnn::Conv2d c44(&net, 512, 3, 3, 1, 1, 1, 1, c44_bin, true, false, 32);
     tk::dnn::Activation a44(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c45(&net, 512, 1, 1, 1, 1, 0, 0, c45_bin, true);
 
@@ -245,7 +245,7 @@ int main()
     //3-2
     tk::dnn::Conv2d c47(&net, 512, 1, 1, 1, 1, 0, 0, c47_bin, true);
     tk::dnn::Activation a47(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c48(&net, 512, 3, 3, 1, 1, 1, 1, c48_bin, true, false, false, 32);
+    tk::dnn::Conv2d c48(&net, 512, 3, 3, 1, 1, 1, 1, c48_bin, true, false, 32);
     tk::dnn::Activation a48(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c49(&net, 512, 1, 1, 1, 1, 0, 0, c49_bin, true);
 
@@ -255,7 +255,7 @@ int main()
     //3-3
     tk::dnn::Conv2d c51(&net, 512, 1, 1, 1, 1, 0, 0, c51_bin, true);
     tk::dnn::Activation a51(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c52(&net, 512, 3, 3, 1, 1, 1, 1, c52_bin, true, false, false, 32);
+    tk::dnn::Conv2d c52(&net, 512, 3, 3, 1, 1, 1, 1, c52_bin, true, false, 32);
     tk::dnn::Activation a52(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c53(&net, 512, 1, 1, 1, 1, 0, 0, c53_bin, true);
 
@@ -265,7 +265,7 @@ int main()
     //3-4
     tk::dnn::Conv2d c55(&net, 512, 1, 1, 1, 1, 0, 0, c55_bin, true);
     tk::dnn::Activation a55(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c56(&net, 512, 3, 3, 1, 1, 1, 1, c56_bin, true, false, false, 32);
+    tk::dnn::Conv2d c56(&net, 512, 3, 3, 1, 1, 1, 1, c56_bin, true, false, 32);
     tk::dnn::Activation a56(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c57(&net, 512, 1, 1, 1, 1, 0, 0, c57_bin, true);
 
@@ -275,7 +275,7 @@ int main()
     //3-5
     tk::dnn::Conv2d c59(&net, 512, 1, 1, 1, 1, 0, 0, c59_bin, true);
     tk::dnn::Activation a59(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c60(&net, 512, 3, 3, 1, 1, 1, 1, c60_bin, true, false, false, 32);
+    tk::dnn::Conv2d c60(&net, 512, 3, 3, 1, 1, 1, 1, c60_bin, true, false, 32);
     tk::dnn::Activation a60(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c61(&net, 512, 1, 1, 1, 1, 0, 0, c61_bin, true);
 
@@ -291,7 +291,7 @@ int main()
 
     tk::dnn::Conv2d c65(&net, 1024, 1, 1, 1, 1, 0, 0, c65_bin, true);
     tk::dnn::Activation a65(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c66(&net, 1024, 3, 3, 2, 2, 1, 1, c66_bin, true, false, false, 32);
+    tk::dnn::Conv2d c66(&net, 1024, 3, 3, 2, 2, 1, 1, c66_bin, true, false, 32);
     tk::dnn::Activation a66(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c67(&net, 1024, 1, 1, 1, 1, 0, 0, c67_bin, true);
     tk::dnn::Activation a67(&net, tk::dnn::ACTIVATION_LEAKY);
@@ -305,7 +305,7 @@ int main()
     //4-1
     tk::dnn::Conv2d c70(&net, 1024, 1, 1, 1, 1, 0, 0, c70_bin, true);
     tk::dnn::Activation a70(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c71(&net, 1024, 3, 3, 1, 1, 1, 1, c71_bin, true, false, false, 32);
+    tk::dnn::Conv2d c71(&net, 1024, 3, 3, 1, 1, 1, 1, c71_bin, true, false, 32);
     tk::dnn::Activation a71(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c72(&net, 1024, 1, 1, 1, 1, 0, 0, c72_bin, true);
 
@@ -315,7 +315,7 @@ int main()
     //4-2
     tk::dnn::Conv2d c74(&net, 1024, 1, 1, 1, 1, 0, 0, c74_bin, true);
     tk::dnn::Activation a74(&net, tk::dnn::ACTIVATION_LEAKY);
-    tk::dnn::Conv2d c75(&net, 1024, 3, 3, 1, 1, 1, 1, c75_bin, true, false, false, 32);
+    tk::dnn::Conv2d c75(&net, 1024, 3, 3, 1, 1, 1, 1, c75_bin, true, false, 32);
     tk::dnn::Activation a75(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Conv2d c76(&net, 1024, 1, 1, 1, 1, 0, 0, c76_bin, true);
 

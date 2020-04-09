@@ -39,7 +39,7 @@ enum layerType_t {
 class Layer {
 
 public:
-    Layer(Network *net, bool final = false);
+    Layer(Network *net);
     virtual ~Layer();
     virtual layerType_t getLayerType() = 0;
 
@@ -47,7 +47,7 @@ public:
         std::cout<<"No infer action for this layer\n";
         return NULL;
     }
-
+    void setFinal() { this->final = true; }
     dataDim_t input_dim, output_dim;
     dnnType *dstData;  //where results will be putted
 
@@ -95,7 +95,7 @@ class LayerWgs : public Layer {
 
 public:
     LayerWgs(Network *net, int inputs, int outputs, int kh, int kw, int kt,
-             std::string fname_weights, bool batchnorm = false, bool additional_bias = false, bool final = false, bool deConv = false, int groups = 1); 
+             std::string fname_weights, bool batchnorm = false, bool additional_bias = false, bool deConv = false, int groups = 1); 
     virtual ~LayerWgs();
 
     int inputs, outputs;
@@ -214,7 +214,7 @@ class Conv2d : public LayerWgs {
 public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
-                std::string fname_weights, bool batchnorm = false, bool deConv = false, bool final = false, int groups = 1, bool additional_bias=false);
+                std::string fname_weights, bool batchnorm = false, bool deConv = false, int groups = 1, bool additional_bias=false);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -312,7 +312,7 @@ public:
     DeConv2d( Network *net, int out_ch, int kernelH, int kernelW,
             int strideH, int strideW, int paddingH, int paddingW,
             std::string fname_weights, bool batchnorm = false, int groups = 1) :
-            Conv2d(net, out_ch, kernelH, kernelW, strideH, strideW, paddingH, paddingW, fname_weights, batchnorm, true, false, groups) {}
+            Conv2d(net, out_ch, kernelH, kernelW, strideH, strideW, paddingH, paddingW, fname_weights, batchnorm, true, groups) {}
     virtual ~DeConv2d() {}
     virtual layerType_t getLayerType() { return LAYER_DECONV2D; };
 
@@ -373,7 +373,7 @@ public:
 class Reshape : public Layer {
 
 public:
-    Reshape(Network *net, dataDim_t new_dim, bool final=false); 
+    Reshape(Network *net, dataDim_t new_dim); 
     virtual ~Reshape();
     virtual layerType_t getLayerType() { return LAYER_RESHAPE; };
 
@@ -428,7 +428,7 @@ public:
     Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
             int paddingH = 0, int paddingW = 0,
-            tkdnnPoolingMode_t pool_mode = POOLING_MAX, bool final = false); 
+            tkdnnPoolingMode_t pool_mode = POOLING_MAX);
     virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
@@ -447,7 +447,7 @@ protected:
 class Softmax : public Layer {
 
 public:
-    Softmax(Network *net, const tk::dnn::dataDim_t* dim=nullptr, bool final=false, const cudnnSoftmaxMode_t mode=CUDNN_SOFTMAX_MODE_CHANNEL); 
+    Softmax(Network *net, const tk::dnn::dataDim_t* dim=nullptr, const cudnnSoftmaxMode_t mode=CUDNN_SOFTMAX_MODE_CHANNEL); 
     virtual ~Softmax();
     virtual layerType_t getLayerType() { return LAYER_SOFTMAX; };
 
@@ -463,7 +463,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n, bool final=false); 
+    Route(Network *net, Layer **layers, int layers_n); 
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
