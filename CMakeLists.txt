@@ -163,16 +163,16 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
 
 
 #-------------------------------------------------------------------------------
-# Prepare for test
+# Prepare for test (not needed anymore)
 #-------------------------------------------------------------------------------
-set(TEST_DATA true CACHE BOOL "If true download deps")
-if( ${TEST_DATA} )
-	message("Launching pre-build dependency installer script...")
-
-    execute_process (COMMAND bash -c "bash build_models.sh download"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-
-	set(TEST_DATA false CACHE BOOL "If true download deps" FORCE)
-	message("Finished dowloading test weights")
-endif()
+#set(TEST_DATA true CACHE BOOL "If true download deps")
+#if( ${TEST_DATA} )
+#	message("Launching pre-build dependency installer script...")
+#
+#    execute_process (COMMAND bash -c "bash build_models.sh download"
+#        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+#
+#	set(TEST_DATA false CACHE BOOL "If true download deps" FORCE)
+#	message("Finished dowloading test weights")
+#endif()
 
