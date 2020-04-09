@@ -5,14 +5,26 @@ cd build
 RED='\033[1;31m'
 GREEN='\033[1;32m'
 ORANGE='\033[1;33m'
+PINK='\033[1;95m'
 NC='\033[0m' # No Color
 
 function print_output {
-    if [ $1 -eq 0 ]
-    then
+    if [ $1 -eq 0 ]; then
         echo -e "$2 ${GREEN}OK${NC}"
+    elif [ $1 -eq 1 ]; then
+        echo -e "$2 ${RED}FATAL ERROR${NC}"
+    elif [ $1 -eq 2 ] || [ $1 -eq 10 ]; then
+        echo -e "$2 ${PINK}CUDNN ERROR${NC}"
+    elif [ $1 -eq 4 ] || [ $1 -eq 12 ]; then
+        echo -e "$2 ${PINK}TENSORRT ERROR${NC}"
+    elif [ $1 -eq 8 ]; then
+        echo -e "$2 ${PINK}CUDNN vs TENSORRT ERROR${NC}"
+    elif [ $1 -eq 6 ]; then
+        echo -e "$2 ${PINK}CUDNN & TENSORTRT ERROR${NC}"
+    elif [ $1 -eq 14 ]; then
+        echo -e "$2 ${PINK}ERROR FOR EVERY CHECK${NC}"
     else
-        echo -e "$2 ${RED}NOT OKAY${NC}"
+        echo -e "$2 ${RED}NOT OKAY (OPENCV maybe)${NC}"
     fi 
 
 } 

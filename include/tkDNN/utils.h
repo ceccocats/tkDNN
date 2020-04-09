@@ -93,6 +93,12 @@
     }                                                                  \
 }
 
+typedef enum {
+  ERROR_CUDNN = 2,
+  ERROR_TKDNN = 4,
+  ERROR_CUDNNvsTENSORRT = 8    
+} resultError_t;
+
 void printCenteredTitle(const char *title, char fill, int dim = 30);
 bool fileExist(const char *fname);
 void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url);

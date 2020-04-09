@@ -51,6 +51,7 @@ int main() {
     
     std::ofstream path("path.txt");
 
+    int ret_cudnn = 0; 
     for(int i=0; i<N; i++) {
         std::cout<<"i: "<<i<<"\n";
         //TIMER_START
@@ -65,9 +66,9 @@ int main() {
         // Print real test
         printCenteredTitle( (std::string(" CHECK RESULT ") + std::to_string(i) + " ").c_str() , '=');
         ImuNet.odim0.print();
-        checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d);
+        ret_cudnn |= checkResult(ImuNet.odim0.tot(), out0, ImuNet.o0_d) == 0 ? 0 : ERROR_CUDNN;
         ImuNet.odim1.print();
-        checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d);
+        ret_cudnn |= checkResult(ImuNet.odim0.tot(), out1, ImuNet.o1_d) == 0 ? 0 : ERROR_CUDNN;
 
         i0_h += ImuNet.dim0.tot();
         i1_h += ImuNet.dim1.tot();
@@ -77,5 +78,5 @@ int main() {
     }
 
     system("cat path.txt | gnuplot -p -e \"set datafile separator ' '; plot '-'\"");
-    return 0;
+    return ret_cudnn;
 }
