@@ -3,15 +3,23 @@ tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives,
 The main goal of this project is to exploit NVIDIA boards as much as possible to obtain the best inference performance. It does not allow training. 
 
 ## Index
-* [Dependencies](#dependencies)
-* [About OpenCV](#about-opencv)
-* [How to compile this repo](#how-to-compile-this-repo)
-* [Workflow](#workflow)
-* [How to export weights](#how-to-export-weights)
-* [Run the demo](#run-the-demo)
-* [mAP demo](#map-demo)
-* [Existing tests and supported networks](#existing-tests-and-supported-networks)
-* [References](#references)
+- [tkDNN](#tkdnn)
+  - [Index](#index)
+  - [Dependencies](#dependencies)
+  - [About OpenCV](#about-opencv)
+  - [How to compile this repo](#how-to-compile-this-repo)
+  - [Workflow](#workflow)
+  - [How to export weights](#how-to-export-weights)
+    - [1)Export weights from darknet](#1export-weights-from-darknet)
+    - [2)Export weights for DLA34 and ResNet101](#2export-weights-for-dla34-and-resnet101)
+    - [3)Export weights for CenterNet](#3export-weights-for-centernet)
+    - [4)Export weights for MobileNetSSD](#4export-weights-for-mobilenetssd)
+  - [Run the demo](#run-the-demo)
+    - [FP16 inference](#fp16-inference)
+    - [INT8 inference](#int8-inference)
+  - [mAP demo](#map-demo)
+  - [Existing tests and supported networks](#existing-tests-and-supported-networks)
+  - [References](#references)
 
 
 
@@ -32,17 +40,15 @@ bash scripts/install_OpenCV4.sh
 When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
 ## How to compile this repo
-Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (1.15 or above). 
+Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above). 
 ```
 git clone https://github.com/ceccocats/tkDNN
 cd tkDNN
-git checkout cnet
 mkdir build
 cd build
-cmake .. # use -DTEST_DATA=False to skip dataset download
+cmake .. 
 make
 ```
-If TEST_DATA is not set to False, weights needed to run some tests will be automatically downloaded.
 
 ## Workflow
 Steps needed to do inference on tkDNN with a custom neural network. 
