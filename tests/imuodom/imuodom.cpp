@@ -77,6 +77,6 @@ int main() {
         out1 += ImuNet.odim1.tot();
     }
 
-    system("cat path.txt | gnuplot -p -e \"set datafile separator ' '; plot '-'\"");
+    int err = system("cat path.txt | gnuplot -p -e \"set datafile separator ' '; plot '-'\"");
     return ret_cudnn;
 }

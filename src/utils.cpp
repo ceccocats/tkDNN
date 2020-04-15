@@ -25,9 +25,10 @@ void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string
         std::string wget_cmd = "wget " + weights_url + " -O " + test_folder + "/weights.zip"; 
         std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
         std::string rm_cmd = "rm " + test_folder + "/weights.zip";
-        system(wget_cmd.c_str());
-        system(unzip_cmd.c_str());
-        system(rm_cmd.c_str());
+        int err = 0;
+        err = system(wget_cmd.c_str());
+        err = system(unzip_cmd.c_str());
+        err = system(rm_cmd.c_str());
     }
 }
 
