@@ -1,16 +1,16 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin   = "../tests/mnist/input.bin";
-const char *c0_bin      = "../tests/mnist/layers/c0.bin";
-const char *c1_bin      = "../tests/mnist/layers/c1.bin";
-const char *d2_bin      = "../tests/mnist/layers/d2.bin";
-const char *d3_bin      = "../tests/mnist/layers/d3.bin";
-const char *output_bin   = "../tests/mnist/output.bin";
+const char *input_bin   = "mnist/input.bin";
+const char *c0_bin      = "mnist/layers/c0.bin";
+const char *c1_bin      = "mnist/layers/c1.bin";
+const char *d2_bin      = "mnist/layers/d2.bin";
+const char *d3_bin      = "mnist/layers/d3.bin";
+const char *output_bin   = "mnist/output.bin";
 
 int main() {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
+    downloadWeightsifDoNotExist(input_bin, "mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);

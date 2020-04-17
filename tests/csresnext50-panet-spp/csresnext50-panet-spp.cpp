@@ -10,7 +10,7 @@ int main()
     tk::dnn::Network net(dim);
 
     // create csresnext50-panet-spp model
-    std::string bin_path = "../tests/csresnext50-panet-spp";
+    std::string bin_path = "csresnext50-panet-spp";
     int classes = 80;
     tk::dnn::Yolo *yolo[3];
 

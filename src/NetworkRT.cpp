@@ -90,8 +90,8 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
              * Each network is located in a folder with the same name as the network.
              * If the folder has a different name, the calibration table is saved in build/ folder.
              */
-            std::string calib_table_name = "../tests/"+ net->networkName + "/" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
-            std::string calib_table_path = "../tests/"+ net->networkName;
+            std::string calib_table_name = net->networkName + "/" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
+            std::string calib_table_path = net->networkName;
             if(!fileExist((const char *)calib_table_path.c_str()))
                 calib_table_name = "./" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
 
