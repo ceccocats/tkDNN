@@ -9,8 +9,8 @@ int main() {
     tk::dnn::Network net(dim);
 
     // create yolo3 model
-    std::string bin_path  = "../tests/yolo3_512";
-    downloadWeightsifDoNotExist("../tests/yolo3_512/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/e7HfScx77JEHeYb/download");
+    std::string bin_path  = "yolo3_512";
+    downloadWeightsifDoNotExist("yolo3_512/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/e7HfScx77JEHeYb/download");
     int classes = 80;
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
