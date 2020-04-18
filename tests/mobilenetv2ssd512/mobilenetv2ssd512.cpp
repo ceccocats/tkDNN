@@ -2,139 +2,139 @@
 #include "tkdnn.h"
 
 
-const char *output_bin1 = "../tests/mobilenetv2ssd512/debug/classification_headers-5.bin";
-const char *output_bin2 = "../tests/mobilenetv2ssd512/debug/regression_headers-5.bin";
-const char *input_bin = "../tests/mobilenetv2ssd512/debug/input.bin";
+const char *output_bin1 = "mobilenetv2ssd512/debug/classification_headers-5.bin";
+const char *output_bin2 = "mobilenetv2ssd512/debug/regression_headers-5.bin";
+const char *input_bin = "mobilenetv2ssd512/debug/input.bin";
 
-const char *conv0_bin = "../tests/mobilenetv2ssd512/layers/base_net-0-0.bin";
+const char *conv0_bin = "mobilenetv2ssd512/layers/base_net-0-0.bin";
 const char *inverted_residual1[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-1-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-1-conv-3.bin"};
+    "mobilenetv2ssd512/layers/base_net-1-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-1-conv-3.bin"};
 const char *inverted_residual2[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-2-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-2-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-2-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-2-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-2-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-2-conv-6.bin"};
 const char *inverted_residual3[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-3-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-3-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-3-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-3-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-3-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-3-conv-6.bin"};
 const char *inverted_residual4[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-4-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-4-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-4-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-4-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-4-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-4-conv-6.bin"};
 const char *inverted_residual5[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-5-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-5-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-5-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-5-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-5-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-5-conv-6.bin"};
 const char *inverted_residual6[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-6-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-6-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-6-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-6-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-6-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-6-conv-6.bin"};
 const char *inverted_residual7[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-7-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-7-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-7-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-7-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-7-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-7-conv-6.bin"};
 const char *inverted_residual8[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-8-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-8-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-8-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-8-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-8-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-8-conv-6.bin"};
 const char *inverted_residual9[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-9-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-9-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-9-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-9-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-9-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-9-conv-6.bin"};
 const char *inverted_residual10[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-10-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-10-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-10-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-10-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-10-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-10-conv-6.bin"};
 const char *inverted_residual11[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-11-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-11-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-11-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-11-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-11-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-11-conv-6.bin"};
 const char *inverted_residual12[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-12-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-12-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-12-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-12-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-12-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-12-conv-6.bin"};
 const char *inverted_residual13[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-13-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-13-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-13-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-13-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-13-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-13-conv-6.bin"};
 const char *inverted_residual14[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-14-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-14-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-14-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-14-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-14-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-14-conv-6.bin"};
 const char *inverted_residual15[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-15-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-15-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-15-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-15-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-15-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-15-conv-6.bin"};
 const char *inverted_residual16[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-16-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-16-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-16-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-16-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-16-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-16-conv-6.bin"};
 const char *inverted_residual17[] = {
-    "../tests/mobilenetv2ssd512/layers/base_net-17-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-17-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/base_net-17-conv-6.bin"};
+    "mobilenetv2ssd512/layers/base_net-17-conv-0.bin",
+    "mobilenetv2ssd512/layers/base_net-17-conv-3.bin",
+    "mobilenetv2ssd512/layers/base_net-17-conv-6.bin"};
 
-const char *conv18 = "../tests/mobilenetv2ssd512/layers/base_net-18-0.bin";
+const char *conv18 = "mobilenetv2ssd512/layers/base_net-18-0.bin";
 
 const char *extras0[] = {
-    "../tests/mobilenetv2ssd512/layers/extras-0-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-0-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-0-conv-6.bin"};
+    "mobilenetv2ssd512/layers/extras-0-conv-0.bin",
+    "mobilenetv2ssd512/layers/extras-0-conv-3.bin",
+    "mobilenetv2ssd512/layers/extras-0-conv-6.bin"};
 const char *extras1[] = {
-    "../tests/mobilenetv2ssd512/layers/extras-1-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-1-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-1-conv-6.bin"};
+    "mobilenetv2ssd512/layers/extras-1-conv-0.bin",
+    "mobilenetv2ssd512/layers/extras-1-conv-3.bin",
+    "mobilenetv2ssd512/layers/extras-1-conv-6.bin"};
 const char *extras2[] = {
-    "../tests/mobilenetv2ssd512/layers/extras-2-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-2-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-2-conv-6.bin"};
+    "mobilenetv2ssd512/layers/extras-2-conv-0.bin",
+    "mobilenetv2ssd512/layers/extras-2-conv-3.bin",
+    "mobilenetv2ssd512/layers/extras-2-conv-6.bin"};
 const char *extras3[] = {
-    "../tests/mobilenetv2ssd512/layers/extras-3-conv-0.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-3-conv-3.bin",
-    "../tests/mobilenetv2ssd512/layers/extras-3-conv-6.bin"};
+    "mobilenetv2ssd512/layers/extras-3-conv-0.bin",
+    "mobilenetv2ssd512/layers/extras-3-conv-3.bin",
+    "mobilenetv2ssd512/layers/extras-3-conv-6.bin"};
 
 const char *classification_header0[] = {
-    "../tests/mobilenetv2ssd512/layers/classification_headers-0-0.bin",
-    "../tests/mobilenetv2ssd512/layers/classification_headers-0-3.bin"};
+    "mobilenetv2ssd512/layers/classification_headers-0-0.bin",
+    "mobilenetv2ssd512/layers/classification_headers-0-3.bin"};
 const char *classification_header1[] = {
-    "../tests/mobilenetv2ssd512/layers/classification_headers-1-0.bin",
-    "../tests/mobilenetv2ssd512/layers/classification_headers-1-3.bin"};
+    "mobilenetv2ssd512/layers/classification_headers-1-0.bin",
+    "mobilenetv2ssd512/layers/classification_headers-1-3.bin"};
 const char *classification_header2[] = {
-    "../tests/mobilenetv2ssd512/layers/classification_headers-2-0.bin",
-    "../tests/mobilenetv2ssd512/layers/classification_headers-2-3.bin"};
+    "mobilenetv2ssd512/layers/classification_headers-2-0.bin",
+    "mobilenetv2ssd512/layers/classification_headers-2-3.bin"};
 const char *classification_header3[] = {
-    "../tests/mobilenetv2ssd512/layers/classification_headers-3-0.bin",
-    "../tests/mobilenetv2ssd512/layers/classification_headers-3-3.bin"};
+    "mobilenetv2ssd512/layers/classification_headers-3-0.bin",
+    "mobilenetv2ssd512/layers/classification_headers-3-3.bin"};
 const char *classification_header4[] = {
-    "../tests/mobilenetv2ssd512/layers/classification_headers-4-0.bin",
-    "../tests/mobilenetv2ssd512/layers/classification_headers-4-3.bin"};
+    "mobilenetv2ssd512/layers/classification_headers-4-0.bin",
+    "mobilenetv2ssd512/layers/classification_headers-4-3.bin"};
 
-const char *classification_header5 = "../tests/mobilenetv2ssd512/layers/classification_headers-5.bin";
+const char *classification_header5 = "mobilenetv2ssd512/layers/classification_headers-5.bin";
 
 const char *regression_header0[] = {
-    "../tests/mobilenetv2ssd512/layers/regression_headers-0-0.bin",
-    "../tests/mobilenetv2ssd512/layers/regression_headers-0-3.bin"};
+    "mobilenetv2ssd512/layers/regression_headers-0-0.bin",
+    "mobilenetv2ssd512/layers/regression_headers-0-3.bin"};
 const char *regression_header1[] = {
-    "../tests/mobilenetv2ssd512/layers/regression_headers-1-0.bin",
-    "../tests/mobilenetv2ssd512/layers/regression_headers-1-3.bin"};
+    "mobilenetv2ssd512/layers/regression_headers-1-0.bin",
+    "mobilenetv2ssd512/layers/regression_headers-1-3.bin"};
 const char *regression_header2[] = {
-    "../tests/mobilenetv2ssd512/layers/regression_headers-2-0.bin",
-    "../tests/mobilenetv2ssd512/layers/regression_headers-2-3.bin"};
+    "mobilenetv2ssd512/layers/regression_headers-2-0.bin",
+    "mobilenetv2ssd512/layers/regression_headers-2-3.bin"};
 const char *regression_header3[] = {
-    "../tests/mobilenetv2ssd512/layers/regression_headers-3-0.bin",
-    "../tests/mobilenetv2ssd512/layers/regression_headers-3-3.bin"};
+    "mobilenetv2ssd512/layers/regression_headers-3-0.bin",
+    "mobilenetv2ssd512/layers/regression_headers-3-3.bin"};
 const char *regression_header4[] = {
-    "../tests/mobilenetv2ssd512/layers/regression_headers-4-0.bin",
-    "../tests/mobilenetv2ssd512/layers/regression_headers-4-3.bin"};
+    "mobilenetv2ssd512/layers/regression_headers-4-0.bin",
+    "mobilenetv2ssd512/layers/regression_headers-4-3.bin"};
 
-const char *regression_header5 = "../tests/mobilenetv2ssd512/layers/regression_headers-5.bin";
+const char *regression_header5 = "mobilenetv2ssd512/layers/regression_headers-5.bin";
 
 
 int main()
 {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/mobilenetv2ssd512", "https://cloud.hipert.unimore.it/s/pdCw2dYyHMJrcEM/download");
+    downloadWeightsifDoNotExist(input_bin, "mobilenetv2ssd512", "https://cloud.hipert.unimore.it/s/pdCw2dYyHMJrcEM/download");
     
 
     int classes = 81;

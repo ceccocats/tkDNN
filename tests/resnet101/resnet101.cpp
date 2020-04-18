@@ -1,159 +1,159 @@
 #include <iostream>
 #include "tkdnn.h"
 
-const char *input_bin = "../tests/resnet101/debug/input.bin";
-const char *conv1_bin = "../tests/resnet101/layers/conv1.bin";
+const char *input_bin = "resnet101/debug/input.bin";
+const char *conv1_bin = "resnet101/layers/conv1.bin";
 
 //layer1
 const char *layer1_bin[]={
-"../tests/resnet101/layers/layer1-0-conv1.bin",
-"../tests/resnet101/layers/layer1-0-conv2.bin",
-"../tests/resnet101/layers/layer1-0-conv3.bin",
-"../tests/resnet101/layers/layer1-0-downsample-0.bin",
+"resnet101/layers/layer1-0-conv1.bin",
+"resnet101/layers/layer1-0-conv2.bin",
+"resnet101/layers/layer1-0-conv3.bin",
+"resnet101/layers/layer1-0-downsample-0.bin",
 
-"../tests/resnet101/layers/layer1-1-conv1.bin",
-"../tests/resnet101/layers/layer1-1-conv2.bin",
-"../tests/resnet101/layers/layer1-1-conv3.bin",
+"resnet101/layers/layer1-1-conv1.bin",
+"resnet101/layers/layer1-1-conv2.bin",
+"resnet101/layers/layer1-1-conv3.bin",
 
-"../tests/resnet101/layers/layer1-2-conv1.bin",
-"../tests/resnet101/layers/layer1-2-conv2.bin",
-"../tests/resnet101/layers/layer1-2-conv3.bin"};
+"resnet101/layers/layer1-2-conv1.bin",
+"resnet101/layers/layer1-2-conv2.bin",
+"resnet101/layers/layer1-2-conv3.bin"};
                         
 
 //layer2
 const char *layer2_bin[]={
-"../tests/resnet101/layers/layer2-0-conv1.bin",
-"../tests/resnet101/layers/layer2-0-conv2.bin",
-"../tests/resnet101/layers/layer2-0-conv3.bin",
-"../tests/resnet101/layers/layer2-0-downsample-0.bin",
+"resnet101/layers/layer2-0-conv1.bin",
+"resnet101/layers/layer2-0-conv2.bin",
+"resnet101/layers/layer2-0-conv3.bin",
+"resnet101/layers/layer2-0-downsample-0.bin",
 
-"../tests/resnet101/layers/layer2-1-conv1.bin",
-"../tests/resnet101/layers/layer2-1-conv2.bin",
-"../tests/resnet101/layers/layer2-1-conv3.bin",
+"resnet101/layers/layer2-1-conv1.bin",
+"resnet101/layers/layer2-1-conv2.bin",
+"resnet101/layers/layer2-1-conv3.bin",
 
-"../tests/resnet101/layers/layer2-2-conv1.bin",
-"../tests/resnet101/layers/layer2-2-conv2.bin",
-"../tests/resnet101/layers/layer2-2-conv3.bin",
+"resnet101/layers/layer2-2-conv1.bin",
+"resnet101/layers/layer2-2-conv2.bin",
+"resnet101/layers/layer2-2-conv3.bin",
 
-"../tests/resnet101/layers/layer2-3-conv1.bin",
-"../tests/resnet101/layers/layer2-3-conv2.bin",
-"../tests/resnet101/layers/layer2-3-conv3.bin"
+"resnet101/layers/layer2-3-conv1.bin",
+"resnet101/layers/layer2-3-conv2.bin",
+"resnet101/layers/layer2-3-conv3.bin"
 };
 //layer3
 const char *layer3_bin[]={
-"../tests/resnet101/layers/layer3-0-conv1.bin",
-"../tests/resnet101/layers/layer3-0-conv2.bin",
-"../tests/resnet101/layers/layer3-0-conv3.bin",
-"../tests/resnet101/layers/layer3-0-downsample-0.bin",
+"resnet101/layers/layer3-0-conv1.bin",
+"resnet101/layers/layer3-0-conv2.bin",
+"resnet101/layers/layer3-0-conv3.bin",
+"resnet101/layers/layer3-0-downsample-0.bin",
 
-"../tests/resnet101/layers/layer3-1-conv1.bin",
-"../tests/resnet101/layers/layer3-1-conv2.bin",
-"../tests/resnet101/layers/layer3-1-conv3.bin",
+"resnet101/layers/layer3-1-conv1.bin",
+"resnet101/layers/layer3-1-conv2.bin",
+"resnet101/layers/layer3-1-conv3.bin",
 
-"../tests/resnet101/layers/layer3-2-conv1.bin",
-"../tests/resnet101/layers/layer3-2-conv2.bin",
-"../tests/resnet101/layers/layer3-2-conv3.bin",
+"resnet101/layers/layer3-2-conv1.bin",
+"resnet101/layers/layer3-2-conv2.bin",
+"resnet101/layers/layer3-2-conv3.bin",
 
-"../tests/resnet101/layers/layer3-3-conv1.bin",
-"../tests/resnet101/layers/layer3-3-conv2.bin",
-"../tests/resnet101/layers/layer3-3-conv3.bin",
+"resnet101/layers/layer3-3-conv1.bin",
+"resnet101/layers/layer3-3-conv2.bin",
+"resnet101/layers/layer3-3-conv3.bin",
 
-"../tests/resnet101/layers/layer3-4-conv1.bin",
-"../tests/resnet101/layers/layer3-4-conv2.bin",
-"../tests/resnet101/layers/layer3-4-conv3.bin",
+"resnet101/layers/layer3-4-conv1.bin",
+"resnet101/layers/layer3-4-conv2.bin",
+"resnet101/layers/layer3-4-conv3.bin",
 
-"../tests/resnet101/layers/layer3-5-conv1.bin",
-"../tests/resnet101/layers/layer3-5-conv2.bin",
-"../tests/resnet101/layers/layer3-5-conv3.bin",
+"resnet101/layers/layer3-5-conv1.bin",
+"resnet101/layers/layer3-5-conv2.bin",
+"resnet101/layers/layer3-5-conv3.bin",
 
-"../tests/resnet101/layers/layer3-6-conv1.bin",
-"../tests/resnet101/layers/layer3-6-conv2.bin",
-"../tests/resnet101/layers/layer3-6-conv3.bin",
+"resnet101/layers/layer3-6-conv1.bin",
+"resnet101/layers/layer3-6-conv2.bin",
+"resnet101/layers/layer3-6-conv3.bin",
 
-"../tests/resnet101/layers/layer3-7-conv1.bin",
-"../tests/resnet101/layers/layer3-7-conv2.bin",
-"../tests/resnet101/layers/layer3-7-conv3.bin",
+"resnet101/layers/layer3-7-conv1.bin",
+"resnet101/layers/layer3-7-conv2.bin",
+"resnet101/layers/layer3-7-conv3.bin",
 
-"../tests/resnet101/layers/layer3-8-conv1.bin",
-"../tests/resnet101/layers/layer3-8-conv2.bin",
-"../tests/resnet101/layers/layer3-8-conv3.bin",
+"resnet101/layers/layer3-8-conv1.bin",
+"resnet101/layers/layer3-8-conv2.bin",
+"resnet101/layers/layer3-8-conv3.bin",
 
-"../tests/resnet101/layers/layer3-9-conv1.bin",
-"../tests/resnet101/layers/layer3-9-conv2.bin",
-"../tests/resnet101/layers/layer3-9-conv3.bin",
+"resnet101/layers/layer3-9-conv1.bin",
+"resnet101/layers/layer3-9-conv2.bin",
+"resnet101/layers/layer3-9-conv3.bin",
 
-"../tests/resnet101/layers/layer3-10-conv1.bin",
-"../tests/resnet101/layers/layer3-10-conv2.bin",
-"../tests/resnet101/layers/layer3-10-conv3.bin",
+"resnet101/layers/layer3-10-conv1.bin",
+"resnet101/layers/layer3-10-conv2.bin",
+"resnet101/layers/layer3-10-conv3.bin",
 
-"../tests/resnet101/layers/layer3-11-conv1.bin",
-"../tests/resnet101/layers/layer3-11-conv2.bin",
-"../tests/resnet101/layers/layer3-11-conv3.bin",
+"resnet101/layers/layer3-11-conv1.bin",
+"resnet101/layers/layer3-11-conv2.bin",
+"resnet101/layers/layer3-11-conv3.bin",
 
-"../tests/resnet101/layers/layer3-12-conv1.bin",
-"../tests/resnet101/layers/layer3-12-conv2.bin",
-"../tests/resnet101/layers/layer3-12-conv3.bin",
+"resnet101/layers/layer3-12-conv1.bin",
+"resnet101/layers/layer3-12-conv2.bin",
+"resnet101/layers/layer3-12-conv3.bin",
 
-"../tests/resnet101/layers/layer3-13-conv1.bin",
-"../tests/resnet101/layers/layer3-13-conv2.bin",
-"../tests/resnet101/layers/layer3-13-conv3.bin",
+"resnet101/layers/layer3-13-conv1.bin",
+"resnet101/layers/layer3-13-conv2.bin",
+"resnet101/layers/layer3-13-conv3.bin",
 
-"../tests/resnet101/layers/layer3-14-conv1.bin",
-"../tests/resnet101/layers/layer3-14-conv2.bin",
-"../tests/resnet101/layers/layer3-14-conv3.bin",
+"resnet101/layers/layer3-14-conv1.bin",
+"resnet101/layers/layer3-14-conv2.bin",
+"resnet101/layers/layer3-14-conv3.bin",
 
-"../tests/resnet101/layers/layer3-15-conv1.bin",
-"../tests/resnet101/layers/layer3-15-conv2.bin",
-"../tests/resnet101/layers/layer3-15-conv3.bin",
+"resnet101/layers/layer3-15-conv1.bin",
+"resnet101/layers/layer3-15-conv2.bin",
+"resnet101/layers/layer3-15-conv3.bin",
 
-"../tests/resnet101/layers/layer3-16-conv1.bin",
-"../tests/resnet101/layers/layer3-16-conv2.bin",
-"../tests/resnet101/layers/layer3-16-conv3.bin",
+"resnet101/layers/layer3-16-conv1.bin",
+"resnet101/layers/layer3-16-conv2.bin",
+"resnet101/layers/layer3-16-conv3.bin",
 
-"../tests/resnet101/layers/layer3-17-conv1.bin",
-"../tests/resnet101/layers/layer3-17-conv2.bin",
-"../tests/resnet101/layers/layer3-17-conv3.bin",
+"resnet101/layers/layer3-17-conv1.bin",
+"resnet101/layers/layer3-17-conv2.bin",
+"resnet101/layers/layer3-17-conv3.bin",
 
-"../tests/resnet101/layers/layer3-18-conv1.bin",
-"../tests/resnet101/layers/layer3-18-conv2.bin",
-"../tests/resnet101/layers/layer3-18-conv3.bin",
+"resnet101/layers/layer3-18-conv1.bin",
+"resnet101/layers/layer3-18-conv2.bin",
+"resnet101/layers/layer3-18-conv3.bin",
 
-"../tests/resnet101/layers/layer3-19-conv1.bin",
-"../tests/resnet101/layers/layer3-19-conv2.bin",
-"../tests/resnet101/layers/layer3-19-conv3.bin",
+"resnet101/layers/layer3-19-conv1.bin",
+"resnet101/layers/layer3-19-conv2.bin",
+"resnet101/layers/layer3-19-conv3.bin",
 
-"../tests/resnet101/layers/layer3-20-conv1.bin",
-"../tests/resnet101/layers/layer3-20-conv2.bin",
-"../tests/resnet101/layers/layer3-20-conv3.bin",
+"resnet101/layers/layer3-20-conv1.bin",
+"resnet101/layers/layer3-20-conv2.bin",
+"resnet101/layers/layer3-20-conv3.bin",
 
-"../tests/resnet101/layers/layer3-21-conv1.bin",
-"../tests/resnet101/layers/layer3-21-conv2.bin",
-"../tests/resnet101/layers/layer3-21-conv3.bin",
+"resnet101/layers/layer3-21-conv1.bin",
+"resnet101/layers/layer3-21-conv2.bin",
+"resnet101/layers/layer3-21-conv3.bin",
 
-"../tests/resnet101/layers/layer3-22-conv1.bin",
-"../tests/resnet101/layers/layer3-22-conv2.bin",
-"../tests/resnet101/layers/layer3-22-conv3.bin"};
+"resnet101/layers/layer3-22-conv1.bin",
+"resnet101/layers/layer3-22-conv2.bin",
+"resnet101/layers/layer3-22-conv3.bin"};
 
 
 //layer4
 const char *layer4_bin[]={
-"../tests/resnet101/layers/layer4-0-conv1.bin",
-"../tests/resnet101/layers/layer4-0-conv2.bin",
-"../tests/resnet101/layers/layer4-0-conv3.bin",
-"../tests/resnet101/layers/layer4-0-downsample-0.bin",
+"resnet101/layers/layer4-0-conv1.bin",
+"resnet101/layers/layer4-0-conv2.bin",
+"resnet101/layers/layer4-0-conv3.bin",
+"resnet101/layers/layer4-0-downsample-0.bin",
 
-"../tests/resnet101/layers/layer4-1-conv1.bin",
-"../tests/resnet101/layers/layer4-1-conv2.bin",
-"../tests/resnet101/layers/layer4-1-conv3.bin",
+"resnet101/layers/layer4-1-conv1.bin",
+"resnet101/layers/layer4-1-conv2.bin",
+"resnet101/layers/layer4-1-conv3.bin",
 
-"../tests/resnet101/layers/layer4-2-conv1.bin",
-"../tests/resnet101/layers/layer4-2-conv2.bin",
-"../tests/resnet101/layers/layer4-2-conv3.bin"};
+"resnet101/layers/layer4-2-conv1.bin",
+"resnet101/layers/layer4-2-conv2.bin",
+"resnet101/layers/layer4-2-conv3.bin"};
 
 //final
-const char *fc_bin = "../tests/resnet101/layers/fc.bin";
+const char *fc_bin = "resnet101/layers/fc.bin";
 
-const char *output_bin = "../tests/resnet101/debug/fc.bin";
+const char *output_bin = "resnet101/debug/fc.bin";
 
 int main()
 {
