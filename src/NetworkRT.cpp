@@ -58,7 +58,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         dataDim_t dim = net->layers[0]->input_dim;
         dtRT = DataType::kFLOAT;
 
-        builderRT->setMaxBatchSize(1);
+        builderRT->setMaxBatchSize(net->maxBatchSize);
         builderRT->setMaxWorkspaceSize(1 << 30);
 
         if(net->fp16 && builderRT->platformHasFastFp16()) {
@@ -133,6 +133,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         input->setName("out");
         networkRT->markOutput(*input);
 
+        std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
         std::cout<<"Building tensorRT cuda engine...\n";
 #if NV_TENSORRT_MAJOR >= 6                
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
@@ -181,9 +182,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
-        checkCuda(cudaMalloc(&buffersRT[i], dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
+        checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
     }
-    checkCuda(cudaMalloc(&output, output_dim.tot()*sizeof(dnnType)));
+    checkCuda(cudaMalloc(&output, engineRT->getMaxBatchSize()*output_dim.tot()*sizeof(dnnType)));
 	checkCuda(cudaStreamCreate(&stream));
 }
 
@@ -192,19 +193,24 @@ NetworkRT::~NetworkRT() {
 }
 
 dnnType* NetworkRT::infer(dataDim_t &dim, dnnType* data) {
+    int batches = dim.n;
+    if(batches > getMaxBatchSize()) {
+        FatalError("input batch size too large");
+    }
 
-    checkCuda(cudaMemcpyAsync(buffersRT[buf_input_idx], data, input_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
-    contextRT->enqueue(1, buffersRT, stream, nullptr);
-    checkCuda(cudaMemcpyAsync(output, buffersRT[buf_output_idx], output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
-    cudaStreamSynchronize(stream);
+    checkCuda(cudaMemcpyAsync(buffersRT[buf_input_idx], data, batches*input_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+    contextRT->enqueue(batches, buffersRT, stream, nullptr);
+    checkCuda(cudaMemcpyAsync(output, buffersRT[buf_output_idx], batches*output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+    checkCuda(cudaStreamSynchronize(stream));
 
     dim = output_dim;
+    dim.n = batches;
 
     return output;
 }
 
-void NetworkRT::enqueue() {
-    contextRT->enqueue(1, buffersRT, stream, nullptr);
+void NetworkRT::enqueue(int batchSize) {
+    contextRT->enqueue(batchSize, buffersRT, stream, nullptr);
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {

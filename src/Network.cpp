@@ -34,6 +34,10 @@ Network::Network(dataDim_t input_dim) {
             int8 = true;
         }
     }
+    maxBatchSize = 1;
+    if(const char* env_p = std::getenv("TKDNN_BATCHSIZE")) {
+        maxBatchSize = atoi(env_p);
+    }
     if(const char* env_p = std::getenv("TKDNN_CALIB_IMG_PATH"))
         fileImgList = env_p;
     
