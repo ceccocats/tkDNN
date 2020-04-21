@@ -63,6 +63,7 @@ public:
 
     const static int MAX_BUFFERS_RT = 10;
     void* buffersRT[MAX_BUFFERS_RT];
+    dataDim_t buffersDIM[MAX_BUFFERS_RT];
     int buf_input_idx, buf_output_idx;
 
     dataDim_t input_dim, output_dim;
@@ -78,6 +79,13 @@ public:
         if(engineRT != nullptr)
             return engineRT->getMaxBatchSize();
         else
+            return 0;
+    }
+
+    int getBuffersN() {
+        if(engineRT != nullptr)
+            return engineRT->getNbBindings();
+        else 
             return 0;
     }
 

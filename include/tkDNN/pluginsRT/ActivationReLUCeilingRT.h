@@ -41,7 +41,7 @@ public:
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
 		activationReLUCeilingForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-											reinterpret_cast<dnnType*>(outputs[0]), size, ceiling, stream);
+											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, ceiling, stream);
 		return 0;
 	}
 

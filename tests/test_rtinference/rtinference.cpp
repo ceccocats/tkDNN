@@ -27,11 +27,16 @@ int main(int argc, char *argv[]) {
     dnnType *input_d;
     checkCuda( cudaMalloc(&input_d, idim.tot()*sizeof(dnnType)));
 
+    int ret_tensorrt = 0; 
     std::cout<<"Testing with batchsize: "<<BATCH_SIZE<<"\n";
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     for(int i=0; i<10; i++) {
-        for(int j=0; j<idim.tot(); j++) {
-            input[j] = ((float) rand() / (RAND_MAX));
+
+        // generate input
+        for(int j=0; j<netRT.input_dim.tot(); j++) {
+            dnnType val = ((float) rand() / (RAND_MAX));
+            for(int b=0; b<BATCH_SIZE; b++)
+                input[netRT.input_dim.tot()*b + j] = val;
         }
         checkCuda(cudaMemcpy(input_d, input, idim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
 
@@ -39,7 +44,17 @@ int main(int argc, char *argv[]) {
         TIMER_START
         netRT.infer(dim, input_d);
         TIMER_STOP
+
+        // control output
+        for(int o=1; o<netRT.getBuffersN(); o++) {
+            for(int b=1; b<BATCH_SIZE; b++) {
+                dnnType *out_d = (dnnType*) netRT.buffersRT[o];
+                dnnType *out0_d = out_d;
+                dnnType *outI_d = out_d + netRT.buffersDIM[o].tot()*b;
+                //ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d);
+            }
+        }
     }
     
-    return 0;
+    return ret_tensorrt;
 }
