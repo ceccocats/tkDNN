@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
                 dnnType *out_d = (dnnType*) netRT.buffersRT[o];
                 dnnType *out0_d = out_d;
                 dnnType *outI_d = out_d + netRT.buffersDIM[o].tot()*b;
-                //ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d);
+                ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d);
             }
         }
     }
