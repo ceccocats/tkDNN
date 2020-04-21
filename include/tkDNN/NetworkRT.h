@@ -74,11 +74,18 @@ public:
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();
 
+    int getMaxBatchSize() {
+        if(engineRT != nullptr)
+            return engineRT->getMaxBatchSize();
+        else
+            return 0;
+    }
+
     /**
         Do inferece
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
-    void enqueue();    
+    void enqueue(int batchSize = 1);    
 
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Conv2d *l);
