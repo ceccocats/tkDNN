@@ -182,6 +182,8 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
+        buffersDIM[i] = dataDim_t(1, dim.d[0], dim.d[1], dim.d[2]);
+        std::cout<<"RtBuffer "<<i<<"   dim: "; buffersDIM[i].print();
         checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
     }
     checkCuda(cudaMalloc(&output, engineRT->getMaxBatchSize()*output_dim.tot()*sizeof(dnnType)));
@@ -326,7 +328,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         lRT = (ILayer*) lRTconv;
         
         Dims d = lRTconv->getOutput(0)->getDimensions();
-        std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
+        //std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
     }
 
     checkNULL(lRT);
@@ -533,7 +535,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
-    std::cout<<"convert DEFORMABLE\n";
+    //std::cout<<"convert DEFORMABLE\n";
     ILayer *preconv = convert_layer(input, l->preconv);
     checkNULL(preconv);
 
@@ -541,7 +543,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     inputs[0] = input;
     inputs[1] = preconv->getOutput(0);
 
-    std::cout<<"New plugin DEFORMABLE\n";
+    //std::cout<<"New plugin DEFORMABLE\n";
     IPlugin *plugin = new DeformableConvRT(l->chunk_dim, l->kernelH, l->kernelW, l->strideH, l->strideW, l->paddingH, l->paddingW, 
                                             l->deformableGroup, l->input_dim.n, l->input_dim.c, l->input_dim.h, l->input_dim.w, 
                                             l->output_dim.n, l->output_dim.c, l->output_dim.h, l->output_dim.w, l);
@@ -568,7 +570,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     Weights power{dtRT, power_b, l->outputs};
     Weights shift{dtRT, mean_b, l->outputs};
     Weights scale{dtRT, variance_b, l->outputs};
-    std::cout<<lRT->getNbOutputs()<<std::endl;
+    //std::cout<<lRT->getNbOutputs()<<std::endl;
     IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
                 shift, scale, power);
     
@@ -628,7 +630,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     const char * buf = reinterpret_cast<const char*>(serialData);
 
     std::string name(layerName);
-    std::cout<<name<<std::endl;
+    //std::cout<<name<<std::endl;
 
     if(name.find("ActivationLeaky") == 0) {
         ActivationLeakyRT *a = new ActivationLeakyRT();

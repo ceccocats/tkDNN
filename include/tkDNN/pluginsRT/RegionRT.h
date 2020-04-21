@@ -50,16 +50,16 @@ public:
 
 		for (int b = 0; b < batchSize; ++b){
 			for(int n = 0; n < num; ++n){
-				int index = entry_index(b, n*w*h, 0, batchSize);
+				int index = entry_index(b, n*w*h, 0);
 				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
 				
-				index = entry_index(b, n*w*h, coords, batchSize);
+				index = entry_index(b, n*w*h, coords);
 				activationLOGISTICForward(srcData + index, dstData + index, w*h, stream);
 			}
 		}
 
 		//softmax start
-		int index = entry_index(0, 0, coords + 1, batchSize);
+		int index = entry_index(0, 0, coords + 1);
 		softmaxForward(	srcData + index, classes, batchSize*num, 
 						(batchSize*c*h*w)/num, 
 						w*h, 1, w*h, 1, dstData + index, stream);
@@ -85,10 +85,10 @@ public:
 	int c, h, w;
     int classes, coords, num;
 
-	int entry_index(int batch, int location, int entry, int batchSize) {
+	int entry_index(int batch, int location, int entry) {
 		int n =   location / (w*h);
 		int loc = location % (w*h);
-		return batch*c*h*w*batchSize + n*w*h*(coords+classes+1) + entry*w*h + loc;
+		return batch*c*h*w + n*w*h*(coords+classes+1) + entry*w*h + loc;
 	}
 
 };
