@@ -46,7 +46,8 @@ int main(int argc, char *argv[]) {
         TIMER_STOP
 
         // control output
-        for(int o=1; o<netRT.getBuffersN(); o++) {
+        std::cout<<"Output Buffers: "<<netRT.getBuffersN()-1<<"\n";
+	for(int o=1; o<netRT.getBuffersN(); o++) {
             for(int b=1; b<BATCH_SIZE; b++) {
                 dnnType *out_d = (dnnType*) netRT.buffersRT[o];
                 dnnType *out0_d = out_d;

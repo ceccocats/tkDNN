@@ -47,11 +47,15 @@ public:
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
-		checkCuda( cudaMemcpy(dstData, srcData, rows*cols*sizeof(dnnType), cudaMemcpyDeviceToDevice));
-	
-		float const alpha(1.0);
-		float const beta(0.0);
-		checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, rows, cols, &alpha, srcData, cols, &beta, srcData, rows, dstData, rows ));
+		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*rows*cols*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+
+		checkERROR( cublasSetStream(handle, stream) );	
+		for(int i=0; i<batchSize; i++) {
+			float const alpha(1.0);
+			float const beta(0.0);
+			int offset = i*rows*cols;
+			checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, rows, cols, &alpha, srcData + offset, cols, &beta, srcData + offset, rows, dstData + offset, rows ));
+		}
 		return 0;
 	}
 
