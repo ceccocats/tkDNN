@@ -61,7 +61,7 @@ public:
 		//softmax start
 		int index = entry_index(0, 0, coords + 1);
 		softmaxForward(	srcData + index, classes, batchSize*num, 
-						(batchSize*c*h*w)/num, 
+						(c*h*w)/num, 
 						w*h, 1, w*h, 1, dstData + index, stream);
 
 		return 0;
