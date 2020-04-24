@@ -172,7 +172,12 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
         colors[c] = cv::Scalar(int(255.0 * b), int(255.0 * g), int(255.0 * r));
     }
 
-    if(classes == 21){
+    if(classes == 11){ //BDD
+        const char *classes_names_[] = {
+        "person","car","truck","bus","motor","bike","rider","traffic light","traffic sign","train"};
+        classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
+    }
+    else if(classes == 21){ //VOC
         const char *classes_names_[] = {
         "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
         "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike",
@@ -180,7 +185,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
         classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
 
     }
-    else if (classes == 81){
+    else if (classes == 81){ //COCO
         const char *classes_names_[] = {
         "person" , "bicycle" , "car" , "motorbike" , "aeroplane" , "bus" ,
         "train" , "truck" , "boat" , "traffic light" , "fire hydrant" , "stop sign" , 
