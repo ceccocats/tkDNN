@@ -1,32 +1,32 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo_relu/layers/input.bin";
-const char *c0_bin     = "../tests/yolo_relu/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo_relu/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo_relu/layers/c4.bin";
-const char *c5_bin     = "../tests/yolo_relu/layers/c5.bin";
-const char *c6_bin     = "../tests/yolo_relu/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo_relu/layers/c8.bin";
-const char *c9_bin     = "../tests/yolo_relu/layers/c9.bin";
-const char *c10_bin    = "../tests/yolo_relu/layers/c10.bin";
-const char *c12_bin    = "../tests/yolo_relu/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo_relu/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo_relu/layers/c14.bin";
-const char *c15_bin    = "../tests/yolo_relu/layers/c15.bin";
-const char *c16_bin    = "../tests/yolo_relu/layers/c16.bin";
-const char *c18_bin    = "../tests/yolo_relu/layers/c18.bin";
-const char *c19_bin    = "../tests/yolo_relu/layers/c19.bin";
-const char *c20_bin    = "../tests/yolo_relu/layers/c20.bin";
-const char *c21_bin    = "../tests/yolo_relu/layers/c21.bin";
-const char *c22_bin    = "../tests/yolo_relu/layers/c22.bin";
-const char *c23_bin    = "../tests/yolo_relu/layers/c23.bin";
-const char *c24_bin    = "../tests/yolo_relu/layers/c24.bin";
-const char *c26_bin    = "../tests/yolo_relu/layers/c26.bin";
-const char *c29_bin    = "../tests/yolo_relu/layers/c29.bin";
-const char *c30_bin    = "../tests/yolo_relu/layers/c30.bin";
-const char *g31_bin    = "../tests/yolo_relu/layers/g31.bin";
-const char *output_bin = "../tests/yolo_relu/layers/output.bin";
+const char *input_bin  = "yolo_relu/layers/input.bin";
+const char *c0_bin     = "yolo_relu/layers/c0.bin";
+const char *c2_bin     = "yolo_relu/layers/c2.bin";
+const char *c4_bin     = "yolo_relu/layers/c4.bin";
+const char *c5_bin     = "yolo_relu/layers/c5.bin";
+const char *c6_bin     = "yolo_relu/layers/c6.bin";
+const char *c8_bin     = "yolo_relu/layers/c8.bin";
+const char *c9_bin     = "yolo_relu/layers/c9.bin";
+const char *c10_bin    = "yolo_relu/layers/c10.bin";
+const char *c12_bin    = "yolo_relu/layers/c12.bin";
+const char *c13_bin    = "yolo_relu/layers/c13.bin";
+const char *c14_bin    = "yolo_relu/layers/c14.bin";
+const char *c15_bin    = "yolo_relu/layers/c15.bin";
+const char *c16_bin    = "yolo_relu/layers/c16.bin";
+const char *c18_bin    = "yolo_relu/layers/c18.bin";
+const char *c19_bin    = "yolo_relu/layers/c19.bin";
+const char *c20_bin    = "yolo_relu/layers/c20.bin";
+const char *c21_bin    = "yolo_relu/layers/c21.bin";
+const char *c22_bin    = "yolo_relu/layers/c22.bin";
+const char *c23_bin    = "yolo_relu/layers/c23.bin";
+const char *c24_bin    = "yolo_relu/layers/c24.bin";
+const char *c26_bin    = "yolo_relu/layers/c26.bin";
+const char *c29_bin    = "yolo_relu/layers/c29.bin";
+const char *c30_bin    = "yolo_relu/layers/c30.bin";
+const char *g31_bin    = "yolo_relu/layers/g31.bin";
+const char *output_bin = "yolo_relu/layers/output.bin";
 
 int main() {
 

@@ -1,23 +1,23 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo_tiny/layers/input.bin";
-const char *c0_bin     = "../tests/yolo_tiny/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo_tiny/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo_tiny/layers/c4.bin";
-const char *c5_bin     = "../tests/yolo_tiny/layers/c5.bin";
-const char *c6_bin     = "../tests/yolo_tiny/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo_tiny/layers/c8.bin";
-const char *c10_bin    = "../tests/yolo_tiny/layers/c10.bin";
-const char *c11_bin    = "../tests/yolo_tiny/layers/c11.bin";
-const char *c12_bin    = "../tests/yolo_tiny/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo_tiny/layers/c13.bin";
-const char *g14_bin    = "../tests/yolo_tiny/layers/g14.bin";
-const char *output_bin = "../tests/yolo_tiny/layers/output.bin";
+const char *input_bin  = "yolo_tiny/layers/input.bin";
+const char *c0_bin     = "yolo_tiny/layers/c0.bin";
+const char *c2_bin     = "yolo_tiny/layers/c2.bin";
+const char *c4_bin     = "yolo_tiny/layers/c4.bin";
+const char *c5_bin     = "yolo_tiny/layers/c5.bin";
+const char *c6_bin     = "yolo_tiny/layers/c6.bin";
+const char *c8_bin     = "yolo_tiny/layers/c8.bin";
+const char *c10_bin    = "yolo_tiny/layers/c10.bin";
+const char *c11_bin    = "yolo_tiny/layers/c11.bin";
+const char *c12_bin    = "yolo_tiny/layers/c12.bin";
+const char *c13_bin    = "yolo_tiny/layers/c13.bin";
+const char *g14_bin    = "yolo_tiny/layers/g14.bin";
+const char *output_bin = "yolo_tiny/layers/output.bin";
 
 int main() {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/yolo_tiny", "https://cloud.hipert.unimore.it/s/m3orfJr8pGrN5mQ/download");
+    downloadWeightsifDoNotExist(input_bin, "yolo_tiny", "https://cloud.hipert.unimore.it/s/m3orfJr8pGrN5mQ/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);

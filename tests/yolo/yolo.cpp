@@ -1,36 +1,36 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo/layers/input.bin";
-const char *c0_bin     = "../tests/yolo/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo/layers/c4.bin";
-const char *c5_bin     = "../tests/yolo/layers/c5.bin";
-const char *c6_bin     = "../tests/yolo/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo/layers/c8.bin";
-const char *c9_bin     = "../tests/yolo/layers/c9.bin";
-const char *c10_bin    = "../tests/yolo/layers/c10.bin";
-const char *c12_bin    = "../tests/yolo/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo/layers/c14.bin";
-const char *c15_bin    = "../tests/yolo/layers/c15.bin";
-const char *c16_bin    = "../tests/yolo/layers/c16.bin";
-const char *c18_bin    = "../tests/yolo/layers/c18.bin";
-const char *c19_bin    = "../tests/yolo/layers/c19.bin";
-const char *c20_bin    = "../tests/yolo/layers/c20.bin";
-const char *c21_bin    = "../tests/yolo/layers/c21.bin";
-const char *c22_bin    = "../tests/yolo/layers/c22.bin";
-const char *c23_bin    = "../tests/yolo/layers/c23.bin";
-const char *c24_bin    = "../tests/yolo/layers/c24.bin";
-const char *c26_bin    = "../tests/yolo/layers/c26.bin";
-const char *c29_bin    = "../tests/yolo/layers/c29.bin";
-const char *c30_bin    = "../tests/yolo/layers/c30.bin";
-const char *g31_bin    = "../tests/yolo/layers/g31.bin";
-const char *output_bin = "../tests/yolo/layers/output.bin";
+const char *input_bin  = "yolo/layers/input.bin";
+const char *c0_bin     = "yolo/layers/c0.bin";
+const char *c2_bin     = "yolo/layers/c2.bin";
+const char *c4_bin     = "yolo/layers/c4.bin";
+const char *c5_bin     = "yolo/layers/c5.bin";
+const char *c6_bin     = "yolo/layers/c6.bin";
+const char *c8_bin     = "yolo/layers/c8.bin";
+const char *c9_bin     = "yolo/layers/c9.bin";
+const char *c10_bin    = "yolo/layers/c10.bin";
+const char *c12_bin    = "yolo/layers/c12.bin";
+const char *c13_bin    = "yolo/layers/c13.bin";
+const char *c14_bin    = "yolo/layers/c14.bin";
+const char *c15_bin    = "yolo/layers/c15.bin";
+const char *c16_bin    = "yolo/layers/c16.bin";
+const char *c18_bin    = "yolo/layers/c18.bin";
+const char *c19_bin    = "yolo/layers/c19.bin";
+const char *c20_bin    = "yolo/layers/c20.bin";
+const char *c21_bin    = "yolo/layers/c21.bin";
+const char *c22_bin    = "yolo/layers/c22.bin";
+const char *c23_bin    = "yolo/layers/c23.bin";
+const char *c24_bin    = "yolo/layers/c24.bin";
+const char *c26_bin    = "yolo/layers/c26.bin";
+const char *c29_bin    = "yolo/layers/c29.bin";
+const char *c30_bin    = "yolo/layers/c30.bin";
+const char *g31_bin    = "yolo/layers/g31.bin";
+const char *output_bin = "yolo/layers/output.bin";
 
 int main() {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/yolo", "https://cloud.hipert.unimore.it/s/nf4PJ3k8bxBETwL/download");
+    downloadWeightsifDoNotExist(input_bin, "yolo", "https://cloud.hipert.unimore.it/s/nf4PJ3k8bxBETwL/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 608, 608, 1);

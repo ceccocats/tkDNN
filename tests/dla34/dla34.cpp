@@ -1,50 +1,50 @@
 #include <iostream>
 #include "tkdnn.h"
 
-const char *input_bin = "../tests/dla34/debug/input.bin";
-const char *conv1_bin = "../tests/dla34/layers/features-init_block-conv1-conv.bin";
-const char *conv2_bin = "../tests/dla34/layers/features-init_block-conv2-conv.bin";
-const char *conv3_bin = "../tests/dla34/layers/features-init_block-conv3-conv.bin";
+const char *input_bin = "dla34/debug/input.bin";
+const char *conv1_bin = "dla34/layers/features-init_block-conv1-conv.bin";
+const char *conv2_bin = "dla34/layers/features-init_block-conv2-conv.bin";
+const char *conv3_bin = "dla34/layers/features-init_block-conv3-conv.bin";
 // s - stage, t - tree
-const char *s1_t1_conv1_bin = "../tests/dla34/layers/features-stage1-tree1-body-conv1-conv.bin";
-const char *s1_t1_conv2_bin = "../tests/dla34/layers/features-stage1-tree1-body-conv2-conv.bin";
-const char *s1_t1_project = "../tests/dla34/layers/features-stage1-tree1-project_conv-conv.bin";
-const char *s1_t2_conv1_bin = "../tests/dla34/layers/features-stage1-tree2-body-conv1-conv.bin";
-const char *s1_t2_conv2_bin = "../tests/dla34/layers/features-stage1-tree2-body-conv2-conv.bin";
-const char *s1_root_conv1_bin = "../tests/dla34/layers/features-stage1-root-conv-conv.bin";
-const char *s2_t1_t1_conv1_bin = "../tests/dla34/layers/features-stage2-tree1-tree1-body-conv1-conv.bin";
-const char *s2_t1_t1_conv2_bin = "../tests/dla34/layers/features-stage2-tree1-tree1-body-conv2-conv.bin";
-const char *s2_t1_t1_project = "../tests/dla34/layers/features-stage2-tree1-tree1-project_conv-conv.bin";
-const char *s2_t1_t2_conv1_bin = "../tests/dla34/layers/features-stage2-tree1-tree2-body-conv1-conv.bin";
-const char *s2_t1_t2_conv2_bin = "../tests/dla34/layers/features-stage2-tree1-tree2-body-conv2-conv.bin";
-const char *s2_t1_root_conv1_bin = "../tests/dla34/layers/features-stage2-tree1-root-conv-conv.bin";
-const char *s2_t2_t1_conv1_bin = "../tests/dla34/layers/features-stage2-tree2-tree1-body-conv1-conv.bin";
-const char *s2_t2_t1_conv2_bin = "../tests/dla34/layers/features-stage2-tree2-tree1-body-conv2-conv.bin";
-const char *s2_t2_t2_conv1_bin = "../tests/dla34/layers/features-stage2-tree2-tree2-body-conv1-conv.bin";
-const char *s2_t2_t2_conv2_bin = "../tests/dla34/layers/features-stage2-tree2-tree2-body-conv2-conv.bin";
-const char *s2_t2_root_conv1_bin = "../tests/dla34/layers/features-stage2-tree2-root-conv-conv.bin";
-const char *s3_t1_t1_conv1_bin = "../tests/dla34/layers/features-stage3-tree1-tree1-body-conv1-conv.bin";
-const char *s3_t1_t1_conv2_bin = "../tests/dla34/layers/features-stage3-tree1-tree1-body-conv2-conv.bin";
-const char *s3_t1_t1_project = "../tests/dla34/layers/features-stage3-tree1-tree1-project_conv-conv.bin";
-const char *s3_t1_t2_conv1_bin = "../tests/dla34/layers/features-stage3-tree1-tree2-body-conv1-conv.bin";
-const char *s3_t1_t2_conv2_bin = "../tests/dla34/layers/features-stage3-tree1-tree2-body-conv2-conv.bin";
-const char *s3_t1_root_conv1_bin = "../tests/dla34/layers/features-stage3-tree1-root-conv-conv.bin";
-const char *s3_t2_t1_conv1_bin = "../tests/dla34/layers/features-stage3-tree2-tree1-body-conv1-conv.bin";
-const char *s3_t2_t1_conv2_bin = "../tests/dla34/layers/features-stage3-tree2-tree1-body-conv2-conv.bin";
-const char *s3_t2_t2_conv1_bin = "../tests/dla34/layers/features-stage3-tree2-tree2-body-conv1-conv.bin";
-const char *s3_t2_t2_conv2_bin = "../tests/dla34/layers/features-stage3-tree2-tree2-body-conv2-conv.bin";
-const char *s3_t2_root_conv1_bin = "../tests/dla34/layers/features-stage3-tree2-root-conv-conv.bin";
-const char *s4_t1_conv1_bin = "../tests/dla34/layers/features-stage4-tree1-body-conv1-conv.bin";
-const char *s4_t1_conv2_bin = "../tests/dla34/layers/features-stage4-tree1-body-conv2-conv.bin";
-const char *s4_t1_project = "../tests/dla34/layers/features-stage4-tree1-project_conv-conv.bin";
-const char *s4_t2_conv1_bin = "../tests/dla34/layers/features-stage4-tree2-body-conv1-conv.bin";
-const char *s4_t2_conv2_bin = "../tests/dla34/layers/features-stage4-tree2-body-conv2-conv.bin";
-const char *s4_root_conv1_bin = "../tests/dla34/layers/features-stage4-root-conv-conv.bin";
+const char *s1_t1_conv1_bin = "dla34/layers/features-stage1-tree1-body-conv1-conv.bin";
+const char *s1_t1_conv2_bin = "dla34/layers/features-stage1-tree1-body-conv2-conv.bin";
+const char *s1_t1_project = "dla34/layers/features-stage1-tree1-project_conv-conv.bin";
+const char *s1_t2_conv1_bin = "dla34/layers/features-stage1-tree2-body-conv1-conv.bin";
+const char *s1_t2_conv2_bin = "dla34/layers/features-stage1-tree2-body-conv2-conv.bin";
+const char *s1_root_conv1_bin = "dla34/layers/features-stage1-root-conv-conv.bin";
+const char *s2_t1_t1_conv1_bin = "dla34/layers/features-stage2-tree1-tree1-body-conv1-conv.bin";
+const char *s2_t1_t1_conv2_bin = "dla34/layers/features-stage2-tree1-tree1-body-conv2-conv.bin";
+const char *s2_t1_t1_project = "dla34/layers/features-stage2-tree1-tree1-project_conv-conv.bin";
+const char *s2_t1_t2_conv1_bin = "dla34/layers/features-stage2-tree1-tree2-body-conv1-conv.bin";
+const char *s2_t1_t2_conv2_bin = "dla34/layers/features-stage2-tree1-tree2-body-conv2-conv.bin";
+const char *s2_t1_root_conv1_bin = "dla34/layers/features-stage2-tree1-root-conv-conv.bin";
+const char *s2_t2_t1_conv1_bin = "dla34/layers/features-stage2-tree2-tree1-body-conv1-conv.bin";
+const char *s2_t2_t1_conv2_bin = "dla34/layers/features-stage2-tree2-tree1-body-conv2-conv.bin";
+const char *s2_t2_t2_conv1_bin = "dla34/layers/features-stage2-tree2-tree2-body-conv1-conv.bin";
+const char *s2_t2_t2_conv2_bin = "dla34/layers/features-stage2-tree2-tree2-body-conv2-conv.bin";
+const char *s2_t2_root_conv1_bin = "dla34/layers/features-stage2-tree2-root-conv-conv.bin";
+const char *s3_t1_t1_conv1_bin = "dla34/layers/features-stage3-tree1-tree1-body-conv1-conv.bin";
+const char *s3_t1_t1_conv2_bin = "dla34/layers/features-stage3-tree1-tree1-body-conv2-conv.bin";
+const char *s3_t1_t1_project = "dla34/layers/features-stage3-tree1-tree1-project_conv-conv.bin";
+const char *s3_t1_t2_conv1_bin = "dla34/layers/features-stage3-tree1-tree2-body-conv1-conv.bin";
+const char *s3_t1_t2_conv2_bin = "dla34/layers/features-stage3-tree1-tree2-body-conv2-conv.bin";
+const char *s3_t1_root_conv1_bin = "dla34/layers/features-stage3-tree1-root-conv-conv.bin";
+const char *s3_t2_t1_conv1_bin = "dla34/layers/features-stage3-tree2-tree1-body-conv1-conv.bin";
+const char *s3_t2_t1_conv2_bin = "dla34/layers/features-stage3-tree2-tree1-body-conv2-conv.bin";
+const char *s3_t2_t2_conv1_bin = "dla34/layers/features-stage3-tree2-tree2-body-conv1-conv.bin";
+const char *s3_t2_t2_conv2_bin = "dla34/layers/features-stage3-tree2-tree2-body-conv2-conv.bin";
+const char *s3_t2_root_conv1_bin = "dla34/layers/features-stage3-tree2-root-conv-conv.bin";
+const char *s4_t1_conv1_bin = "dla34/layers/features-stage4-tree1-body-conv1-conv.bin";
+const char *s4_t1_conv2_bin = "dla34/layers/features-stage4-tree1-body-conv2-conv.bin";
+const char *s4_t1_project = "dla34/layers/features-stage4-tree1-project_conv-conv.bin";
+const char *s4_t2_conv1_bin = "dla34/layers/features-stage4-tree2-body-conv1-conv.bin";
+const char *s4_t2_conv2_bin = "dla34/layers/features-stage4-tree2-body-conv2-conv.bin";
+const char *s4_root_conv1_bin = "dla34/layers/features-stage4-root-conv-conv.bin";
 
 //final
-const char *fc_bin = "../tests/dla34/layers/output.bin";
+const char *fc_bin = "dla34/layers/output.bin";
 
-const char *output_bin = "../tests/dla34/debug/output.bin";  
+const char *output_bin = "dla34/debug/output.bin";  
 
 int main()
 {
