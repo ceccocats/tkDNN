@@ -3,12 +3,12 @@
 #include "tkdnn.h"
 #include "NvInfer.h"
 
-const char *input_bin   = "../tests/mnist/input.bin";
-const char *c0_bin      = "../tests/mnist/layers/c0.bin";
-const char *c1_bin      = "../tests/mnist/layers/c1.bin";
-const char *d2_bin      = "../tests/mnist/layers/d2.bin";
-const char *d3_bin      = "../tests/mnist/layers/d3.bin";
-const char *output_bin   = "../tests/mnist/output.bin";
+const char *input_bin   = "mnist/input.bin";
+const char *c0_bin      = "mnist/layers/c0.bin";
+const char *c1_bin      = "mnist/layers/c1.bin";
+const char *d2_bin      = "mnist/layers/d2.bin";
+const char *d3_bin      = "mnist/layers/d3.bin";
+const char *output_bin   = "mnist/output.bin";
 
 using namespace nvinfer1;
 
@@ -25,7 +25,7 @@ class Logger : public ILogger
 
 int main() {
 
-	downloadWeightsifDoNotExist(input_bin, "../tests/mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
+	downloadWeightsifDoNotExist(input_bin, "mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
 
     std::cout<<"\n==== CUDNN ====\n";
     // Network layout

@@ -22,10 +22,12 @@ bool fileExist(const char *fname) {
 
 void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url){
     if(!fileExist(input_bin.c_str())){
+        std::string mkdir_cmd = "mkdir " + test_folder; 
         std::string wget_cmd = "wget " + weights_url + " -O " + test_folder + "/weights.zip"; 
         std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
         std::string rm_cmd = "rm " + test_folder + "/weights.zip";
         int err = 0;
+        err = system(mkdir_cmd.c_str());
         err = system(wget_cmd.c_str());
         err = system(unzip_cmd.c_str());
         err = system(rm_cmd.c_str());
