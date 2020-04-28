@@ -86,26 +86,26 @@ public:
 		dnnType *output_conv = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
 
 		// split conv2d outputs into offset to mask
-		checkCuda(cudaMemcpy(offset, output_conv, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-		checkCuda(cudaMemcpy(mask, output_conv + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-		// kernel sigmoide
-		activationSIGMOIDForward(mask, mask, chunk_dim);
-	
-		// deformable convolution
-		dcnV2CudaForward(stat, handle, 
-                         	srcData, data_d,
-							bias2_d, ones_d1,
-							offset, mask,
-							reinterpret_cast<dnnType*>(outputs[0]), ones_d2,
-							kh, kw,
-							sh, sw,
-							ph, pw,
-							1, 1,
-							deformableGroup, 
-							i_n, i_c, i_h, i_w,
-							o_n, o_c, o_h, o_w,
-							chunk_dim);
-
+		for(int b=0; b<batchSize; b++) {
+			checkCuda(cudaMemcpy(offset, output_conv + b * 3 * chunk_dim, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
+			checkCuda(cudaMemcpy(mask, output_conv + b * 3 * chunk_dim + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
+			// kernel sigmoide
+			activationSIGMOIDForward(mask, mask, chunk_dim);
+			// deformable convolution
+			dcnV2CudaForward(stat, handle, 
+								srcData, data_d,
+								bias2_d, ones_d1,
+								offset, mask,
+								reinterpret_cast<dnnType*>(outputs[0]), ones_d2,
+								kh, kw,
+								sh, sw,
+								ph, pw,
+								1, 1,
+								deformableGroup, b,
+								i_n, i_c, i_h, i_w,
+								o_n, o_c, o_h, o_w,
+								chunk_dim);
+		}
 		return 0;
 	}
 
@@ -185,6 +185,11 @@ public:
 	dnnType * offset;
 	dnnType * mask;
 	dnnType *ones_d2;
+	// dnnType *input_n;
+	// dnnType *offset_n;
+	// dnnType *mask_n;
+	// dnnType *output_n;
+	
 	
 	tk::dnn::DeformConv2d *defRT;
 };

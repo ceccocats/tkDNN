@@ -241,12 +241,13 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
                          const int stride_h, const int stride_w,
                          const int pad_h, const int pad_w,
                          const int dilation_h, const int dilation_w,
-                         const int deformable_group,
+                         const int deformable_group, const int batch_id,
                          const int in_n, const int in_c, const int in_h, const int in_w, 
                          const int out_n, const int out_c, const int out_h, const int out_w,
                          const int chunk_dim, cudaStream_t stream)
 {  
   // stat and handle have be moved out to preserve 2 - 6 milliseconds every 100. 
+  const int batch = batch_id;
   const int channels = in_c;
   const int height = in_h;
   const int width = in_w;
@@ -265,13 +266,14 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
   stat = cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, 
               n, m, k, &alpha, 
               ones, k, bias, k, 
-              &beta, output, n);
+              &beta, output + batch * out_c * out_h * out_w, n);
   if (stat != CUBLAS_STATUS_SUCCESS)
     FatalError("CUBLAS initialization failed\n");
 
   modulatedDeformableIm2colCuda(stream,
-                                    input, offset,
-                                    mask,
+                                input + batch * channels * height * width,  
+                                offset,// + b * 2 * int((float)chunk_dim / batch),
+                                mask,// + b * int((float)chunk_dim / batch),
                                     1, channels, height, width,
                                     height_out, width_out, deformable_group, columns);
   // modulatedDeformableIm2colCudaGeneralVersion(stream,
@@ -290,7 +292,7 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
   stat = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 
               n, m, k, &alpha, 
               columns, n, weight, k, 
-              &beta, output, n);
+              &beta, output + batch * out_c * out_h * out_w, n);
 
   if (stat != CUBLAS_STATUS_SUCCESS)
     FatalError("CUBLAS initialization failed\n");
