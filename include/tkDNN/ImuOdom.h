@@ -113,6 +113,10 @@ class ImuOdom {
             return true;
         }
 
+        void close() {
+            // TODO: dealloc :)
+        }
+
         void update(dnnType *x0, dnnType *x1, dnnType *x2) {
 
             checkCuda( cudaMemcpy(i0_d, x0, dim0.tot()*sizeof(dnnType), cudaMemcpyHostToDevice) );
