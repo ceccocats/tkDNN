@@ -163,6 +163,11 @@ N.b. The test will be slower: this is due to the INT8 calibration, which may tak
 
 N.b. INT8 calibration requires TensorRT version greater than or equal to 6.0
 
+### BatchSize bigger than 1
+```
+export TKDNN_BATCHSIZE=2
+```
+
 ## mAP demo
 
 To compute mAP, precision, recall and f1score, run the map_demo.

@@ -62,10 +62,10 @@ public:
 
 		for (int b = 0; b < batchSize; ++b){
 			for(int n = 0; n < n_masks; ++n){
-				int index = entry_index(b, n*w*h, 0, batchSize);
+				int index = entry_index(b, n*w*h, 0);
 				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
 				
-				index = entry_index(b, n*w*h, 4, batchSize);
+				index = entry_index(b, n*w*h, 4);
 				activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*w*h, stream);
 			}
 		}
@@ -109,10 +109,10 @@ public:
     dnnType *mask;
     dnnType *bias;
 
-	int entry_index(int batch, int location, int entry, int batchSize) {
+	int entry_index(int batch, int location, int entry) {
 		int n =   location / (w*h);
 		int loc = location % (w*h);
-		return batch*c*h*w*batchSize + n*w*h*(4+classes+1) + entry*w*h + loc;
+		return batch*c*h*w + n*w*h*(4+classes+1) + entry*w*h + loc;
 	}
 
 };
