@@ -174,7 +174,7 @@ int main()
     std::string g161_bin = bin_path + "/layers/g161.bin";
     
 
-    // downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/Kcs4xBozwY4wFx8/download");
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download");
 
     tk::dnn::Conv2d c0(&net, 32, 3, 3, 1, 1, 1, 1, c0_bin, true);
     tk::dnn::Activation a0(&net, tk::dnn::ACTIVATION_MISH);
@@ -564,7 +564,7 @@ int main()
     tk::dnn::Yolo yolo161(&net, classes, 3, g161_bin, 3, 1.05);
 
 
-    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download");
+    
 
     
 
