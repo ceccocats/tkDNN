@@ -172,6 +172,7 @@ This will create a TensorRT file with the desidered **max** batch size.
 The test will still run with a batch of 1, but the created tensorRT can manage the desidered batch size.
 
 ### Test batch Inference
+This will test the network with random input and check if the output of each batch is the same.
 ```
 ./test_rtinference <network-rt-file> <number-of-batches>
 # <number-of-batches> should be less or equal to the max batch size of the <network-rt-file>
