@@ -114,9 +114,9 @@ python run_ssd_live_demo.py mb2-ssd-lite <pth-model-fil> <labels-file>
 
 To run the an object detection demo follow these steps (example with yolov3):
 ```
-rm yolo3_FP32.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_fp32.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_FP32.rt ../demo/yolo_test.mp4 y
+./demo yolo3_fp32.rt ../demo/yolo_test.mp4 y
 ```
 In general the demo program takes 4 parameters:
 ```
@@ -136,9 +136,9 @@ N.b. By default it is used FP32 inference
 To run the an object detection demo with FP16 inference follow these steps (example with yolov3):
 ```
 export TKDNN_MODE=FP16  # set the half floating point optimization
-rm yolo3_FP16.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_fp16.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_FP16.rt ../demo/yolo_test.mp4 y
+./demo yolo3_fp16.rt ../demo/yolo_test.mp4 y
 ```
 N.b. Using FP16 inference will lead to some errors in the results (first or second decimal). 
 
@@ -153,9 +153,9 @@ export TKDNN_CALIB_IMG_PATH=/path/to/calibration/image_list.txt
 
 # label_list.txt contains the list of the absolute paths to the calibration labels
 export TKDNN_CALIB_LABEL_PATH=/path/to/calibration/label_list.txt
-rm yolo3_INT8.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_int8.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_INT8.rt ../demo/yolo_test.mp4 y
+./demo yolo3_int8.rt ../demo/yolo_test.mp4 y
 ```
 N.b. Using INT8 inference will lead to some errors in the results. 
 
@@ -166,6 +166,21 @@ N.b. INT8 calibration requires TensorRT version greater than or equal to 6.0
 ### BatchSize bigger than 1
 ```
 export TKDNN_BATCHSIZE=2
+# build tensorRT files
+```
+This will create a TensorRT file with the desidered **max** batch size.
+The test will still run with a batch of 1, but the created tensorRT can manage the desidered batch size.
+
+### Test batch Inference
+```
+./test_rtinference <network-rt-file> <number-of-batches>
+# <number-of-batches> should be less or equal to the max batch size of the <network-rt-file>
+
+# example
+export TKDNN_BATCHSIZE=4           # set max batch size
+rm yolo3_fp32.rt                   # be sure to delete(or move) old tensorRT files
+./test_yolo3                       # build RT file
+./test_rtinference yolo3_fp32.rt 4 # test with a batch size of 4
 ```
 
 ## mAP demo
