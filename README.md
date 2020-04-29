@@ -69,10 +69,10 @@ Weights are essential for any network to run inference. For each test a folder o
 Therefore, once the weights have been exported, the folders layers and debug should be placed in the corresponding test.
 
 ### 1)Export weights from darknet
-To export weights for NNs that are defined in darknet framework, use [this](https://github.com/ceccocats/darknet) fork of darknet and follow these steps to obtain a correct debug and layers folder, ready for tkDNN.
+To export weights for NNs that are defined in darknet framework, use [this](https://git.hipert.unimore.it/fgatti/darknet.git) fork of darknet and follow these steps to obtain a correct debug and layers folder, ready for tkDNN.
 
 ```
-git clone https://github.com/ceccocats/darknet
+git clone https://git.hipert.unimore.it/fgatti/darknet.git
 cd darknet
 make
 mkdir layers debug
