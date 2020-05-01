@@ -1,29 +1,29 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin  = "../tests/yolo3_tiny512/layers/input.bin";
-const char *c0_bin     = "../tests/yolo3_tiny512/layers/c0.bin";
-const char *c2_bin     = "../tests/yolo3_tiny512/layers/c2.bin";
-const char *c4_bin     = "../tests/yolo3_tiny512/layers/c4.bin";
-const char *c6_bin     = "../tests/yolo3_tiny512/layers/c6.bin";
-const char *c8_bin     = "../tests/yolo3_tiny512/layers/c8.bin";
-const char *c10_bin    = "../tests/yolo3_tiny512/layers/c10.bin";
-const char *c12_bin    = "../tests/yolo3_tiny512/layers/c12.bin";
-const char *c13_bin    = "../tests/yolo3_tiny512/layers/c13.bin";
-const char *c14_bin    = "../tests/yolo3_tiny512/layers/c14.bin";
-const char *c15_bin    = "../tests/yolo3_tiny512/layers/c15.bin";
-const char *c18_bin    = "../tests/yolo3_tiny512/layers/c18.bin";
-const char *c21_bin    = "../tests/yolo3_tiny512/layers/c21.bin";
-const char *c22_bin    = "../tests/yolo3_tiny512/layers/c22.bin";
-const char *g16_bin    = "../tests/yolo3_tiny512/layers/g16.bin";
-const char *g23_bin    = "../tests/yolo3_tiny512/layers/g23.bin";
-// const char *output_bin = "../tests/yolo3_tiny512/layers/output.bin";
+const char *input_bin  = "yolo3_tiny512/layers/input.bin";
+const char *c0_bin     = "yolo3_tiny512/layers/c0.bin";
+const char *c2_bin     = "yolo3_tiny512/layers/c2.bin";
+const char *c4_bin     = "yolo3_tiny512/layers/c4.bin";
+const char *c6_bin     = "yolo3_tiny512/layers/c6.bin";
+const char *c8_bin     = "yolo3_tiny512/layers/c8.bin";
+const char *c10_bin    = "yolo3_tiny512/layers/c10.bin";
+const char *c12_bin    = "yolo3_tiny512/layers/c12.bin";
+const char *c13_bin    = "yolo3_tiny512/layers/c13.bin";
+const char *c14_bin    = "yolo3_tiny512/layers/c14.bin";
+const char *c15_bin    = "yolo3_tiny512/layers/c15.bin";
+const char *c18_bin    = "yolo3_tiny512/layers/c18.bin";
+const char *c21_bin    = "yolo3_tiny512/layers/c21.bin";
+const char *c22_bin    = "yolo3_tiny512/layers/c22.bin";
+const char *g16_bin    = "yolo3_tiny512/layers/g16.bin";
+const char *g23_bin    = "yolo3_tiny512/layers/g23.bin";
+// const char *output_bin = "yolo3_tiny512/layers/output.bin";
 
-const char *output_bin = "../tests/yolo3_tiny512/debug/layer23_out.bin";
+const char *output_bin = "yolo3_tiny512/debug/layer23_out.bin";
 
 int main() {
     
-    downloadWeightsifDoNotExist(input_bin, "../tests/yolo3_tiny512", "https://cloud.hipert.unimore.it/s/8Zt6bHwHADqP4JC/download");
+    downloadWeightsifDoNotExist(input_bin, "yolo3_tiny512", "https://cloud.hipert.unimore.it/s/8Zt6bHwHADqP4JC/download");
     
     int classes = 80;
 

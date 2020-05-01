@@ -102,13 +102,13 @@ dnnType* DeformConv2d::infer(dataDim_t &dim, dnnType* srcData) {
     dcnV2CudaForward(stat, handle, 
                          srcData, this->data_d,
                          this->bias2_d, ones_d1,
-                         offset, mask,
+                         offset, mask,                      
                          dstData, ones_d2,
                          this->kernelH, this->kernelW,
                          this->strideH, this->strideW,
                          this->paddingH, this->paddingW,
                          1, 1,
-                         this->deformableGroup, 
+                         this->deformableGroup, 0, //batch_id for cudnn is set to 0 (no batch)
                          preconv->input_dim.n, preconv->input_dim.c, preconv->input_dim.h, preconv->input_dim.w,
                          this->output_dim.n, this->output_dim.c, this->output_dim.h, this->output_dim.w,
                          chunk_dim);

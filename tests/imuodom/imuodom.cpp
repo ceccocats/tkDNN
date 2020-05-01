@@ -1,30 +1,30 @@
 #include<iostream>
 #include "tkDNN/ImuOdom.h"
 
-const char *i0_bin   = "../tests/imuodom/layers/input0.bin";
-const char *i1_bin   = "../tests/imuodom/layers/input1.bin";
-const char *i2_bin   = "../tests/imuodom/layers/input2.bin";
-const char *o0_bin   = "../tests/imuodom/layers/output0.bin";
-const char *o1_bin   = "../tests/imuodom/layers/output1.bin";
+const char *i0_bin   = "imuodom/layers/input0.bin";
+const char *i1_bin   = "imuodom/layers/input1.bin";
+const char *i2_bin   = "imuodom/layers/input2.bin";
+const char *o0_bin   = "imuodom/layers/output0.bin";
+const char *o1_bin   = "imuodom/layers/output1.bin";
 
-const char *c0_bin = "../tests/imuodom/layers/conv1d_7.bin";
-const char *c1_bin = "../tests/imuodom/layers/conv1d_8.bin";
-const char *c2_bin = "../tests/imuodom/layers/conv1d_9.bin";
-const char *c3_bin = "../tests/imuodom/layers/conv1d_10.bin";
-const char *c4_bin = "../tests/imuodom/layers/conv1d_11.bin";
-const char *c5_bin = "../tests/imuodom/layers/conv1d_12.bin";
-const char *l0_bin = "../tests/imuodom/layers/bidirectional_3.bin";
-const char *l1_bin = "../tests/imuodom/layers/bidirectional_4.bin";
-const char *d0_bin = "../tests/imuodom/layers/dense_3.bin";
-const char *d1_bin = "../tests/imuodom/layers/dense_4.bin";
+const char *c0_bin = "imuodom/layers/conv1d_7.bin";
+const char *c1_bin = "imuodom/layers/conv1d_8.bin";
+const char *c2_bin = "imuodom/layers/conv1d_9.bin";
+const char *c3_bin = "imuodom/layers/conv1d_10.bin";
+const char *c4_bin = "imuodom/layers/conv1d_11.bin";
+const char *c5_bin = "imuodom/layers/conv1d_12.bin";
+const char *l0_bin = "imuodom/layers/bidirectional_3.bin";
+const char *l1_bin = "imuodom/layers/bidirectional_4.bin";
+const char *d0_bin = "imuodom/layers/dense_3.bin";
+const char *d1_bin = "imuodom/layers/dense_4.bin";
 
 
 int main() {
 
-    downloadWeightsifDoNotExist(i0_bin, "../tests/imuodom", "https://cloud.hipert.unimore.it/s/ZAy34K5w2ixED6x/download");
+    downloadWeightsifDoNotExist(i0_bin, "imuodom", "https://cloud.hipert.unimore.it/s/ZAy34K5w2ixED6x/download");
     
     tk::dnn::ImuOdom ImuNet;
-    ImuNet.init("../tests/imuodom/layers/");
+    ImuNet.init("imuodom/layers/");
 
     const int N = 10000; //19513;
 
