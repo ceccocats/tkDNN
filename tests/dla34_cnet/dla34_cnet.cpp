@@ -1,109 +1,109 @@
 #include <iostream>
 #include "tkdnn.h"
 
-const char *input_bin = "../tests/dla34_cnet/debug/input.bin";
-const char *conv1_bin = "../tests/dla34_cnet/layers/base-base_layer-0.bin";
-const char *conv2_bin = "../tests/dla34_cnet/layers/base-level0-0.bin";
-const char *conv3_bin = "../tests/dla34_cnet/layers/base-level1-0.bin";
+const char *input_bin = "dla34_cnet/debug/input.bin";
+const char *conv1_bin = "dla34_cnet/layers/base-base_layer-0.bin";
+const char *conv2_bin = "dla34_cnet/layers/base-level0-0.bin";
+const char *conv3_bin = "dla34_cnet/layers/base-level1-0.bin";
 // s - stage, t - tree
-const char *s1_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level2-tree1-conv1.bin";
-const char *s1_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level2-tree1-conv2.bin";
-const char *s1_t1_project = "../tests/dla34_cnet/layers/base-level2-project-0.bin";
-const char *s1_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level2-tree2-conv1.bin";
-const char *s1_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level2-tree2-conv2.bin";
-const char *s1_root_conv1_bin = "../tests/dla34_cnet/layers/base-level2-root-conv.bin";
-const char *s2_t1_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree1-tree1-conv1.bin";
-const char *s2_t1_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level3-tree1-tree1-conv2.bin";
-const char *s2_t1_t1_project = "../tests/dla34_cnet/layers/base-level3-tree1-project-0.bin";
-const char *s2_t1_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree1-tree2-conv1.bin";
-const char *s2_t1_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level3-tree1-tree2-conv2.bin";
-const char *s2_t1_root_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree1-root-conv.bin";
-const char *s2_t2_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree2-tree1-conv1.bin";
-const char *s2_t2_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level3-tree2-tree1-conv2.bin";
-const char *s2_t2_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree2-tree2-conv1.bin";
-const char *s2_t2_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level3-tree2-tree2-conv2.bin";
-const char *s2_t2_root_conv1_bin = "../tests/dla34_cnet/layers/base-level3-tree2-root-conv.bin";
-const char *s3_t1_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree1-tree1-conv1.bin";
-const char *s3_t1_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level4-tree1-tree1-conv2.bin";
-const char *s3_t1_t1_project = "../tests/dla34_cnet/layers/base-level4-tree1-project-0.bin";
-const char *s3_t1_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree1-tree2-conv1.bin";
-const char *s3_t1_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level4-tree1-tree2-conv2.bin";
-const char *s3_t1_root_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree1-root-conv.bin";
-const char *s3_t2_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree2-tree1-conv1.bin";
-const char *s3_t2_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level4-tree2-tree1-conv2.bin";
-const char *s3_t2_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree2-tree2-conv1.bin";
-const char *s3_t2_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level4-tree2-tree2-conv2.bin";
-const char *s3_t2_root_conv1_bin = "../tests/dla34_cnet/layers/base-level4-tree2-root-conv.bin";
-const char *s4_t1_conv1_bin = "../tests/dla34_cnet/layers/base-level5-tree1-conv1.bin";
-const char *s4_t1_conv2_bin = "../tests/dla34_cnet/layers/base-level5-tree1-conv2.bin";
-const char *s4_t1_project = "../tests/dla34_cnet/layers/base-level5-project-0.bin";
-const char *s4_t2_conv1_bin = "../tests/dla34_cnet/layers/base-level5-tree2-conv1.bin";
-const char *s4_t2_conv2_bin = "../tests/dla34_cnet/layers/base-level5-tree2-conv2.bin";
-const char *s4_root_conv1_bin = "../tests/dla34_cnet/layers/base-level5-root-conv.bin";
+const char *s1_t1_conv1_bin = "dla34_cnet/layers/base-level2-tree1-conv1.bin";
+const char *s1_t1_conv2_bin = "dla34_cnet/layers/base-level2-tree1-conv2.bin";
+const char *s1_t1_project = "dla34_cnet/layers/base-level2-project-0.bin";
+const char *s1_t2_conv1_bin = "dla34_cnet/layers/base-level2-tree2-conv1.bin";
+const char *s1_t2_conv2_bin = "dla34_cnet/layers/base-level2-tree2-conv2.bin";
+const char *s1_root_conv1_bin = "dla34_cnet/layers/base-level2-root-conv.bin";
+const char *s2_t1_t1_conv1_bin = "dla34_cnet/layers/base-level3-tree1-tree1-conv1.bin";
+const char *s2_t1_t1_conv2_bin = "dla34_cnet/layers/base-level3-tree1-tree1-conv2.bin";
+const char *s2_t1_t1_project = "dla34_cnet/layers/base-level3-tree1-project-0.bin";
+const char *s2_t1_t2_conv1_bin = "dla34_cnet/layers/base-level3-tree1-tree2-conv1.bin";
+const char *s2_t1_t2_conv2_bin = "dla34_cnet/layers/base-level3-tree1-tree2-conv2.bin";
+const char *s2_t1_root_conv1_bin = "dla34_cnet/layers/base-level3-tree1-root-conv.bin";
+const char *s2_t2_t1_conv1_bin = "dla34_cnet/layers/base-level3-tree2-tree1-conv1.bin";
+const char *s2_t2_t1_conv2_bin = "dla34_cnet/layers/base-level3-tree2-tree1-conv2.bin";
+const char *s2_t2_t2_conv1_bin = "dla34_cnet/layers/base-level3-tree2-tree2-conv1.bin";
+const char *s2_t2_t2_conv2_bin = "dla34_cnet/layers/base-level3-tree2-tree2-conv2.bin";
+const char *s2_t2_root_conv1_bin = "dla34_cnet/layers/base-level3-tree2-root-conv.bin";
+const char *s3_t1_t1_conv1_bin = "dla34_cnet/layers/base-level4-tree1-tree1-conv1.bin";
+const char *s3_t1_t1_conv2_bin = "dla34_cnet/layers/base-level4-tree1-tree1-conv2.bin";
+const char *s3_t1_t1_project = "dla34_cnet/layers/base-level4-tree1-project-0.bin";
+const char *s3_t1_t2_conv1_bin = "dla34_cnet/layers/base-level4-tree1-tree2-conv1.bin";
+const char *s3_t1_t2_conv2_bin = "dla34_cnet/layers/base-level4-tree1-tree2-conv2.bin";
+const char *s3_t1_root_conv1_bin = "dla34_cnet/layers/base-level4-tree1-root-conv.bin";
+const char *s3_t2_t1_conv1_bin = "dla34_cnet/layers/base-level4-tree2-tree1-conv1.bin";
+const char *s3_t2_t1_conv2_bin = "dla34_cnet/layers/base-level4-tree2-tree1-conv2.bin";
+const char *s3_t2_t2_conv1_bin = "dla34_cnet/layers/base-level4-tree2-tree2-conv1.bin";
+const char *s3_t2_t2_conv2_bin = "dla34_cnet/layers/base-level4-tree2-tree2-conv2.bin";
+const char *s3_t2_root_conv1_bin = "dla34_cnet/layers/base-level4-tree2-root-conv.bin";
+const char *s4_t1_conv1_bin = "dla34_cnet/layers/base-level5-tree1-conv1.bin";
+const char *s4_t1_conv2_bin = "dla34_cnet/layers/base-level5-tree1-conv2.bin";
+const char *s4_t1_project = "dla34_cnet/layers/base-level5-project-0.bin";
+const char *s4_t2_conv1_bin = "dla34_cnet/layers/base-level5-tree2-conv1.bin";
+const char *s4_t2_conv2_bin = "dla34_cnet/layers/base-level5-tree2-conv2.bin";
+const char *s4_root_conv1_bin = "dla34_cnet/layers/base-level5-root-conv.bin";
 
 //final
-// const char *fc_bin = "../tests/dla34_cnet/layers/output.bin";
+// const char *fc_bin = "dla34_cnet/layers/output.bin";
 
-const char *ida_0_p_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_0-proj_1-conv.bin";
-const char *ida_0_p_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_0-proj_1-conv-conv_offset_mask.bin";
-const char *ida_0_up_1_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_0-up_1.bin";
-const char *ida_0_n_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_0-node_1-conv.bin";
-const char *ida_0_n_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_0-node_1-conv-conv_offset_mask.bin";
+const char *ida_0_p_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_0-proj_1-conv.bin";
+const char *ida_0_p_1_conv_bin = "dla34_cnet/layers/dla_up-ida_0-proj_1-conv-conv_offset_mask.bin";
+const char *ida_0_up_1_deconv_bin = "dla34_cnet/layers/dla_up-ida_0-up_1.bin";
+const char *ida_0_n_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_0-node_1-conv.bin";
+const char *ida_0_n_1_conv_bin = "dla34_cnet/layers/dla_up-ida_0-node_1-conv-conv_offset_mask.bin";
 
-const char *ida_1_p_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-proj_1-conv.bin";
-const char *ida_1_p_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-proj_1-conv-conv_offset_mask.bin";
-const char *ida_1_up_1_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-up_1.bin";
-const char *ida_1_n_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-node_1-conv.bin";
-const char *ida_1_n_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-node_1-conv-conv_offset_mask.bin";
-const char *ida_1_p_2_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-proj_2-conv.bin";
-const char *ida_1_p_2_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-proj_2-conv-conv_offset_mask.bin";
-const char *ida_1_up_2_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-up_2.bin";
-const char *ida_1_n_2_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-node_2-conv.bin";
-const char *ida_1_n_2_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_1-node_2-conv-conv_offset_mask.bin";
+const char *ida_1_p_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_1-proj_1-conv.bin";
+const char *ida_1_p_1_conv_bin = "dla34_cnet/layers/dla_up-ida_1-proj_1-conv-conv_offset_mask.bin";
+const char *ida_1_up_1_deconv_bin = "dla34_cnet/layers/dla_up-ida_1-up_1.bin";
+const char *ida_1_n_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_1-node_1-conv.bin";
+const char *ida_1_n_1_conv_bin = "dla34_cnet/layers/dla_up-ida_1-node_1-conv-conv_offset_mask.bin";
+const char *ida_1_p_2_dcn_bin = "dla34_cnet/layers/dla_up-ida_1-proj_2-conv.bin";
+const char *ida_1_p_2_conv_bin = "dla34_cnet/layers/dla_up-ida_1-proj_2-conv-conv_offset_mask.bin";
+const char *ida_1_up_2_deconv_bin = "dla34_cnet/layers/dla_up-ida_1-up_2.bin";
+const char *ida_1_n_2_dcn_bin = "dla34_cnet/layers/dla_up-ida_1-node_2-conv.bin";
+const char *ida_1_n_2_conv_bin = "dla34_cnet/layers/dla_up-ida_1-node_2-conv-conv_offset_mask.bin";
 
-const char *ida_2_p_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_1-conv.bin";
-const char *ida_2_p_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_1-conv-conv_offset_mask.bin";
-const char *ida_2_up_1_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-up_1.bin";
-const char *ida_2_n_1_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_1-conv.bin";
-const char *ida_2_n_1_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_1-conv-conv_offset_mask.bin";
-const char *ida_2_p_2_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_2-conv.bin";
-const char *ida_2_p_2_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_2-conv-conv_offset_mask.bin";
-const char *ida_2_up_2_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-up_2.bin";
-const char *ida_2_n_2_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_2-conv.bin";
-const char *ida_2_n_2_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_2-conv-conv_offset_mask.bin";
-const char *ida_2_p_3_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_3-conv.bin";
-const char *ida_2_p_3_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-proj_3-conv-conv_offset_mask.bin";
-const char *ida_2_up_3_deconv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-up_3.bin";
-const char *ida_2_n_3_dcn_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_3-conv.bin";
-const char *ida_2_n_3_conv_bin = "../tests/dla34_cnet/layers/dla_up-ida_2-node_3-conv-conv_offset_mask.bin";
+const char *ida_2_p_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-proj_1-conv.bin";
+const char *ida_2_p_1_conv_bin = "dla34_cnet/layers/dla_up-ida_2-proj_1-conv-conv_offset_mask.bin";
+const char *ida_2_up_1_deconv_bin = "dla34_cnet/layers/dla_up-ida_2-up_1.bin";
+const char *ida_2_n_1_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-node_1-conv.bin";
+const char *ida_2_n_1_conv_bin = "dla34_cnet/layers/dla_up-ida_2-node_1-conv-conv_offset_mask.bin";
+const char *ida_2_p_2_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-proj_2-conv.bin";
+const char *ida_2_p_2_conv_bin = "dla34_cnet/layers/dla_up-ida_2-proj_2-conv-conv_offset_mask.bin";
+const char *ida_2_up_2_deconv_bin = "dla34_cnet/layers/dla_up-ida_2-up_2.bin";
+const char *ida_2_n_2_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-node_2-conv.bin";
+const char *ida_2_n_2_conv_bin = "dla34_cnet/layers/dla_up-ida_2-node_2-conv-conv_offset_mask.bin";
+const char *ida_2_p_3_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-proj_3-conv.bin";
+const char *ida_2_p_3_conv_bin = "dla34_cnet/layers/dla_up-ida_2-proj_3-conv-conv_offset_mask.bin";
+const char *ida_2_up_3_deconv_bin = "dla34_cnet/layers/dla_up-ida_2-up_3.bin";
+const char *ida_2_n_3_dcn_bin = "dla34_cnet/layers/dla_up-ida_2-node_3-conv.bin";
+const char *ida_2_n_3_conv_bin = "dla34_cnet/layers/dla_up-ida_2-node_3-conv-conv_offset_mask.bin";
 
-const char *ida_up_p_1_dcn_bin = "../tests/dla34_cnet/layers/ida_up-proj_1-conv.bin";
-const char *ida_up_p_1_conv_bin = "../tests/dla34_cnet/layers/ida_up-proj_1-conv-conv_offset_mask.bin";
-const char *ida_up_up_1_deconv_bin = "../tests/dla34_cnet/layers/ida_up-up_1.bin";
-const char *ida_up_n_1_dcn_bin = "../tests/dla34_cnet/layers/ida_up-node_1-conv.bin";
-const char *ida_up_n_1_conv_bin = "../tests/dla34_cnet/layers/ida_up-node_1-conv-conv_offset_mask.bin";
-const char *ida_up_p_2_dcn_bin = "../tests/dla34_cnet/layers/ida_up-proj_2-conv.bin";
-const char *ida_up_p_2_conv_bin = "../tests/dla34_cnet/layers/ida_up-proj_2-conv-conv_offset_mask.bin";
-const char *ida_up_up_2_deconv_bin = "../tests/dla34_cnet/layers/ida_up-up_2.bin";
-const char *ida_up_n_2_dcn_bin = "../tests/dla34_cnet/layers/ida_up-node_2-conv.bin";
-const char *ida_up_n_2_conv_bin = "../tests/dla34_cnet/layers/ida_up-node_2-conv-conv_offset_mask.bin";
+const char *ida_up_p_1_dcn_bin = "dla34_cnet/layers/ida_up-proj_1-conv.bin";
+const char *ida_up_p_1_conv_bin = "dla34_cnet/layers/ida_up-proj_1-conv-conv_offset_mask.bin";
+const char *ida_up_up_1_deconv_bin = "dla34_cnet/layers/ida_up-up_1.bin";
+const char *ida_up_n_1_dcn_bin = "dla34_cnet/layers/ida_up-node_1-conv.bin";
+const char *ida_up_n_1_conv_bin = "dla34_cnet/layers/ida_up-node_1-conv-conv_offset_mask.bin";
+const char *ida_up_p_2_dcn_bin = "dla34_cnet/layers/ida_up-proj_2-conv.bin";
+const char *ida_up_p_2_conv_bin = "dla34_cnet/layers/ida_up-proj_2-conv-conv_offset_mask.bin";
+const char *ida_up_up_2_deconv_bin = "dla34_cnet/layers/ida_up-up_2.bin";
+const char *ida_up_n_2_dcn_bin = "dla34_cnet/layers/ida_up-node_2-conv.bin";
+const char *ida_up_n_2_conv_bin = "dla34_cnet/layers/ida_up-node_2-conv-conv_offset_mask.bin";
 
-const char *hm_conv1_bin = "../tests/dla34_cnet/layers/hm-0.bin";
-const char *hm_conv2_bin = "../tests/dla34_cnet/layers/hm-2.bin";
-const char *wh_conv1_bin = "../tests/dla34_cnet/layers/wh-0.bin";
-const char *wh_conv2_bin = "../tests/dla34_cnet/layers/wh-2.bin";
-const char *reg_conv1_bin = "../tests/dla34_cnet/layers/reg-0.bin";
-const char *reg_conv2_bin = "../tests/dla34_cnet/layers/reg-2.bin";
+const char *hm_conv1_bin = "dla34_cnet/layers/hm-0.bin";
+const char *hm_conv2_bin = "dla34_cnet/layers/hm-2.bin";
+const char *wh_conv1_bin = "dla34_cnet/layers/wh-0.bin";
+const char *wh_conv2_bin = "dla34_cnet/layers/wh-2.bin";
+const char *reg_conv1_bin = "dla34_cnet/layers/reg-0.bin";
+const char *reg_conv2_bin = "dla34_cnet/layers/reg-2.bin";
 
 const char *output_bin[]={
-"../tests/dla34_cnet/debug/hm.bin",
-"../tests/dla34_cnet/debug/wh.bin",
-"../tests/dla34_cnet/debug/reg.bin"};
+"dla34_cnet/debug/hm.bin",
+"dla34_cnet/debug/wh.bin",
+"dla34_cnet/debug/reg.bin"};
 
 int main()
 {
 
-    downloadWeightsifDoNotExist(input_bin, "../tests/dla34_cnet", "https://cloud.hipert.unimore.it/s/KRZBbCQsKAtQwpZ/download");
+    downloadWeightsifDoNotExist(input_bin, "dla34_cnet", "https://cloud.hipert.unimore.it/s/KRZBbCQsKAtQwpZ/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);
