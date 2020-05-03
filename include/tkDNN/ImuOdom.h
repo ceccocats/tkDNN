@@ -137,7 +137,8 @@ class ImuOdom {
             q.x() = deltaQ(1);
             q.y() = deltaQ(2);
             q.z() = deltaQ(3);    
-            odomPOS = odomPOS + deltaP.cast<double>();
+            odomPOS = odomPOS + odomROT*deltaP.cast<double>(); // V1
+            //odomPOS = odomPOS + deltaP.cast<double>(); // V2
             odomROT = odomROT * q.normalized().toRotationMatrix();
             
             // compute euler
