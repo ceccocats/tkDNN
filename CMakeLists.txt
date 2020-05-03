@@ -113,8 +113,14 @@ target_link_libraries(test_yolo3_berkeley tkDNN)
 add_executable(test_yolo3_flir tests/yolo3_flir/yolo3_flir.cpp)
 target_link_libraries(test_yolo3_flir tkDNN)
 
+add_executable(test_yolo4 tests/yolo4/yolo4.cpp)
+target_link_libraries(test_yolo4 tkDNN)
+
 add_executable(test_mobilenetv2ssd tests/mobilenetv2ssd/mobilenetv2ssd.cpp)
 target_link_libraries(test_mobilenetv2ssd tkDNN)
+
+add_executable(test_bdd-mobilenetv2ssd tests/bdd-mobilenetv2ssd/bdd-mobilenetv2ssd.cpp)
+target_link_libraries(test_bdd-mobilenetv2ssd tkDNN)
 
 add_executable(test_mobilenetv2ssd512 tests/mobilenetv2ssd512/mobilenetv2ssd512.cpp)
 target_link_libraries(test_mobilenetv2ssd512 tkDNN)
@@ -124,6 +130,9 @@ target_link_libraries(test_resnet101 tkDNN)
 
 add_executable(test_csresnext50-panet-spp tests/csresnext50-panet-spp/csresnext50-panet-spp.cpp)
 target_link_libraries(test_csresnext50-panet-spp tkDNN)
+
+add_executable(test_bdd-csresnext50-panet-spp tests/bdd-csresnext50-panet-spp/bdd-csresnext50-panet-spp.cpp)
+target_link_libraries(test_bdd-csresnext50-panet-spp tkDNN)
 
 add_executable(test_resnet101_cnet tests/resnet101_cnet/resnet101_cnet.cpp)
 target_link_libraries(test_resnet101_cnet tkDNN)

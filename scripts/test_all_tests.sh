@@ -71,6 +71,7 @@ do
     ./test_imuodom &>> $out_file
     print_output $? imuodom
 
+    test_net yolo4
     test_net resnet101_cnet
     test_net yolo3
     test_net yolo3_flir
@@ -87,7 +88,7 @@ do
     test_net yolo_voc
     test_net dla34_cnet
     test_net yolo3_coco4
-
+    
 done
 
 echo "If errors occured, check logfile $out_file" 
