@@ -2,6 +2,9 @@
 tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives, specifically thought to work on NVIDIA Jetson Boards. It has been tested on TK1(branch cudnn2), TX1, TX2, AGX Xavier and several discrete GPU.
 The main goal of this project is to exploit NVIDIA boards as much as possible to obtain the best inference performance. It does not allow training. 
 
+Accepted paper @ IRC 2020, will soon been published.
+M. Verucchi, L. Bartoli, F. Bagni, F. Gatti, P. Burgio and M. Bertogna, "Real-Time clustering and LiDAR-camera fusion on embedded platforms for self-driving cars",  in proceedings in IEEE Robotic Computing (2020)
+
 ## Index
 - [tkDNN](#tkdnn)
   - [Index](#index)
@@ -69,10 +72,10 @@ Weights are essential for any network to run inference. For each test a folder o
 Therefore, once the weights have been exported, the folders layers and debug should be placed in the corresponding test.
 
 ### 1)Export weights from darknet
-To export weights for NNs that are defined in darknet framework, use [this](https://github.com/ceccocats/darknet) fork of darknet and follow these steps to obtain a correct debug and layers folder, ready for tkDNN.
+To export weights for NNs that are defined in darknet framework, use [this](https://git.hipert.unimore.it/fgatti/darknet.git) fork of darknet and follow these steps to obtain a correct debug and layers folder, ready for tkDNN.
 
 ```
-git clone https://github.com/ceccocats/darknet
+git clone https://git.hipert.unimore.it/fgatti/darknet.git
 cd darknet
 make
 mkdir layers debug
@@ -114,9 +117,9 @@ python run_ssd_live_demo.py mb2-ssd-lite <pth-model-fil> <labels-file>
 
 To run the an object detection demo follow these steps (example with yolov3):
 ```
-rm yolo3_FP32.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_fp32.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_FP32.rt ../demo/yolo_test.mp4 y
+./demo yolo3_fp32.rt ../demo/yolo_test.mp4 y
 ```
 In general the demo program takes 4 parameters:
 ```
@@ -136,9 +139,9 @@ N.b. By default it is used FP32 inference
 To run the an object detection demo with FP16 inference follow these steps (example with yolov3):
 ```
 export TKDNN_MODE=FP16  # set the half floating point optimization
-rm yolo3_FP16.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_fp16.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_FP16.rt ../demo/yolo_test.mp4 y
+./demo yolo3_fp16.rt ../demo/yolo_test.mp4 y
 ```
 N.b. Using FP16 inference will lead to some errors in the results (first or second decimal). 
 
@@ -153,9 +156,9 @@ export TKDNN_CALIB_IMG_PATH=/path/to/calibration/image_list.txt
 
 # label_list.txt contains the list of the absolute paths to the calibration labels
 export TKDNN_CALIB_LABEL_PATH=/path/to/calibration/label_list.txt
-rm yolo3_INT8.rt        # be sure to delete(or move) old tensorRT files
+rm yolo3_int8.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_INT8.rt ../demo/yolo_test.mp4 y
+./demo yolo3_int8.rt ../demo/yolo_test.mp4 y
 ```
 N.b. Using INT8 inference will lead to some errors in the results. 
 
@@ -166,16 +169,38 @@ N.b. INT8 calibration requires TensorRT version greater than or equal to 6.0
 ### BatchSize bigger than 1
 ```
 export TKDNN_BATCHSIZE=2
+# build tensorRT files
+```
+This will create a TensorRT file with the desidered **max** batch size.
+The test will still run with a batch of 1, but the created tensorRT can manage the desidered batch size.
+
+### Test batch Inference
+This will test the network with random input and check if the output of each batch is the same.
+```
+./test_rtinference <network-rt-file> <number-of-batches>
+# <number-of-batches> should be less or equal to the max batch size of the <network-rt-file>
+
+# example
+export TKDNN_BATCHSIZE=4           # set max batch size
+rm yolo3_fp32.rt                   # be sure to delete(or move) old tensorRT files
+./test_yolo3                       # build RT file
+./test_rtinference yolo3_fp32.rt 4 # test with a batch size of 4
 ```
 
 ## mAP demo
 
 To compute mAP, precision, recall and f1score, run the map_demo.
 
-A validation set is needed. To download COCO_val2017 run (form the root folder): 
+A validation set is needed. 
+To download COCO_val2017 (80 classes) run (form the root folder): 
 ```
-bash scripts/download_validation.sh 
+bash scripts/download_validation.sh COCO
 ```
+To download Berkeley_val (10 classes) run (form the root folder): 
+```
+bash scripts/download_validation.sh BDD
+```
+
 To compute the map, the following parameters are needed:
 ```
 ./map_demo <network rt> <network type [y|c|m]> <labels file path> <config file path>
@@ -204,7 +229,7 @@ cd build
 | yolo_tiny         | YOLO v2 tiny<sup>1</sup>                      | [COCO 2014](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/m3orfJr8pGrN5mQ/download)                                                                   |
 | yolo_voc          | YOLO v2<sup>1</sup>                           | [VOC      ](http://host.robots.ox.ac.uk/pascal/VOC/)          | 21        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/DJC5Fi2pEjfNDP9/download)                                                                   |
 | yolo3             | YOLO v3<sup>2</sup>                           | [COCO 2014](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/jPXmHyptpLoNdNR/download)     |
-| yolo3_512   | YOLO v3<sup>2</sup>                                 | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/e7HfScx77JEHeYb/download)     |
+| yolo3_512   | YOLO v3<sup>2</sup>                                 | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/RGecMeGLD4cXEWL/download)     |
 | yolo3_berkeley    | YOLO v3<sup>2</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)   | 10        | 320x544       | [weights](https://cloud.hipert.unimore.it/s/o5cHa4AjTKS64oD/download)                                                                   |
 | yolo3_coco4       | YOLO v3<sup>2</sup>                           | [COCO 2014](http://cocodataset.org/)                          | 4         | 416x416       | [weights](https://cloud.hipert.unimore.it/s/o27NDzSAartbyc4/download)                                                                   |
 | yolo3_flir        | YOLO v3<sup>2</sup>                           | [FREE FLIR](https://www.flir.com/oem/adas/adas-dataset-form/) | 3         | 320x544       | [weights](https://cloud.hipert.unimore.it/s/62DECncmF6bMMiH/download)                                                                   |
@@ -217,6 +242,7 @@ cd build
 | resnet101         | Resnet 101<sup>6</sup>                        | [COCO 2014](http://cocodataset.org/)                          | 80        | 224x224       | weights                                                                   |
 | resnet101_cnet    | Centernet (Resnet101 backend)<sup>4</sup>     | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/5BTjHMWBcJk8g3i/download)     |
 | csresnext50-panet-spp    | Cross Stage Partial Network <sup>7</sup>     | [COCO 2014](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/Kcs4xBozwY4wFx8/download)     |
+| yolo4             | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
 
 
 ## References
@@ -228,3 +254,4 @@ cd build
 5. Sandler, Mark, et al. "Mobilenetv2: Inverted residuals and linear bottlenecks." Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
 6. He, Kaiming, et al. "Deep residual learning for image recognition." Proceedings of the IEEE conference on computer vision and pattern recognition. 2016.
 7. Wang, Chien-Yao, et al. "CSPNet: A New Backbone that can Enhance Learning Capability of CNN." arXiv preprint arXiv:1911.11929 (2019).
+8. Bochkovskiy, Alexey, Chien-Yao Wang, and Hong-Yuan Mark Liao. "YOLOv4: Optimal Speed and Accuracy of Object Detection." arXiv preprint arXiv:2004.10934 (2020).
