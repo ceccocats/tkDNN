@@ -16,9 +16,9 @@ def bin_write(f, data):
     bin = struct.pack(fmt, *data)
     f.write(bin)
 
-
+# USE weight_exporter to generare wgs bins
 if __name__ == '__main__':
-
+    
 
     print("DATA FORMAT: ", keras.backend.image_data_format())
 
