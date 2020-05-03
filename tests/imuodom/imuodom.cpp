@@ -9,7 +9,11 @@ const char *o1_bin   = "imuodom/layers/output1.bin";
 
 int main() {
 
-    downloadWeightsifDoNotExist(i0_bin, "imuodom", "https://cloud.hipert.unimore.it/s/BBSEbEbQbPKxp4s/download");
+    // V1 
+    downloadWeightsifDoNotExist(i0_bin, "imuodom", "https://cloud.hipert.unimore.it/s/ZAy34K5w2ixED6x/download");
+    
+    // V2
+    //downloadWeightsifDoNotExist(i0_bin, "imuodom", "https://cloud.hipert.unimore.it/s/BBSEbEbQbPKxp4s/download");
     
     tk::dnn::ImuOdom ImuNet;
     ImuNet.init("imuodom/layers/");
