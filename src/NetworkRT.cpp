@@ -225,7 +225,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -413,7 +413,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-    } else {
+    } 
+    else if(l->act_mode == ACTIVATION_MISH) {
+        IPlugin *plugin = new ActivationMishRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else {
         FatalError("this Activation mode is not yet implemented");
         return NULL;
     }
@@ -518,7 +525,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
     //std::cout<<"New plugin YOLO\n";
-    IPlugin *plugin = new YoloRT(l->classes, l->num, l);
+    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
@@ -637,6 +644,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         a->size = readBUF<int>(buf);
         return a;
     }
+    if(name.find("ActivationMish") == 0) {
+        ActivationMishRT *a = new ActivationMishRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
     if(name.find("ActivationCReLU") == 0) {
         ActivationReLUCeiling *a = new ActivationReLUCeiling(readBUF<float>(buf));
         a->size = readBUF<int>(buf);
@@ -728,6 +740,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
+        r->scaleXY = readBUF<float>(buf);
         for(int i=0; i<r->n_masks; i++)
             r->mask[i] = readBUF<dnnType>(buf);
         for(int i=0; i<r->n_masks*2*r->num; i++)
