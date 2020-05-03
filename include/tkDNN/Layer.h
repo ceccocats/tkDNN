@@ -18,6 +18,7 @@ enum layerType_t {
     LAYER_ACTIVATION,
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
+    LAYER_ACTIVATION_MISH,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
     LAYER_MULADD,
@@ -66,6 +67,7 @@ public:
             case LAYER_ACTIVATION:          return "Activation";
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
+            case LAYER_ACTIVATION_MISH:     return "ActivationMish";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
             case LAYER_MULADD:              return "MulAdd";
@@ -168,7 +170,8 @@ public:
 */
 typedef enum {
     ACTIVATION_ELU     = 100,
-    ACTIVATION_LEAKY   = 101
+    ACTIVATION_LEAKY   = 101,
+    ACTIVATION_MISH   = 102
 } tkdnnActivationMode_t;
 
 /**
@@ -187,6 +190,8 @@ public:
             return LAYER_ACTIVATION_CRELU;
         else if (act_mode == ACTIVATION_LEAKY)
             return LAYER_ACTIVATION_LEAKY;
+        else if (act_mode == ACTIVATION_MISH)
+            return LAYER_ACTIVATION_MISH;
         else
             return LAYER_ACTIVATION;
          };
@@ -561,13 +566,14 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks=3);
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
     int classes, num, n_masks;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
+    float scaleXY;
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);

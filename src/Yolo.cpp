@@ -11,12 +11,13 @@
 
 namespace tk { namespace dnn {
 
-Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks) : 
+Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy) : 
     Layer(net) {
     
     this->classes = classes;
     this->num = num;
     this->n_masks = n_masks;
+    this->scaleXY = scale_xy;
 
     // load anchors
     if(fname_weights != "") {
@@ -74,6 +75,8 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
+
+            if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
             
             index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);

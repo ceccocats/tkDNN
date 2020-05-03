@@ -8,6 +8,7 @@ void activationLEAKYForward(dnnType *srcData, dnnType *dstData, int size, cudaSt
 void activationReLUCeilingForward(dnnType *srcData, dnnType *dstData, int size, const float ceiling, cudaStream_t stream = cudaStream_t(0));
 void activationLOGISTICForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationSIGMOIDForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
+void activationMishForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream= cudaStream_t(0));
 
 void fill(dnnType *data, int size, dnnType val, cudaStream_t stream = cudaStream_t(0));
 
@@ -45,4 +46,6 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
                          const int in_n, const int in_c, const int in_h, const int in_w,
                          const int out_n, const int out_c, const int out_h, const int out_w,
                          const int dst_dim, cudaStream_t stream = cudaStream_t(0));
+
+void scalAdd(dnnType* dstData, int size, float alpha, float beta, int inc, cudaStream_t stream = cudaStream_t(0));
 #endif //KERNELS_H

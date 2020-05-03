@@ -35,7 +35,8 @@ class ImuOdom {
         // output eigen CPU
         Eigen::MatrixXf deltaP, deltaQ;
 
-        Eigen::MatrixXd odomPOS, odomROT;
+        Eigen::MatrixXd odomPOS, odomEULER;
+        Eigen::Matrix3d odomROT;
         Eigen::Isometry3f tf = Eigen::Isometry3f::Identity();
 
         ImuOdom() {}
@@ -109,7 +110,7 @@ class ImuOdom {
 
             odomPOS = Eigen::MatrixXd::Zero(3, 1); 
             odomROT = Eigen::MatrixXd::Identity(3, 3);
-
+            odomEULER = Eigen::MatrixXd::Zero(3, 1); 
             return true;
         }
 
@@ -132,8 +133,18 @@ class ImuOdom {
             q.x() = deltaQ(1);
             q.y() = deltaQ(2);
             q.z() = deltaQ(3);    
-            odomPOS = odomPOS + odomROT*deltaP.cast<double>();
+            odomPOS = odomPOS + deltaP.cast<double>();
             odomROT = odomROT * q.normalized().toRotationMatrix();
+            
+            // compute euler
+            auto newEULER = odomROT.eulerAngles(0, 1, 2);
+            for(int i=0; i<3; i++) {
+                while( fabs(newEULER(i) - odomEULER(i)) > M_PI_2 )  {
+                    newEULER(i) += newEULER(i) - odomEULER(i) > 0 ? -M_PI : +M_PI;
+                    //std::cout<<newEULER(i)<<" "<<odomEULER(i)<<"\n";
+                }
+            }
+            odomEULER = newEULER;
 
             // compose tf
             tf.matrix().block(0, 0, 3, 3) = odomROT.cast<float>();
