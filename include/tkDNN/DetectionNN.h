@@ -14,7 +14,7 @@
 
 #include "tkdnn.h"
 
-//#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
 #ifdef OPENCV_CUDACONTRIB
 #include <opencv2/cudawarping.hpp>
@@ -55,11 +55,11 @@ class DetectionNN {
          * boundig boxes. 
          * 
          */
-        virtual void postprocess() = 0;
+        virtual void postprocess(const bool mAP=false) = 0;
 
     public:
         int classes = 0;
-        float confThreshold = 0.3; /*threshold on the confidence of the boxes*/
+        float confThreshold = 0.05; /*threshold on the confidence of the boxes*/
 
         std::vector<tk::dnn::box> detected; /*bounding boxes in output*/
         std::vector<double> stats; /*keeps track of inference times (ms)*/
@@ -86,7 +86,7 @@ class DetectionNN {
          *        are saved on a csv file, otherwise not.
          * @param times pointer to the output stream where to write times
          */
-        void update(cv::Mat &frame, bool save_times=false, std::ofstream *times=nullptr){
+        void update(cv::Mat &frame, bool save_times=false, std::ofstream *times=nullptr, const bool mAP=false){
             if(!frame.data)
                 FatalError("No image data feed to detection");
 
@@ -116,7 +116,7 @@ class DetectionNN {
 
             {
                 TIMER_START
-                postprocess();
+                postprocess(mAP);
                 TIMER_STOP
                 if(save_times) *times<<t_ns<<"\n";
             }

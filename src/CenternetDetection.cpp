@@ -260,7 +260,7 @@ void CenternetDetection::preprocess(cv::Mat &frame){
 #endif
 }
 
-void CenternetDetection::postprocess(){
+void CenternetDetection::postprocess(const bool mAP){
     dnnType *rt_out[4];
     rt_out[0] = (dnnType *)netRT->buffersRT[1];
     rt_out[1] = (dnnType *)netRT->buffersRT[2];

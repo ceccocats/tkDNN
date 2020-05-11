@@ -108,6 +108,9 @@ void computeTPFPFN( std::vector<Frame> &images,const int classes,
                     bool verbose=false, const bool write_on_file=false,    
                     std::string net="");
 
+
+void printJsonCOCOFormat(std::ofstream *out_file, const std::string image_path, std::vector<tk::dnn::box> bbox, const int classes, const int w, const int h);
+
 }}
 #endif /*EVALUATION_H*/
 

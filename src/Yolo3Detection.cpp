@@ -83,7 +83,7 @@ void Yolo3Detection::preprocess(cv::Mat &frame){
 #endif
 }
 
-void Yolo3Detection::postprocess(){
+void Yolo3Detection::postprocess(const bool mAP){
     //get yolo outputs
     dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
@@ -132,6 +132,9 @@ void Yolo3Detection::postprocess(){
             res.y = y0;
             res.w = x1 - x0;
             res.h = y1 - y0;
+            if(mAP)
+                for(int c=0; c<classes; c++) 
+                    res.probs.push_back(dets[j].prob[c]);
             detected.push_back(res);
         }
     }

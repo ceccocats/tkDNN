@@ -75,7 +75,7 @@ public:
 
     bool init(const std::string& tensor_path, const int n_classes=80);
     void preprocess(cv::Mat &frame);
-    void postprocess();
+    void postprocess(const bool mAP=false);
 };
 
 
