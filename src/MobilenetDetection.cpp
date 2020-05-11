@@ -243,7 +243,7 @@ void MobilenetDetection::preprocess(cv::Mat &frame){
 #endif
 }
 
-void MobilenetDetection::postprocess(){
+void MobilenetDetection::postprocess(const bool mAP){
     //get confidences and locations_h
     dnnType *rt_out[2];
     rt_out[0] = (dnnType *)netRT->buffersRT[3];
@@ -272,6 +272,10 @@ void MobilenetDetection::postprocess(){
                 b.y = locations_h[j * N_COORDS + 1];
                 b.w = locations_h[j * N_COORDS + 2];
                 b.h = locations_h[j * N_COORDS + 3];
+
+                if(mAP)
+                    for(int c=1; c<classes; c++) 
+                        b.probs.push_back(confidences_h[c * nPriors + j]);
 
                 boxes.push_back(b);
             }

@@ -115,6 +115,18 @@ target_link_libraries(test_yolo3_flir tkDNN)
 add_executable(test_yolo4 tests/yolo4/yolo4.cpp)
 target_link_libraries(test_yolo4 tkDNN)
 
+add_executable(test_yolo4_320 tests/yolo4/yolo4_320.cpp)
+target_link_libraries(test_yolo4_320 tkDNN)
+
+add_executable(test_yolo4_512 tests/yolo4/yolo4_512.cpp)
+target_link_libraries(test_yolo4_512 tkDNN)
+
+add_executable(test_yolo4_608 tests/yolo4/yolo4_608.cpp)
+target_link_libraries(test_yolo4_608 tkDNN)
+
+add_executable(test_yolo4_berkeley tests/yolo4_berkeley/yolo4_berkeley.cpp)
+target_link_libraries(test_yolo4_berkeley tkDNN)
+
 add_executable(test_mobilenetv2ssd tests/mobilenetv2ssd/mobilenetv2ssd.cpp)
 target_link_libraries(test_mobilenetv2ssd tkDNN)
 
