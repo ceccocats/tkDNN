@@ -34,6 +34,12 @@ int main(int argc, char *argv[]) {
     int n_classes = 80;
     if(argc > 4)
         n_classes = atoi(argv[4]); 
+    bool show = true;
+    if(argc > 5)
+        show = atoi(argv[5]); 
+
+    if(!show)
+        SAVE_RESULT = true;
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
@@ -76,7 +82,8 @@ int main(int argc, char *argv[]) {
 
     cv::Mat frame;
     cv::Mat dnn_input;
-    cv::namedWindow("detection", cv::WINDOW_NORMAL);
+    if(show)
+        cv::namedWindow("detection", cv::WINDOW_NORMAL);
     
     std::vector<tk::dnn::box> detected_bbox;
 
@@ -93,8 +100,10 @@ int main(int argc, char *argv[]) {
         detNN->update(dnn_input);
         frame = detNN->draw(frame);
 
-        cv::imshow("detection", frame);
-        cv::waitKey(1);
+        if(show){
+            cv::imshow("detection", frame);
+            cv::waitKey(1);
+        }
         if(SAVE_RESULT)
             resultVideo << frame;
     }
