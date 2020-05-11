@@ -36,7 +36,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
 
-find_package(yaml-cpp REQUIRED)
+# gives problems in cross-compiling, probably malformed cmake config
+#find_package(yaml-cpp REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Build Libraries
@@ -47,7 +48,7 @@ set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRAR
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
-target_link_libraries(tkDNN ${tkdnn_LIBS} nvinfer_plugin)
+target_link_libraries(tkDNN ${tkdnn_LIBS})
 
 #static 
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})
