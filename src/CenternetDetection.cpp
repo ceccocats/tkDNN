@@ -263,10 +263,10 @@ void CenternetDetection::preprocess(cv::Mat &frame, const int bi){
 
 void CenternetDetection::postprocess(const int bi, const bool mAP){
     dnnType *rt_out[4];
-    rt_out[0] = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[0].tot()*bi;
-    rt_out[1] = (dnnType *)netRT->buffersRT[2]+ netRT->buffersDIM[1].tot()*bi;
-    rt_out[2] = (dnnType *)netRT->buffersRT[3]+ netRT->buffersDIM[2].tot()*bi; 
-    rt_out[3] = (dnnType *)netRT->buffersRT[4]+ netRT->buffersDIM[3].tot()*bi; 
+    rt_out[0] = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
+    rt_out[1] = (dnnType *)netRT->buffersRT[2]+ netRT->buffersDIM[2].tot()*bi;
+    rt_out[2] = (dnnType *)netRT->buffersRT[3]+ netRT->buffersDIM[3].tot()*bi; 
+    rt_out[3] = (dnnType *)netRT->buffersRT[4]+ netRT->buffersDIM[4].tot()*bi; 
 
     // auto start_t = std::chrono::steady_clock::now();
     // auto step_t = std::chrono::steady_clock::now();
