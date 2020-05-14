@@ -34,9 +34,15 @@ int main(int argc, char *argv[]) {
     int n_classes = 80;
     if(argc > 4)
         n_classes = atoi(argv[4]); 
-    bool show = true;
+    int n_batch = 1;
     if(argc > 5)
-        show = atoi(argv[5]); 
+        n_batch = atoi(argv[5]); 
+    bool show = true;
+    if(argc > 6)
+        show = atoi(argv[6]); 
+
+    if(n_batch < 1 || n_batch > 64)
+        FatalError("Batch dim not supported");
 
     if(!show)
         SAVE_RESULT = true;
@@ -63,7 +69,7 @@ int main(int argc, char *argv[]) {
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    detNN->init(net, n_classes);
+    detNN->init(net, n_classes, n_batch);
 
     gRun = true;
 
@@ -81,30 +87,40 @@ int main(int argc, char *argv[]) {
     }
 
     cv::Mat frame;
-    cv::Mat dnn_input;
     if(show)
         cv::namedWindow("detection", cv::WINDOW_NORMAL);
-    
-    std::vector<tk::dnn::box> detected_bbox;
+
+    std::vector<cv::Mat> batch_frame;
+    std::vector<cv::Mat> batch_dnn_input;
 
     while(gRun) {
-        cap >> frame; 
-        if(!frame.data) {
-            break;
-        }  
- 
-        // this will be resized to the net format
-        dnn_input = frame.clone();
+        batch_dnn_input.clear();
+        batch_frame.clear();
         
+        for(int bi=0; bi< n_batch; ++bi){
+            cap >> frame; 
+            if(!frame.data) 
+                break;
+            
+            batch_frame.push_back(frame);
+
+            // this will be resized to the net format
+            batch_dnn_input.push_back(frame.clone());
+        } 
+        if(!frame.data) 
+            break;
+    
         //inference
-        detNN->update(dnn_input);
-        frame = detNN->draw(frame);
+        detNN->update(batch_dnn_input);
+        detNN->draw(batch_frame);
 
         if(show){
-            cv::imshow("detection", frame);
-            cv::waitKey(1);
+            for(int bi=0; bi< n_batch; ++bi){
+                cv::imshow("detection", batch_frame[bi]);
+                cv::waitKey(1);
+            }
         }
-        if(SAVE_RESULT)
+        if(n_batch == 1 && SAVE_RESULT)
             resultVideo << frame;
     }
 
@@ -112,10 +128,10 @@ int main(int argc, char *argv[]) {
     double mean = 0; 
     
     std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
+    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())/n_batch<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())/n_batch<<" ms\n";    
     for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
-    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    std::cout<<"Avg: "<<mean/n_batch<<" ms\n"<<COL_END;   
     
 
     return 0;

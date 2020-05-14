@@ -34,6 +34,8 @@ class DetectionNN {
 
         cv::Scalar colors[256];
 
+        int nBatches = 1;
+
 #ifdef OPENCV_CUDACONTRIB
         cv::cuda::GpuMat bgr[3];
         cv::cuda::GpuMat imagePreproc;
@@ -47,21 +49,26 @@ class DetectionNN {
          * This method preprocess the image, before feeding it to the NN.
          *
          * @param frame original frame to adapt for inference.
+         * @param bi batch index
          */
-        virtual void preprocess(cv::Mat &frame) = 0;
+        virtual void preprocess(cv::Mat &frame, const int bi=0) = 0;
 
         /**
          * This method postprocess the output of the NN to obtain the correct 
          * boundig boxes. 
          * 
+         * @param bi batch index
+         * @param mAP set to true only if all the probabilities for a bounding 
+         *            box are needed, as in some cases for the mAP calculation
          */
-        virtual void postprocess(const bool mAP=false) = 0;
+        virtual void postprocess(const int bi=0,const bool mAP=false) = 0;
 
     public:
         int classes = 0;
-        float confThreshold = 0.05; /*threshold on the confidence of the boxes*/
+        float confThreshold = 0.3; /*threshold on the confidence of the boxes*/
 
         std::vector<tk::dnn::box> detected; /*bounding boxes in output*/
+        std::vector<std::vector<tk::dnn::box>> batchDetected; /*bounding boxes in output*/
         std::vector<double> stats; /*keeps track of inference times (ms)*/
         std::vector<std::string> classesNames;
 
@@ -74,36 +81,41 @@ class DetectionNN {
          * 
          * @param tensor_path path to the rt file og the NN.
          * @param n_classes number of classes for the given dataset.
+         * @param n_batches number of batches to use in inference
          * @return true if everything is correct, false otherwise.
          */
-        virtual bool init(const std::string& tensor_path, const int n_classes=80) = 0;
+        virtual bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1) = 0;
         
         /**
          * This method performs the whole detection of the NN.
          * 
-         * @param frame frame to run detection on.
+         * @param frames frames to run detection on.
          * @param save_times if set to true, preprocess, inference and postprocess times 
          *        are saved on a csv file, otherwise not.
          * @param times pointer to the output stream where to write times
+         * @param mAP set to true only if all the probabilities for a bounding 
+         *            box are needed, as in some cases for the mAP calculation
          */
-        void update(cv::Mat &frame, bool save_times=false, std::ofstream *times=nullptr, const bool mAP=false){
-            if(!frame.data)
-                FatalError("No image data feed to detection");
-
+        void update(std::vector<cv::Mat>& frames, bool save_times=false, std::ofstream *times=nullptr, const bool mAP=false){
             if(save_times && times==nullptr)
                 FatalError("save_times set to true, but no valid ofstream given");
 
-            originalSize = frame.size();
             printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
                 TIMER_START
-                preprocess(frame);
+                for(int bi=0; bi<nBatches;++bi){
+                    if(!frames[bi].data)
+                        FatalError("No image data feed to detection");
+                    originalSize = frames[bi].size();
+                    preprocess(frames[bi], bi);    
+                }
                 TIMER_STOP
                 if(save_times) *times<<t_ns<<";";
             }
 
             //do inference
             tk::dnn::dataDim_t dim = netRT->input_dim;
+            dim.n = nBatches;
             {
                 dim.print();
                 TIMER_START
@@ -114,9 +126,11 @@ class DetectionNN {
                 if(save_times) *times<<t_ns<<";";
             }
 
+            batchDetected.clear();
             {
                 TIMER_START
-                postprocess(mAP);
+                for(int bi=0; bi<nBatches;++bi)
+                    postprocess(bi, mAP);
                 TIMER_STOP
                 if(save_times) *times<<t_ns<<"\n";
             }
@@ -125,10 +139,9 @@ class DetectionNN {
         /**
          * Method to draw boundixg boxes and labels on a frame.
          * 
-         * @param frame orginal frame to draw bounding box on.
-         * @return frame with boundig boxes.
+         * @param frames orginal frame to draw bounding box on.
          */
-        cv::Mat draw(cv::Mat &frame) {
+        void draw(std::vector<cv::Mat>& frames) {
             tk::dnn::box b;
             int x0, w, x1, y0, h, y1;
             int objClass;
@@ -137,24 +150,26 @@ class DetectionNN {
             int baseline = 0;
             float font_scale = 0.5;
             int thickness = 2;   
-            // draw dets
-            for(int i=0; i<detected.size(); i++) {
-                b           = detected[i];
-                x0   		= b.x;
-                x1   		= b.x + b.w;
-                y0   		= b.y;
-                y1   		= b.y + b.h;
-                det_class 	= classesNames[b.cl];
 
-                // draw rectangle
-                cv::rectangle(frame, cv::Point(x0, y0), cv::Point(x1, y1), colors[b.cl], 2); 
+            for(int bi=0; bi<frames.size(); ++bi){
+                // draw dets
+                for(int i=0; i<batchDetected[bi].size(); i++) { 
+                    b           = batchDetected[bi][i];
+                    x0   		= b.x;
+                    x1   		= b.x + b.w;
+                    y0   		= b.y;
+                    y1   		= b.y + b.h;
+                    det_class 	= classesNames[b.cl];
 
-                // draw label
-                cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
-                cv::rectangle(frame, cv::Point(x0, y0), cv::Point((x0 + text_size.width - 2), (y0 - text_size.height - 2)), colors[b.cl], -1);                      
-                cv::putText(frame, det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
+                    // draw rectangle
+                    cv::rectangle(frames[bi], cv::Point(x0, y0), cv::Point(x1, y1), colors[b.cl], 2); 
+
+                    // draw label
+                    cv::Size text_size = getTextSize(det_class, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
+                    cv::rectangle(frames[bi], cv::Point(x0, y0), cv::Point((x0 + text_size.width - 2), (y0 - text_size.height - 2)), colors[b.cl], -1);                      
+                    cv::putText(frames[bi], det_class, cv::Point(x0, (y0 - (baseline / 2))), cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
+                }
             }
-            return frame;
         }
 
 };

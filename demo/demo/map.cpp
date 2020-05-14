@@ -132,19 +132,20 @@ int main(int argc, char *argv[])
             FatalError("Wrong image file path.");
 
         cv::Mat frame = cv::imread(f.iFilename.c_str(), cv::IMREAD_COLOR);
+        std::vector<cv::Mat> batch_frames;
+        batch_frames.push_back(frame);
         int height = frame.rows;
         int width = frame.cols;
 
-        cv::Mat dnn_input;
         if(!frame.data) 
             break;
-        dnn_input = frame.clone();
+        std::vector<cv::Mat> batch_dnn_input;
+        batch_dnn_input.push_back(frame.clone());
 
         //inference 
-        
         detected_bbox.clear();
-        detNN->update(dnn_input, write_res_on_file, &times, write_coco_json);
-        frame = detNN->draw(frame);
+        detNN->update(batch_dnn_input, write_res_on_file, &times, write_coco_json);
+        detNN->draw(batch_frames);
         detected_bbox = detNN->detected;
 
         if(write_coco_json)
@@ -171,7 +172,7 @@ int main(int argc, char *argv[])
                 myfile << d.cl << " "<< d.prob << " "<< d.x << " "<< d.y << " "<< d.w << " "<< d.h <<"\n";
 
 			if(show)// draw rectangle for detection
-                cv::rectangle(frame, cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
+                cv::rectangle(batch_frames[0], cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
         }
 
         if(write_dets)
@@ -190,14 +191,14 @@ int main(int argc, char *argv[])
                 f.gt.push_back(b);
 
                 if(show)// draw rectangle for groundtruth
-                    cv::rectangle(frame, cv::Point((b.x-b.w/2)*width, (b.y-b.h/2)*height), cv::Point((b.x+b.w/2)*width,(b.y+b.h/2)*height), cv::Scalar(0, 255, 0), 2);             
+                    cv::rectangle(batch_frames[0], cv::Point((b.x-b.w/2)*width, (b.y-b.h/2)*height), cv::Point((b.x+b.w/2)*width,(b.y+b.h/2)*height), cv::Scalar(0, 255, 0), 2);             
             }
         }    
       
         images.push_back(f);
         
         if(show){
-            cv::imshow("detection", frame);
+            cv::imshow("detection", batch_frames[0]);
             cv::waitKey(0);
         }
 
