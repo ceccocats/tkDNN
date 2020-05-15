@@ -36,16 +36,18 @@
 #define COL_PURPLEB "\033[1;35m"
 #define COL_CYANB "\033[1;36m"
 
+#define VERBOSE 0
+
 // Simple Timer 
 #define TIMER_START timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
-#define TIMER_STOP_C(col)  clock_gettime(CLOCK_MONOTONIC, &end);       \
+#define TIMER_STOP_C(col, show)  clock_gettime(CLOCK_MONOTONIC, &end);       \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
-    std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
+    if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
-#define TIMER_STOP TIMER_STOP_C(COL_CYANB)
+#define TIMER_STOP TIMER_STOP_C(COL_CYANB, VERBOSE)
 
 /********************************************************
  * Prints the error message, and exits

@@ -100,7 +100,7 @@ class DetectionNN {
             if(save_times && times==nullptr)
                 FatalError("save_times set to true, but no valid ofstream given");
 
-            printCenteredTitle(" TENSORRT detection ", '=', 30); 
+            if(VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
                 TIMER_START
                 for(int bi=0; bi<nBatches;++bi){
@@ -117,11 +117,11 @@ class DetectionNN {
             tk::dnn::dataDim_t dim = netRT->input_dim;
             dim.n = nBatches;
             {
-                dim.print();
+                if(VERBOSE) dim.print();
                 TIMER_START
                 netRT->infer(dim, input_d);
                 TIMER_STOP
-                dim.print();
+                if(VERBOSE) dim.print();
                 stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<";";
             }
