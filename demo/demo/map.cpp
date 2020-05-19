@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
         //inference 
         detected_bbox.clear();
-        detNN->update(batch_dnn_input, write_res_on_file, &times, write_coco_json);
+        detNN->update(batch_dnn_input,1,write_res_on_file, &times, write_coco_json);
         detNN->draw(batch_frames);
         detected_bbox = detNN->detected;
 
