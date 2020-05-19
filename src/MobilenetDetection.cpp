@@ -256,8 +256,8 @@ void MobilenetDetection::postprocess(const int bi, const bool mAP){
     checkCuda(cudaMemcpy(locations_h, rt_out[1], N_COORDS * nPriors * sizeof(float), cudaMemcpyDeviceToHost));
     convert_locatios_to_boxes_and_center();
 
-    int width =  originalSize.width;
-    int height =  originalSize.height;
+    int width =  originalSize[bi].width;
+    int height =  originalSize[bi].height;
 
     float *conf_per_class;
     for (int i = 1; i < classes; i++){

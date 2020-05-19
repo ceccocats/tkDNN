@@ -30,7 +30,7 @@ class DetectionNN {
         tk::dnn::NetworkRT *netRT = nullptr;
         dnnType *input_d;
 
-        cv::Size originalSize;
+        std::vector<cv::Size> originalSize;
 
         cv::Scalar colors[256];
 
@@ -103,13 +103,14 @@ class DetectionNN {
             if(cur_batches > nBatches)
                 FatalError("A batch size greater than nBatches cannot be used");
 
+            originalSize.clear();
             if(VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
                 TIMER_START
                 for(int bi=0; bi<cur_batches;++bi){
                     if(!frames[bi].data)
                         FatalError("No image data feed to detection");
-                    originalSize = frames[bi].size();
+                    originalSize.push_back(frames[bi].size());
                     preprocess(frames[bi], bi);    
                 }
                 TIMER_STOP

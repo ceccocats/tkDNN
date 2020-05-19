@@ -127,7 +127,7 @@ void CenternetDetection::preprocess(cv::Mat &frame, const int bi){
     // auto start_t = std::chrono::steady_clock::now();
     // auto step_t = std::chrono::steady_clock::now();
     // auto end_t = std::chrono::steady_clock::now();
-    cv::Size sz = originalSize;
+    cv::Size sz = originalSize[bi];
     // std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
     cv::Size sz_old;
     float scale = 1.0;
