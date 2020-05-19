@@ -94,8 +94,8 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) 
         rt_out[i] = (dnnType*)netRT->buffersRT[i+1] + netRT->buffersDIM[i+1].tot()*bi;
 
-    float x_ratio =  float(originalSize.width) / float(netRT->input_dim.w);
-    float y_ratio =  float(originalSize.height) / float(netRT->input_dim.h);
+    float x_ratio =  float(originalSize[bi].width) / float(netRT->input_dim.w);
+    float y_ratio =  float(originalSize[bi].height) / float(netRT->input_dim.h);
 
     // compute dets
     nDets = 0;
