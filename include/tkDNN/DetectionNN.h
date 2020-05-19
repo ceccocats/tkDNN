@@ -81,7 +81,7 @@ class DetectionNN {
          * 
          * @param tensor_path path to the rt file og the NN.
          * @param n_classes number of classes for the given dataset.
-         * @param n_batches number of batches to use in inference
+         * @param n_batches maximum number of batches to use in inference
          * @return true if everything is correct, false otherwise.
          */
         virtual bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1) = 0;
@@ -90,20 +90,23 @@ class DetectionNN {
          * This method performs the whole detection of the NN.
          * 
          * @param frames frames to run detection on.
+         * @param cur_batches number of batches to use in inference
          * @param save_times if set to true, preprocess, inference and postprocess times 
          *        are saved on a csv file, otherwise not.
          * @param times pointer to the output stream where to write times
          * @param mAP set to true only if all the probabilities for a bounding 
          *            box are needed, as in some cases for the mAP calculation
          */
-        void update(std::vector<cv::Mat>& frames, bool save_times=false, std::ofstream *times=nullptr, const bool mAP=false){
+        void update(std::vector<cv::Mat>& frames, const int cur_batches=1, bool save_times=false, std::ofstream *times=nullptr, const bool mAP=false){
             if(save_times && times==nullptr)
                 FatalError("save_times set to true, but no valid ofstream given");
+            if(cur_batches > nBatches)
+                FatalError("A batch size greater than nBatches cannot be used");
 
             if(VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
                 TIMER_START
-                for(int bi=0; bi<nBatches;++bi){
+                for(int bi=0; bi<cur_batches;++bi){
                     if(!frames[bi].data)
                         FatalError("No image data feed to detection");
                     originalSize = frames[bi].size();
@@ -115,7 +118,7 @@ class DetectionNN {
 
             //do inference
             tk::dnn::dataDim_t dim = netRT->input_dim;
-            dim.n = nBatches;
+            dim.n = cur_batches;
             {
                 if(VERBOSE) dim.print();
                 TIMER_START
@@ -129,7 +132,7 @@ class DetectionNN {
             batchDetected.clear();
             {
                 TIMER_START
-                for(int bi=0; bi<nBatches;++bi)
+                for(int bi=0; bi<cur_batches;++bi)
                     postprocess(bi, mAP);
                 TIMER_STOP
                 if(save_times) *times<<t_ns<<"\n";
