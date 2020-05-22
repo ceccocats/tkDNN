@@ -142,6 +142,9 @@ target_link_libraries(test_dla34 tkDNN)
 add_executable(test_dla34_cnet tests/dla34_cnet/dla34_cnet.cpp)
 target_link_libraries(test_dla34_cnet tkDNN)
 
+add_executable(test_dla34_cnet3d tests/dla34_cnet3d/dla34_cnet3d.cpp)
+target_link_libraries(test_dla34_cnet3d tkDNN)
+
 add_executable(test_imuodom tests/imuodom/imuodom.cpp)
 target_link_libraries(test_imuodom tkDNN)
 ################################################################################
