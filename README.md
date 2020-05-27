@@ -131,6 +131,19 @@ N.b. By default it is used FP32 inference
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
+### Run the 3D demo
+
+To run the 3D object detection demo follow these steps (example with CenterNet based on DLA34):
+```
+rm dla34_cnet3d_fp32.rt        # be sure to delete(or move) old tensorRT files
+./test_dla34_cnet3d            # run the yolo test (is slow)
+./demo3D dla34_cnet3d_fp32.rt ../demo/yolo_test.mp4 c
+```
+The demo3D program takes the same parameters of the demo program:
+```
+./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes>
+```
+
 ### FP16 inference
 
 To run the an object detection demo with FP16 inference follow these steps (example with yolov3):
