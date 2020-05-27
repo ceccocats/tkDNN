@@ -546,6 +546,16 @@ struct sortable_bbox {
     int cl;
     float **probs;
 };
+struct box3D {
+    int cl;
+    std::vector<float> corners;
+    float prob;
+
+    void print() 
+    {
+        std::cout<<"\tcl: "<<cl<<"\tprob: "<<prob<<"\tshape corners: "<<corners.size()<<std::endl;
+    }
+};
 
 /**
     Yolo3 layer

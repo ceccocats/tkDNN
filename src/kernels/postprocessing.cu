@@ -1,5 +1,11 @@
 #include "kernelsThrust.h"
 
+void transformDep(float *src_begin, float *src_end, float *dst_begin, float *dst_end) {
+    int e = exp(-6);
+    thrust::transform(thrust::device, dst_begin, dst_end, thrust::make_constant_iterator(e), dst_begin, thrust::plus<float>());
+    thrust::transform(thrust::device, src_begin, src_end, dst_begin, dst_begin, thrust::divides<float>());
+    thrust::transform(thrust::device, dst_begin, dst_end, thrust::make_constant_iterator(-1.0), dst_begin, thrust::plus<float>());
+}
 
 void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op){
     thrust::transform(thrust::device, src_begin, src_end, src2_begin, src_out, op);
@@ -49,6 +55,14 @@ void topKxyAddOffset(int * ids_begin, const int K, const int size,
     thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(size), ids_out, thrust::plus<int>());
     thrust::gather(thrust::device, ids_out, ids_out+K, src_begin, src_out);
     thrust::transform(thrust::device, intys_begin, intys_begin + K, src_out, ys_begin, thrust::plus<float>());
+}
+
+void getRecordsFromTopKId(int * ids_begin, const int K, const int ch, const int size, dnnType *src_begin, float *src_out, int *ids_out) {
+    for(int i=0; i<ch; i++) {
+        // thrust::gather(thrust::device, ids_begin, ids_begin + K, src_begin, src_out);
+        thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(i*size), ids_out, thrust::plus<int>());
+        thrust::gather(thrust::device, ids_out, ids_out + K, src_begin, src_out+i*K);
+    }
 }
 
 void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 
