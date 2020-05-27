@@ -159,6 +159,9 @@ target_link_libraries(map_demo tkDNN)
 add_executable(demo demo/demo/demo.cpp)
 target_link_libraries(demo tkDNN)
 
+add_executable(demo3D demo/demo/demo3D.cpp)
+target_link_libraries(demo3D tkDNN)
+
 #-------------------------------------------------------------------------------
 # Install
 #-------------------------------------------------------------------------------
