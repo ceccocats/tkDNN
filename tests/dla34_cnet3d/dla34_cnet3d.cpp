@@ -112,7 +112,7 @@ const char *output_bin[]={
 int main()
 {
 
-    // downloadWeightsifDoNotExist(input_bin, "dla34_cnet3d", "https://cloud.hipert.unimore.it/s/KRZBbCQsKAtQwpZ/download");
+    downloadWeightsifDoNotExist(input_bin, "dla34_cnet3d", "https://cloud.hipert.unimore.it/s/2MDyWGzQsTKMjmR/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 3, 512, 512, 1);
