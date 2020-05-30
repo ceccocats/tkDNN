@@ -7,6 +7,11 @@ int main() {
 
     tk::dnn::Network *net = tk::dnn::DarknetParser("../tests/yolo3/yolov3.cfg");
 
+    tk::dnn::darknetFields_t f;
+    tk::dnn::darknetParseFields("width=40", f);
+    tk::dnn::darknetParseFields("height=40", f);
+    std::cout<<f<<std::endl;
+
     // Network layout
     //tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
     //tk::dnn::Network net(dim);
