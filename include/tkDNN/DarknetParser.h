@@ -20,6 +20,7 @@ namespace tk { namespace dnn {
         int n_mask = 0;
         int classes = 0;
         int num = 0;
+        int pad = 0;
         float scale_xy = 0;
         std::vector<int> layers;
         std::string activation = "";
@@ -27,7 +28,7 @@ namespace tk { namespace dnn {
     };
 
     std::ostream& operator<<(std::ostream& os, const darknetFields_t& f){
-        os << f.width << " " << f.height << " " << f.channels << " " << f.batch_normalize<< " " << f.filters << " "  << " " << f.activation;
+        os << f.width << " " << f.height << " " << f.channels << " " << f.batch_normalize<< " " << f.filters << " "  << f.activation<< " " << f.scale_xy;
         return os;
     }
 
@@ -51,26 +52,68 @@ namespace tk { namespace dnn {
         return true;
     }
 
+    std::vector<int> fromStringToIntVec(const std::string& line, const char delimiter){
+        std::stringstream linestream(line);
+        std::string value;
+        std::vector<int> values;
+
+        while(getline(linestream,value,delimiter))
+            values.push_back(std::stoi(value));
+        return values;
+    }
+
     bool darknetParseFields(const std::string& line, darknetFields_t& fields){
 
         std::string name,value;
         if(!divideNameAndValue(line, name, value))
             return false;
-        std::cout<<name<<std::endl;
-        std::cout<<value<<std::endl;
-        if(name == "width")
+        if(name.find("width") !=  std::string::npos)
             fields.width = std::stoi(value);
-        else if (name == "height")
+        else if(name.find("height") !=  std::string::npos)
             fields.height = std::stoi(value);
-        else if (name == "channels")
+        else if(name.find("channels") !=  std::string::npos)
             fields.channels = std::stoi(value);
-        else if (name == "batch_normalize")
+        else if(name.find("batch_normalize") !=  std::string::npos)
             fields.batch_normalize = std::stoi(value);
-        else if (name == "filters")
+        else if(name.find("filters") !=  std::string::npos)
             fields.filters = std::stoi(value);
-        else if (name == "activation")
+        else if(name.find("activation") !=  std::string::npos)
             fields.activation = value;
-        
+        else if(name.find("size") !=  std::string::npos){
+            fields.size_x = std::stoi(value);
+            fields.size_y = std::stoi(value);
+        }
+        else if(name.find("size_x") !=  std::string::npos)
+            fields.size_x = std::stoi(value);
+        else if(name.find("size_y") !=  std::string::npos)
+            fields.size_y = std::stoi(value);
+        else if(name.find("stride") !=  std::string::npos){
+            fields.stride_x = std::stoi(value);
+            fields.stride_y = std::stoi(value);
+        }
+        else if(name.find("stride_x") !=  std::string::npos)
+            fields.stride_x = std::stoi(value);
+        else if(name.find("stride_y") !=  std::string::npos)
+            fields.stride_y = std::stoi(value);
+        else if(name.find("pad") !=  std::string::npos)
+            fields.pad = std::stoi(value);
+        else if(name.find("classes") !=  std::string::npos)
+            fields.classes = std::stoi(value);
+        else if(name.find("num") !=  std::string::npos)
+            fields.num = std::stoi(value);
+        else if(name.find("scale_xy") !=  std::string::npos)
+            fields.scale_xy = std::stof(value);
+        else if(name.find("from") !=  std::string::npos)
+            fields.layers.push_back(std::stof(value));
+        else if(name.find("mask") !=  std::string::npos){
+            auto vec = fromStringToIntVec(value, ',');
+            fields.n_mask = vec.size();
+        }
+        else if(name.find("layers") !=  std::string::npos)
+            fields.layers = fromStringToIntVec(value, ',');
+
+        else
+            std::cout<<"Not supported field: "<<line<<std::endl;
         return true;
     }
 
