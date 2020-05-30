@@ -1,17 +1,23 @@
 #include<iostream>
 #include<vector>
 #include "tkdnn.h"
+#include "DarknetParser.h"
 
 int main() {
 
-    // Network layout
-    tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
-    tk::dnn::Network net(dim);
+    tk::dnn::Network *net = tk::dnn::DarknetParser("../../tests/yolo3/yolo3.cfg");
 
+    // Network layout
+    //tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
+    //tk::dnn::Network net(dim);
+
+    /*
     // create yolo3 model
     std::string bin_path  = "yolo3";
     downloadWeightsifDoNotExist("yolo3/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/jPXmHyptpLoNdNR/download");
     int classes = 80;
+
+    
     tk::dnn::Yolo *yolo [3];
     #include "models/Yolo3.h"
 
@@ -30,9 +36,10 @@ int main() {
     //print network model
     net.print();
 
+    
     //convert network to tensorRT
     tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("yolo3"));
-
+    
     // the network have 3 outputs
     tk::dnn::dataDim_t out_dim[3];
     for(int i=0; i<3; i++) out_dim[i] = yolo[i]->output_dim; 
@@ -96,4 +103,5 @@ int main() {
         ret_cudnn_tensorrt |= checkResult(odim, cudnn_out[i], rt_out[i]) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     }
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
+    */
 }
