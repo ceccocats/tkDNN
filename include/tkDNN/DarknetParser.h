@@ -101,6 +101,8 @@ namespace tk { namespace dnn {
             fields.classes = std::stoi(value);
         else if(name.find("num") !=  std::string::npos)
             fields.num = std::stoi(value);
+        else if(name.find("groups") !=  std::string::npos)
+            fields.groups = std::stoi(value);
         else if(name.find("scale_xy") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
         else if(name.find("from") !=  std::string::npos)
