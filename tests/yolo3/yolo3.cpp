@@ -8,10 +8,10 @@ int main() {
     tk::dnn::Network *net = tk::dnn::DarknetParser("../tests/yolo3/yolov3.cfg");
 
     tk::dnn::darknetFields_t f;
-    tk::dnn::darknetParseFields("width=40", f);
+    tk::dnn::darknetParseFields("width =  40", f);
     tk::dnn::darknetParseFields("height=40", f);
-    tk::dnn::darknetParseFields("channels=40", f);
-    tk::dnn::darknetParseFields("activation=leaky", f);
+    tk::dnn::darknetParseFields("layers = -1", f);
+    tk::dnn::darknetParseFields("mask = 3,4,5", f);
     std::cout<<f<<std::endl;
 
     // Network layout
