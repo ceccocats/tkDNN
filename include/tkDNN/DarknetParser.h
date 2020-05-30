@@ -140,15 +140,17 @@ namespace tk { namespace dnn {
         if(f.type == "convolutional") {
             std::string wgs = wgs_path + "/c" + std::to_string(netLayers.size()) + ".bin";
             printf("%d (%d,%d) (%d,%d) (%d,%d) %s %d %d\n", f.filters, f.size_x, f.size_y, f.stride_x, f.stride_y, f.padding_x, f.padding_y, wgs.c_str(), f.batch_normalize, f.groups);
-            netLayers.push_back(new tk::dnn::Conv2d(net, f.filters, f.size_x, f.size_y, f.stride_x, 
-                                f.stride_y, f.padding_x, f.padding_y, wgs, f.batch_normalize, false, f.groups));
+            tk::dnn::Conv2d *l= new tk::dnn::Conv2d(net, f.filters, f.size_x, f.size_y, f.stride_x, 
+                                f.stride_y, f.padding_x, f.padding_y, wgs, f.batch_normalize, false, f.groups);
             if(f.activation != "linear") {
                 tkdnnActivationMode_t act;
                 if(f.activation == "relu") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_RELU);
                 else if(f.activation == "leaky") act = tk::dnn::ACTIVATION_LEAKY;
                 else if(f.activation == "mish") act = tk::dnn::ACTIVATION_MISH;
                 else { FatalError("activation not supported: " + f.activation); }
-                new tk::dnn::Activation(net, act);
+                netLayers.push_back(new tk::dnn::Activation(net, act));
+            } else {
+                netLayers.push_back(l);
             }
         } else if(f.type == "shortcut") {
             if(f.layers.size() != 1) FatalError("no layers to shortcut\n");
