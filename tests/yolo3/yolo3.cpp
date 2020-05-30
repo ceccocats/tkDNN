@@ -5,16 +5,13 @@
 
 int main() {
 
-    tk::dnn::Network *net = tk::dnn::darknetParser("../tests/yolo3/yolov3.cfg");
-
-    // Network layout
-    //tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
-    //tk::dnn::Network net(dim);
-
-    /*
     // create yolo3 model
     std::string bin_path  = "yolo3";
     downloadWeightsifDoNotExist("yolo3/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/jPXmHyptpLoNdNR/download");
+    
+    tk::dnn::Network *net = tk::dnn::darknetParser("../tests/yolo3/yolov3.cfg", "yolo3/layers");
+    net->print();
+    /*
     int classes = 80;
 
     
