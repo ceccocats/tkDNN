@@ -9,16 +9,25 @@ namespace tk { namespace dnn {
         int height = 0;
         int channels = 0;
         int batch_normalize=0;
+        int groups = 0;
         int filters=0;
-        int size=0;
-        int stride=0;
-        int pad=0;
+        int size_x=0;
+        int size_y=0;
+        int stride_x=0;
+        int stride_y=0;
+        int padding_x = 0;
+        int padding_y = 0;
+        int n_mask = 0;
+        int classes = 0;
+        int num = 0;
+        float scale_xy = 0;
+        std::vector<int> layers;
         std::string activation = "";
 
     };
 
     std::ostream& operator<<(std::ostream& os, const darknetFields_t& f){
-        os << f.width << " " << f.height << " " << f.channels << " " << f.batch_normalize<< " " << f.filters<< " " << f.size<< " " << f.stride << " " << f.pad << " " << f.activation;
+        os << f.width << " " << f.height << " " << f.channels << " " << f.batch_normalize<< " " << f.filters << " "  << " " << f.activation;
         return os;
     }
 
@@ -59,12 +68,6 @@ namespace tk { namespace dnn {
             fields.batch_normalize = std::stoi(value);
         else if (name == "filters")
             fields.filters = std::stoi(value);
-        else if (name == "size")
-            fields.size = std::stoi(value);
-        else if (name == "stride")
-            fields.stride = std::stoi(value);
-        else if (name == "pad")
-            fields.pad = std::stoi(value);
         else if (name == "activation")
             fields.activation = value;
         
