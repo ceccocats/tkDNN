@@ -38,6 +38,14 @@ namespace tk { namespace dnn {
         std::cout<<"Add layer: "<<fields.type<<"\n";
         if(fields.type == "convolutional") {
 
+        } else if(fields.type == "shortcut") {
+
+        } else if(fields.type == "upsample") {
+
+        } else if(fields.type == "route") {
+
+        } else if(fields.type == "yolo") {
+        
         } else{
             FatalError("layer not supported: " + fields.type);
         }
