@@ -59,6 +59,14 @@ namespace tk { namespace dnn {
             fields.batch_normalize = std::stoi(value);
         else if (name == "filters")
             fields.filters = std::stoi(value);
+        else if (name == "size")
+            fields.size = std::stoi(value);
+        else if (name == "stride")
+            fields.stride = std::stoi(value);
+        else if (name == "pad")
+            fields.pad = std::stoi(value);
+        else if (name == "activation")
+            fields.activation = value;
         
         return true;
     }

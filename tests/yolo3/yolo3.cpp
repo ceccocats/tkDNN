@@ -10,6 +10,8 @@ int main() {
     tk::dnn::darknetFields_t f;
     tk::dnn::darknetParseFields("width=40", f);
     tk::dnn::darknetParseFields("height=40", f);
+    tk::dnn::darknetParseFields("channels=40", f);
+    tk::dnn::darknetParseFields("activation=leaky", f);
     std::cout<<f<<std::endl;
 
     // Network layout
