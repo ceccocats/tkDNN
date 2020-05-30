@@ -6,6 +6,7 @@
 int main() {
 
     tk::dnn::Network *net = tk::dnn::DarknetParser("../../tests/yolo3/yolo3.cfg");
+    tk::dnn::parseType("[net]");
 
     // Network layout
     //tk::dnn::dataDim_t dim(1, 3, 416, 416, 1);
