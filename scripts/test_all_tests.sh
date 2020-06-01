@@ -78,9 +78,10 @@ do
     test_net yolo3_512
     test_net yolo3tiny
     test_net csresnext50-panet-spp
+    #test_net csresnext50-panet-spp_berkeley
     test_net mobilenetv2ssd
     test_net yolo3tiny_512
-    test_net yolo2tiny
+    #test_net yolo2tiny
     test_net mobilenetv2ssd512
     test_net mnist
     test_net yolo2

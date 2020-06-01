@@ -10,7 +10,8 @@ int main() {
         bin_path + "/layers/input.bin"
     };
     std::vector<std::string> output_bins = {
-        bin_path + "debug/layer23_out.bin",
+        bin_path + "/debug/layer16_out.bin",
+        bin_path + "/debug/layer23_out.bin",
     };
     std::string wgs_path  = bin_path + "/layers";
     std::string cfg_path  = "../tests/darknet/cfg/yolo3tiny_512.cfg";
@@ -25,6 +26,7 @@ int main() {
     tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
     int ret = testInference(input_bins, output_bins, net, netRT);
+    net->releaseLayers();
     delete net;
     delete netRT;
     return ret;

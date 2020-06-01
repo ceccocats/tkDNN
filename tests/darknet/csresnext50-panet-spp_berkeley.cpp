@@ -5,7 +5,7 @@
 #include "DarknetParser.h"
 
 int main() {
-    std::string bin_path = "bdd-csresnext50-panet-spp";
+    std::string bin_path = "csresnext50-panet-spp_berkeley";
     std::vector<std::string> input_bins = { 
         bin_path + "/layers/input.bin"
     };
@@ -17,6 +17,7 @@ int main() {
     std::string wgs_path  = bin_path + "/layers";
     std::string cfg_path  = "../tests/darknet/cfg/csresnext50-panet-spp_berkeley.cfg";
     std::string name_path = "../tests/darknet/names/berkeley.names";
+    // FIXME: wrong weights
     // downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s//download");
 
     // parse darknet network
@@ -27,6 +28,7 @@ int main() {
     tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
     int ret = testInference(input_bins, output_bins, net, netRT);
+    net->releaseLayers();
     delete net;
     delete netRT;
     return ret;

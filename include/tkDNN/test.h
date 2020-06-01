@@ -8,6 +8,11 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
         if(net->layers[i]->final)
             outputs.push_back(net->layers[i]);
     }
+    // no final layers, set last as output
+    if(outputs.size() == 0) {
+        outputs.push_back(net->layers[net->num_layers-1]);
+    }
+
 
     // check input
     if(input_bins.size() != 1) {

@@ -12,8 +12,7 @@
 namespace tk { namespace dnn {
 
 Region::Region(Network *net, int classes, int coords, int num) : 
-    Layer(net) {
-
+    Layer(net) {    
     this->classes = classes;
     this->coords = coords;
     this->num = num;

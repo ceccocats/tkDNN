@@ -40,6 +40,7 @@ class Network {
 public:
     Network(dataDim_t input_dim);
     virtual ~Network();
+    void releaseLayers();
 
     /**
         Do inferece for every added layer
