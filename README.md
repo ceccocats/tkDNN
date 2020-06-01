@@ -189,7 +189,7 @@ where
 *  ```<kind-of-network>``` is the type of network. Thee types are currently supported: ```y``` (YOLO family), ```c``` (CenterNet family) and ```m``` (MobileNet-SSD family)
 *  ```<number-of-classes>```is the number of classes the network is trained on
 N.b. By default it is used FP32 inference
-* ```<output-type>``` benchmark or save_result. Adding benchmark will not show opencv detection video allowing demo to be run from command line and providing performance results without showing the video results. Adding save_result will save output of detection to results.mp4.
+* ```<output-type>``` benchmark or save_result. Adding benchmark will not show opencv detection video allowing demo to be run from terminal, providing performance results without showing the video. Adding save_result will save output of detection to results.mp4.
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
