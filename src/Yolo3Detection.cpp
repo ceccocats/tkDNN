@@ -3,11 +3,15 @@
 
 namespace tk { namespace dnn {
 
-bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
+bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, const int n_batches) {
 
     //convert network to tensorRT
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
+
+    nBatches = n_batches;
+    tk::dnn::dataDim_t idim = netRT->input_dim;    
+    idim.n = nBatches;
 
     if(netRT->pluginFactory->n_yolos < 2 ) {
         FatalError("this is not yolo3");
@@ -19,7 +23,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
         num = yRT->num;
         nMasks = yRT->n_masks;
 
-        // make a yolo layer for interpret predictions
+        // make a yolo layer to interpret predictions
         yolo[i] = new tk::dnn::Yolo(nullptr, classes, nMasks, ""); // yolo without input and bias
         yolo[i]->mask_h = new dnnType[nMasks];
         yolo[i]->bias_h = new dnnType[num*nMasks*2];
@@ -31,9 +35,9 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
 #ifndef OPENCV_CUDACONTRIB
-    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
+    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*idim.tot()));
 #endif
-    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
+    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*idim.tot()));
 
     // class colors precompute    
     for(int c=0; c<classes; c++) {
@@ -48,7 +52,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes) {
     return true;
 } 
 
-void Yolo3Detection::preprocess(cv::Mat &frame){
+void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
 #ifdef OPENCV_CUDACONTRIB
     cv::cuda::GpuMat orig_img, img_resized;
     orig_img = cv::cuda::GpuMat(frame);
@@ -64,7 +68,7 @@ void Yolo3Detection::preprocess(cv::Mat &frame){
         int size = imagePreproc.rows * imagePreproc.cols;
         int ch = netRT->input_dim.c-1 -i;
         bgr[ch].download(bgr_h); //TODO: don't copy back on CPU
-        checkCuda( cudaMemcpy(input_d + i*size, (float*)bgr_h.data, size*sizeof(dnnType), cudaMemcpyHostToDevice));
+        checkCuda( cudaMemcpy(input_d + i*size + netRT->input_dim.tot()*bi, (float*)bgr_h.data, size*sizeof(dnnType), cudaMemcpyHostToDevice));
     }
 #else
     cv::resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
@@ -77,21 +81,21 @@ void Yolo3Detection::preprocess(cv::Mat &frame){
     for(int i=0; i<netRT->input_dim.c; i++) {
         int idx = i*imagePreproc.rows*imagePreproc.cols;
         int ch = netRT->input_dim.c-1 -i;
-        memcpy((void*)&input[idx], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));     
+        memcpy((void*)&input[idx + netRT->input_dim.tot()*bi], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));     
     }
-    checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+    checkCuda(cudaMemcpyAsync(input_d + netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
 #endif
 }
 
-void Yolo3Detection::postprocess(){
+void Yolo3Detection::postprocess(const int bi, const bool mAP){
+
     //get yolo outputs
     dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
-    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
-        rt_out[i] = (dnnType*)netRT->buffersRT[i+1];
-    }
+    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) 
+        rt_out[i] = (dnnType*)netRT->buffersRT[i+1] + netRT->buffersDIM[i+1].tot()*bi;
 
-    float x_ratio =  float(originalSize.width) / float(netRT->input_dim.w);
-    float y_ratio =  float(originalSize.height) / float(netRT->input_dim.h);
+    float x_ratio =  float(originalSize[bi].width) / float(netRT->input_dim.w);
+    float y_ratio =  float(originalSize[bi].height) / float(netRT->input_dim.h);
 
     // compute dets
     nDets = 0;
@@ -132,9 +136,13 @@ void Yolo3Detection::postprocess(){
             res.y = y0;
             res.w = x1 - x0;
             res.h = y1 - y0;
+            if(mAP)
+                for(int c=0; c<classes; c++) 
+                    res.probs.push_back(dets[j].prob[c]);
             detected.push_back(res);
         }
     }
+    batchDetected.push_back(detected);
 }
 
 

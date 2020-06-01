@@ -65,9 +65,9 @@ public:
     MobilenetDetection() {};
     ~MobilenetDetection() {}; 
 
-    bool init(const std::string& tensor_path, const int n_classes);
-    void preprocess(cv::Mat &frame);
-    void postprocess();
+    bool init(const std::string& tensor_path, const int n_classes, const int n_batches=1);
+    void preprocess(cv::Mat &frame, const int bi=0);
+    void postprocess(const int bi=0,const bool mAP=false);
 };
 
 
