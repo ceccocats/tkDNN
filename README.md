@@ -104,7 +104,6 @@ python demo.py --input_res 512 --arch resdcn_101 ctdet --demo /path/to/image/or/
 python demo.py --input_res 512 --arch dla_34 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_dla_2x.pth --exp_wo --exp_wo_dim 512
 ```
 ### 4)Export weights for MobileNetSSD
-
 To get the weights needed to run Mobilenet tests use [this](https://github.com/mive93/pytorch-ssd) fork of a Pytorch implementation of SSD network. 
 
 ```
@@ -113,6 +112,34 @@ cd pytorch-ssd
 conda env create -f env_mobv2ssd.yml
 python run_ssd_live_demo.py mb2-ssd-lite <pth-model-fil> <labels-file>
 ```
+
+## Darknet Parser
+tkDNN implement and easy parser for darknet cfg files, a network can be converted with *tk::dnn::darknetParser*:
+```
+// example of parsing yolo4
+tk::dnn::Network *net = tk::dnn::darknetParser("yolov4.cfg", "yolov4/layers", "coco.names");
+net->print();
+```
+All models from darknet are now parsed directly from cfg, you still need to export the weights with the descripted tools in the previus section.
+<details>
+  <summary>Supported layers</summary>
+  convolutional
+  maxpool
+  avgpool
+  shortcut
+  upsample
+  route
+  reorg
+  region
+  yolo
+</details>
+<details>
+  <summary>Supported activations</summary>
+  relu
+  leaky
+  mish
+</details>
+
 ## Run the demo
 
 To run the an object detection demo follow these steps (example with yolov3):
