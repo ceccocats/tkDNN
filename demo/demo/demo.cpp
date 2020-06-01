@@ -10,6 +10,7 @@
 
 bool gRun;
 bool SAVE_RESULT = false;
+bool BENCHMARK = false;
 
 void sig_handler(int signo) {
     std::cout<<"request gateway stop\n";
@@ -33,7 +34,13 @@ int main(int argc, char *argv[]) {
         ntype = argv[3][0]; 
     int n_classes = 80;
     if(argc > 4)
-        n_classes = atoi(argv[4]); 
+        n_classes = atoi(argv[4]);
+    if(argc > 5 && strcmp(argv[5], "benchmark") == 0) {
+        BENCHMARK = true;
+    }
+    if(argc > 5 && strcmp(argv[5], "save_result") == 0) {
+        SAVE_RESULT = true;        
+    }
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
@@ -76,8 +83,9 @@ int main(int argc, char *argv[]) {
 
     cv::Mat frame;
     cv::Mat dnn_input;
+    if(!BENCHMARK) {
     cv::namedWindow("detection", cv::WINDOW_NORMAL);
-    
+    }
     std::vector<tk::dnn::box> detected_bbox;
 
     while(gRun) {
@@ -91,9 +99,13 @@ int main(int argc, char *argv[]) {
         
         //inference
         detNN->update(dnn_input);
+        if(!BENCHMARK) {
         frame = detNN->draw(frame);
+        }
 
+        if(!BENCHMARK) {
         cv::imshow("detection", frame);
+        }
         cv::waitKey(1);
         if(SAVE_RESULT)
             resultVideo << frame;
@@ -106,9 +118,9 @@ int main(int argc, char *argv[]) {
     std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
     std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
     for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
-    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    std::cout<<"Avg: "<<mean<<" ms\n";
+    std::cout<<"Avg FPS: " << 1000 / mean <<COL_END;   
     
 
     return 0;
 }
-
