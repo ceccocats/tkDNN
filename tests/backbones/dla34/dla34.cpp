@@ -312,9 +312,9 @@ int main()
     printCenteredTitle(" CUDNN inference ", '=', 30);
     {
         dim1.print();
-        TIMER_START
+        TKDNN_TSTART
         net.infer(dim1, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim1.print();
     }
     cudnn_out = net.layers[net.num_layers-1]->dstData;
@@ -326,9 +326,9 @@ int main()
     printCenteredTitle(" TENSORRT inference ", '=', 30);
     {
         dim2.print();
-        TIMER_START
+        TKDNN_TSTART
         netRT.infer(dim2, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim2.print();
     }
     rt_out = (dnnType *)netRT.buffersRT[1];

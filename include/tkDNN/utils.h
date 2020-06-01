@@ -39,15 +39,15 @@
 #define TKDNN_VERBOSE 0
 
 // Simple Timer 
-#define TIMER_START timespec start, end;                               \
+#define TKDNN_TSTART timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
-#define TIMER_STOP_C(col, show)  clock_gettime(CLOCK_MONOTONIC, &end);       \
+#define TKDNN_TSTOP_C(col, show)  clock_gettime(CLOCK_MONOTONIC, &end);       \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
     if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
-#define TIMER_STOP TIMER_STOP_C(COL_CYANB, TKDNN_VERBOSE)
+#define TKDNN_TSTOP TKDNN_TSTOP_C(COL_CYANB, TKDNN_VERBOSE)
 
 /********************************************************
  * Prints the error message, and exits

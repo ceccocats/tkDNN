@@ -35,9 +35,9 @@ int main() {
 
     std::cout<<"CUDNN inference:\n"; {
         dim.print(); //print initial dimension  
-        TIMER_START
+        TKDNN_TSTART
         out_data = net.infer(dim, data);    
-        TIMER_STOP
+        TKDNN_TSTOP
         dim.print();   
     }
 
@@ -49,9 +49,9 @@ int main() {
 
     std::cout<<"TENSORRT inference:\n"; {
         dim2.print();
-        TIMER_START
+        TKDNN_TSTART
         out_data2 = netRT.infer(dim2, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim2.print();
     }
 
