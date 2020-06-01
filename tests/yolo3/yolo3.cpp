@@ -9,18 +9,13 @@ int main() {
     std::string bin_path  = "yolo3";
     downloadWeightsifDoNotExist("yolo3/layers/input.bin", bin_path, "https://cloud.hipert.unimore.it/s/jPXmHyptpLoNdNR/download");
     
-    tk::dnn::Network *net = tk::dnn::darknetParser("../tests/yolo3/yolov3.cfg", "yolo3/layers");
+    tk::dnn::Network *net = tk::dnn::darknetParser("../tests/yolo3/yolov3.cfg", "yolo3/layers", "../tests/yolo3/coco.names");
     net->print();
 
     std::vector<tk::dnn::Yolo*> yolo;
     for(int i=0; i<net->num_layers; i++) {
         if(net->layers[i]->getLayerType() == tk::dnn::layerType_t::LAYER_YOLO)
             yolo.push_back((tk::dnn::Yolo*)net->layers[i]);
-    }
-
-    // fill classes names
-    for(int i=0; i<3; i++) {
-        yolo[i]->classesNames = {"person" , "bicycle" , "car" , "motorbike" , "aeroplane" , "bus" , "train" , "truck" , "boat" , "traffic light" , "fire hydrant" , "stop sign" , "parking meter" , "bench" , "bird" , "cat" , "dog" , "horse" , "sheep" , "cow" , "elephant" , "bear" , "zebra" , "giraffe" , "backpack" , "umbrella" , "handbag" , "tie" , "suitcase" , "frisbee" , "skis" , "snowboard" , "sports ball" , "kite" , "baseball bat" , "baseball glove" , "skateboard" , "surfboard" , "tennis racket" , "bottle" , "wine glass" , "cup" , "fork" , "knife" , "spoon" , "bowl" , "banana" , "apple" , "sandwich" , "orange" , "broccoli" , "carrot" , "hot dog" , "pizza" , "donut" , "cake" , "chair" , "sofa" , "pottedplant" , "bed" , "diningtable" , "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , "cell phone" , "microwave" , "oven" , "toaster" , "sink" , "refrigerator" , "book" , "clock" , "vase" , "scissors" , "teddy bear" , "hair drier" , "toothbrush"};
     }
 
     //convert network to tensorRT

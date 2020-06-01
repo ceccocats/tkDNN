@@ -12,3 +12,5 @@ build/
 *.hdf5
 *.pk
 *.table
+demo/COCO_val2017
+demo/BDD100k_val

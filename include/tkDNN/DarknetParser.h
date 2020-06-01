@@ -127,7 +127,7 @@ namespace tk { namespace dnn {
     }
 
 
-    void darknetAddLayer(tk::dnn::Network *net, darknetFields_t &f, std::string wgs_path, std::vector<tk::dnn::Layer*> &netLayers) {
+    void darknetAddLayer(tk::dnn::Network *net, darknetFields_t &f, std::string wgs_path, std::vector<tk::dnn::Layer*> &netLayers, const std::vector<std::string>& names) {
         if(net == nullptr)
             FatalError("Cant add a layer without a Net\n");
 
@@ -180,14 +180,30 @@ namespace tk { namespace dnn {
         } else if(f.type == "yolo") {
             std::string wgs = wgs_path + "/g" + std::to_string(netLayers.size()) + ".bin";
             printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
-            netLayers.push_back(new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy));
+            tk::dnn::Yolo *l = new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy);
+            l->classesNames = names;
+            netLayers.push_back(l);
 
         } else{
             FatalError("layer not supported: " + f.type);
         }
     }
 
-    tk::dnn::Network* darknetParser(std::string cfg_file, std::string wgs_path) {
+    std::vector<std::string> darknetReadNames(const std::string& names_file){
+        std::ifstream if_names(names_file);
+        if(!if_names.is_open())
+            FatalError("cloud not open names file: " + names_file);       
+
+        std::vector<std::string> names;
+        std::string line;
+        while(std::getline(if_names, line))
+            names.push_back(line);
+        
+        if_names.close();
+        return names;
+    }
+
+    tk::dnn::Network* darknetParser(const std::string& cfg_file, const std::string& wgs_path, const std::string& names_file) {
 
         tk::dnn::Network *net = nullptr;
         
@@ -197,6 +213,8 @@ namespace tk { namespace dnn {
         std::ifstream if_cfg(cfg_file);
         if(!if_cfg.is_open())
             FatalError("cloud not open cfg file: " + cfg_file);
+
+        std::vector<std::string> names = darknetReadNames(names_file);
 
         darknetFields_t fields; // will be filled with layers fields
         std::string line;
@@ -218,7 +236,7 @@ namespace tk { namespace dnn {
                     if(fields.type == "net")
                         net = darknetAddNet(fields);
                     else
-                        darknetAddLayer(net, fields, wgs_path, netLayers);
+                        darknetAddLayer(net, fields, wgs_path, netLayers, names);
                 }
 
                 // new type
@@ -237,7 +255,7 @@ namespace tk { namespace dnn {
 
         // end of filled type
         if(fields.type != "") {
-            darknetAddLayer(net, fields, wgs_path, netLayers);
+            darknetAddLayer(net, fields, wgs_path, netLayers, names);
         }
 
         if(net == nullptr) {
