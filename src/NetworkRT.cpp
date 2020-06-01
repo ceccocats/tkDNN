@@ -122,7 +122,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             input = Ilay->getOutput(0);
             input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
             
-            if(l->getLayerType() == LAYER_YOLO || l->final)
+            if(l->final)
                 networkRT->markOutput(*input);
             tensors[l] = input;
         }

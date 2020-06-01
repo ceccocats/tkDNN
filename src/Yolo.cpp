@@ -13,7 +13,8 @@ namespace tk { namespace dnn {
 
 Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy) : 
     Layer(net) {
-    
+    this->final = true;
+
     this->classes = classes;
     this->num = num;
     this->n_masks = n_masks;

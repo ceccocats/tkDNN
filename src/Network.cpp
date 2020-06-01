@@ -59,7 +59,8 @@ Network::Network(dataDim_t input_dim) {
 }
 
 Network::~Network() {
-
+    for(int i=0; i<num_layers; i++)
+        delete layers[i];
     checkCUDNN( cudnnDestroy(cudnnHandle) );
     checkERROR( cublasDestroy(cublasHandle) );
 }
