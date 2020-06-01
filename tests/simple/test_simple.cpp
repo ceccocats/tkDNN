@@ -38,18 +38,18 @@ int main() {
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
-        TIMER_START
+        TKDNN_TSTART
         out_data = net.infer(dim1, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim1.print();
     }
 
     tk::dnn::dataDim_t dim2 = dim;
     printCenteredTitle(" TENSORRT inference ", '=', 30); {
         dim2.print();
-        TIMER_START
+        TKDNN_TSTART
         out_data2 = netRT.infer(dim2, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim2.print();
     }
 

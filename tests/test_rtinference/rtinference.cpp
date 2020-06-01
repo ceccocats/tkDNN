@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
         checkCuda(cudaMemcpy(input_d, input, idim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
 
         tk::dnn::dataDim_t dim = idim;
-        TIMER_START
+        TKDNN_TSTART
         netRT.infer(dim, input_d);
-        TIMER_STOP
+        TKDNN_TSTOP
         total_time+= t_ns;
 
         // control output

@@ -34,9 +34,9 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
     tk::dnn::dataDim_t dim1 =  net->input_dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {
         dim1.print();
-        TIMER_START
+        TKDNN_TSTART
         net->infer(dim1, data);    
-        TIMER_STOP
+        TKDNN_TSTOP
         dim1.print();   
     }
     for(int i=0; i<outputs.size(); i++) cudnn_out[i] = outputs[i]->dstData;
@@ -45,9 +45,9 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
         tk::dnn::dataDim_t dim2 = net->input_dim;
         printCenteredTitle(" TENSORRT inference ", '=', 30); {
             dim2.print();
-            TIMER_START
+            TKDNN_TSTART
             netRT->infer(dim2, data);
-            TIMER_STOP
+            TKDNN_TSTOP
             dim2.print();
         }
         for(int i=0; i<outputs.size(); i++) rt_out[i] = (dnnType*)netRT->buffersRT[i+1];

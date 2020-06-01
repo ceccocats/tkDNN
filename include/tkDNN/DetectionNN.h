@@ -106,14 +106,14 @@ class DetectionNN {
             originalSize.clear();
             if(TKDNN_VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
-                TIMER_START
+                TKDNN_TSTART
                 for(int bi=0; bi<cur_batches;++bi){
                     if(!frames[bi].data)
                         FatalError("No image data feed to detection");
                     originalSize.push_back(frames[bi].size());
                     preprocess(frames[bi], bi);    
                 }
-                TIMER_STOP
+                TKDNN_TSTOP
                 if(save_times) *times<<t_ns<<";";
             }
 
@@ -122,9 +122,9 @@ class DetectionNN {
             dim.n = cur_batches;
             {
                 if(TKDNN_VERBOSE) dim.print();
-                TIMER_START
+                TKDNN_TSTART
                 netRT->infer(dim, input_d);
-                TIMER_STOP
+                TKDNN_TSTOP
                 if(TKDNN_VERBOSE) dim.print();
                 stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<";";
@@ -132,10 +132,10 @@ class DetectionNN {
 
             batchDetected.clear();
             {
-                TIMER_START
+                TKDNN_TSTART
                 for(int bi=0; bi<cur_batches;++bi)
                     postprocess(bi, mAP);
-                TIMER_STOP
+                TKDNN_TSTOP
                 if(save_times) *times<<t_ns<<"\n";
             }
         }      

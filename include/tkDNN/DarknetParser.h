@@ -124,7 +124,7 @@ namespace tk { namespace dnn {
     }
 
     tk::dnn::Network *darknetAddNet(darknetFields_t &fields) {
-        std::cout<<"Add Net: "<<fields.type<<"\n";
+        //std::cout<<"Add Net: "<<fields.type<<"\n";
         dataDim_t dim(1, fields.channels, fields.height, fields.width);
         return new tk::dnn::Network(dim);
     }
@@ -138,10 +138,10 @@ namespace tk { namespace dnn {
         if(f.pad == 1) {
             f.padding_x = f.padding_y = f.size_x /2;
         }
-        std::cout<<"Add layer: "<<f.type<<"\n";
+        //std::cout<<"Add layer: "<<f.type<<"\n";
         if(f.type == "convolutional") {
             std::string wgs = wgs_path + "/c" + std::to_string(netLayers.size()) + ".bin";
-            printf("%d (%d,%d) (%d,%d) (%d,%d) %s %d %d\n", f.filters, f.size_x, f.size_y, f.stride_x, f.stride_y, f.padding_x, f.padding_y, wgs.c_str(), f.batch_normalize, f.groups);
+            //printf("%d (%d,%d) (%d,%d) (%d,%d) %s %d %d\n", f.filters, f.size_x, f.size_y, f.stride_x, f.stride_y, f.padding_x, f.padding_y, wgs.c_str(), f.batch_normalize, f.groups);
             tk::dnn::Conv2d *l= new tk::dnn::Conv2d(net, f.filters, f.size_x, f.size_y, f.stride_x, 
                                 f.stride_y, f.padding_x, f.padding_y, wgs, f.batch_normalize, false, f.groups);
             netLayers.push_back(l);
@@ -163,7 +163,7 @@ namespace tk { namespace dnn {
             if(layerIdx < 0)
                 layerIdx = netLayers.size() + layerIdx; 
             if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to shortcut\n");
-            std::cout<<"shortcut to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
+            //std::cout<<"shortcut to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
             netLayers.push_back(new tk::dnn::Shortcut(net, netLayers[layerIdx]));
 
         } else if(f.type == "upsample") {
@@ -177,7 +177,7 @@ namespace tk { namespace dnn {
                 if(layerIdx < 0)
                     layerIdx = netLayers.size() + layerIdx; 
                 if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to route\n");
-                std::cout<<"Route to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
+                //std::cout<<"Route to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
                 layers.push_back(netLayers[layerIdx]);
             }
             netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size()));
@@ -190,7 +190,7 @@ namespace tk { namespace dnn {
 
         } else if(f.type == "yolo") {
             std::string wgs = wgs_path + "/g" + std::to_string(netLayers.size()) + ".bin";
-            printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
+            //printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
             tk::dnn::Yolo *l = new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy);
             if(names.size() != f.classes)
                 FatalError("Mismatch between number of classes and names");

@@ -46,10 +46,10 @@ int main() {
     int ret_cudnn = 0; 
     for(int i=0; i<N; i++) {
         std::cout<<"i: "<<i<<"\n";
-        //TIMER_START
+        //TKDNN_TSTART
         // Inference
         ImuNet.update(i0_h, i1_h, i2_h);
-        //TIMER_STOP
+        //TKDNN_TSTOP
 
         // log path
         path<<ImuNet.odomPOS(0)<<" "<<ImuNet.odomPOS(1)<<" "<< ImuNet.odomPOS(2)<<" ";
