@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
     }
 
     if(write_coco_json){
-        coco_json.seekp (coco_json.tellp()-2);
+        coco_json.seekp (coco_json.tellp() - std::streampos(2));
         coco_json << "\n]\n";
         coco_json.close();
     }

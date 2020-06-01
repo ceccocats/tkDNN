@@ -174,7 +174,7 @@ int main()
     std::string g161_bin = bin_path + "/layers/g161.bin";
     
 
-    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download");
+    downloadWeightsifDoNotExist(input_bin, bin_path, "https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download");
 
     tk::dnn::Conv2d c0(&net, 32, 3, 3, 1, 1, 1, 1, c0_bin, true);
     tk::dnn::Activation a0(&net, tk::dnn::ACTIVATION_MISH);

@@ -14,7 +14,7 @@
 
 #include "tkdnn.h"
 
-#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+// #define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
 #ifdef OPENCV_CUDACONTRIB
 #include <opencv2/cudawarping.hpp>
@@ -104,7 +104,7 @@ class DetectionNN {
                 FatalError("A batch size greater than nBatches cannot be used");
 
             originalSize.clear();
-            if(VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
+            if(TKDNN_VERBOSE) printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
                 TIMER_START
                 for(int bi=0; bi<cur_batches;++bi){
@@ -121,11 +121,11 @@ class DetectionNN {
             tk::dnn::dataDim_t dim = netRT->input_dim;
             dim.n = cur_batches;
             {
-                if(VERBOSE) dim.print();
+                if(TKDNN_VERBOSE) dim.print();
                 TIMER_START
                 netRT->infer(dim, input_d);
                 TIMER_STOP
-                if(VERBOSE) dim.print();
+                if(TKDNN_VERBOSE) dim.print();
                 stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<";";
             }

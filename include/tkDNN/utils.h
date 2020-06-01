@@ -36,7 +36,7 @@
 #define COL_PURPLEB "\033[1;35m"
 #define COL_CYANB "\033[1;36m"
 
-#define VERBOSE 0
+#define TKDNN_VERBOSE 0
 
 // Simple Timer 
 #define TIMER_START timespec start, end;                               \
@@ -47,7 +47,7 @@
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
     if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
-#define TIMER_STOP TIMER_STOP_C(COL_CYANB, VERBOSE)
+#define TIMER_STOP TIMER_STOP_C(COL_CYANB, TKDNN_VERBOSE)
 
 /********************************************************
  * Prints the error message, and exits
