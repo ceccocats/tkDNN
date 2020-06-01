@@ -76,16 +76,16 @@ do
     test_net yolo3
     test_net yolo3_flir
     test_net yolo3_512
-    test_net yolo3_tiny
+    test_net yolo3tiny
     test_net csresnext50-panet-spp
     test_net mobilenetv2ssd
-    test_net yolo3_tiny512
-    test_net yolo_tiny
+    test_net yolo3tiny_512
+    test_net yolo2tiny
     test_net mobilenetv2ssd512
     test_net mnist
-    test_net yolo
+    test_net yolo2
     test_net yolo3_berkeley
-    test_net yolo_voc
+    test_net yolo2_voc
     test_net dla34_cnet
     test_net yolo3_coco4
     
