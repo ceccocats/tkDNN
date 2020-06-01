@@ -181,6 +181,8 @@ namespace tk { namespace dnn {
             std::string wgs = wgs_path + "/g" + std::to_string(netLayers.size()) + ".bin";
             printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
             tk::dnn::Yolo *l = new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy);
+            if(names.size() != f.classes)
+                FatalError("Mismatch between number of classes and names");
             l->classesNames = names;
             netLayers.push_back(l);
 
@@ -197,7 +199,8 @@ namespace tk { namespace dnn {
         std::vector<std::string> names;
         std::string line;
         while(std::getline(if_names, line))
-            names.push_back(line);
+            if(line != "")
+                names.push_back(line);
         
         if_names.close();
         return names;
