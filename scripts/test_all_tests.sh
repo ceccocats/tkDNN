@@ -68,28 +68,29 @@ do
     export TKDNN_BATCHSIZE=2
     echo -e "${ORANGE}Batch $TKDNN_BATCHSIZE ${NC}"
     
+    test_net mnist    
     ./test_imuodom &>> $out_file
     print_output $? imuodom
 
     test_net yolo4
-    test_net resnet101_cnet
+    test_net yolo4_berkeley
     test_net yolo3
+    test_net yolo3_berkeley
+    test_net yolo3_coco4
     test_net yolo3_flir
     test_net yolo3_512
     test_net yolo3tiny
+    test_net yolo3tiny_512
+    test_net yolo2
+    test_net yolo2_voc
+    #test_net yolo2tiny
     test_net csresnext50-panet-spp
     #test_net csresnext50-panet-spp_berkeley
-    test_net mobilenetv2ssd
-    test_net yolo3tiny_512
-    #test_net yolo2tiny
-    test_net mobilenetv2ssd512
-    test_net mnist
-    test_net yolo2
-    test_net yolo3_berkeley
-    test_net yolo2_voc
+    test_net resnet101_cnet
     test_net dla34_cnet
-    test_net yolo3_coco4
-    
+    test_net mobilenetv2ssd
+    test_net mobilenetv2ssd512
+    test_net bdd-mobilenetv2ssd
 done
 
 echo "If errors occured, check logfile $out_file" 

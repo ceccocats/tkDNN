@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     bool show = false;
     bool write_dets = false;
     bool write_res_on_file = true;
+    bool write_coco_json = true;
     int n_images = 5000;
 
     bool verbose;
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     double vm_total = 0, rss_total = 0;
     double vm, rss;
 
+    //read args
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
@@ -52,6 +54,7 @@ int main(int argc, char *argv[])
     if(argc > 4)
         config_filename = argv[4]; 
 
+    //check if files needed exist
     if(!fileExist(config_filename))
         FatalError("Wrong config file path.");
     if(!fileExist(net))
@@ -63,10 +66,18 @@ int main(int argc, char *argv[])
     tk::dnn::readmAPParams( config_filename, classes,  map_points, map_levels, map_step,
                 IoU_thresh, conf_thresh, verbose);
 
-    std::ofstream times, memory;
+    //extract network name from rt path
     std::string net_name;
     removePathAndExtension(net, net_name);
     std::cout<<"Network: "<<net_name<<std::endl;
+
+    //open files (if needed)
+    std::ofstream times, memory, coco_json;
+
+    if(write_coco_json){
+        coco_json.open(net_name+"_COCO_res.json");
+        coco_json << "[\n";
+    }
 
     if(write_res_on_file){
         times.open("times_"+net_name+".csv");
@@ -74,15 +85,12 @@ int main(int argc, char *argv[])
         memory<<net<<";";
     }
 
+    // instantiate detector
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
     tk::dnn::MobilenetDetection mbnet;
-
     tk::dnn::DetectionNN *detNN;  
-
     int n_classes = classes;   
-    
-    
     switch(ntype){
         case 'y':
             detNN = &yolo;
@@ -97,9 +105,9 @@ int main(int argc, char *argv[])
         default:
             FatalError("Network type not allowed (3rd parameter)\n");
     }
-
     detNN->init(net, n_classes);
 
+    //read images 
     std::ifstream all_labels(labels_path);
     std::string l_filename;
     std::vector<tk::dnn::Frame> images;
@@ -124,21 +132,25 @@ int main(int argc, char *argv[])
             FatalError("Wrong image file path.");
 
         cv::Mat frame = cv::imread(f.iFilename.c_str(), cv::IMREAD_COLOR);
+        std::vector<cv::Mat> batch_frames;
+        batch_frames.push_back(frame);
         int height = frame.rows;
         int width = frame.cols;
 
-        cv::Mat dnn_input;
         if(!frame.data) 
             break;
-        dnn_input = frame.clone();
+        std::vector<cv::Mat> batch_dnn_input;
+        batch_dnn_input.push_back(frame.clone());
 
         //inference 
-        
         detected_bbox.clear();
-        detNN->update(dnn_input, write_res_on_file, &times);
-        frame = detNN->draw(frame);
+        detNN->update(batch_dnn_input,1,write_res_on_file, &times, write_coco_json);
+        detNN->draw(batch_frames);
         detected_bbox = detNN->detected;
-        
+
+        if(write_coco_json)
+            printJsonCOCOFormat(&coco_json, f.iFilename.c_str(), detected_bbox, classes,  width, height);        
+
         std::ofstream myfile;
         if(write_dets)
             myfile.open ("det/"+f.lFilename.substr(f.lFilename.find("000")));
@@ -160,30 +172,33 @@ int main(int argc, char *argv[])
                 myfile << d.cl << " "<< d.prob << " "<< d.x << " "<< d.y << " "<< d.w << " "<< d.h <<"\n";
 
 			if(show)// draw rectangle for detection
-                cv::rectangle(frame, cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
+                cv::rectangle(batch_frames[0], cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
         }
 
         if(write_dets)
             myfile.close();
 
         // read and save groundtruth labels
-        std::ifstream labels(l_filename);
-        for(std::string line; std::getline(labels, line); ){
-            std::istringstream in(line); 
-            tk::dnn::BoundingBox b;
-            in >> b.cl >> b.x >> b.y >> b.w >> b.h;  
-            b.prob = 1;
-            b.truthFlag = 1;
-            f.gt.push_back(b);
+        if(fileExist(f.lFilename.c_str()))
+        {
+            std::ifstream labels(l_filename);
+            for(std::string line; std::getline(labels, line); ){
+                std::istringstream in(line); 
+                tk::dnn::BoundingBox b;
+                in >> b.cl >> b.x >> b.y >> b.w >> b.h;  
+                b.prob = 1;
+                b.truthFlag = 1;
+                f.gt.push_back(b);
 
-            if(show)// draw rectangle for groundtruth
-                cv::rectangle(frame, cv::Point((b.x-b.w/2)*width, (b.y-b.h/2)*height), cv::Point((b.x+b.w/2)*width,(b.y+b.h/2)*height), cv::Scalar(0, 255, 0), 2);             
+                if(show)// draw rectangle for groundtruth
+                    cv::rectangle(batch_frames[0], cv::Point((b.x-b.w/2)*width, (b.y-b.h/2)*height), cv::Point((b.x+b.w/2)*width,(b.y+b.h/2)*height), cv::Scalar(0, 255, 0), 2);             
+            }
         }    
       
         images.push_back(f);
         
         if(show){
-            cv::imshow("detection", frame);
+            cv::imshow("detection", batch_frames[0]);
             cv::waitKey(0);
         }
 
@@ -193,6 +208,13 @@ int main(int argc, char *argv[])
 
         
     }
+
+    if(write_coco_json){
+        coco_json.seekp (coco_json.tellp() - std::streampos(2));
+        coco_json << "\n]\n";
+        coco_json.close();
+    }
+
     std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
 
     //compute mAP

@@ -134,7 +134,7 @@ const char *regression_header5 = "bdd-mobilenetv2ssd/layers/regression_headers-5
 int main()
 {
 
-    // downloadWeightsifDoNotExist(input_bin, "bdd-mobilenetv2ssd", "https://cloud.hipert.unimore.it/s//download");
+    downloadWeightsifDoNotExist(input_bin, "bdd-mobilenetv2ssd", "https://cloud.hipert.unimore.it/s/jzRBxcEJYJ99RLa/download");
 
     int classes = 11;
 

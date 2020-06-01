@@ -535,6 +535,7 @@ struct box {
     int cl;
     float x, y, w, h;
     float prob;
+    std::vector<float> probs;
 
     void print() 
     {
@@ -581,7 +582,7 @@ public:
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 2048;
+    static const int MAX_DETECTIONS = 8192;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
     static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
 };
