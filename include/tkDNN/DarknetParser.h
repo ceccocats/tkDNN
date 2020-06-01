@@ -22,6 +22,7 @@ namespace tk { namespace dnn {
         int classes = 20;
         int num = 1;
         int pad = 0;
+        int coords = 4;
         float scale_xy = 1;
         std::vector<int> layers;
         std::string activation = "linear";
@@ -102,9 +103,11 @@ namespace tk { namespace dnn {
             fields.classes = std::stoi(value);
         else if(name.find("num") !=  std::string::npos)
             fields.num = std::stoi(value);
+        else if(name.find("coords") !=  std::string::npos)
+            fields.coords = std::stoi(value);
         else if(name.find("groups") !=  std::string::npos)
             fields.groups = std::stoi(value);
-        else if(name.find("scale_xy") !=  std::string::npos)
+        else if(name.find("scale_x_y") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
         else if(name.find("from") !=  std::string::npos)
             fields.layers.push_back(std::stof(value));
@@ -135,23 +138,25 @@ namespace tk { namespace dnn {
         if(f.pad == 1) {
             f.padding_x = f.padding_y = f.size_x /2;
         }
-
         std::cout<<"Add layer: "<<f.type<<"\n";
         if(f.type == "convolutional") {
             std::string wgs = wgs_path + "/c" + std::to_string(netLayers.size()) + ".bin";
             printf("%d (%d,%d) (%d,%d) (%d,%d) %s %d %d\n", f.filters, f.size_x, f.size_y, f.stride_x, f.stride_y, f.padding_x, f.padding_y, wgs.c_str(), f.batch_normalize, f.groups);
             tk::dnn::Conv2d *l= new tk::dnn::Conv2d(net, f.filters, f.size_x, f.size_y, f.stride_x, 
                                 f.stride_y, f.padding_x, f.padding_y, wgs, f.batch_normalize, false, f.groups);
-            if(f.activation != "linear") {
-                tkdnnActivationMode_t act;
-                if(f.activation == "relu") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_RELU);
-                else if(f.activation == "leaky") act = tk::dnn::ACTIVATION_LEAKY;
-                else if(f.activation == "mish") act = tk::dnn::ACTIVATION_MISH;
-                else { FatalError("activation not supported: " + f.activation); }
-                netLayers.push_back(new tk::dnn::Activation(net, act));
-            } else {
-                netLayers.push_back(l);
-            }
+            netLayers.push_back(l);
+        } else if(f.type == "maxpool") {
+            if(f.stride_x == 1 && f.stride_y == 1)
+                netLayers.push_back(new tk::dnn::Pooling(net, f.size_x, f.size_y, f.stride_x, f.stride_y, 
+                    f.padding_x, f.padding_y, tk::dnn::POOLING_MAX_FIXEDSIZE));
+            else
+                netLayers.push_back(new tk::dnn::Pooling(net, f.size_x, f.size_y, f.stride_x, f.stride_y, 
+                    f.padding_x, f.padding_y, tk::dnn::POOLING_MAX));
+
+        } else if(f.type == "avgpool") {
+            netLayers.push_back(new tk::dnn::Pooling(net, f.size_x, f.size_y, f.stride_x, f.stride_y, 
+                f.padding_x, f.padding_y, tk::dnn::POOLING_AVERAGE));
+
         } else if(f.type == "shortcut") {
             if(f.layers.size() != 1) FatalError("no layers to shortcut\n");
             int layerIdx = f.layers[0];
@@ -177,6 +182,12 @@ namespace tk { namespace dnn {
             }
             netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size()));
 
+        } else if(f.type == "reorg") {
+            netLayers.push_back(new tk::dnn::Reorg(net, f.stride_x));
+
+        } else if(f.type == "region") {
+            netLayers.push_back(new tk::dnn::Region(net, f.classes, f.coords, f.num));
+
         } else if(f.type == "yolo") {
             std::string wgs = wgs_path + "/g" + std::to_string(netLayers.size()) + ".bin";
             printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
@@ -189,6 +200,16 @@ namespace tk { namespace dnn {
         } else{
             FatalError("layer not supported: " + f.type);
         }
+
+        // add activation
+        if(netLayers.size() > 0 && f.activation != "linear") {
+            tkdnnActivationMode_t act;
+            if(f.activation == "relu") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_RELU);
+            else if(f.activation == "leaky") act = tk::dnn::ACTIVATION_LEAKY;
+            else if(f.activation == "mish") act = tk::dnn::ACTIVATION_MISH;
+            else { FatalError("activation not supported: " + f.activation); }
+            netLayers[netLayers.size()-1] = new tk::dnn::Activation(net, act);
+        };
     }
 
     std::vector<std::string> darknetReadNames(const std::string& names_file){
@@ -244,7 +265,7 @@ namespace tk { namespace dnn {
 
                 // new type
                 //std::cout<<"type: "<<type<<"\n";
-                fields = darknetFields_t();
+                fields = darknetFields_t(); // reset to default
                 fields.type = type;
                 continue;
             }

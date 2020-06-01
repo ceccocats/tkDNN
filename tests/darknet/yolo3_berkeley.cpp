@@ -16,7 +16,7 @@ int main() {
     };
     std::string wgs_path  = bin_path + "/layers";
     std::string cfg_path  = "../tests/darknet/cfg/yolo3_berkeley.cfg";
-    std::string name_path = "../tests/darknet/names/barkeley.names";
+    std::string name_path = "../tests/darknet/names/berkeley.names";
     downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/o5cHa4AjTKS64oD/download");
 
     // parse darknet network
@@ -27,6 +27,7 @@ int main() {
     tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
     int ret = testInference(input_bins, output_bins, net, netRT);
+    net->releaseLayers();
     delete net;
     delete netRT;
     return ret;
