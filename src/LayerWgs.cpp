@@ -80,7 +80,7 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         variance16_h = new __half[b_size];
         scales16_h   = new __half[b_size];
 
-        //cudaMalloc(&power16_d, b_size*sizeof(__half));
+        cudaMalloc(&power16_d, b_size*sizeof(__half));
         cudaMalloc(&mean16_d, b_size*sizeof(__half));
         cudaMalloc(&variance16_d, b_size*sizeof(__half));
         cudaMalloc(&scales16_d, b_size*sizeof(__half));
@@ -91,8 +91,8 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
 
         //init power array of ones
         cudaMemcpy(tmp_d, power_h, b_size*sizeof(float), cudaMemcpyHostToDevice);
-        //float2half(tmp_d, power16_d, b_size);
-        //cudaMemcpy(power16_h, power16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+        float2half(tmp_d, power16_d, b_size);
+        cudaMemcpy(power16_h, power16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
 
         //mean array
         cudaMemcpy(tmp_d, mean_h, b_size*sizeof(float), cudaMemcpyHostToDevice);

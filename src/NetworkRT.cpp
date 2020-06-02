@@ -134,6 +134,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         networkRT->markOutput(*input);
 
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
+        printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
 #if NV_TENSORRT_MAJOR >= 6                
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);

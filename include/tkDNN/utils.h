@@ -116,5 +116,6 @@ void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData,
                     dnnType* add_vector, int dim, dnnType mul);
 
 void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
+void printCudaMemUsage();
 void removePathAndExtension(const std::string &full_string, std::string &name);
 #endif //UTILS_H

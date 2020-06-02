@@ -128,6 +128,7 @@ void Network::print() {
     }
     printCenteredTitle("", '=', 60);
     std::cout<<"\n";
+    printCudaMemUsage();
 }
 const char *Network::getNetworkRTName(const char *network_name){
     networkName = network_name;

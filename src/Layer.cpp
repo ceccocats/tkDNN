@@ -24,6 +24,11 @@ Layer::~Layer() {
 
     checkCUDNN( cudnnDestroyTensorDescriptor(srcTensorDesc) );
     checkCUDNN( cudnnDestroyTensorDescriptor(dstTensorDesc) );
+
+    if(dstData != nullptr) {
+        cudaFree(dstData);
+        dstData = nullptr;
+    }
 }
 
 }}
