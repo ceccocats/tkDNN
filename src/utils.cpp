@@ -197,6 +197,12 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
    resident_set_kb = rss * page_size_kb;
 }
 
+void printCudaMemUsage() {
+    size_t free, total;
+    checkCuda( cudaMemGetInfo(&free, &total) );	 
+    std::cout<<"GPU free memory: "<<double(free)/1e6<<" mb.\n";
+}
+
 void removePathAndExtension(const std::string &full_string, std::string &name){
     name = full_string;
     std::string tmp_str = full_string;

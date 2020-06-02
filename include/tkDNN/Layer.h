@@ -50,7 +50,7 @@ public:
     }
     void setFinal() { this->final = true; }
     dataDim_t input_dim, output_dim;
-    dnnType *dstData;  //where results will be putted
+    dnnType *dstData = nullptr;  //where results will be putted
 
     int id = 0;
     bool final;        //if the layer is the final one
@@ -122,7 +122,7 @@ public:
     __half *data16_d  = nullptr, *bias16_d  = nullptr;
     __half *bias216_h = nullptr, *bias216_d = nullptr;
 
-    __half *power16_h    = nullptr;
+    __half *power16_h    = nullptr,    *power16_d = nullptr;
     __half *scales16_h   = nullptr,   *scales16_d = nullptr;
     __half *mean16_h     = nullptr,     *mean16_d = nullptr;
     __half *variance16_h = nullptr, *variance16_d = nullptr;
@@ -164,6 +164,7 @@ public:
             if(  scales16_d != nullptr) { cudaFree(  scales16_d);   scales16_d = nullptr; }
             if(    mean16_d != nullptr) { cudaFree(    mean16_d);     mean16_d = nullptr; }
             if(variance16_d != nullptr) { cudaFree(variance16_d); variance16_d = nullptr; } 
+            if(   power16_d != nullptr) { cudaFree(   power16_d);    power16_d = nullptr; }
         }
     }
 };
