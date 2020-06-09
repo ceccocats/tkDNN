@@ -86,7 +86,11 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     // RNN descriptors
     checkCUDNN(cudnnCreateRNNDescriptor(&rnnDesc));
 
-    checkCUDNN(cudnnSetRNNDescriptor(net->cudnnHandle, 
+#if CUDNN_MAJOR > 7
+    checkCUDNN(cudnnSetRNNDescriptor_v6(net->cudnnHandle,
+#else
+    checkCUDNN(cudnnSetRNNDescriptor(net->cudnnHandle,
+#endif
         rnnDesc, stateSize, numLayers, dropoutDesc,
         cudnnRNNInputMode_t::CUDNN_LINEAR_INPUT,
         //(bidirectional ? cudnnDirectionMode_t::CUDNN_BIDIRECTIONAL : cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL),
