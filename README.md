@@ -177,24 +177,31 @@ N.b. Using FP16 inference will lead to some errors in the results (first or seco
 
 ### INT8 inference
 
-To run the an object detection demo with INT8 inference follow these steps (example with yolov3):
+To run the an object detection demo with INT8 inference three environment variables need to be set:
+  * ```export TKDNN_MODE=INT8```: set the 8-bit integer optimization
+  * ```export TKDNN_CALIB_IMG_PATH=/path/to/calibration/image_list.txt``` : image_list.txt has in each line the absolute path to a calibration image
+  * ```export TKDNN_CALIB_LABEL_PATH=/path/to/calibration/label_list.txt```: label_list.txt has in each line the absolute path to a calibration label
+  
+You should provide image_list.txt and label_list.txt, using training images. However, if you want to quickly test the INT8 inference you can run (from this repo root folder)
 ```
-export TKDNN_MODE=INT8  # set the 8-bit integer optimization
+bash scripts/download_validation.sh COCO
+```
+to automatically download COCO2017 validation (inside demo folder) and create those needed file. Use BDD insted of COCO to download BDD validation. 
 
-# image_list.txt contains the list of the absolute paths to the calibration images
-export TKDNN_CALIB_IMG_PATH=/path/to/calibration/image_list.txt
-
-# label_list.txt contains the list of the absolute paths to the calibration labels
-export TKDNN_CALIB_LABEL_PATH=/path/to/calibration/label_list.txt
+Then a complete example using yolo3 and COCO dataset would be:
+```
+export TKDNN_MODE=INT8
+export TKDNN_CALIB_LABEL_PATH=../demo/COCO_val2017/all_labels.txt
+export TKDNN_CALIB_IMG_PATH=../demo/COCO_val2017/all_images.txt
 rm yolo3_int8.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
 ./demo yolo3_int8.rt ../demo/yolo_test.mp4 y
 ```
-N.b. Using INT8 inference will lead to some errors in the results. 
-
-N.b. The test will be slower: this is due to the INT8 calibration, which may take some time to complete. 
-
-N.b. INT8 calibration requires TensorRT version greater than or equal to 6.0
+N.B. 
+ * Using INT8 inference will lead to some errors in the results. 
+ * The test will be slower: this is due to the INT8 calibration, which may take some time to complete. 
+ * INT8 calibration requires TensorRT version greater than or equal to 6.0
+ * Only 100 images are used to create the calibration table by default (set in the code).
 
 ### BatchSize bigger than 1
 ```
