@@ -2,8 +2,17 @@
 tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives, specifically thought to work on NVIDIA Jetson Boards. It has been tested on TK1(branch cudnn2), TX1, TX2, AGX Xavier and several discrete GPU.
 The main goal of this project is to exploit NVIDIA boards as much as possible to obtain the best inference performance. It does not allow training. 
 
+
+If you use tkDNN in your research, please cite one of the following papers. For use in commercial solutions, write at gattifrancesco@hotmail.it or refer to https://hipert.unimore.it/ .
+
+```
 Accepted paper @ IRC 2020, will soon been published.
 M. Verucchi, L. Bartoli, F. Bagni, F. Gatti, P. Burgio and M. Bertogna, "Real-Time clustering and LiDAR-camera fusion on embedded platforms for self-driving cars",  in proceedings in IEEE Robotic Computing (2020)
+
+Accepted paper @ ETFA 2020, will soon been published.
+M. Verucchi, G. Brilli, D. Sapienza, M. Verasani, M. Arena, F. Gatti, A. Capotondi, R. Cavicchioli, M. Bertogna, M. Solieri
+"A Systematic Assessment of Embedded Neural Networks for Object Detection", in IEEE International Conference on Emerging Technologies and Factory Automation (2020)
+```
 
 ## Index
 - [tkDNN](#tkdnn)

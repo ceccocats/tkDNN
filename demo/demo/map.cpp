@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
         std::ofstream myfile;
         if(write_dets)
-            myfile.open ("det/"+f.lFilename.substr(f.lFilename.find("000")));
+            myfile.open ("det/"+f.lFilename.substr(f.lFilename.find("labels/") + 7));
 
         // save detections labels
         for(auto d:detected_bbox){
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
             f.det.push_back(b);
 
             if(write_dets)
-                myfile << d.cl << " "<< d.prob << " "<< d.x << " "<< d.y << " "<< d.w << " "<< d.h <<"\n";
+                myfile << d.cl << " "<< d.prob << " "<< b.x << " "<< b.y << " "<< b.w << " "<< b.h <<"\n";
 
 			if(show)// draw rectangle for detection
                 cv::rectangle(batch_frames[0], cv::Point(d.x, d.y), cv::Point(d.x + d.w, d.y + d.h), cv::Scalar(0, 0, 255), 2);             
