@@ -105,7 +105,7 @@ void printCenteredTitle(const char *title, char fill, int dim = 30);
 bool fileExist(const char *fname);
 void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url);
 void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10);
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10, bool verbose=true);
 void printDeviceVector(int size, dnnType* vec_d, bool device = true);
 float getColor(const int c, const int x, const int max);
 void resize(int size, dnnType **data);

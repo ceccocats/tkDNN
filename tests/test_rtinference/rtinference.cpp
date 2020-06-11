@@ -1,4 +1,5 @@
 #include<iostream>
+#include<algorithm>
 #include "tkdnn.h"
 #include <stdlib.h>     /* srand, rand */
 
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
 
     int ret_tensorrt = 0; 
     std::cout<<"Testing with batchsize: "<<BATCH_SIZE<<"\n";
+    std::vector<double> stats;
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     float total_time = 0;
     for(int i=0; i<1200; i++) {
@@ -46,18 +48,26 @@ int main(int argc, char *argv[]) {
         netRT.infer(dim, input_d);
         TKDNN_TSTOP
         total_time+= t_ns;
+        if(i> 1)
+        stats.push_back(t_ns);
 
         // control output
-        std::cout<<"Output Buffers: "<<netRT.getBuffersN()-1<<"\n";
+        // std::cout<<"Output Buffers: "<<netRT.getBuffersN()-1<<"\n";
+        std::cout<<"Img: "<<i<<"\n";
 	for(int o=1; o<netRT.getBuffersN(); o++) {
             for(int b=1; b<BATCH_SIZE; b++) {
                 dnnType *out_d = (dnnType*) netRT.buffersRT[o];
                 dnnType *out0_d = out_d;
                 dnnType *outI_d = out_d + netRT.buffersDIM[o].tot()*b;
-                ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d) == 0 ? 0 : ERROR_TENSORRT;
+                ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d,true, 10, false) == 0 ? 0 : ERROR_TENSORRT;
             }
         }
     }
-    std::cout<<"avg: "<<total_time/1200.<<std::endl;
+    std::cout<<"Min: "<<*std::min_element(stats.begin(), stats.end())/BATCH_SIZE<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(stats.begin(), stats.end())/BATCH_SIZE<<" ms\n";    
+    double mean =0;
+    for(int i=0; i<stats.size(); i++) mean += stats[i]; mean /= stats.size();
+    std::cout<<"Avg: "<<mean/BATCH_SIZE<<" ms\t"<<1000/(mean/BATCH_SIZE)<<" FPS\n"<<COL_END;   
     return ret_tensorrt;
 }
+
