@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
 
     //convert network to tensorRT
     tk::dnn::NetworkRT netRT(NULL, argv[1]);
+
+    
     
     tk::dnn::dataDim_t idim = netRT.input_dim;
     tk::dnn::dataDim_t odim = netRT.output_dim;
@@ -63,11 +65,28 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    std::cout<<"Min: "<<*std::min_element(stats.begin(), stats.end())/BATCH_SIZE<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(stats.begin(), stats.end())/BATCH_SIZE<<" ms\n";    
+
+    double min = *std::min_element(stats.begin(), stats.end())/BATCH_SIZE;
+    double max = *std::max_element(stats.begin(), stats.end())/BATCH_SIZE;
     double mean =0;
     for(int i=0; i<stats.size(); i++) mean += stats[i]; mean /= stats.size();
-    std::cout<<"Avg: "<<mean/BATCH_SIZE<<" ms\t"<<1000/(mean/BATCH_SIZE)<<" FPS\n"<<COL_END;   
+    mean /=BATCH_SIZE;
+
+    std::cout<<"Min: "<<min<<" ms\n";    
+    std::cout<<"Max: "<<max<<" ms\n";    
+    std::cout<<"Avg: "<<mean<<" ms\t"<<1000/(mean)<<" FPS\n"<<COL_END;   
+
+
+    std::ofstream times;
+    times.open("times_rtinference.csv", std::ios_base::app);
+
+    std::string net_name;
+    removePathAndExtension(argv[1], net_name);
+
+    times << net_name<< "_" << BATCH_SIZE << ";" << mean << ";" << min << ";" << max << ";" << 1000./mean << "\n";
+
+    times.close();
+
     return ret_tensorrt;
 }
 
