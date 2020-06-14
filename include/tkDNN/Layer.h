@@ -261,6 +261,10 @@ public:
     Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
                 std::string fname_weights, bool batchnorm = false, bool deConv = false, int groups = 1, bool additional_bias=false);
+    Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
+                int strideH, int strideW, int paddingH, int paddingW,
+                int dilationW, int dilationH,
+                std::string fname_weights, bool batchnorm = false, bool deConv = false, int groups = 1, bool additional_bias=false);
     virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
@@ -269,6 +273,7 @@ public:
     int kernelH, kernelW, strideH, strideW, paddingH, paddingW;
     bool deConv, additional_bias;
     int groups;
+    int dilationW, dilationH;
 
 protected:
     cudnnFilterDescriptor_t filterDesc;
