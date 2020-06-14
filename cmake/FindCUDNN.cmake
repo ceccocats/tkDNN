@@ -1,33 +1,66 @@
-# Find the header files
+# find the library
+if(CUDA_FOUND)
+  find_cuda_helper_libs(cudnn)
+  set(CUDNN_LIBRARY ${CUDA_cudnn_LIBRARY} CACHE FILEPATH "location of the cuDNN library")
+  unset(CUDA_cudnn_LIBRARY CACHE)
 
-find_path(CUDNN_INCLUDE_DIR
-        ${CMAKE_SYSROOT}/usr/local/include
-        ${CMAKE_SYSROOT}/usr/include
-        /usr/local/nvidia/tensorrt/include/
-        NO_DEFAULT_PATH
-)
+  find_cuda_helper_libs(nvinfer)
+  set(NVINFER_LIBRARY ${CUDA_nvinfer_LIBRARY} CACHE FILEPATH "location of the nvinfer library")
+  unset(CUDA_nvinfer_LIBRARY CACHE)
+endif()
 
-set(OLD_ROOT ${CMAKE_FIND_ROOT_PATH})
-list(APPEND CMAKE_FIND_ROOT_PATH /)
-list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .so.7)
-list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .so.5)
-find_library(CUDNN_LIB
-    NAMES cudnn
-    PATHS
-    /usr/local/driveworks/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
-    /usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu/
+# find the include
+if(CUDNN_LIBRARY)
+  find_path(CUDNN_INCLUDE_DIR
+    cudnn.h
+    PATHS ${CUDA_TOOLKIT_INCLUDE}
+    DOC "location of cudnn.h"
     NO_DEFAULT_PATH
-)
-find_library(CUDNN_NVLIB
-    NAMES "nvinfer"
-    PATHS
-    /usr/local/driveworks/targets/${CMAKE_SYSTEM_PROCESSOR}-Linux/lib
-    /usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu/
-    NO_DEFAULT_PATH
-)
-set(CMAKE_FIND_ROOT_PATH ${OLD_ROOT})
+  )
 
-set(CUDNN_LIBRARIES ${CUDNN_LIB} ${CUDNN_NVLIB})
-message("-- Found CUDNN: "  ${CUDNN_LIB})
-message("-- Found NVINFER: "  ${CUDNN_NVLIB})
+  if(NOT CUDNN_INCLUDE_DIR)
+    find_path(CUDNN_INCLUDE_DIR
+      cudnn.h
+      DOC "location of cudnn.h"
+    )
+  endif()
+
+  message("-- Found CUDNN: " ${CUDNN_LIBRARY})
+  message("-- Found CUDNN include: " ${CUDNN_INCLUDE_DIR})
+endif()
+
+if(NVINFER_LIBRARY)
+  find_path(NVINFER_INCLUDE_DIR
+    NvInfer.h
+    PATHS ${CUDA_TOOLKIT_INCLUDE}
+    DOC "location of NvInfer.h"
+    NO_DEFAULT_PATH
+  )
+
+  if(NOT NVINFER_INCLUDE_DIR)
+    find_path(NVINFER_INCLUDE_DIR
+        NvInfer.h
+        DOC "location of NvInfer.h"
+    )
+  endif()
+
+  message("-- Found NVINFER: " ${NVINFER_LIBRARY})
+  message("-- Found NVINFER include: " ${NVINFER_INCLUDE_DIR})
+endif()
+
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(CUDNN
+  FOUND_VAR CUDNN_FOUND
+  REQUIRED_VARS
+  CUDNN_LIBRARY
+  CUDNN_INCLUDE_DIR
+  VERSION_VAR CUDNN_VERSION
+)
+
+if(CUDNN_FOUND)
+  set(CUDNN_LIBRARIES ${CUDNN_LIBRARY} ${NVINFER_LIBRARY})
+  set(CUDNN_INCLUDE_DIRS ${CUDNN_INCLUDE_DIR} ${NVINFER_INCLUDE_DIR})
+endif()
+
 set(CUDNN_FOUND true)
