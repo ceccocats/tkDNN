@@ -595,7 +595,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
 
 bool NetworkRT::serialize(const char *filename) {
 
-    std::ofstream p(filename);
+    std::ofstream p(filename, std::ios::binary);
     if (!p) {
         FatalError("could not open plan output file");
         return false;

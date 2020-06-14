@@ -20,6 +20,8 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 
 find_package(CUDNN REQUIRED)
+include_directories(${CUDNN_INCLUDE_DIR})
+
 
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
