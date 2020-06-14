@@ -182,7 +182,7 @@ namespace tk { namespace dnn {
             }
             netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size()));
 
-        } else if(f.type == "reorg") {
+        } else if(f.type == "reorg" || f.type == "reorg3d") {
             netLayers.push_back(new tk::dnn::Reorg(net, f.stride_x));
 
         } else if(f.type == "region") {
