@@ -120,7 +120,7 @@ target_link_libraries(demo tkDNN)
 #         CACHE PATH "default install path" FORCE)
 #endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY include DESTINATION include)
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS tkDNN kernels DESTINATION lib)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake" # source directory
         DESTINATION "share/tkDNN" # target directory
