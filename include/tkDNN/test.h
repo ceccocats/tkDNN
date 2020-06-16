@@ -1,7 +1,7 @@
 
 #include <tkdnn.h>
 int testInference(std::vector<std::string> input_bins, std::vector<std::string> output_bins, 
-  tk::dnn::Network *net, tk::dnn::NetworkRT *netRT = nullptr) {
+    tk::dnn::Network *net, tk::dnn::NetworkRT *netRT = nullptr) {
 
     std::vector<tk::dnn::Layer*> outputs;
     for(int i=0; i<net->num_layers; i++) {
@@ -67,7 +67,11 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
             std::cout<<"CUDNN vs TRT    "; 
             ret_cudnn_tensorrt |= checkResult(odim, cudnn_out[i], rt_out[i]) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
         }
-    }
-    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 
-  }
+        delete [] out_h;
+        checkCuda( cudaFree(out) );
+    }
+    delete [] input_h;
+    checkCuda( cudaFree(data) );
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
+}
