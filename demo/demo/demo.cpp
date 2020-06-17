@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     int n_batch = 1;
     if(argc > 5)
         n_batch = atoi(argv[5]); 
-    bool show = true;
+    bool show = false;
     if(argc > 6)
         show = atoi(argv[6]); 
 
