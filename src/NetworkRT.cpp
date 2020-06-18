@@ -316,9 +316,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
-        lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
-        //std::cout << "dilation: " << l->dilationH << ", " << l->dilationW << std::endl;
-        lRTconv->setDilation(DimsHW{l->dilationH, l->dilationW}); //mrho
+        lRTconv->setPadding(DimsHW{l->paddingH * l->dilationH, l->paddingW * l->dilationW});
+        lRTconv->setDilation(DimsHW{l->dilationH, l->dilationW});
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
     } else {
