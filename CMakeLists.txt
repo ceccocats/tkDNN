@@ -10,6 +10,7 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
+add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
 # CUDA
