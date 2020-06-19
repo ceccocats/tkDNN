@@ -9,7 +9,7 @@ void activation_leaky(dnnType *input, dnnType *output, int size) {
         if (input[i]>0)
             output[i] = input[i];
         else
-            output[i] = 0.1f*input[i];
+            output[i] = 0.01f*input[i]; //FIME!!
     }
  }
 

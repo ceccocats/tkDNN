@@ -103,6 +103,10 @@ target_link_libraries(test_resnet101_cnet tkDNN)
 add_executable(test_dla34_cnet tests/centernet/dla34_cnet/dla34_cnet.cpp)
 target_link_libraries(test_dla34_cnet tkDNN)
 
+# SHELFNET
+add_executable(test_shelfnet tests/shelfnet/shelfnet.cpp)
+target_link_libraries(test_shelfnet tkDNN)
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
