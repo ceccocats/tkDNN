@@ -534,13 +534,14 @@ public:
 class Reorg : public Layer {
 
 public:
-    Reorg(Network *net, int stride);
+    Reorg(Network *net, int stride, bool reorg3d = false);
     virtual ~Reorg();
     virtual layerType_t getLayerType() { return LAYER_REORG; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     int stride;
+    bool reorg3d;
 };
 
 /**

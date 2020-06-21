@@ -5,9 +5,10 @@
 
 namespace tk { namespace dnn {
 
-Reorg::Reorg(Network *net, int stride) : Layer(net) {
+Reorg::Reorg(Network *net, int stride, bool reorg3d) : Layer(net) {
 
     this->stride = stride;
+    this->reorg3d = reorg3d;
     
     output_dim.n = input_dim.n;
     output_dim.c = input_dim.c*stride*stride;
@@ -24,8 +25,10 @@ Reorg::~Reorg() {
 }
 
 dnnType* Reorg::infer(dataDim_t &dim, dnnType* srcData) {
-
-    reorgForward(srcData, dstData, output_dim.n, output_dim.c, output_dim.h, output_dim.w, stride);
+    if (reorg3d)
+        reorgForward(srcData, dstData, output_dim.n, output_dim.c, output_dim.h, output_dim.w, stride);
+    else
+        reorgForward(srcData, dstData, dim.n, dim.c, dim.h, dim.w, stride);
 
     dim = output_dim;
     return dstData;

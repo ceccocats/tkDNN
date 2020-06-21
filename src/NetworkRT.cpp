@@ -481,7 +481,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
     //std::cout<<"New plugin REORG\n";
-    IPlugin *plugin = new ReorgRT(l->stride);
+    IPlugin *plugin = new ReorgRT(l->stride, l->reorg3d);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
