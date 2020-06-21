@@ -25,7 +25,7 @@ Reorg::~Reorg() {
 
 dnnType* Reorg::infer(dataDim_t &dim, dnnType* srcData) {
 
-    reorgForward(srcData, dstData, dim.n, dim.c, dim.h, dim.w, stride);
+    reorgForward(srcData, dstData, output_dim.n, output_dim.c, output_dim.h, output_dim.w, stride);
 
     dim = output_dim;
     return dstData;

@@ -21,9 +21,9 @@ public:
 	}
 
 	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		c = inputDims[0].d[0];
-		h = inputDims[0].d[1];
-		w = inputDims[0].d[2];
+		c = outputDims[0].d[0];
+		h = outputDims[0].d[1];
+		w = outputDims[0].d[2];
 	}
 
 	int initialize() override {
