@@ -15,6 +15,11 @@ Reshape::Reshape(Network *net, dataDim_t new_dim) : Layer(net) {
     output_dim.w = new_dim.w;
     output_dim.l = new_dim.l;
 
+    output_dim = new_dim;
+
+    if(input_dim.tot() != output_dim.tot())
+        FatalError("Reshape dimension mismatch");
+
 }
 
 Reshape::~Reshape() {

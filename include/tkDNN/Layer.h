@@ -21,6 +21,7 @@ enum layerType_t {
     LAYER_ACTIVATION_MISH,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
+    LAYER_RESIZE,
     LAYER_MULADD,
     LAYER_POOLING,
     LAYER_SOFTMAX,
@@ -70,6 +71,7 @@ public:
             case LAYER_ACTIVATION_MISH:     return "ActivationMish";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
+            case LAYER_RESIZE:              return "Resize";
             case LAYER_MULADD:              return "MulAdd";
             case LAYER_POOLING:             return "Pooling";
             case LAYER_SOFTMAX:             return "Softmax";
@@ -427,6 +429,19 @@ public:
 
 };
 
+/**
+    Resize layer
+*/
+class Resize : public Layer {
+
+public:
+    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false);
+    virtual ~Resize();
+    virtual layerType_t getLayerType() { return LAYER_RESIZE; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+};
 
 /**
     MulAdd layer
@@ -545,7 +560,7 @@ public:
 class Shortcut : public Layer {
 
 public:
-    Shortcut(Network *net, Layer *backLayer); 
+    Shortcut(Network *net, Layer *backLayer, bool mul=false); 
     virtual ~Shortcut();
     virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
 
@@ -553,6 +568,7 @@ public:
 
 public:
     Layer *backLayer;
+    bool mul = false;
 };
 
 /**

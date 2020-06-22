@@ -1,5 +1,9 @@
 #include <iostream>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "tkdnn.h"
+#include "NetworkViz.h"
 
 
 const char *output_bin1 = "shelfnet/debug/classification_headers-5.bin";
@@ -29,35 +33,49 @@ const char *backbone[] = {
     "shelfnet/layers/backbone-layer4-1-conv2.bin"};
 
 const char *conv_out[] = {
+    "shelfnet/layers/conv_out-conv-conv.bin",
+    "shelfnet/layers/conv_out-conv_out.bin",
     "shelfnet/layers/conv_out16-conv-conv.bin",
     "shelfnet/layers/conv_out16-conv_out.bin",
     "shelfnet/layers/conv_out32-conv-conv.bin",
-    "shelfnet/layers/conv_out32-conv_out.bin",
-    "shelfnet/layers/conv_out-conv-conv.bin",
-    "shelfnet/layers/conv_out-conv_out.bin"};
+    "shelfnet/layers/conv_out32-conv_out.bin"
+    };
 
 const char *decoder[] = {
     "shelfnet/layers/decoder-bottom-conv1.bin",
-    "shelfnet/layers/decoder-up_conv_list-0-conv_atten.bin",
+    "shelfnet/layers/decoder-bottom-conv12.bin",
     "shelfnet/layers/decoder-up_conv_list-0-conv-conv.bin",
-    "shelfnet/layers/decoder-up_conv_list-1-conv_atten.bin",
-    "shelfnet/layers/decoder-up_conv_list-1-conv-conv.bin",
+    "shelfnet/layers/decoder-up_conv_list-0-conv_atten.bin",
     "shelfnet/layers/decoder-up_dense_list-0-conv.bin",
-    "shelfnet/layers/decoder-up_dense_list-1-conv.bin"};
+    "shelfnet/layers/decoder-up_conv_list-1-conv-conv.bin",
+    "shelfnet/layers/decoder-up_conv_list-1-conv_atten.bin",
+    "shelfnet/layers/decoder-up_dense_list-1-conv.bin"
+    };
 
     
 const char *ladder[] = {
-    "shelfnet/layers/ladder-bottom-conv1.bin",
-    "shelfnet/layers/ladder-down_conv_list-0.bin",
-    "shelfnet/layers/ladder-down_conv_list-1.bin",
-    "shelfnet/layers/ladder-down_module_list-0-conv1.bin",
-    "shelfnet/layers/ladder-down_module_list-1-conv1.bin",
     "shelfnet/layers/ladder-inconv-conv1.bin",
-    "shelfnet/layers/ladder-up_conv_list-0-conv_atten.bin",
+    "shelfnet/layers/ladder-inconv-conv12.bin",
+    "shelfnet/layers/ladder-down_module_list-0-conv1.bin",
+    "shelfnet/layers/ladder-down_module_list-0-conv12.bin",
+    "shelfnet/layers/ladder-down_conv_list-0.bin",
+
+    "shelfnet/layers/ladder-down_module_list-1-conv1.bin",
+    "shelfnet/layers/ladder-down_module_list-1-conv12.bin",
+    "shelfnet/layers/ladder-down_conv_list-1.bin",
+
+    "shelfnet/layers/ladder-bottom-conv1.bin",
+    "shelfnet/layers/ladder-bottom-conv12.bin",
+    
+    
+    
     "shelfnet/layers/ladder-up_conv_list-0-conv-conv.bin",
-    "shelfnet/layers/ladder-up_conv_list-1-conv_atten.bin",
-    "shelfnet/layers/ladder-up_conv_list-1-conv-conv.bin",
+    "shelfnet/layers/ladder-up_conv_list-0-conv_atten.bin",
     "shelfnet/layers/ladder-up_dense_list-0-conv.bin",
+
+    
+    "shelfnet/layers/ladder-up_conv_list-1-conv-conv.bin",
+    "shelfnet/layers/ladder-up_conv_list-1-conv_atten.bin",
     "shelfnet/layers/ladder-up_dense_list-1-conv.bin"};
 
 const char *trans[] = {
@@ -71,11 +89,11 @@ int main()
 
     int classes = 19;
 
-    // Network layout
+    // Network layout    
     tk::dnn::dataDim_t dim(1, 3, 1024, 1024, 1);
     tk::dnn::Network net(dim);
 
-    int bi = 0;
+    int bi = 0, di = 0, li = 0, ci = 0;
     new tk::dnn::Conv2d(&net, 64, 7, 7, 2, 2, 3, 3, backbone[bi++], true);
     new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Layer* last = new tk::dnn::Pooling (&net, 3, 3, 2, 2, 1, 1, tk::dnn::POOLING_MAX);
@@ -105,24 +123,122 @@ int main()
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
         new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
-
-        if(i != 2)
         
-        {new tk::dnn::Shortcut(&net, last);
+        new tk::dnn::Shortcut(&net, last);
         last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
-        features.push_back(last);}
+        features.push_back(last);
     }
 
-    // for(int i=0; i<features.size(); ++i){
-    //     new tk::dnn::Route(&net, &features[i], 1);
-    //     int out_channel = pow(2,6+i);
-    //     new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, trans[i], true);
-    //     new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    for(int i=0; i<features.size(); ++i){
+        new tk::dnn::Route(&net, &features[i], 1);
+        int out_channel = pow(2,6+i);
+        new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, trans[i], true);
+        features[i] = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    }
+
+    //DECODER
+    
+    last = features[2];
+    std::vector<tk::dnn::Layer*> up_out;
+    //bottom
+    new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, decoder[di++], true, false, 1, true);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, decoder[di++], true, false, 1, true);
+    new tk::dnn::Shortcut(&net, last);
+    last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+    up_out.push_back(last);
+
+    for(int i=0; i<2; ++i){
+        int out_channel = pow(2,7-i);
+        //up-conv
+        std::cout<<out_channel<<std::endl;
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, decoder[di++], true);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        
+        new tk::dnn::Pooling(&net, last->output_dim.w, last->output_dim.h, last->output_dim.w, last->output_dim.h, 0, 0, tk::dnn::POOLING_AVERAGE);
+        new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, decoder[di++], true);
+        
+        tk::dnn::Layer* act = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_SIGMOID);
+        new tk::dnn::Route(&net, &last, 1);
+        new tk::dnn::Shortcut(&net, act, true);
+
+        //interpolate
+        new tk::dnn::Resize(&net, 1,2,2);
+        new tk::dnn::Shortcut(&net, features[1-i]);
+
+        //up-dense
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, decoder[di++], true);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        up_out.push_back(last);
+    }
+
+    //LADDER
+
+    std::vector<tk::dnn::Layer*> down_out;
+    new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+    new tk::dnn::Shortcut(&net, last);
+    new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+    
+    for(int i=0; i<2;++i){
+        int out_channel = pow(2,6+i);
+        tk::dnn::Layer* l_last = new tk::dnn::Shortcut(&net, up_out[2-i]);
+    
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+        new tk::dnn::Shortcut(&net, l_last);
+        l_last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+        down_out.push_back(l_last);
+
+        new tk::dnn::Conv2d (&net, out_channel*2, 3, 3, 2, 2, 1, 1, ladder[li++], false);
+        last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+    }
+
+    new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
+    new tk::dnn::Shortcut(&net, last);
+    last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+    up_out.clear();
+    up_out.push_back(last);
+
+    for(int i=0; i<2; ++i){
+        int out_channel = pow(2,7-i);
+        //up-conv
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        
+        new tk::dnn::Pooling(&net, last->output_dim.w, last->output_dim.h, last->output_dim.w, last->output_dim.h, 0, 0, tk::dnn::POOLING_AVERAGE);
+        new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, ladder[li++], true);
+        
+        tk::dnn::Layer* act = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_SIGMOID);
+        new tk::dnn::Route(&net, &last, 1);
+        new tk::dnn::Shortcut(&net, act, true);
+
+        //interpolate
+        new tk::dnn::Resize(&net, 1,2,2);
+        new tk::dnn::Shortcut(&net, down_out[1-i]);
+
+        // //up-dense
+        new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        up_out.push_back(last);
+    }
+
+
+    // for(int i=2;i>=0;--i){
+        // new tk::dnn::Route(&net, &up_out[i], 1);
+        new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, conv_out[ci++], true);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Conv2d (&net, 19, 3, 3, 1, 1, 1, 1, conv_out[ci++], false);
+        /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true);
     // }
 
+    new tk::dnn::Softmax(&net);
     
-
-    const char *output_bin = "shelfnet/debug/backbone-layer4-1-bn2.bin";
+    const char *output_bin = "shelfnet/debug/fofmaf.bin";
 
     
 
@@ -210,4 +326,7 @@ int main()
     // ret_cudnn_tensorrt |= checkResult(loc->output_dim.tot(), loc->dstData, rt_out4) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
     // return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
+    
+    cv::Mat viz = vizLayer2Mat(&net, net.num_layers-1);
+    cv::imwrite("test.png", viz);
 }

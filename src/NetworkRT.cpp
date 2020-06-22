@@ -512,7 +512,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     else
     {
         // plugin version
-        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim);
+        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim, l->mul);
         ITensor **inputs = new ITensor*[2];
         inputs[0] = input;
         inputs[1] = back_tens; 
@@ -682,7 +682,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         bdim.w = readBUF<int>(buf);
         bdim.l = 1;
 
-        ShortcutRT *r = new ShortcutRT(bdim);
+        ShortcutRT *r = new ShortcutRT(bdim, readBUF<bool>(buf));
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
