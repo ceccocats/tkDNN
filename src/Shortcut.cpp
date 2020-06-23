@@ -11,11 +11,9 @@ Shortcut::Shortcut(Network *net, Layer *backLayer, bool mul) : Layer(net) {
     this->mul = mul;
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 
-    //FIXME
-    // if( /*backLayer->output_dim.c != input_dim.c ||*/
-    //     backLayer->output_dim.w != input_dim.w ||
-    //     backLayer->output_dim.h != input_dim.h   )
-    //     FatalError("Shortcut dim missmatch");
+    if( ( backLayer->output_dim.c != input_dim.c && mul ) ||
+        (( backLayer->output_dim.w != input_dim.w ||  backLayer->output_dim.h != input_dim.h ) && !mul ) )  
+        FatalError("Shortcut dim missmatch");
     
 }
 

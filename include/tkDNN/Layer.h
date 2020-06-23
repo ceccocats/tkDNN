@@ -225,8 +225,9 @@ class Activation : public Layer {
 public:
     int act_mode;
     float ceiling;
+    float slope;
 
-    Activation(Network *net, int act_mode, const float ceiling=0.0); 
+    Activation(Network *net, int act_mode, const float ceiling=0.0, const float slope=0.1); 
     virtual ~Activation();
     virtual layerType_t getLayerType() { 
         if(act_mode == CUDNN_ACTIVATION_CLIPPED_RELU)

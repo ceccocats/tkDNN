@@ -105,6 +105,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Route *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Flatten *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reshape *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Resize *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reorg *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);

@@ -6,8 +6,6 @@
 #include "NetworkViz.h"
 
 
-const char *output_bin1 = "shelfnet/debug/classification_headers-5.bin";
-const char *output_bin2 = "shelfnet/debug/regression_headers-5.bin";
 const char *input_bin = "shelfnet/debug/input.bin";
 
 const char *backbone[] = {
@@ -95,14 +93,14 @@ int main()
 
     int bi = 0, di = 0, li = 0, ci = 0;
     new tk::dnn::Conv2d(&net, 64, 7, 7, 2, 2, 3, 3, backbone[bi++], true);
-    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
     tk::dnn::Layer* last = new tk::dnn::Pooling (&net, 3, 3, 2, 2, 1, 1, tk::dnn::POOLING_MAX);
 
 
     
     for(int i=0; i<2; ++i){
         new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
-        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
         new tk::dnn::Shortcut(&net, last);
         last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
@@ -113,7 +111,7 @@ int main()
         int out_channel = pow(2,7+i);
         std::cout<<out_channel<<std::endl;
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 2, 2, 1, 1, backbone[bi++], true);
-        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         tk::dnn::Layer* bn2 = new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
         new tk::dnn::Route(&net, &last, 1);
         new tk::dnn::Conv2d (&net, out_channel, 1, 1, 2, 2, 0, 0, backbone[bi++], true);
@@ -121,7 +119,7 @@ int main()
         last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
 
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
-        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, backbone[bi++], true);
         
         new tk::dnn::Shortcut(&net, last);
@@ -133,7 +131,7 @@ int main()
         new tk::dnn::Route(&net, &features[i], 1);
         int out_channel = pow(2,6+i);
         new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, trans[i], true);
-        features[i] = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        features[i] = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
     }
 
     //DECODER
@@ -142,7 +140,7 @@ int main()
     std::vector<tk::dnn::Layer*> up_out;
     //bottom
     new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, decoder[di++], true, false, 1, true);
-    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
     new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, decoder[di++], true, false, 1, true);
     new tk::dnn::Shortcut(&net, last);
     last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
@@ -153,7 +151,7 @@ int main()
         //up-conv
         std::cout<<out_channel<<std::endl;
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, decoder[di++], true);
-        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         
         new tk::dnn::Pooling(&net, last->output_dim.w, last->output_dim.h, last->output_dim.w, last->output_dim.h, 0, 0, tk::dnn::POOLING_AVERAGE);
         new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, decoder[di++], true);
@@ -168,7 +166,7 @@ int main()
 
         //up-dense
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, decoder[di++], true);
-        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         up_out.push_back(last);
     }
 
@@ -176,7 +174,7 @@ int main()
 
     std::vector<tk::dnn::Layer*> down_out;
     new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
-    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
     new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
     new tk::dnn::Shortcut(&net, last);
     new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
@@ -186,7 +184,7 @@ int main()
         tk::dnn::Layer* l_last = new tk::dnn::Shortcut(&net, up_out[2-i]);
     
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
-        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
         new tk::dnn::Shortcut(&net, l_last);
         l_last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
@@ -197,7 +195,7 @@ int main()
     }
 
     new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
-    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+    new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
     new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
     new tk::dnn::Shortcut(&net, last);
     last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
@@ -208,7 +206,7 @@ int main()
         int out_channel = pow(2,7-i);
         //up-conv
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true);
-        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         
         new tk::dnn::Pooling(&net, last->output_dim.w, last->output_dim.h, last->output_dim.w, last->output_dim.h, 0, 0, tk::dnn::POOLING_AVERAGE);
         new tk::dnn::Conv2d (&net, out_channel, 1, 1, 1, 1, 0, 0, ladder[li++], true);
@@ -223,7 +221,7 @@ int main()
 
         // //up-dense
         new tk::dnn::Conv2d (&net, out_channel, 3, 3, 1, 1, 1, 1, ladder[li++], true);
-        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         up_out.push_back(last);
     }
 
@@ -231,29 +229,26 @@ int main()
     // for(int i=2;i>=0;--i){
         // new tk::dnn::Route(&net, &up_out[i], 1);
         new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, conv_out[ci++], true);
-        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY);
+        new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         new tk::dnn::Conv2d (&net, 19, 3, 3, 1, 1, 1, 1, conv_out[ci++], false);
-        /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true);
+        // /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true);
     // }
 
-    new tk::dnn::Softmax(&net);
+    // new tk::dnn::Softmax(&net);
     
-    const char *output_bin = "shelfnet/debug/fofmaf.bin";
-
+    const char *output_bin = "shelfnet/debug/conv_out-conv_out.bin";
     
-
     // Load input
     dnnType *data;
     dnnType *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
     std::cout<<"Input:"<<std::endl;
-    // printDeviceVector(64, data, true);
 
     //print network model
     net.print();
 
     // // convert network to tensorRT
-    // tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("shelfnet"));
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("shelfnet"));
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     dnnType *cudnn_out = nullptr;
@@ -266,67 +261,35 @@ int main()
         dim1.print();
     }
 
-    // tk::dnn::dataDim_t out_dim1 = conf5[0]->output_dim;
-    // dnnType *cudnn_out2 = loc5[0]->dstData;
-    // tk::dnn::dataDim_t out_dim2 = loc5[0]->output_dim;
+    tk::dnn::dataDim_t dim2 = dim;
+    printCenteredTitle(" TENSORRT inference ", '=', 30);
+    {
+        dim2.print();
+        TKDNN_TSTART
+        netRT.infer(dim2, data);
+        TKDNN_TSTOP
+        dim2.print();
+    }
 
-    // tk::dnn::dataDim_t dim2 = dim;
-    // printCenteredTitle(" TENSORRT inference ", '=', 30);
-    // {
-    //     dim2.print();
-    //     TKDNN_TSTART
-    //     netRT.infer(dim2, data);
-    //     TKDNN_TSTOP
-    //     dim2.print();
-    // }
+    dnnType *rt_out1 = (dnnType *)netRT.buffersRT[1];
 
-    // dnnType *rt_out1 = (dnnType *)netRT.buffersRT[1];
-    // dnnType *rt_out2 = (dnnType *)netRT.buffersRT[2];
-    // dnnType *rt_out3 = (dnnType *)netRT.buffersRT[3];
-    // dnnType *rt_out4 = (dnnType *)netRT.buffersRT[4];
-
-    printCenteredTitle(std::string(" RESNET CHECK RESULTS ").c_str(), '=', 30);
+    printCenteredTitle(std::string(" CHECK RESULTS ").c_str(), '=', 30);
     dnnType *out1, *out1_h;
     int odim1 = dim1.tot();
     readBinaryFile(output_bin, odim1, &out1_h, &out1);
 
-    printDeviceVector(64, out1);
-
-    // dnnType *out2, *out2_h;
-    // int odim2 = out_dim2.tot();
-    // readBinaryFile(output_bin2, odim2, &out2_h, &out2);
-    // int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
-
+    int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
     std::cout << "CUDNN vs correct" << std::endl;
-    checkResult(odim1, cudnn_out, out1, true, 20) == 0 ? 0 : ERROR_CUDNN;
+    ret_cudnn |= checkResult(odim1, cudnn_out, out1, true, 20) == 0 ? 0 : ERROR_CUDNN;
 
-    // std::cout << "TRT   vs correct" << std::endl;
-    // checkResult(odim1, rt_out1, out1) == 0 ? 0 : ERROR_TENSORRT;
-    // ret_tensorrt |= checkResult(odim2, rt_out2, out2) == 0 ? 0 : ERROR_TENSORRT;
+    std::cout << "TRT   vs correct" << std::endl;
+    ret_tensorrt |=checkResult(odim1, rt_out1, out1) == 0 ? 0 : ERROR_TENSORRT;
 
-    // std::cout << "CUDNN vs TRT    " << std::endl;
-    // ret_cudnn_tensorrt |= checkResult(odim1, cudnn_out1, rt_out1) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
-    // ret_cudnn_tensorrt |= checkResult(odim2, cudnn_out2, rt_out2) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
-
-    // std::cout << "---------------------------------------------------" << std::endl;
-    // std::cout << "Confidence CUDNN" << std::endl;
-    // printDeviceVector(64, conf->dstData, true);
-    // std::cout << "Locations CUDNN" << std::endl;
-    // printDeviceVector(64, loc->dstData, true);
-    // std::cout << "---------------------------------------------------" << std::endl;
-
-    // std::cout << "Confidence tensorRT" << std::endl;
-    // printDeviceVector(64, rt_out3, true);
-    // std::cout << "Locations tensorRT" << std::endl;
-    // printDeviceVector(64, rt_out4, true);
-    // std::cout << "---------------------------------------------------" << std::endl;
-
-    // std::cout << "CUDNN vs TRT    " << std::endl;
-    // ret_cudnn_tensorrt |= checkResult(conf->output_dim.tot(), conf->dstData, rt_out3) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
-    // ret_cudnn_tensorrt |= checkResult(loc->output_dim.tot(), loc->dstData, rt_out4) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
-
-    // return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
+    std::cout << "CUDNN vs TRT    " << std::endl;
+    ret_cudnn_tensorrt |= checkResult(odim1, cudnn_out, rt_out1) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     
     cv::Mat viz = vizLayer2Mat(&net, net.num_layers-1);
     cv::imwrite("test.png", viz);
+
+    return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

@@ -236,6 +236,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Flatten*) l);
     if(type == LAYER_RESHAPE)
         return convert_layer(input, (Reshape*) l);
+    if(type == LAYER_RESIZE)
+        return convert_layer(input, (Resize*) l);
     if(type == LAYER_REORG)
         return convert_layer(input, (Reorg*) l);
     if(type == LAYER_REGION)
@@ -389,13 +391,13 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         
 #if NV_TENSORRT_MAJOR < 6                
         // plugin version
-        IPlugin *plugin = new ActivationLeakyRT();
+        IPlugin *plugin = new ActivationLeakyRT(l->slope);
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
 #else 
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
-        lRT->setAlpha(0.1);
+        lRT->setAlpha(l->slope);
         checkNULL(lRT);
         return lRT;
 #endif
@@ -469,10 +471,19 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Reshape *l) {
     // std::cout<<"convert Reshape\n";
 
-    l->output_dim.print();
     IPlugin *plugin = new ReshapeRT(l->output_dim);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
+    return lRT;
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input, Resize *l) {
+    // std::cout<<"convert Resize\n";
+
+    IResizeLayer *lRT = networkRT->addResize(*input); //default is kNEAREST
+    checkNULL(lRT);
+    Dims d{};
+    lRT->setOutputDimensions(DimsCHW{l->output_dim.c, l->output_dim.h, l->output_dim.w});
     return lRT;
 }
 
@@ -503,7 +514,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     
     ITensor *back_tens = tensors[l->backLayer];
 
-    if(l->backLayer->output_dim.c == l->output_dim.c)
+    if(false) //l->backLayer->output_dim.c == l->output_dim.c && !l->mul) FIXME
     {
         IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
         checkNULL(lRT);
@@ -641,7 +652,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     //std::cout<<name<<std::endl;
 
     if(name.find("ActivationLeaky") == 0) {
-        ActivationLeakyRT *a = new ActivationLeakyRT();
+        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
         a->size = readBUF<int>(buf);
         return a;
     }
