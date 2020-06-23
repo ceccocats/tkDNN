@@ -191,7 +191,7 @@ int main()
         down_out.push_back(l_last);
 
         new tk::dnn::Conv2d (&net, out_channel*2, 3, 3, 2, 2, 1, 1, ladder[li++], false);
-        last = new tk::dnn::Activation (&net, CUDNN_ACTIVATION_RELU);
+        last = new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.0f); //should be ReLU
     }
 
     new tk::dnn::Conv2d (&net, 256, 3, 3, 1, 1, 1, 1, ladder[li++], true, false, 1, true);
@@ -231,12 +231,12 @@ int main()
         new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, conv_out[ci++], true);
         new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
         new tk::dnn::Conv2d (&net, 19, 3, 3, 1, 1, 1, 1, conv_out[ci++], false);
-        // /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true);
+        /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true, tk::dnn::ResizeMode_t::LINEAR);
     // }
 
-    // new tk::dnn::Softmax(&net);
+    new tk::dnn::Softmax(&net);
     
-    const char *output_bin = "shelfnet/debug/conv_out-conv_out.bin";
+    const char *output_bin = "shelfnet/debug/softmax.bin";
     
     // Load input
     dnnType *data;

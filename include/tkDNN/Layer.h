@@ -430,18 +430,22 @@ public:
 
 };
 
+enum ResizeMode_t { NEAREST= 0, 
+                    LINEAR= 1};
+
 /**
     Resize layer
 */
 class Resize : public Layer {
 
 public:
-    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false);
+    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false, ResizeMode_t mode=NEAREST);
     virtual ~Resize();
     virtual layerType_t getLayerType() { return LAYER_RESIZE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
+    ResizeMode_t mode;
 };
 
 /**

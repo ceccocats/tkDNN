@@ -483,6 +483,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Resize *l) {
     IResizeLayer *lRT = networkRT->addResize(*input); //default is kNEAREST
     checkNULL(lRT);
     Dims d{};
+    lRT->setResizeMode(ResizeMode(l->mode));
     lRT->setOutputDimensions(DimsCHW{l->output_dim.c, l->output_dim.h, l->output_dim.w});
     return lRT;
 }
@@ -514,7 +515,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     
     ITensor *back_tens = tensors[l->backLayer];
 
-    if(false) //l->backLayer->output_dim.c == l->output_dim.c && !l->mul) FIXME
+    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul) 
     {
         IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
         checkNULL(lRT);

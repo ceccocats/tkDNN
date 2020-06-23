@@ -72,6 +72,7 @@ do
     ./test_imuodom &>> $out_file
     print_output $? imuodom
 
+    test_net shelfnet
     test_net yolo4
     test_net yolo4_berkeley
     test_net yolo3

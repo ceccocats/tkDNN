@@ -6,23 +6,22 @@
 
 namespace tk { namespace dnn {
 
-cv::Mat vizFloat2colorMap(cv::Mat map) {
+cv::Mat vizFloat2colorMap(cv::Mat map,double min, double max) {
 
-    double min;
-    double max;
-    cv::minMaxIdx(map, &min, &max);
+    if(min == 0 && max == 0)
+        cv::minMaxIdx(map, &min, &max);
+
     cv::Mat adjMap;
     // expand your range to 0..255. Similar to histEq();
     map.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
     //return adjMap;
-
     
     cv::Mat falseColorsMap;
-    applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_HOT);
+    applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_VIRIDIS);
     return falseColorsMap;
 }
 
-cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim) {
+cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim, double min, double max) {
     dnnType *data = nullptr;
 
     // copy to CPU
@@ -38,7 +37,7 @@ cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim) {
     cv::Mat grid = cv::Mat(gridSize, CV_8UC3, cv::Scalar(0));    
 
     for(int i=0; i<dim.c;i++) {
-        cv::Mat raw = vizFloat2colorMap(cv::Mat(cv::Size(dim.w, dim.h),CV_32FC1, data + dim.w*dim.h*i));
+        cv::Mat raw = vizFloat2colorMap(cv::Mat(cv::Size(dim.w, dim.h),CV_32FC1, data + dim.w*dim.h*i), min, max);
         int r = i / gridDim;
         int c = i - r * gridDim;
         raw.copyTo(grid.rowRange(r*dim.h, r*dim.h + dim.h).colRange(c*dim.w, c*dim.w + dim.w));

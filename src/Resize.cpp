@@ -5,8 +5,9 @@
 
 namespace tk { namespace dnn {
 
-Resize::Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed) : Layer(net) {
+Resize::Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed, ResizeMode_t mode) : Layer(net) {
 
+    this->mode = mode;
     if(fixed){
         output_dim.c = scale_c;
         output_dim.h = scale_h;

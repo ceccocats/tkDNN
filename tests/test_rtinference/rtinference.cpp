@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     std::cout<<"Testing with batchsize: "<<BATCH_SIZE<<"\n";
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     float total_time = 0;
-    for(int i=0; i<1200; i++) {
+    for(int i=0; i<64; i++) {
 
         // generate input
         for(int j=0; j<netRT.input_dim.tot(); j++) {
@@ -58,6 +58,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    std::cout<<"avg: "<<total_time/1200.<<std::endl;
+    std::cout<<"avg: "<<total_time/64.<<std::endl;
     return ret_tensorrt;
 }
