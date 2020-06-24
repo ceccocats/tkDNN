@@ -17,6 +17,7 @@
 
 #include "tkdnn.h"
 #include "NetworkViz.h"
+#include "kernelsThrust.h"
 
 namespace tk { namespace dnn {
 
@@ -32,6 +33,12 @@ class SegmentationNN {
         dnnType *input;
         dnnType *input_d;
         float* confidences_h;
+
+        float * tmpInputData_d;
+        float *tmpOutData_d;
+        float *tmpOutData_h;
+
+        cublasHandle_t cublasHandle;
 
         /**
          * This method preprocess the image, before feeding it to the NN.
@@ -97,28 +104,14 @@ class SegmentationNN {
             dnnType *rt_out = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
 
             dataDim_t odim = netRT->output_dim;
-
             
-            checkCuda(cudaMemcpy(confidences_h, rt_out, odim.tot() * sizeof(float), cudaMemcpyDeviceToHost));
+            matrixTranspose(cublasHandle, rt_out, tmpInputData_d, odim.c, odim.w*odim.h);
+            maxElem(tmpInputData_d, tmpOutData_d, odim.c, odim.h, odim.w);
+            checkCuda(cudaMemcpy(tmpOutData_h, tmpOutData_d, odim.w*odim.h * sizeof(float), cudaMemcpyDeviceToHost));
 
-            for(int i=0;i<odim.h;++i){
-                for(int j=0;j<odim.w;++j){
-                    float max_conf = 0;
-                    int max_id = 0;
-
-                    for(int k=0; k<odim.c;++k){
-                        float cur_conf = confidences_h[bi*odim.tot()+k*odim.h*odim.w+i*odim.h+j];
-                        if(cur_conf > max_conf){
-                            max_conf = cur_conf;
-                            max_id = k;
-                        }
-                    }
-                    confidences_h[bi*odim.tot()+0*odim.h*odim.w+i*odim.h+j] = max_id;
-                }
-            }
             dataDim_t vdim = odim;
             vdim.c = 1;
-            segmented[bi] = vizData2Mat(confidences_h, vdim, 1024, 0, 18);
+            segmented[bi] = vizData2Mat(tmpOutData_h, vdim, 1024, 0, 18);
         };
 
     public:
@@ -127,8 +120,12 @@ class SegmentationNN {
         std::vector<std::string> classesNames;
         std::vector<cv::Mat> segmented;
 
-        SegmentationNN() {};
-        ~SegmentationNN(){};
+        SegmentationNN() {
+            checkERROR( cublasCreate(&cublasHandle) );
+        };
+        ~SegmentationNN(){
+            checkERROR( cublasDestroy(cublasHandle) );
+        };
 
         /**
          * Method used to inialize the class, allocate memory and compute 
@@ -151,7 +148,12 @@ class SegmentationNN {
             checkCuda(cudaMallocHost(&input, sizeof(dnnType) * netRT->input_dim.tot() * nBatches));
             checkCuda(cudaMalloc(&input_d, sizeof(dnnType) * netRT->input_dim.tot() * nBatches));
 
-            confidences_h = (float *)malloc(netRT->output_dim.tot() * sizeof(float));
+            dataDim_t odim = netRT->output_dim;
+
+            checkCuda(cudaMallocHost(&confidences_h, sizeof(float) * odim.tot()));
+            checkCuda(cudaMalloc(&tmpInputData_d, sizeof(float) * odim.tot()));
+            checkCuda(cudaMalloc(&tmpOutData_d, sizeof(float) * odim.w*odim.h));
+            checkCuda(cudaMallocHost(&tmpOutData_h, sizeof(float) * odim.w*odim.h));
 
             segmented.resize(nBatches);
             masks.resize(nBatches);
@@ -208,7 +210,7 @@ class SegmentationNN {
         /**
          * Method to draw boundixg boxes and labels on a frame.
          */
-        void draw(const int cur_batches=1) {
+        cv::Mat draw(const int cur_batches=1) {
             for(int i=0; i<cur_batches; ++i){
 
                 cv::bitwise_and(segmented[i], masks[i], segmented[i]);
@@ -216,6 +218,7 @@ class SegmentationNN {
                 cv::imshow("segmented", segmented[i]);
                 cv::waitKey(1);
             }
+            return segmented[0];
         }
 
 };

@@ -7,7 +7,7 @@
 #include "SegmentationNN.h"
 
 bool gRun;
-bool SAVE_RESULT = false;
+bool SAVE_RESULT = true;
 
 void sig_handler(int signo) {
     std::cout<<"request gateway stop\n";
@@ -56,13 +56,10 @@ int main(int argc, char *argv[]) {
     if(SAVE_RESULT) {
         int w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
         int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
+        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(1024, 1024));
     }
 
     cv::Mat frame;
-    if(show)
-        cv::namedWindow("segmentation", cv::WINDOW_NORMAL);
-
     std::vector<cv::Mat> batch_frame;
     std::vector<cv::Mat> batch_dnn_input;
 
@@ -85,14 +82,8 @@ int main(int argc, char *argv[]) {
     
         //inference
         segNN.update(batch_dnn_input, n_batch);
-        segNN.draw();
+        frame = segNN.draw();
 
-        if(show){
-            for(int bi=0; bi< n_batch; ++bi){
-                cv::imshow("segmentation", batch_frame[bi]);
-                cv::waitKey(1);
-            }
-        }
         if(n_batch == 1 && SAVE_RESULT)
             resultVideo << frame;
     }
