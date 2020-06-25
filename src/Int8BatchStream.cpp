@@ -132,21 +132,14 @@ void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res
 
 void BatchStream::readLabels(std::string inputFileName, std::vector<float>& ris) {
     std::ifstream is(inputFileName.c_str());
-    //read only the first number: the image sub-portion class
-    while (true) {
+    
+    std::string line;
+    while (std::getline(is, line))
+    {
+        std::istringstream iss(line);
         float val;
-		is >> val;
-        if (!is) {
-            break;
-        }
-        // insert the first number and skip all others
+        if(!(iss >> val)) { break; } // error
         ris.push_back(val);
-        while( true ) {
-            char c;
-            is >> c;
-            if (is.peek() == '\n') //detect "\n"
-                break;
-        }   
     }
 }
 
