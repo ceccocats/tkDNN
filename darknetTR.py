@@ -80,6 +80,28 @@ get_network_boxes.restype = POINTER(DETECTION)
 # print('end')
 # print(dets[0].cl, dets[0].prob)
 
+
+def resizePadding(image, height, width):
+    desized_size = height, width
+    old_size = image.shape[:2]
+    max_size_idx = old_size.index(max(old_size))
+    ratio = float(desized_size[max_size_idx]) / max(old_size)
+    new_size = tuple([int(x * ratio) for x in old_size])
+
+    if new_size > desized_size:
+        min_size_idx = old_size.index(min(old_size))
+        ratio = float(desized_size[min_size_idx]) / min(old_size)
+        new_size = tuple([int(x * ratio) for x in old_size])
+
+    image = cv2.resize(image, (new_size[1], new_size[0]))
+    delta_w = desized_size[1] - new_size[1]
+    delta_h = desized_size[0] - new_size[0]
+    top, bottom = delta_h // 2, delta_h - (delta_h // 2)
+    left, right = delta_w // 2, delta_w - (delta_w // 2)
+
+    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT)
+    return image
+
 def detect_image(net, meta, darknet_image, thresh=.5):
     num = c_int(0)
 
@@ -102,8 +124,9 @@ def loop_detect(detect_m, video_path):
         ret, image = stream.read()
         if ret is False:
             break
-        frame_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(frame_rgb,
+        # image = resizePadding(image, 512, 512)
+        # frame_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.resize(image,
                            (512, 512),
                            interpolation=cv2.INTER_LINEAR)
         detections = detect_m.detect(image, need_resize=False)
@@ -150,7 +173,6 @@ class YOLO4RT(object):
                                    (self.input_size, self.input_size),
                                    interpolation=cv2.INTER_LINEAR)
             frame_data = image.ctypes.data_as(c_char_p)
-
             copy_image_from_bytes(self.darknet_image, frame_data)
 
             detections = detect_image(self.model, self.metaMain, self.darknet_image, thresh=self.thresh)
