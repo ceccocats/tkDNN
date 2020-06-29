@@ -13,8 +13,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/hal/interface.h>
 
-
-
 #include "tkdnn.h"
 #include "NetworkViz.h"
 #include "kernelsThrust.h"
@@ -38,6 +36,8 @@ class SegmentationNN {
         float *tmpOutData_d;
         float *tmpOutData_h;
 
+        float *mean_d, *stddev_d;
+
         cublasHandle_t cublasHandle;
 
         /**
@@ -47,23 +47,10 @@ class SegmentationNN {
          * @param bi batch index
          */
         void preprocess(cv::Mat &frame, const int bi=0) {
-
             frame.convertTo(frame, CV_32FC3, 1 / 255.0, 0);
-
-            cv::split(frame, bgr);
-            float mean[] = {0.485, 0.456, 0.406};
-            float stddev[] = {0.229, 0.224, 0.225};
-            for(int i=0; i<3; i++){
-                bgr[2-i] -= mean[i];
-                bgr[2-i] /= stddev[i];
-            }
-            cv::merge(bgr, 3, frame);
-
-            int crop_size = netRT->input_dim.w;
             int H = frame.rows;
             int W = frame.cols;
             cv::Mat frame_cropped;
-
             cv::Mat mask(frame.size(), CV_8UC3, cv::Scalar(255,255,255));
             
             if(H != W){
@@ -81,17 +68,22 @@ class SegmentationNN {
                 }
             }
 
-            resize(frame_cropped, frame_cropped, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-            resize(mask, mask, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-            masks[bi] = mask.clone();
+            tk::dnn::dataDim_t idim = netRT->input_dim;
+
+            resize(frame_cropped, frame_cropped, cv::Size(idim.w, idim.h));
+            resize(mask, mask, cv::Size(idim.w, idim.h));
+            masks[bi] = mask;
             
             cv::split(frame_cropped, bgr);
-            for (int i = 0; i < netRT->input_dim.c; i++){
+            for (int i = 0; i < idim.c; i++){
                 int idx = i * frame_cropped.rows * frame_cropped.cols;
-                int ch = netRT->input_dim.c-1 -i;
-                memcpy((void *)&input[idx + netRT->input_dim.tot()*bi], (void *)bgr[ch].data, frame_cropped.rows * frame_cropped.cols * sizeof(dnnType));
+                int ch = idim.c-1 -i;
+                memcpy((void *)&input[idx + idim.tot()*bi], (void *)bgr[ch].data, frame_cropped.rows * frame_cropped.cols * sizeof(dnnType));
             }
-            checkCuda(cudaMemcpyAsync(input_d+ netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+
+            checkCuda(cudaMemcpyAsync(input_d+ idim.tot()*bi, input + idim.tot()*bi, idim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+
+            normalize(input_d + idim.tot()*bi, idim.c, idim.h, idim.w, mean_d, stddev_d);
         }        
 
         /**
@@ -157,6 +149,16 @@ class SegmentationNN {
 
             segmented.resize(nBatches);
             masks.resize(nBatches);
+
+            std::vector<float> mean = {0.485, 0.456, 0.406};
+            std::vector<float> stddev = {0.229, 0.224, 0.225};
+
+            checkCuda(cudaMalloc(&mean_d, sizeof(float) * mean.size()));
+            checkCuda(cudaMalloc(&stddev_d, sizeof(float) * stddev.size()));
+
+            checkCuda(cudaMemcpyAsync(mean_d, mean.data(), mean.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
+            checkCuda(cudaMemcpyAsync(stddev_d, stddev.data(), stddev.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
+
         }
         
         /**
