@@ -75,6 +75,8 @@ namespace tk { namespace dnn {
             fields.coords = std::stoi(value);
         else if(name.find("groups") !=  std::string::npos)
             fields.groups = std::stoi(value);
+        else if(name.find("group_id") !=  std::string::npos)
+            fields.group_id = std::stoi(value);
         else if(name.find("scale_x_y") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
         else if(name.find("from") !=  std::string::npos)
@@ -148,7 +150,7 @@ namespace tk { namespace dnn {
                 //std::cout<<"Route to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
                 layers.push_back(netLayers[layerIdx]);
             }
-            netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size()));
+            netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size(), f.groups, f.group_id));
 
         } else if(f.type == "reorg") {
             netLayers.push_back(new tk::dnn::Reorg(net, f.stride_x));

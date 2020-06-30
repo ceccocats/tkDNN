@@ -11,6 +11,7 @@ namespace tk { namespace dnn {
         int channels = 3;
         int batch_normalize=0;
         int groups = 1;
+        int group_id = 0;
         int filters=1;
         int size_x=1;
         int size_y=1;
