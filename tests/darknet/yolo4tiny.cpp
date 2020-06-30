@@ -23,11 +23,11 @@ int main() {
     net->print();
 
     //convert network to tensorRT
-    // tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
+    tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
-    int ret = testInference(input_bins, output_bins, net, nullptr);
+    int ret = testInference(input_bins, output_bins, net, netRT);
     net->releaseLayers();
     delete net;
-    // delete netRT;
+    delete netRT;
     return ret;
 }
