@@ -52,16 +52,18 @@ public:
 	}
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-
+		
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
-		int offset = 0;
-		for(int i=0; i<in; i++) {
-			dnnType *input = (dnnType*)reinterpret_cast<const dnnType*>(inputs[i]);
-			int in_dim = c_in[i]*h*w;
-			int part_in_dim = in_dim / this->groups;
-			checkCuda( cudaMemcpyAsync(dstData + offset, input + this->group_id*part_in_dim, part_in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream) );
-			offset += part_in_dim;
+		for(int b=0; b<batchSize; b++) {
+			int offset = 0;
+			for(int i=0; i<in; i++) {
+				dnnType *input = (dnnType*)reinterpret_cast<const dnnType*>(inputs[i]);
+				int in_dim = c_in[i]*h*w;
+				int part_in_dim = in_dim / this->groups;
+				checkCuda( cudaMemcpyAsync(dstData + b*c*w*h + offset, input + b*c*w*h*groups + this->group_id*part_in_dim, part_in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream) );
+				offset += part_in_dim;
+			}
 		}
 
 		return 0;
