@@ -6,13 +6,39 @@ The main goal of this project is to exploit NVIDIA boards as much as possible to
 If you use tkDNN in your research, please cite one of the following papers. For use in commercial solutions, write at gattifrancesco@hotmail.it or refer to https://hipert.unimore.it/ .
 
 ```
-Accepted paper @ IRC 2020, will soon been published.
+Accepted paper @ IRC 2020, will soon be published.
 M. Verucchi, L. Bartoli, F. Bagni, F. Gatti, P. Burgio and M. Bertogna, "Real-Time clustering and LiDAR-camera fusion on embedded platforms for self-driving cars",  in proceedings in IEEE Robotic Computing (2020)
 
-Accepted paper @ ETFA 2020, will soon been published.
+Accepted paper @ ETFA 2020, will soon be published.
 M. Verucchi, G. Brilli, D. Sapienza, M. Verasani, M. Arena, F. Gatti, A. Capotondi, R. Cavicchioli, M. Bertogna, M. Solieri
 "A Systematic Assessment of Embedded Neural Networks for Object Detection", in IEEE International Conference on Emerging Technologies and Factory Automation (2020)
 ```
+
+## Results
+Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimesion as the input size, on 
+  * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
+  * Xavier AGX, Jetpack 4.3 (CUDA 10.0, CUDNN 7.6.3, tensorrt 6.0.1 );
+  * Tx2, Jetpack 4.2 (CUDA 10.0, CUDNN 7.3.1, tensorrt 5.0.6 );
+  * Jetson Nano, Jetpack 4.4  (CUDA 10.2, CUDNN 8.0.0, tensorrt 7.1.0 ). 
+
+| Platform   | Network    | FP32, B=1 | FP32, B=4	| FP16, B=1 |	FP16, B=4 |	INT8, B=1 |	INT8, B=4 | 
+| :------:   | :-----:    | :-----:   | :-----:   | :-----:   |	:-----:   |	:-----:   |	:-----:   | 
+| RTX 2080Ti | yolo4  320 | 118,59	  |237,31	    | 207,81	  | 443,32	  | 262,37	  | 530,93    | 
+| RTX 2080Ti | yolo4  416 | 104,81	  |162,86	    | 169,06	  | 293,78	  | 206,93	  | 353,26    | 
+| RTX 2080Ti | yolo4  512 | 92,98	    |132,43	    | 140,36	  | 215,17	  | 165,35	  | 254,96    | 
+| RTX 2080Ti | yolo4  608 | 63,77	    |81,53	    | 111,39	  | 152,89	  | 127,79	  | 184,72    | 
+| AGX Xavier | yolo4 320  |	26,78	    |32,05	    | 57,14	    | 79,05	    | 73,15	    | 97,56     |
+| AGX Xavier | yolo4 416  |	19,96	    |21,52	    | 41,01	    | 49,00	    | 50,81	    | 60,61     |
+| AGX Xavier | yolo4 512  |	16,58	    |16,98	    | 31,12	    | 33,84	    | 37,82	    | 41,28     |
+| AGX Xavier | yolo4 608  |	9,45 	    |10,13	    | 21,92	    | 23,36	    | 27,05	    | 28,93     |
+| Tx2        | yolo4 320	| 11,18	    | 12,07	    | 15,32	    | 16,31     | -         | -         |
+| Tx2        | yolo4 416	| 7,30	    | 7,58	    | 9,45	    | 9,90      | -         | -         |
+| Tx2        | yolo4 512	| 5,96	    | 5,95	    | 7,22	    | 7,23      | -         | -         |
+| Tx2        | yolo4 608	| 3,63	    | 3,65	    | 4,67	    | 4,70      | -         | -         |
+| Nano       | yolo4 320	| 4,23	    | 4,55	    | 6,14	    | 6,53      | -         | -         |
+| Nano       | yolo4 416	| 2,88	    | 3,00	    | 3,90	    | 4,04      | -         | -         |
+| Nano       | yolo4 512	| 2,32	    | 2,34	    | 3,02	    | 3,04      | -         | -         |
+| Nano       | yolo4 608	| 1,40	    | 1,41	    | 1,92	    | 1,93      | -         | -         |
 
 ## Index
 - [tkDNN](#tkdnn)
@@ -291,6 +317,8 @@ This demo also creates a json file named ```net_name_COCO_res.json``` containing
 | resnet101_cnet    | Centernet (Resnet101 backend)<sup>4</sup>     | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/5BTjHMWBcJk8g3i/download)     |
 | csresnext50-panet-spp    | Cross Stage Partial Network <sup>7</sup>     | [COCO 2014](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/Kcs4xBozwY4wFx8/download)     |
 | yolo4             | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
+| yolo4_berkeley             | Yolov4 <sup>8</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)                          | 10        | 540x320       | [weights](https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download)     |
+| yolo4tiny             | Yolov4 tiny                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
 
 
 ## References

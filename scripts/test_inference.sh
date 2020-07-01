@@ -45,6 +45,7 @@ do
     test_inference yolo4_416 $mode
     test_inference yolo4_512 $mode
     test_inference yolo4_608 $mode
+    test_inference yolo4tiny $mode
 done
 
 

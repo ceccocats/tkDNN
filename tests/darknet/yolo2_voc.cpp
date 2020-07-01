@@ -13,8 +13,8 @@ int main() {
         bin_path + "/layers/output.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = "../tests/darknet/cfg/yolo2_voc.cfg";
-    std::string name_path = "../tests/darknet/names/voc.names";
+    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo2_voc.cfg";
+    std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/voc.names";
     downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/DJC5Fi2pEjfNDP9/download");
 
     // parse darknet network

@@ -10,6 +10,7 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
+add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 #-------------------------------------------------------------------------------
 # CUDA
@@ -20,6 +21,8 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 
 find_package(CUDNN REQUIRED)
+include_directories(${CUDNN_INCLUDE_DIR})
+
 
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")

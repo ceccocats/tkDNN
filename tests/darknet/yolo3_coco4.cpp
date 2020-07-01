@@ -15,8 +15,8 @@ int main() {
         bin_path + "/debug/layer106_out.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = "../tests/darknet/cfg/yolo3_coco4.cfg";
-    std::string name_path = "../tests/darknet/names/coco4.names";
+    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo3_coco4.cfg";
+    std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/coco4.names";
     downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/o27NDzSAartbyc4/download");
 
     // parse darknet network
