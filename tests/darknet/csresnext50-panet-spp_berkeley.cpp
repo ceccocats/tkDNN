@@ -17,8 +17,7 @@ int main() {
     std::string wgs_path  = bin_path + "/layers";
     std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/csresnext50-panet-spp_berkeley.cfg";
     std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/berkeley.names";
-    // FIXME: wrong weights
-    // downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s//download");
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/q82qHAtqpoaFYo5/download");
 
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
