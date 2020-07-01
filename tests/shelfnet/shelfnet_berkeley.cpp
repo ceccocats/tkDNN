@@ -6,86 +6,86 @@
 #include "NetworkViz.h"
 
 
-const char *input_bin = "shelfnet/debug/input.bin";
+const char *input_bin = "shelfnet_berkeley/debug/input.bin";
 
 const char *backbone[] = {
-    "shelfnet/layers/backbone-conv1.bin",
-    "shelfnet/layers/backbone-layer1-0-conv1.bin",
-    "shelfnet/layers/backbone-layer1-0-conv2.bin",
-    "shelfnet/layers/backbone-layer1-1-conv1.bin",
-    "shelfnet/layers/backbone-layer1-1-conv2.bin",
-    "shelfnet/layers/backbone-layer2-0-conv1.bin",
-    "shelfnet/layers/backbone-layer2-0-conv2.bin",
-    "shelfnet/layers/backbone-layer2-0-downsample-0.bin",
-    "shelfnet/layers/backbone-layer2-1-conv1.bin",
-    "shelfnet/layers/backbone-layer2-1-conv2.bin",
-    "shelfnet/layers/backbone-layer3-0-conv1.bin",
-    "shelfnet/layers/backbone-layer3-0-conv2.bin",
-    "shelfnet/layers/backbone-layer3-0-downsample-0.bin",
-    "shelfnet/layers/backbone-layer3-1-conv1.bin",
-    "shelfnet/layers/backbone-layer3-1-conv2.bin",
-    "shelfnet/layers/backbone-layer4-0-conv1.bin",
-    "shelfnet/layers/backbone-layer4-0-conv2.bin",
-    "shelfnet/layers/backbone-layer4-0-downsample-0.bin",
-    "shelfnet/layers/backbone-layer4-1-conv1.bin",
-    "shelfnet/layers/backbone-layer4-1-conv2.bin"};
+    "shelfnet_berkeley/layers/backbone-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer1-0-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer1-0-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer1-1-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer1-1-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer2-0-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer2-0-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer2-0-downsample-0.bin",
+    "shelfnet_berkeley/layers/backbone-layer2-1-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer2-1-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer3-0-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer3-0-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer3-0-downsample-0.bin",
+    "shelfnet_berkeley/layers/backbone-layer3-1-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer3-1-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer4-0-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer4-0-conv2.bin",
+    "shelfnet_berkeley/layers/backbone-layer4-0-downsample-0.bin",
+    "shelfnet_berkeley/layers/backbone-layer4-1-conv1.bin",
+    "shelfnet_berkeley/layers/backbone-layer4-1-conv2.bin"};
 
 const char *conv_out[] = {
-    "shelfnet/layers/conv_out-conv-conv.bin",
-    "shelfnet/layers/conv_out-conv_out.bin",
-    "shelfnet/layers/conv_out16-conv-conv.bin",
-    "shelfnet/layers/conv_out16-conv_out.bin",
-    "shelfnet/layers/conv_out32-conv-conv.bin",
-    "shelfnet/layers/conv_out32-conv_out.bin"
+    "shelfnet_berkeley/layers/conv_out-conv-conv.bin",
+    "shelfnet_berkeley/layers/conv_out-conv_out.bin",
+    "shelfnet_berkeley/layers/conv_out16-conv-conv.bin",
+    "shelfnet_berkeley/layers/conv_out16-conv_out.bin",
+    "shelfnet_berkeley/layers/conv_out32-conv-conv.bin",
+    "shelfnet_berkeley/layers/conv_out32-conv_out.bin"
     };
 
 const char *decoder[] = {
-    "shelfnet/layers/decoder-bottom-conv1.bin",
-    "shelfnet/layers/decoder-bottom-conv12.bin",
-    "shelfnet/layers/decoder-up_conv_list-0-conv-conv.bin",
-    "shelfnet/layers/decoder-up_conv_list-0-conv_atten.bin",
-    "shelfnet/layers/decoder-up_dense_list-0-conv.bin",
-    "shelfnet/layers/decoder-up_conv_list-1-conv-conv.bin",
-    "shelfnet/layers/decoder-up_conv_list-1-conv_atten.bin",
-    "shelfnet/layers/decoder-up_dense_list-1-conv.bin"
+    "shelfnet_berkeley/layers/decoder-bottom-conv1.bin",
+    "shelfnet_berkeley/layers/decoder-bottom-conv12.bin",
+    "shelfnet_berkeley/layers/decoder-up_conv_list-0-conv-conv.bin",
+    "shelfnet_berkeley/layers/decoder-up_conv_list-0-conv_atten.bin",
+    "shelfnet_berkeley/layers/decoder-up_dense_list-0-conv.bin",
+    "shelfnet_berkeley/layers/decoder-up_conv_list-1-conv-conv.bin",
+    "shelfnet_berkeley/layers/decoder-up_conv_list-1-conv_atten.bin",
+    "shelfnet_berkeley/layers/decoder-up_dense_list-1-conv.bin"
     };
 
     
 const char *ladder[] = {
-    "shelfnet/layers/ladder-inconv-conv1.bin",
-    "shelfnet/layers/ladder-inconv-conv12.bin",
-    "shelfnet/layers/ladder-down_module_list-0-conv1.bin",
-    "shelfnet/layers/ladder-down_module_list-0-conv12.bin",
-    "shelfnet/layers/ladder-down_conv_list-0.bin",
+    "shelfnet_berkeley/layers/ladder-inconv-conv1.bin",
+    "shelfnet_berkeley/layers/ladder-inconv-conv12.bin",
+    "shelfnet_berkeley/layers/ladder-down_module_list-0-conv1.bin",
+    "shelfnet_berkeley/layers/ladder-down_module_list-0-conv12.bin",
+    "shelfnet_berkeley/layers/ladder-down_conv_list-0.bin",
 
-    "shelfnet/layers/ladder-down_module_list-1-conv1.bin",
-    "shelfnet/layers/ladder-down_module_list-1-conv12.bin",
-    "shelfnet/layers/ladder-down_conv_list-1.bin",
+    "shelfnet_berkeley/layers/ladder-down_module_list-1-conv1.bin",
+    "shelfnet_berkeley/layers/ladder-down_module_list-1-conv12.bin",
+    "shelfnet_berkeley/layers/ladder-down_conv_list-1.bin",
 
-    "shelfnet/layers/ladder-bottom-conv1.bin",
-    "shelfnet/layers/ladder-bottom-conv12.bin",
+    "shelfnet_berkeley/layers/ladder-bottom-conv1.bin",
+    "shelfnet_berkeley/layers/ladder-bottom-conv12.bin",
     
     
     
-    "shelfnet/layers/ladder-up_conv_list-0-conv-conv.bin",
-    "shelfnet/layers/ladder-up_conv_list-0-conv_atten.bin",
-    "shelfnet/layers/ladder-up_dense_list-0-conv.bin",
+    "shelfnet_berkeley/layers/ladder-up_conv_list-0-conv-conv.bin",
+    "shelfnet_berkeley/layers/ladder-up_conv_list-0-conv_atten.bin",
+    "shelfnet_berkeley/layers/ladder-up_dense_list-0-conv.bin",
 
     
-    "shelfnet/layers/ladder-up_conv_list-1-conv-conv.bin",
-    "shelfnet/layers/ladder-up_conv_list-1-conv_atten.bin",
-    "shelfnet/layers/ladder-up_dense_list-1-conv.bin"};
+    "shelfnet_berkeley/layers/ladder-up_conv_list-1-conv-conv.bin",
+    "shelfnet_berkeley/layers/ladder-up_conv_list-1-conv_atten.bin",
+    "shelfnet_berkeley/layers/ladder-up_dense_list-1-conv.bin"};
 
 const char *trans[] = {
-    "shelfnet/layers/trans1-conv.bin",
-    "shelfnet/layers/trans2-conv.bin",
-    "shelfnet/layers/trans3-conv.bin"};
+    "shelfnet_berkeley/layers/trans1-conv.bin",
+    "shelfnet_berkeley/layers/trans2-conv.bin",
+    "shelfnet_berkeley/layers/trans3-conv.bin"};
 int main()
 {
 
-    downloadWeightsifDoNotExist(input_bin, "shelfnet", "https://cloud.hipert.unimore.it/s/mEDZMRJaGCFWSJF/download");
+    downloadWeightsifDoNotExist(input_bin, "shelfnet_berkeley", "https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download");
 
-    int classes = 19;
+    int classes = 20;
 
     // Network layout    
     tk::dnn::dataDim_t dim(1, 3, 1024, 1024, 1);
@@ -230,13 +230,13 @@ int main()
         // new tk::dnn::Route(&net, &up_out[i], 1);
         new tk::dnn::Conv2d (&net, 64, 3, 3, 1, 1, 1, 1, conv_out[ci++], true);
         new tk::dnn::Activation (&net, tk::dnn::ACTIVATION_LEAKY, 0.0f, 0.01);
-        new tk::dnn::Conv2d (&net, 19, 3, 3, 1, 1, 1, 1, conv_out[ci++], false);
-        /*up_out[i] =*/ new tk::dnn::Resize(&net, 19, net.input_dim.h, net.input_dim.w, true, tk::dnn::ResizeMode_t::LINEAR);
+        new tk::dnn::Conv2d (&net, classes, 3, 3, 1, 1, 1, 1, conv_out[ci++], false);
+        /*up_out[i] =*/ new tk::dnn::Resize(&net, classes, net.input_dim.h, net.input_dim.w, true, tk::dnn::ResizeMode_t::LINEAR);
     // }
 
     new tk::dnn::Softmax(&net);
     
-    const char *output_bin = "shelfnet/debug/softmax.bin";
+    const char *output_bin = "shelfnet_berkeley/debug/softmax.bin";
     
     // Load input
     dnnType *data;
@@ -248,7 +248,7 @@ int main()
     net.print();
 
     // // convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("shelfnet"));
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("shelfnet_berkeley"));
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     dnnType *cudnn_out = nullptr;

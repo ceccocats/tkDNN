@@ -29,9 +29,12 @@ int main(int argc, char *argv[]) {
     int n_batch = 1;
     if(argc > 3)
         n_batch = atoi(argv[3]); 
-    bool show = false;
+    int n_classes = 19;
     if(argc > 4)
-        show = atoi(argv[4]); 
+        n_classes = atoi(argv[4]); 
+    bool show = false;
+    if(argc > 5)
+        show = atoi(argv[5]); 
 
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
@@ -39,7 +42,7 @@ int main(int argc, char *argv[]) {
     if(!show)
         SAVE_RESULT = true;
 
-    int n_classes = 19;
+    
 
     tk::dnn::SegmentationNN segNN;
     segNN.init(net, n_classes, n_batch);
