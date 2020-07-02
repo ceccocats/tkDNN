@@ -26,7 +26,6 @@ class SegmentationNN {
         int nBatches = 1;
 
         std::vector<cv::Size> originalSize;
-        std::vector<cv::Mat> masks;
         cv::Mat bgr[3];
         dnnType *input;
         dnnType *input_d;
@@ -40,6 +39,24 @@ class SegmentationNN {
 
         cublasHandle_t cublasHandle;
 
+        void computeBorders(const int or_width, const int or_height, int& top, int& bottom, int& left, int&right){
+            top = 0;
+            bottom = 0;
+            left = 0;
+            right = 0;
+
+            if(or_height != or_width){
+                if(or_height < or_width){
+                    top = (or_width - or_height)/2;
+                    bottom = or_width - top - or_height;
+                }
+                else{
+                    left = (or_height - or_width)/2;
+                    right = or_height - left - or_width;
+                }
+            }
+        }
+
         /**
          * This method preprocess the image, before feeding it to the NN.
          *
@@ -47,32 +64,20 @@ class SegmentationNN {
          * @param bi batch index
          */
         void preprocess(cv::Mat &frame, const int bi=0) {
+            originalSize[bi] = frame.size();
+
             frame.convertTo(frame, CV_32FC3, 1 / 255.0, 0);
             int H = frame.rows;
             int W = frame.cols;
             cv::Mat frame_cropped;
-            cv::Mat mask(frame.size(), CV_8UC3, cv::Scalar(255,255,255));
-            
-            if(H != W){
-                if(H < W){
-                    int top = (W - H)/2;
-                    int bottom = W - top - H;
-                    cv::copyMakeBorder(frame, frame_cropped, top, bottom, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
-                    cv::copyMakeBorder(mask, mask, top, bottom, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
-                }
-                else{
-                    int left = (H - W)/2;
-                    int right = H - left - W;
-                    cv::copyMakeBorder(frame, frame_cropped, 0, 0, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
-                    cv::copyMakeBorder(mask, mask, 0, 0, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
-                }
-            }
+
+            int top, bottom, left, right;
+            computeBorders(W, H, top, bottom, left, right);
+            cv::copyMakeBorder(frame, frame_cropped, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
 
             tk::dnn::dataDim_t idim = netRT->input_dim;
 
             resize(frame_cropped, frame_cropped, cv::Size(idim.w, idim.h));
-            resize(mask, mask, cv::Size(idim.w, idim.h));
-            masks[bi] = mask;
             
             cv::split(frame_cropped, bgr);
             for (int i = 0; i < idim.c; i++){
@@ -92,7 +97,7 @@ class SegmentationNN {
          * 
          * @param bi batch index
          */
-        void postprocess(const int bi=0) {
+        void postprocess(const int bi=0, bool appy_colormap = true) {
             dnnType *rt_out = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
 
             dataDim_t odim = netRT->output_dim;
@@ -103,7 +108,23 @@ class SegmentationNN {
 
             dataDim_t vdim = odim;
             vdim.c = 1;
-            segmented[bi] = vizData2Mat(tmpOutData_h, vdim, 1024, 0, 18);
+
+            cv::Mat colored;
+
+            if(appy_colormap)
+                colored = vizData2Mat(tmpOutData_h, vdim, 1024, 0, 18);
+            else{
+                cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
+                colored_fp32.convertTo(colored, CV_8UC1);
+            }
+            
+            int max_dim = (originalSize[bi].width > originalSize[bi].height) ? originalSize[bi].width : originalSize[bi].height;
+            resize(colored, colored, cv::Size(max_dim, max_dim));
+            int top, bottom, left, right;
+            computeBorders(originalSize[bi].width, originalSize[bi].height, top, bottom, left, right);
+            cv::Rect roi(left,top,originalSize[bi].width, originalSize[bi].height);
+            cv::Mat or_size (colored, roi);
+            segmented[bi] = or_size;
         };
 
     public:
@@ -148,7 +169,7 @@ class SegmentationNN {
             checkCuda(cudaMallocHost(&tmpOutData_h, sizeof(float) * odim.w*odim.h));
 
             segmented.resize(nBatches);
-            masks.resize(nBatches);
+            originalSize.resize(nBatches);
 
             std::vector<float> mean = {0.485, 0.456, 0.406};
             std::vector<float> stddev = {0.229, 0.224, 0.225};
@@ -172,7 +193,7 @@ class SegmentationNN {
          * @param mAP set to true only if all the probabilities for a bounding 
          *            box are needed, as in some cases for the mAP calculation
          */
-        void update(std::vector<cv::Mat>& frames, const int cur_batches=1){
+        void update(std::vector<cv::Mat>& frames, const int cur_batches=1, bool apply_colormap=true){
             if(cur_batches > nBatches)
                 FatalError("A batch size greater than nBatches cannot be used");
 
@@ -204,7 +225,7 @@ class SegmentationNN {
             {
                 TKDNN_TSTART
                 for(int bi=0; bi<cur_batches;++bi)
-                    postprocess(bi);
+                    postprocess(bi, apply_colormap);
                 TKDNN_TSTOP
             }
         }      
@@ -214,8 +235,6 @@ class SegmentationNN {
          */
         cv::Mat draw(const int cur_batches=1) {
             for(int i=0; i<cur_batches; ++i){
-
-                cv::bitwise_and(segmented[i], masks[i], segmented[i]);
 
                 cv::imshow("segmented", segmented[i]);
                 cv::waitKey(1);

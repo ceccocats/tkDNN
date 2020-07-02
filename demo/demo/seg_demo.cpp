@@ -14,6 +14,24 @@ void sig_handler(int signo) {
     gRun = false;
 }
 
+void writePred(const std::string& images_names, const std::string& gt_folder, const std::string& out_folder, tk::dnn::SegmentationNN& segNN){
+    std::ifstream all_gt(images_names);
+    std::string filename;
+    cv::Mat frame;
+    std::vector<cv::Mat> batch_frame;
+    std::vector<cv::Mat> batch_dnn_input;
+    for (; std::getline(all_gt, filename); ) {
+        std::cout<<filename<<std::endl;
+        frame = cv::imread(gt_folder + filename);
+        batch_dnn_input.clear();
+        batch_frame.clear();
+        batch_frame.push_back(frame);
+        batch_dnn_input.push_back(frame.clone());
+        segNN.update(batch_dnn_input, 1, false);
+        cv::imwrite(out_folder + filename, segNN.segmented[0]);
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     std::cout<<"detection\n";
@@ -35,17 +53,28 @@ int main(int argc, char *argv[]) {
     bool show = false;
     if(argc > 5)
         show = atoi(argv[5]); 
+    bool write_pred = false;
+    if(argc > 6)
+        write_pred = atoi(argv[6]); 
+    
 
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
 
-    if(!show)
-        SAVE_RESULT = true;
-
-    
-
     tk::dnn::SegmentationNN segNN;
     segNN.init(net, n_classes, n_batch);
+
+    if(write_pred){
+        std::string gt_folder = "../demo/CityScapes_val/images/";
+        std::string images_names = "../demo/CityScapes_val/all_images.txt";
+        std::string out_folder = "seg/";
+
+        writePred(images_names, gt_folder, out_folder, segNN);
+        return 0;
+    }
+
+    if(!show)
+        SAVE_RESULT = true;
 
     gRun = true;
 
