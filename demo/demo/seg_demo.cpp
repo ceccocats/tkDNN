@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
     cv::Mat frame;
     std::vector<cv::Mat> batch_frame;
     std::vector<cv::Mat> batch_dnn_input;
+    int height = 0, width = 0;
 
     while(gRun) {
         batch_dnn_input.clear();
@@ -103,7 +104,8 @@ int main(int argc, char *argv[]) {
             cap >> frame; 
             if(!frame.data) 
                 break;
-            
+            height = frame.rows;
+            width = frame.cols;
             batch_frame.push_back(frame);
 
             // this will be resized to the net format
@@ -121,13 +123,19 @@ int main(int argc, char *argv[]) {
     }
 
     std::cout<<"segmentation end\n";   
-    double mean = 0; 
+    double mean = 0, mean_pre = 0, mean_post = 0;
     
-    std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-    std::cout<<"Min: "<<*std::min_element(segNN.stats.begin(), segNN.stats.end())/n_batch<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(segNN.stats.begin(), segNN.stats.end())/n_batch<<" ms\n";    
+    std::cout<<COL_GREENB<<"\n\nTime stats for size ["<<width<<","<<height<<"] :\n";
+    // std::cout<<"Min: "<<*std::min_element(segNN.stats.begin(), segNN.stats.end())/n_batch<<" ms\n";    
+    // std::cout<<"Max: "<<*std::max_element(segNN.stats.begin(), segNN.stats.end())/n_batch<<" ms\n";    
+    
     for(int i=0; i<segNN.stats.size(); i++) mean += segNN.stats[i]; mean /= segNN.stats.size();
-    std::cout<<"Avg: "<<mean/n_batch<<" ms\t"<<1000/(mean/n_batch)<<" FPS\n"<<COL_END;   
+    for(int i=0; i<segNN.stats_pre.size(); i++) mean_pre += segNN.stats_pre[i]; mean_pre /= segNN.stats_pre.size();
+    for(int i=0; i<segNN.stats_post.size(); i++) mean_post += segNN.stats_post[i]; mean_post /= segNN.stats_post.size();
+    std::cout<<"Avg pre:\t"<<mean_pre/n_batch<<" ms\t"<<1000/(mean_pre/n_batch)<<" FPS\n";   
+    std::cout<<"Avg inf:\t"<<mean/n_batch<<" ms\t"<<1000/(mean/n_batch)<<" FPS\n";   
+    std::cout<<"Avg post:\t"<<mean_post/n_batch<<" ms\t"<<1000/(mean_post/n_batch)<<" FPS\n\n";   
+    std::cout<<"Avg tot:\t"<<(mean_pre + mean_post + mean) /n_batch<<" ms\t"<<1000/((mean_pre + mean_post + mean)/n_batch)<<" FPS\n"<<COL_END;   
     
 
     return 0;

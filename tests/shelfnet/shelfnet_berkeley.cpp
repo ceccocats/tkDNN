@@ -88,7 +88,7 @@ int main()
     int classes = 20;
 
     // Network layout    
-    tk::dnn::dataDim_t dim(1, 3, 1024, 1024, 1);
+    tk::dnn::dataDim_t dim(1, 3, 736, 1280, 1);
     tk::dnn::Network net(dim);
 
     int bi = 0, di = 0, li = 0, ci = 0;

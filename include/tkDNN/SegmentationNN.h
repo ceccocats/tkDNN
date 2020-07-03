@@ -130,6 +130,8 @@ class SegmentationNN {
     public:
         int classes = 0;
         std::vector<double> stats; /*keeps track of inference times (ms)*/
+        std::vector<double> stats_pre; 
+        std::vector<double> stats_post; 
         std::vector<std::string> classesNames;
         std::vector<cv::Mat> segmented;
 
@@ -208,6 +210,7 @@ class SegmentationNN {
                     preprocess(frames[bi], bi);    
                 }
                 TKDNN_TSTOP
+                stats_pre.push_back(t_ns);
             }
 
             //do inference
@@ -227,6 +230,7 @@ class SegmentationNN {
                 for(int bi=0; bi<cur_batches;++bi)
                     postprocess(bi, apply_colormap);
                 TKDNN_TSTOP
+                stats_post.push_back(t_ns);
             }
         }      
 
@@ -236,8 +240,9 @@ class SegmentationNN {
         cv::Mat draw(const int cur_batches=1) {
             for(int i=0; i<cur_batches; ++i){
 
-                cv::imshow("segmented", segmented[i]);
-                cv::waitKey(1);
+                // cv::imshow("segmented", segmented[i]);
+                // cv::resizeWindow("segmented", cv::Size(512,288));
+                // cv::waitKey(1);
             }
             return segmented[0];
         }
