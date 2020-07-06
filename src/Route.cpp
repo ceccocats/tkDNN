@@ -5,7 +5,7 @@
 
 namespace tk { namespace dnn {
 
-Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
+Route::Route(Network *net, Layer **layers, int layers_n, int groups, int group_id) : Layer(net) {
 
     // copy input layers
     if(layers_n > MAX_LAYERS) {
@@ -15,6 +15,8 @@ Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
         this->layers[i] = layers[i];
     }
     this->layers_n = layers_n;
+    this->groups = groups;
+    this->group_id = group_id;
     
     //get dims
     output_dim.l = 1;
@@ -32,6 +34,7 @@ Route::Route(Network *net, Layer **layers, int layers_n) : Layer(net) {
         output_dim.c += layers[i]->output_dim.c;
     }
 
+    output_dim.c /= this->groups;
     input_dim = output_dim;
 
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
@@ -49,8 +52,9 @@ dnnType* Route::infer(dataDim_t &dim, dnnType* srcData) {
     for(int i=0; i<layers_n; i++) {
         dnnType *input = layers[i]->dstData;
         int in_dim = layers[i]->output_dim.tot();
-        checkCuda( cudaMemcpy(dstData + offset, input, in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
-        offset += in_dim;
+        int part_in_dim = in_dim / this->groups;
+        checkCuda( cudaMemcpy(dstData + offset, input + this->group_id*part_in_dim, part_in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        offset += part_in_dim;
     }
 
     //update data dimensions    

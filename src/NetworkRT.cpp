@@ -449,12 +449,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
         // }
         // std::cout<<"\n";
     }
-    
-    IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
-    //IPlugin *plugin = new RouteRT();
-    //IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
-    checkNULL(lRT);
 
+    if(l->groups > 1){
+        IPlugin *plugin = new RouteRT(l->groups, l->group_id);
+        IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
+    checkNULL(lRT);
     return lRT;
 }
 
@@ -595,7 +598,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
 
 bool NetworkRT::serialize(const char *filename) {
 
-    std::ofstream p(filename);
+    std::ofstream p(filename, std::ios::binary);
     if (!p) {
         FatalError("could not open plan output file");
         return false;
@@ -766,9 +769,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
     } 
-/*
+
     if(name.find("Route") == 0) {
-        RouteRT *r = new RouteRT();
+        RouteRT *r = new RouteRT(readBUF<int>(buf),readBUF<int>(buf));
         r->in = readBUF<int>(buf);
         for(int i=0; i<RouteRT::MAX_INPUTS; i++)
             r->c_in[i] = readBUF<int>(buf);
@@ -777,7 +780,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
     } 
-*/
+
     if(name.find("Deformable") == 0) {
         DeformableConvRT *r = new DeformableConvRT(readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
                                                     readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),

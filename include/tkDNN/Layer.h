@@ -509,7 +509,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n); 
+    Route(Network *net, Layer **layers, int layers_n, int groups = 1, int group_id = 0); 
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
@@ -519,6 +519,8 @@ public:
     static const int MAX_LAYERS = 32;
     Layer *layers[MAX_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
+    int groups;
+    int group_id;
 };
 
 
