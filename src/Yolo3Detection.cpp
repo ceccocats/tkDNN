@@ -3,13 +3,14 @@
 
 namespace tk { namespace dnn {
 
-bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, const int n_batches) {
+bool Yolo3Detection::init(const std::string& tensor_path, const float conf_threshold, const int n_classes, const int n_batches) {
 
     //convert network to tensorRT
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
 
     nBatches = n_batches;
+    confThreshold = conf_threshold;
     tk::dnn::dataDim_t idim = netRT->input_dim;    
     idim.n = nBatches;
 

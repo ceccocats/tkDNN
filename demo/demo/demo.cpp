@@ -69,7 +69,8 @@ int main(int argc, char *argv[]) {
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    detNN->init(net, n_classes, n_batch);
+    float conf_thresh = 0.3;
+    detNN->init(net, conf_thresh, n_classes, n_batch);
 
     gRun = true;
 
