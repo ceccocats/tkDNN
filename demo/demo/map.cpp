@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     bool show = false;
     bool write_dets = false;
     bool write_res_on_file = true;
-    bool write_coco_json = true;
+    bool write_coco_json = false;
     int n_images = 5000;
 
     bool verbose;
@@ -88,9 +88,9 @@ int main(int argc, char *argv[])
     }
 
     if(write_res_on_file){
-        times.open("times_"+net_name+".csv");
+        times.open("times_"+net_name+"_"+ std::to_string(n_batches)+"_"+std::to_string(confidence_thresh)+".csv");
         memory.open("memory.csv", std::ios_base::app);
-        memory<<net<<";";
+        memory<<net_name+"_"+ std::to_string(n_batches)+"_"+std::to_string(confidence_thresh)<<";";
     }
 
     // instantiate detector
@@ -245,11 +245,11 @@ int main(int argc, char *argv[])
     std::cout << "Avg VM[MB]: " << vm_total/images_done/1024.0 << ";Avg RSS[MB]: " << rss_total/images_done/1024.0 << std::endl;
 
     //compute mAP
-    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,confidence_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net_name);
+    double AP = tk::dnn::computeMapNIoULevels(images,classes,IoU_thresh,confidence_thresh, map_points, map_step, map_levels, verbose, write_res_on_file, net_name+"_"+ std::to_string(n_batches)+"_"+std::to_string(confidence_thresh));
     std::cout<<"mAP "<<IoU_thresh<<":"<<IoU_thresh+map_step*(map_levels-1)<<" = "<<AP<<std::endl;
 
     //compute average precision, recall and f1score
-    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,confidence_thresh, verbose, write_res_on_file, net_name);
+    tk::dnn::computeTPFPFN(images,classes,IoU_thresh,confidence_thresh, verbose, write_res_on_file, net_name +"_"+ std::to_string(n_batches)+"_"+std::to_string(confidence_thresh));
 
     if(write_res_on_file){
         memory<<vm_total/images_done/1024.0<<";"<<rss_total/images_done/1024.0<<"\n";
