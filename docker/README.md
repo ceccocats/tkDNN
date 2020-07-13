@@ -1,7 +1,7 @@
 # Use the prebuilt image
 ```
 # build image
-docker build -t tkdnn:build -f Dockerfile-f Dockerfile . 
+docker build -t tkdnn:build -f Dockerfile . 
 ```
 
 # Build Base Docker image
