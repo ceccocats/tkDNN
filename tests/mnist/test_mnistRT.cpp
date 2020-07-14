@@ -3,12 +3,12 @@
 #include "tkdnn.h"
 #include "NvInfer.h"
 
-const char *input_bin   = "../tests/mnist/input.bin";
-const char *c0_bin      = "../tests/mnist/layers/c0.bin";
-const char *c1_bin      = "../tests/mnist/layers/c1.bin";
-const char *d2_bin      = "../tests/mnist/layers/d2.bin";
-const char *d3_bin      = "../tests/mnist/layers/d3.bin";
-const char *output_bin   = "../tests/mnist/output.bin";
+const char *input_bin   = "mnist/input.bin";
+const char *c0_bin      = "mnist/layers/c0.bin";
+const char *c1_bin      = "mnist/layers/c1.bin";
+const char *d2_bin      = "mnist/layers/d2.bin";
+const char *d3_bin      = "mnist/layers/d3.bin";
+const char *output_bin   = "mnist/output.bin";
 
 using namespace nvinfer1;
 
@@ -25,14 +25,16 @@ class Logger : public ILogger
 
 int main() {
 
+	downloadWeightsifDoNotExist(input_bin, "mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
+
     std::cout<<"\n==== CUDNN ====\n";
     // Network layout
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);
 	tk::dnn::Network net(dim);
     tk::dnn::Conv2d     l0(&net, 20, 5, 5, 1, 1, 0, 0, c0_bin);
-    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
-    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Dense      l4(&net, 500, d2_bin);
     tk::dnn::Activation l5(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Dense      l6(&net, 10, d3_bin);
@@ -47,9 +49,9 @@ int main() {
     
     // Inference
     {
-        TIMER_START
+        TKDNN_TSTART
         data = net.infer(dim, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim.print();   
     }
 
@@ -155,9 +157,9 @@ int main() {
     {
         checkCuda(cudaMemcpyAsync(buffers[inputIndex], input_h, 1 * 28*28* sizeof(float), cudaMemcpyHostToDevice, stream));
         cudaStreamSynchronize(stream);  //want to test only the inference time
-        TIMER_START
+        TKDNN_TSTART
         context->enqueue(1, buffers, stream, nullptr);
-        TIMER_STOP
+        TKDNN_TSTOP
         checkCuda(cudaMemcpyAsync(output, buffers[outputIndex],10*sizeof(float), cudaMemcpyDeviceToHost, stream));
         cudaStreamSynchronize(stream);
     }

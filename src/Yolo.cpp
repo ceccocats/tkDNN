@@ -11,18 +11,29 @@
 
 namespace tk { namespace dnn {
 
-Yolo::Yolo(Network *net, int classes, int num, const char* fname_weights) : 
+Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy) : 
     Layer(net) {
-    
+    this->final = true;
+
     this->classes = classes;
     this->num = num;
+    this->n_masks = n_masks;
+    this->scaleXY = scale_xy;
 
     // load anchors
-    if(fname_weights != nullptr) {
+    if(fname_weights != "") {
         int seek = 0;
-        readBinaryFile(fname_weights, num, &mask_h, &mask_d, seek);
-        seek += num;
-        readBinaryFile(fname_weights, 3*num*2, &bias_h, &bias_d, seek);
+        readBinaryFile(fname_weights, n_masks, &mask_h, &mask_d, seek);
+        seek += n_masks;
+        readBinaryFile(fname_weights, n_masks*num*2, &bias_h, &bias_d, seek);
+        //for(int i=0; i<n_masks*num*2; i++)
+            //printf("%f\n", bias_h[i]);
+    }
+
+    // init default classes name
+    classesNames.clear();
+    for(int i=0; i<classes; i++) {
+        classesNames.push_back(std::to_string(i));
     }
 
     // same
@@ -62,9 +73,11 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     checkCuda( cudaMemcpy(dstData, srcData, dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
 
     for (int b = 0; b < dim.n; ++b){
-        for(int n = 0; n < num; ++n){
+        for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
+
+            if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
             
             index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
             activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
@@ -121,7 +134,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
     for (i = 0; i < lw*lh; ++i){
         int row = i / lw;
         int col = i % lw;
-        for(n = 0; n < num; ++n){
+        for(n = 0; n < n_masks; ++n){
             int obj_index  = entry_index(0, n*lw*lh + i, 4, classes, input_dim, output_dim);
             float objectness = predictions[obj_index];
             if(objectness <= thresh) continue;

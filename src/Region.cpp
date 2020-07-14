@@ -12,8 +12,7 @@
 namespace tk { namespace dnn {
 
 Region::Region(Network *net, int classes, int coords, int num) : 
-    Layer(net) {
-
+    Layer(net) {    
     this->classes = classes;
     this->coords = coords;
     this->num = num;
@@ -66,7 +65,7 @@ dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
 
 /* Intepret class */
 RegionInterpret::RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
-    int classes, int coords, int num, float thresh, const char* fname_weights) {
+    int classes, int coords, int num, float thresh, std::string fname_weights) {
 
     this->input_dim = input_dim;
     this->output_dim = output_dim;

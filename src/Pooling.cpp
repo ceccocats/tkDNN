@@ -6,6 +6,7 @@
 namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
+                  int paddingH, int paddingW,
                   tkdnnPoolingMode_t pool_mode) : 
     Layer(net) {
 
@@ -14,8 +15,8 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->strideH = strideH;
     this->strideW = strideW;
     this->pool_mode = pool_mode;
-    this->paddingH = 0;
-    this->paddingW = 0;
+    this->paddingH = paddingH;
+    this->paddingW = paddingW;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
@@ -24,6 +25,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     int h = input_dim.h;
     int w = input_dim.w;
     int l = input_dim.l;
+    
 
     poolOn3d = false;
     
@@ -37,16 +39,32 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
         n = l;
     }
 
-    checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnnPoolingMode_t(pool_mode),
-                CUDNN_NOT_PROPAGATE_NAN, winH, winW, 0, 0, strideH, strideW) );
+    cudnnPoolingMode_t cudnn_pool_mode = cudnnPoolingMode_t(pool_mode);
+    if(pool_mode == POOLING_MAX_FIXEDSIZE) cudnn_pool_mode = cudnnPoolingMode_t(tkdnnPoolingMode_t::POOLING_MAX);
+
+    checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnn_pool_mode,
+                CUDNN_NOT_PROPAGATE_NAN, winH, winW, paddingH, paddingW, strideH, strideW) );
 
     checkCUDNN( cudnnSetTensor4dDescriptor(srcTensorDesc, 
                 net->tensorFormat, net->dataType, n, c, h, w) );
 
     //get out dim
-    checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
-    //h = (h + winH*this->paddingH)/strideH;
-    //w = (w + winW*this->paddingW)/strideW;
+    // checkCUDNN( cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n, &c, &h, &w)); 
+
+    //compute w and h as in darknet
+    if(pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE){
+        int padH = paddingH == 0? winH -1 : paddingH;
+        int padW = paddingW == 0? winW -1 : paddingW;
+        h = (h + padH - winH)/strideH +1;
+        w =  (w + padW - winW)/strideW +1;
+    }
+    else{
+        h = (h + 2*paddingH - winH)/strideH +1 ;
+        w =  (w + 2*paddingW - winW)/strideW +1;
+    }
+    
+    // h = (h + winH*this->paddingH)/strideH;
+    // w = (w + winW*this->paddingW)/strideW;
 
     checkCUDNN( cudnnSetTensor4dDescriptor(dstTensorDesc,
                 net->tensorFormat, net->dataType, n, c, h, w) );
@@ -92,11 +110,16 @@ dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
         poolDst = tmpOutputData;
     }
 
-    dnnType alpha = dnnType(1);
-    dnnType beta = dnnType(0);
-    checkCUDNN( cudnnPoolingForward(net->cudnnHandle, poolingDesc,
-                &alpha, srcTensorDesc, poolSrc,
-                &beta, dstTensorDesc, poolDst) );
+    if(pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE){
+        MaxPoolingForward(poolSrc, poolDst, dim.n, dim.c, dim.h, dim.w, this->strideH, this->strideW, this->winH, this->winH-1);
+    }
+    else{
+        dnnType alpha = dnnType(1);
+        dnnType beta = dnnType(0);
+        checkCUDNN( cudnnPoolingForward(net->cudnnHandle, poolingDesc,
+                    &alpha, srcTensorDesc, poolSrc,
+                    &beta, dstTensorDesc, poolDst) );
+    }
 
     //update dim
     dim = output_dim;

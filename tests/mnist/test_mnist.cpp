@@ -1,28 +1,30 @@
 #include<iostream>
 #include "tkdnn.h"
 
-const char *input_bin   = "../tests/mnist/input.bin";
-const char *c0_bin      = "../tests/mnist/layers/c0.bin";
-const char *c1_bin      = "../tests/mnist/layers/c1.bin";
-const char *d2_bin      = "../tests/mnist/layers/d2.bin";
-const char *d3_bin      = "../tests/mnist/layers/d3.bin";
-const char *output_bin   = "../tests/mnist/output.bin";
+const char *input_bin   = "mnist/input.bin";
+const char *c0_bin      = "mnist/layers/c0.bin";
+const char *c1_bin      = "mnist/layers/c1.bin";
+const char *d2_bin      = "mnist/layers/d2.bin";
+const char *d3_bin      = "mnist/layers/d3.bin";
+const char *output_bin   = "mnist/output.bin";
 
 int main() {
+
+    downloadWeightsifDoNotExist(input_bin, "mnist", "https://cloud.hipert.unimore.it/s/2TyQkMJL3LArLAS/download");
 
     // Network layout
     tk::dnn::dataDim_t dim(1, 1, 28, 28, 1);
     tk::dnn::Network net(dim);
     tk::dnn::Conv2d     l0(&net, 20, 5, 5, 1, 1, 0, 0, c0_bin);
-    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l1(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Conv2d     l2(&net, 50, 5, 5, 1, 1, 0, 0, c1_bin);
-    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, tk::dnn::POOLING_MAX);
+    tk::dnn::Pooling    l3(&net, 2, 2, 2, 2, 0, 0, tk::dnn::POOLING_MAX);
     tk::dnn::Dense      l4(&net, 500, d2_bin);
     tk::dnn::Activation l5(&net, tk::dnn::ACTIVATION_LEAKY);
     tk::dnn::Dense      l6(&net, 10, d3_bin);
     tk::dnn::Softmax    l7(&net);
 
-    tk::dnn::NetworkRT netRT(&net, "mnist.rt");
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("mnist"));
 
     // Load input
     dnnType *data;
@@ -33,9 +35,9 @@ int main() {
 
     std::cout<<"CUDNN inference:\n"; {
         dim.print(); //print initial dimension  
-        TIMER_START
+        TKDNN_TSTART
         out_data = net.infer(dim, data);    
-        TIMER_STOP
+        TKDNN_TSTOP
         dim.print();   
     }
 
@@ -47,9 +49,9 @@ int main() {
 
     std::cout<<"TENSORRT inference:\n"; {
         dim2.print();
-        TIMER_START
+        TKDNN_TSTART
         out_data2 = netRT.infer(dim2, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim2.print();
     }
 
@@ -58,7 +60,7 @@ int main() {
     //printDeviceVector(10, out_data);
 
     std::cout<<"\n======= CHECK RESULT =======\n";
-    checkResult(dim.tot(), out_data, out_data2);
+    int ret_tensorrt = checkResult(dim.tot(), out_data, out_data2) == 0 ? 0 : ERROR_TENSORRT;
 
  /*
     // Print real test
@@ -68,5 +70,5 @@ int main() {
     readBinaryFile(output_bin, dim.tot(), &out_h, &out);
     printDeviceVector(dim.tot(), out);
 */ 
-    return 0;
+    return ret_tensorrt;
 }
