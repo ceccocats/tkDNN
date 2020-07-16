@@ -62,9 +62,10 @@ void Conv2d::initCUDNN(bool back) {
     // init workspace
     workSpace = NULL;
     ws_sizeInBytes = 0;
+    int algo_count = 0;
     if(back) {
         checkCUDNN( cudnnGetConvolutionBackwardDataAlgorithm_v7(net->cudnnHandle,
-                                                                filterDesc, dstTensor, convDesc, srcTensor, 1, 0, &bwAlgo) );
+                                                                filterDesc, dstTensor, convDesc, srcTensor, 1, &algo_count, &bwAlgo) );
         checkCUDNN(cudnnGetConvolutionBackwardDataWorkspaceSize(net->cudnnHandle,
                                                                 filterDesc, dstTensor, convDesc, srcTensor,
                                                                 bwAlgo.algo, &ws_sizeInBytes));
@@ -74,13 +75,17 @@ void Conv2d::initCUDNN(bool back) {
         srcTensorDesc = dstTensor;
         dstTensorDesc = srcTensor;
     } else {
+        
         checkCUDNN( cudnnGetConvolutionForwardAlgorithm_v7(net->cudnnHandle,
                                                          srcTensor, filterDesc, convDesc, dstTensor,
-                                                        1, 0, &algo) );
+                                                        1, &algo_count, &algo) );
          checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(net->cudnnHandle,
                                                             srcTensor, filterDesc, convDesc, dstTensor,
                                                            algo.algo, &ws_sizeInBytes));
     }
+
+    if(algo_count < 1)
+        FatalError("Cannot retrieve convolutional algo");
 }
 
 void Conv2d::inferCUDNN(dnnType* srcData, bool back) {
