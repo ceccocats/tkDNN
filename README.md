@@ -1,9 +1,9 @@
 # tkDNN
-tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives, specifically thought to work on NVIDIA Jetson Boards. It has been tested on TK1(branch cudnn2), TX1, TX2, AGX Xavier and several discrete GPU.
+tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives, specifically thought to work on NVIDIA Jetson Boards. It has been tested on TK1(branch cudnn2), TX1, TX2, AGX Xavier, Nano and several discrete GPUs.
 The main goal of this project is to exploit NVIDIA boards as much as possible to obtain the best inference performance. It does not allow training. 
 
 
-If you use tkDNN in your research, please cite one of the following papers. For use in commercial solutions, write at gattifrancesco@hotmail.it or refer to https://hipert.unimore.it/ .
+If you use tkDNN in your research, please cite one of the following papers. For use in commercial solutions, write at gattifrancesco@hotmail.it and micaela.verucchi@unimore.it or refer to https://hipert.unimore.it/ .
 
 ```
 Accepted paper @ IRC 2020, will soon be published.
@@ -175,15 +175,25 @@ All models from darknet are now parsed directly from cfg, you still need to expo
   mish
 </details>
 
-## Run the demo
+## Run the demo 
+This is an example using yolov4.
 
-To run the an object detection demo follow these steps (example with yolov3):
+To run the an object detection first create the .rt file by running:
 ```
-rm yolo3_fp32.rt        # be sure to delete(or move) old tensorRT files
-./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_fp32.rt ../demo/yolo_test.mp4 y
+rm yolo4_fp32.rt        # be sure to delete(or move) old tensorRT files
+./test_yolo4            # run the yolo test (is slow)
 ```
-In general the demo program takes 4 parameters:
+If you get problems in the creation, try to check the error activating the debug of TensorRT in this way:
+```
+cmake .. -DDEBUG=True
+make
+```
+
+Once you have succesfully created your rt file, run the demo: 
+```
+./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y
+```
+In general the demo program takes 6 parameters:
 ```
 ./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag>
 ```
@@ -196,6 +206,7 @@ where
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization but save the video into result.mp4 (if n-batches ==1)
 
 N.b. By default it is used FP32 inference
+
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
