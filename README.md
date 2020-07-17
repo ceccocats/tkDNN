@@ -204,6 +204,8 @@ where
 *  ```<number-of-classes>```is the number of classes the network is trained on
 *  ```<n-batches>``` number of batches to use in inference (N.B. you should first export TKDNN_BATCHSIZE to the required n_batches and create again the rt file for the network).
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization but save the video into result.mp4 (if n-batches ==1)
+* ```<save-flag>``` if set to 0 the results will be saved and if set to 1 then the results will not be saved.
+* ```<http-stream-port>``` if set to 0 then http stream will be  off but if port number is given eg: 8090 then the stream can seen in ```https://localhost:8090```
 
 N.b. By default it is used FP32 inference
 
