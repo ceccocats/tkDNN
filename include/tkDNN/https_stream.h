@@ -53,7 +53,7 @@ static int close_socket(SOCKET s) {
     return result;
 }
 #else   // _WIN32 - else: nix
-#include "darkunistd.h"
+#include "httpunistd.h"
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -337,10 +337,3 @@ int send_http_post_request(char *http_post_host, int server_port, const char *vi
     return 0;
 }
 #else   //  __CYGWIN__*/
-#ifndef   NI_MAXHOST
-#define   NI_MAXHOST 1025
-#endif
-
-#ifndef   NI_NUMERICHOST
-#define NI_NUMERICHOST  0x02
-#endif
