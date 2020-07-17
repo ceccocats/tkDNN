@@ -183,6 +183,12 @@ rm yolo3_fp32.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
 ./demo yolo3_fp32.rt ../demo/yolo_test.mp4 y
 ```
+
+To run the an object detection demo with python (example with yolov4):
+```
+python darknetTR.py build/yolo4_fp16.rt --video=demo/yolo_test.mp4
+```
+
 In general the demo program takes 4 parameters:
 ```
 ./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag>
