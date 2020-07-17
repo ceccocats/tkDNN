@@ -42,15 +42,15 @@ int main(int argc, char *argv[])
     bool show = true;
     if (argc > 6)
         show = atoi(argv[6]);
-    int port = 0;
     if (argc > 7)
-        port = atoi(argv[7]);
+        SAVE_RESULT = atoi(argv[7]);
+    int port = 0;
+    if (argc > 8)
+        port = atoi(argv[8]);
 
     if (n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
 
-    if (!show)
-        SAVE_RESULT = true;
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
             for (int bi = 0; bi < n_batch; ++bi)
             {
                 cv::imshow("detection", batch_frame[bi]);
-                
             }
         }
         if (cv::waitKey(1) == 27)
@@ -138,7 +137,7 @@ int main(int argc, char *argv[])
         }
         if (n_batch == 1 && SAVE_RESULT)
             resultVideo << frame;
-       
+
         if (port > 0)
         {
             send_mjpeg(batch_frame[0], port, 400000, 40);
