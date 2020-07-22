@@ -232,7 +232,156 @@ class SegmentationNN {
                 TKDNN_TSTOP
                 stats_post.push_back(t_ns);
             }
-        }      
+        }     
+
+        void updateOriginal(cv::Mat frame, bool apply_colormap=true){
+
+            std::vector<cv::Mat> splitted_frames;
+            int H, W, net_H, net_W;
+            int top = 0, bottom = 0, left = 0, right = 0;
+            std::vector<std::pair<int,int>> pos;
+
+            {
+                TKDNN_TSTART
+                cv::Size original_size =  frame.size();
+
+                frame.convertTo(frame, CV_32FC3, 1 / 255.0, 0);
+                H = frame.rows;
+                W = frame.cols;
+                net_H = netRT->input_dim.h; 
+                net_W = netRT->input_dim.w;
+
+                cv::Mat frame_cropped;
+                
+                if( H <= net_H && W <= net_W ){ // smaller size wrt network
+                    top = (net_H - H)/2;
+                    bottom = net_H - H - top ;
+                    left = (net_W - W)/2;
+                    right = net_W - W - left ;
+                    cv::copyMakeBorder(frame, frame_cropped, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
+                    splitted_frames.push_back(frame_cropped);
+                }
+                else{ //bigger size wrt network
+
+                    
+                    if(H < net_H  ||  W < net_W){
+                        if(H < net_H){
+                            top = (net_H - H)/2;
+                            bottom = net_H - H - top ;
+                        }
+                        else{
+                            left = (net_W - W)/2;
+                            right = net_W - W - left ;
+                        }
+                        cv::copyMakeBorder(frame, frame_cropped, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+                    }
+
+                    for(int x=0; x+net_W<=W ;){
+                        for(int y=0; y+net_H <=H ; ){
+                            cv::Rect roi(x, y, net_W, net_H);
+                            cv::Mat image_roi = frame(roi);
+                            splitted_frames.push_back(image_roi);
+                            pos.push_back(std::make_pair(x,y));
+                            
+                            y += net_H;
+                            if(y == H)
+                                break;
+                            if(y + net_H > H) y = H - net_H;
+                        }
+                        x += net_W;
+                        if(x == W)
+                            break;
+                        if(x + net_W > W) x = W - net_W;
+                    }
+                }
+
+                tk::dnn::dataDim_t idim = netRT->input_dim;
+
+                if(splitted_frames.size()> nBatches)
+                    FatalError(std::to_string(splitted_frames.size()) + " min batches required");
+
+                for(int bi=0; bi<splitted_frames.size();++bi){
+                    cv::split(splitted_frames[bi], bgr);
+                    for (int i = 0; i < idim.c; i++){
+                        int idx = i * splitted_frames[bi].rows * splitted_frames[bi].cols;
+                        int ch = idim.c-1 -i;
+                        memcpy((void *)&input[idx + idim.tot()*bi], (void *)bgr[ch].data, splitted_frames[bi].rows * splitted_frames[bi].cols * sizeof(dnnType));
+                    }
+
+                    checkCuda(cudaMemcpyAsync(input_d+ idim.tot()*bi, input + idim.tot()*bi, idim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+                    normalize(input_d + idim.tot()*bi, idim.c, idim.h, idim.w, mean_d, stddev_d);
+                }
+                TKDNN_TSTOP
+                stats_pre.push_back(t_ns);
+            }
+
+            tk::dnn::dataDim_t dim = netRT->input_dim;
+            dim.n = splitted_frames.size();
+            {
+                if(TKDNN_VERBOSE) dim.print();
+                TKDNN_TSTART
+                netRT->infer(dim, input_d);
+                TKDNN_TSTOP
+                if(TKDNN_VERBOSE) dim.print();
+                stats.push_back(t_ns);
+            }
+
+            dataDim_t odim = netRT->output_dim;
+
+            std::vector<cv::Mat> out_img;
+
+            {
+                TKDNN_TSTART
+
+                for(int bi=0; bi<splitted_frames.size();++bi){
+
+                    dnnType *rt_out = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;               
+                    
+                    matrixTranspose(cublasHandle, rt_out, tmpInputData_d, odim.c, odim.w*odim.h);
+                    maxElem(tmpInputData_d, tmpOutData_d, odim.c, odim.h, odim.w);
+                    checkCuda(cudaMemcpy(tmpOutData_h, tmpOutData_d, odim.w*odim.h * sizeof(float), cudaMemcpyDeviceToHost));
+
+                    dataDim_t vdim = odim;
+                    vdim.c = 1;
+
+                    cv::Mat colored;
+
+                    if(apply_colormap)
+                        colored = vizData2Mat(tmpOutData_h, vdim, 1024, 0, 18);
+                    else{
+                        cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
+                        colored_fp32.convertTo(colored, CV_8UC1);
+                    }
+                    out_img.push_back(colored);
+                }
+
+
+                cv::Mat seg(frame.size(), out_img[0].type());
+                if(out_img.size() == 1)
+                {
+                    cv::Rect roi(left, top, W, H);
+                    seg = out_img[0](roi);
+                }
+                else{
+                    int bi=0;
+
+                    if(top == 0 && left == 0){
+
+                        for(int i=0; i<out_img.size(); ++i){
+                            cv::Mat roi_collage = seg(cv::Rect( pos[i].first ,pos[i].second,out_img[i].cols,out_img[i].rows));
+                            out_img[i].copyTo(roi_collage);
+                        }
+                    }
+                    else{
+                        FatalError("Not handled case")
+                    }
+                }
+                segmented[0] = seg;
+                
+                TKDNN_TSTOP
+                stats_post.push_back(t_ns);
+            }
+        } 
 
         /**
          * Method to draw boundixg boxes and labels on a frame.
@@ -240,9 +389,9 @@ class SegmentationNN {
         cv::Mat draw(const int cur_batches=1) {
             for(int i=0; i<cur_batches; ++i){
 
-                // cv::imshow("segmented", segmented[i]);
-                // cv::resizeWindow("segmented", cv::Size(512,288));
-                // cv::waitKey(1);
+                cv::imshow("segmented", segmented[i]);
+                cv::resizeWindow("segmented", cv::Size(512,288));
+                cv::waitKey(1);
             }
             return segmented[0];
         }
