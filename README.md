@@ -206,10 +206,9 @@ where
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization.
 * ```<save-flag>``` if set to 0 the results will be saved into result.mp4 (if n-batches ==1) and if set to 1 then the results will not be saved.
 * ```<http-stream-port>``` if set to 0 then http stream will be  off but if port number is given eg: 8090 then the stream can seen the results in ```https://localhost:8090```
+* ```<extyolo flag>``` if set to 1 then yolo like coordinates of the bounding boxes will be printed on the terminal
 
 N.b. By default it is used FP32 inference
-
-**NOTE**: if you want to turn of the yolo coordinates out put on you terminal then change line:125 of demo/demo.cpp and line:148 of demo/map.cpp to  ```detNN->draw(batch_frame,false);``` and recompile 
 
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
