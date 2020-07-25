@@ -47,6 +47,9 @@ int main(int argc, char *argv[])
     int port = 0;
     if (argc > 8)
         port = atoi(argv[8]);
+    bool extyolo=false;
+    if(argc >9)
+        extyolo = atoi(argv[9]);
 
     if (n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
@@ -122,7 +125,7 @@ int main(int argc, char *argv[])
 
         //inference
         detNN->update(batch_dnn_input, n_batch);
-        detNN->draw(batch_frame,true);
+        detNN->draw(batch_frame,extyolo);
 
         if (show)
         {
