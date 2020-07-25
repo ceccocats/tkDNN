@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
         //inference
         detNN->update(batch_dnn_input, n_batch);
-        detNN->draw(batch_frame);
+        detNN->draw(batch_frame,true);
 
         if (show)
         {
