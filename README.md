@@ -209,6 +209,8 @@ where
 
 N.b. By default it is used FP32 inference
 
+**NOTE**: if you want to turn of the yolo coordinates out put on you terminal then change line:125 of demo/demo.cpp and line:148 of demo/map.cpp to  ```detNN->draw(batch_frame,false);``` and recompile 
+
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
