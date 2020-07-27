@@ -114,17 +114,17 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
         int y0   = (b.y-b.h/2.);
         int y1   = (b.y+b.h/2.);
 
+        // convert to image coords
+        x0 = x_ratio*x0;
+        x1 = x_ratio*x1;
+        y0 = y_ratio*y0;
+        y1 = y_ratio*y1;
+        
         for(int c=0; c<classes; c++) {
             if(dets[j].prob[c] >= confThreshold) {
                 int obj_class = c;
                 float prob = dets[j].prob[c];
 
-                // convert to image coords
-                x0 = x_ratio*x0;
-                x1 = x_ratio*x1;
-                y0 = y_ratio*y0;
-                y1 = y_ratio*y1;
-                
                 tk::dnn::box res;
                 res.cl = obj_class;
                 res.prob = prob;
