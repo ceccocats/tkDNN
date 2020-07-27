@@ -113,34 +113,35 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
         int x1   = (b.x+b.w/2.);
         int y0   = (b.y-b.h/2.);
         int y1   = (b.y+b.h/2.);
-        int obj_class = -1;
-        float prob = 0;
+
         for(int c=0; c<classes; c++) {
             if(dets[j].prob[c] >= confThreshold) {
-                obj_class = c;
-                prob = dets[j].prob[c];
+                int obj_class = c;
+                float prob = dets[j].prob[c];
+
+                // convert to image coords
+                x0 = x_ratio*x0;
+                x1 = x_ratio*x1;
+                y0 = y_ratio*y0;
+                y1 = y_ratio*y1;
+                
+                tk::dnn::box res;
+                res.cl = obj_class;
+                res.prob = prob;
+                res.x = x0;
+                res.y = y0;
+                res.w = x1 - x0;
+                res.h = y1 - y0;
+
+                // FIXME: this shuld be useless
+                // if(mAP)
+                //     for(int c=0; c<classes; c++) 
+                //         res.probs.push_back(dets[j].prob[c]);
+
+                detected.push_back(res);
             }
         }
 
-        if(obj_class >= 0) {
-            // convert to image coords
-            x0 = x_ratio*x0;
-            x1 = x_ratio*x1;
-            y0 = y_ratio*y0;
-            y1 = y_ratio*y1;
-              
-            tk::dnn::box res;
-            res.cl = obj_class;
-            res.prob = prob;
-            res.x = x0;
-            res.y = y0;
-            res.w = x1 - x0;
-            res.h = y1 - y0;
-            if(mAP)
-                for(int c=0; c<classes; c++) 
-                    res.probs.push_back(dets[j].prob[c]);
-            detected.push_back(res);
-        }
     }
     batchDetected.push_back(detected);
 }
