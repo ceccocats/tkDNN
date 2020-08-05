@@ -3,13 +3,14 @@
 
 namespace tk { namespace dnn {
 
-bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, const int n_batches) {
+bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh) {
 
     //convert network to tensorRT
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
 
     nBatches = n_batches;
+    confThreshold = conf_thresh;
     tk::dnn::dataDim_t idim = netRT->input_dim;    
     idim.n = nBatches;
 
@@ -109,10 +110,10 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
     detected.clear();
     for(int j=0; j<nDets; j++) {
         tk::dnn::Yolo::box b = dets[j].bbox;
-        int x0   = (b.x-b.w/2.);
-        int x1   = (b.x+b.w/2.);
-        int y0   = (b.y-b.h/2.);
-        int y1   = (b.y+b.h/2.);
+        float x0   = (b.x-b.w/2.);
+        float x1   = (b.x+b.w/2.);
+        float y0   = (b.y-b.h/2.);
+        float y1   = (b.y+b.h/2.);
 
         // convert to image coords
         x0 = x_ratio*x0;

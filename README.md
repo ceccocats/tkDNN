@@ -193,7 +193,7 @@ Once you have succesfully created your rt file, run the demo:
 ```
 ./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y
 ```
-In general the demo program takes 6 parameters:
+In general the demo program takes 7 parameters:
 ```
 ./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag>
 ```
@@ -204,6 +204,7 @@ where
 *  ```<number-of-classes>```is the number of classes the network is trained on
 *  ```<n-batches>``` number of batches to use in inference (N.B. you should first export TKDNN_BATCHSIZE to the required n_batches and create again the rt file for the network).
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization but save the video into result.mp4 (if n-batches ==1)
+*  ```<conf-thresh>``` confidence threshold for the detector. Only bounding boxes with threshold greater than conf-thresh will be displayed.
 
 N.b. By default it is used FP32 inference
 
