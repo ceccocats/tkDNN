@@ -40,6 +40,9 @@ int main(int argc, char *argv[]) {
     bool show = true;
     if(argc > 6)
         show = atoi(argv[6]); 
+    float conf_thresh=0.3;
+    if(argc > 7)
+        conf_thresh = atof(argv[7]);     
 
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
@@ -69,7 +72,7 @@ int main(int argc, char *argv[]) {
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    detNN->init(net, n_classes, n_batch);
+    detNN->init(net, n_classes, n_batch, conf_thresh);
 
     gRun = true;
 
