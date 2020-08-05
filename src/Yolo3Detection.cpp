@@ -52,27 +52,79 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, c
     return true;
 } 
 
-void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
-#ifdef OPENCV_CUDACONTRIB
-    cv::cuda::GpuMat orig_img, img_resized;
-    orig_img = cv::cuda::GpuMat(frame);
-    cv::cuda::resize(orig_img, img_resized, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-
-    img_resized.convertTo(imagePreproc, CV_32FC3, 1/255.0); 
-
-    //split channels
-    cv::cuda::split(imagePreproc,bgr);//split source
-
-    //write channels
-    for(int i=0; i<netRT->input_dim.c; i++) {
-        int size = imagePreproc.rows * imagePreproc.cols;
-        int ch = netRT->input_dim.c-1 -i;
-        bgr[ch].download(bgr_h); //TODO: don't copy back on CPU
-        checkCuda( cudaMemcpy(input_d + i*size + netRT->input_dim.tot()*bi, (float*)bgr_h.data, size*sizeof(dnnType), cudaMemcpyHostToDevice));
+cv::Mat resize_image(cv::Mat im, int w, int h)
+{
+    cv::Mat resized = cv::Mat(cv::Size(w,h), CV_32FC3, cv::Scalar(0) );
+    cv::Mat part = cv::Mat(cv::Size(w,im.rows), CV_32FC3, cv::Scalar(0) );
+    int r, c, k;
+    float w_scale = (float)(im.cols - 1) / (w - 1);
+    float h_scale = (float)(im.rows - 1) / (h - 1);
+    
+    for(k = 0; k < im.channels(); ++k){
+        for(r = 0; r < im.rows; ++r){
+            for(c = 0; c < w; ++c){
+                float val = 0;
+                if(c == w-1 || im.cols == 1){
+                    val = im.at<cv::Vec3f>(r, im.cols-1)[k];
+                } else {
+                    float sx = c*w_scale;
+                    int ix = (int) sx;
+                    float dx = sx - ix;
+                    val = (1 - dx) * im.at<cv::Vec3f>(r, ix)[k] + dx * im.at<cv::Vec3f>(r,ix+1)[k];
+                }
+                part.at<cv::Vec3f>(r,c)[k] = val;
+            }
+        }
     }
-#else
-    cv::resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
+    for(k = 0; k < im.channels(); ++k){
+        for(r = 0; r < h; ++r){
+            float sy = r*h_scale;
+            int iy = (int) sy;
+            float dy = sy - iy;
+            for(c = 0; c < w; ++c){
+                float val = (1-dy) * part.at<cv::Vec3f>(iy, c)[k];
+                resized.at<cv::Vec3f>(r, c)[k] = val;
+            }
+            if(r == h-1 || im.rows == 1) continue;
+            for(c = 0; c < w; ++c){
+                float val = dy * part.at<cv::Vec3f>(iy+1, c)[k];
+                resized.at<cv::Vec3f>(r,c)[k] += val;
+            }
+        }
+    }
+
+    return resized;
+}
+
+void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
     frame.convertTo(imagePreproc, CV_32FC3, 1/255.0); 
+
+    if(letterbox){
+        int im_w = frame.cols;
+        int im_h = frame.rows;
+        int net_w = netRT->input_dim.w;
+        int net_h = netRT->input_dim.h;
+        if(net_w == net_h && letterbox){
+            float ratio = ( im_w > im_h ) ? float(im_w)/float(net_w) : float(im_h)/float(net_h);
+
+            int new_h = im_h/ratio;
+            int new_w = im_w/ratio;
+
+            imagePreproc = resize_image(imagePreproc, new_w, new_h);
+
+            cv::Mat borders;
+            int top = (net_h - new_h)/2;
+            int bottom = (net_h - new_h) - top;
+            int left = (net_w - new_w)/2;
+            int right = (net_w - new_w) - left;
+
+            cv::copyMakeBorder(imagePreproc,imagePreproc, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0.5,0.5,0.5));
+        }
+        else
+            FatalError("letterbox not spported with h!=w");
+    }
+    else
+        imagePreproc = resize_image(imagePreproc, netRT->input_dim.w, netRT->input_dim.h);
 
     //split channels
     cv::split(imagePreproc,bgr);//split source
@@ -84,7 +136,6 @@ void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
         memcpy((void*)&input[idx + netRT->input_dim.tot()*bi], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));     
     }
     checkCuda(cudaMemcpyAsync(input_d + netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
-#endif
 }
 
 void Yolo3Detection::postprocess(const int bi, const bool mAP){
@@ -105,14 +156,45 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
     }
     tk::dnn::Yolo::mergeDetections(dets, nDets, classes);
 
+    int im_w = originalSize[bi].width;
+    int im_h = originalSize[bi].height;
+    int net_w = netRT->input_dim.w;
+    int net_h = netRT->input_dim.h;
+    int new_h, new_w;
+
+    int top = 0, left = 0;
+
+    if(letterbox){
+        float ratio = ( im_w > im_h ) ? float(im_w)/float(net_w) : float(im_h)/float(net_h);
+        x_ratio = ratio;
+        y_ratio = ratio;
+        std::cout<<ratio<<std::endl;
+
+        int new_h = im_h/ratio;
+        int new_w = im_w/ratio;
+
+        top = (net_h - new_h)/2;
+        left = (net_w - new_w)/2;
+    }
+    else{
+        new_h = net_h;
+        new_w = net_w;
+    }
+    
+    float deltaw = net_w - new_w;
+    float deltah = net_h - new_h;
+    float ratiow = (float)new_w / net_w;
+    float ratioh = (float)new_h / net_h;
+
     // fill detected
     detected.clear();
     for(int j=0; j<nDets; j++) {
         tk::dnn::Yolo::box b = dets[j].bbox;
-        int x0   = (b.x-b.w/2.);
-        int x1   = (b.x+b.w/2.);
-        int y0   = (b.y-b.h/2.);
-        int y1   = (b.y+b.h/2.);
+
+        float x0   = (b.x - left - b.w/2.);
+        float x1   = (b.x - left + b.w/2.);
+        float y0   = (b.y - top - b.h/2.);
+        float y1   = (b.y - top + b.h/2.);
 
         // convert to image coords
         x0 = x_ratio*x0;
@@ -133,15 +215,9 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
                 res.w = x1 - x0;
                 res.h = y1 - y0;
 
-                // FIXME: this shuld be useless
-                // if(mAP)
-                //     for(int c=0; c<classes; c++) 
-                //         res.probs.push_back(dets[j].prob[c]);
-
                 detected.push_back(res);
             }
         }
-
     }
     batchDetected.push_back(detected);
 }

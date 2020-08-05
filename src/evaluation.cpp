@@ -342,14 +342,16 @@ void printJsonCOCOFormat(std::ofstream *out_file, const std::string image_path, 
                 //min threshold confidence is set in DetectionNN.h
                 if (bbox[i].probs[j] > 0) {
 
-                    *out_file <<    "{\"image_id\":" << image_id <<
+                    *out_file << std::fixed  << std::setprecision(6) <<
+                                    "{\"image_id\":" << image_id <<
                                     ", \"category_id\":" << coco_ids[j] << 
                                     ", \"bbox\":[" << bx << ", " << by << ", " << bw << ", " << bh << 
                                     "], \"score\":" << bbox[i].probs[j] << "},\n";
                 }
             }
         else
-            *out_file <<    "{\"image_id\":" << image_id <<
+            *out_file <<     std::fixed  << std::setprecision(6) <<
+                            "{\"image_id\":" << image_id <<
                             ", \"category_id\":" << coco_ids[bbox[i].cl] << 
                             ", \"bbox\":[" << bx << ", " << by << ", " << bw << ", " << bh << 
                             "], \"score\":" << bbox[i].prob << "},\n";

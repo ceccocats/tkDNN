@@ -13,6 +13,7 @@ private:
     int num = 0;
     int nMasks = 0;
     int nDets = 0;
+    bool letterbox = false;
     tk::dnn::Yolo::detection *dets = nullptr;
     tk::dnn::Yolo* yolo[3];
 
@@ -21,7 +22,7 @@ private:
     cv::Mat bgr_h;
     
 public:
-    Yolo3Detection() {};
+    Yolo3Detection(const bool letter_box=false) :letterbox(letter_box){}
     ~Yolo3Detection() {}; 
 
     bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1);
