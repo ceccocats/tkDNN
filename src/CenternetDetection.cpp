@@ -372,10 +372,10 @@ void CenternetDetection::postprocess(const int bi, const bool mAP){
                     // std::cout<<"th: "<<scores[j]<<" - cl: "<<clses[j]<<" i: "<<i<<std::endl;
                     //add coco bbox
                     //det[0:4], i, det[4]
-                    int x0   = target_coords[j*4];
-                    int y0   = target_coords[j*4+1];
-                    int x1   = target_coords[j*4+2];
-                    int y1   = target_coords[j*4+3];
+                    float x0   = target_coords[j*4];
+                    float y0   = target_coords[j*4+1];
+                    float x1   = target_coords[j*4+2];
+                    float y1   = target_coords[j*4+3];
                     int obj_class = clses[j];
                     float prob = scores[j];
                     // std::cout<<"("<<x0<<", "<<y0<<"),("<<x1<<", "<<y1<<")"<<std::endl;
