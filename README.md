@@ -14,7 +14,7 @@ M. Verucchi, G. Brilli, D. Sapienza, M. Verasani, M. Arena, F. Gatti, A. Capoton
 "A Systematic Assessment of Embedded Neural Networks for Object Detection", in IEEE International Conference on Emerging Technologies and Factory Automation (2020)
 ```
 
-## Results
+## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimesion as the input size, on 
   * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
   * Xavier AGX, Jetpack 4.3 (CUDA 10.0, CUDNN 7.6.3, tensorrt 6.0.1 );
@@ -39,6 +39,20 @@ Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimesio
 | Nano       | yolo4 416	| 2,88	    | 3,00	    | 3,90	    | 4,04      | -         | -         |
 | Nano       | yolo4 512	| 2,32	    | 2,34	    | 3,02	    | 3,04      | -         | -         |
 | Nano       | yolo4 608	| 1,40	    | 1,41	    | 1,92	    | 1,93      | -         | -         |
+
+## MAP Results
+Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
+
+|                      | CodaLab       | CodaLab   | CodaLab       | CodaLab     | tkDNN map     | tkDNN map |
+| -------------------- | :-----------: | :-------: | :-----------: | :---------: | :-----------: | :-------: |
+|                      | **tkDNN**     | **tkDNN** | **darknet**   | **darknet** | **tkDNN**     | **tkDNN** |
+|                      | MAP(0.5:0.95) | AP50      | MAP(0.5:0.95) | AP50        | MAP(0.5:0.95) | AP50      |
+| Yolov3 (416x416)     | 0.381         | 0.675     | 0.380         | 0.675       | 0.372         | 0.663     |
+| yolov4 (416x416)     | 0.468         | 0.705     | 0.471         | 0.710       | 0.459         | 0.695     |
+| yolov3tiny (416x416) | 0.096         | 0.202     | 0.096         | 0.201       | 0.093         | 0.198     |
+| yolov4tiny (416x416) | 0.202         | 0.400     | 0.201         | 0.400       | 0.197         | 0.395     |
+| Cnet-dla34 (512x512) | 0.366         | 0.543     | \-            | \-          | 0.361         | 0.535     |
+| mv2SSD (512x512)     | 0.226         | 0.381     | \-            | \-          | 0.223         | 0.378     |
 
 ## Index
 - [tkDNN](#tkdnn)
