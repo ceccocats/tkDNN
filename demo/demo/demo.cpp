@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     int n_batch = 1;
     if(argc > 5)
         n_batch = atoi(argv[5]); 
-    bool show = true;
+    bool show = false;
     if(argc > 6)
         show = atoi(argv[6]); 
     float conf_thresh=0.3;
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
         } 
         if(!frame.data) 
             break;
-    
+
         //inference
         detNN->update(batch_dnn_input, n_batch);
         detNN->draw(batch_frame);

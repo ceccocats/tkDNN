@@ -138,7 +138,19 @@ class DetectionNN {
                 TKDNN_TSTOP
                 if(save_times) *times<<t_ns<<"\n";
             }
-        }      
+        }
+        /**
+         * Method to get results.
+         *
+         */
+        std::vector<std::vector<tk::dnn::box>>& get_batch_detected()
+        {
+            return batchDetected;
+        }
+        std::vector<std::string> get_classesName()
+        {
+            return classesNames;
+        }
 
         /**
          * Method to draw boundixg boxes and labels on a frame.
