@@ -133,7 +133,7 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     output_dim = input_dim;
     output_dim.c = stateSize*(bidirectional ? 2 : 1);
 
-    // if retunseq is disabled only the last timestep is returned
+    // if retunseq is disabled only the last timestamp is returned
     if(!returnSeq) {
         output_dim.h = 1;
         output_dim.w = 1;
@@ -254,7 +254,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             rnnDesc,
             seqLen,                     // number of time steps (nT)
             x_desc_vec_.data(),         // input array of desc (nT*nC_in)
-            srcF,                    // input pointer
+            srcF,                       // input pointer
             hx_desc_,                   // initial hidden state desc     
             hx_ptr,                     // initial hidden state pointer 
             cx_desc_,                   // initial cell state desc      
@@ -281,7 +281,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             rnnDesc,
             seqLen,                     // number of time steps (nT)
             x_desc_vec_.data(),         // input array of desc (nT*nC_in)
-            srcB,                    // input pointer
+            srcB,                       // input pointer
             hx_desc_,                   // initial hidden state desc     
             hx_ptr,                     // initial hidden state pointer 
             cx_desc_,                   // initial cell state desc      
@@ -289,7 +289,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             w_desc_,                    // weights desc
             wb_ptr,                     // weights pointer
             y_desc_vec_.data(),         // output desc     (nT*nC_out)
-            dstB_NR,                       // output pointer
+            dstB_NR,                    // output pointer
             hy_desc_,                   // final hidden state desc        
             hy_ptr,                     // final hidden state pointer 
             cy_desc_,                   // final cell state desc          
@@ -307,7 +307,7 @@ dnnType* LSTM::infer(dataDim_t &dim, dnnType* srcData) {
             one_output_dim.c*sizeof(dnnType), cudaMemcpyDeviceToDevice));
     }    
 
-    // if retunseq is disabled only the last timestep is returned
+    // if retunseq is disabled only the last timestamp is returned
     if(returnSeq) {
         // forward transpose
         matrixTranspose(net->cublasHandle, dstF, dstData, 

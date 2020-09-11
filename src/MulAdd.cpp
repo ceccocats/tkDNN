@@ -12,7 +12,7 @@ MulAdd::MulAdd(Network *net, dnnType mul, dnnType add) : Layer(net) {
 
     int size = input_dim.tot();
 
-    // create a vector with all value setted to add 
+    // create a vector with all value set to add 
     dnnType *add_vector_h = new dnnType[size];
     for(int i=0; i<size; i++)
         add_vector_h[i] = add;

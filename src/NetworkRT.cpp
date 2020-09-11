@@ -163,7 +163,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
 	buf_input_idx = engineRT->getBindingIndex("data"); 
     buf_output_idx = engineRT->getBindingIndex("out");
-    std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
+    std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);

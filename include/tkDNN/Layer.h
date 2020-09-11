@@ -171,7 +171,7 @@ public:
 
 
 /**
-    Input layer (it doesnt need weigths)
+    Input layer (it doesn't need weights)
 */
 class Input : public Layer {
 
@@ -207,7 +207,7 @@ public:
 
 
 /**
-    Avaible activation functions
+    Available activation functions
 */
 typedef enum {
     ACTIVATION_ELU     = 100,
@@ -216,7 +216,7 @@ typedef enum {
 } tkdnnActivationMode_t;
 
 /**
-    Activation layer (it doesnt need weigths)
+    Activation layer (it doesn't need weights)
 */
 class Activation : public Layer {
 
@@ -318,9 +318,9 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     const bool bidirectional = true; /**> is the net bidir */
-    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    bool returnSeq = false;       /**> if false return only the result of last timestamp */
     int stateSize = 0; /**> number of hidden states */
-    int seqLen = 0;    /**> number of timesteps */
+    int seqLen = 0;    /**> number of timestamp */
     int numLayers = 1; /**> number of internal layers */
 
 protected:
@@ -367,7 +367,7 @@ public:
 
 
 /**
-    Deformable Convolutionl 2d layer
+    Deformable Convolutional 2d layer
 */  
 class DeformConv2d : public LayerWgs {
 
@@ -449,7 +449,7 @@ protected:
 
 
 /**
-    Avaible pooling functions (padding on tkDNN is not supported)
+    Available pooling functions (padding on tkDNN is not supported)
 */
 typedef enum {
     POOLING_MAX     = 0,
@@ -460,7 +460,7 @@ typedef enum {
 
 /**
     Pooling layer
-    currenty supported only 2d pooing (also on 3d input)
+    currently supported only 2d pooing (also on 3d input)
 */
 class Pooling : public Layer {
 
@@ -526,7 +526,7 @@ public:
 
 /**
     Reorg layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Reorg : public Layer {
 
@@ -559,7 +559,7 @@ public:
 
 /**
     Upsample layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Upsample : public Layer {
 
