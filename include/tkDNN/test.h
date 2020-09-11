@@ -20,7 +20,7 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
     }
     if(output_bins.size() != outputs.size()) {
         std::cout<<output_bins.size()<<" "<<outputs.size()<<"\n";
-        FatalError("outputs size missmatch");
+        FatalError("outputs size mismatch");
     }
 
     // Load input

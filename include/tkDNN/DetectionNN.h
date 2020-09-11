@@ -76,10 +76,10 @@ class DetectionNN {
         ~DetectionNN(){};
 
         /**
-         * Method used to inialize the class, allocate memory and compute 
+         * Method used to initialize the class, allocate memory and compute 
          * needed data.
          * 
-         * @param tensor_path path to the rt file og the NN.
+         * @param tensor_path path to the rt file of the NN.
          * @param n_classes number of classes for the given dataset.
          * @param n_batches maximum number of batches to use in inference
          * @return true if everything is correct, false otherwise.
@@ -141,9 +141,9 @@ class DetectionNN {
         }      
 
         /**
-         * Method to draw boundixg boxes and labels on a frame.
+         * Method to draw bounding boxes and labels on a frame.
          * 
-         * @param frames orginal frame to draw bounding box on.
+         * @param frames original frame to draw bounding box on.
          */
         void draw(std::vector<cv::Mat>& frames) {
             tk::dnn::box b;

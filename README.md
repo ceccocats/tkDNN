@@ -15,7 +15,7 @@ M. Verucchi, G. Brilli, D. Sapienza, M. Verasani, M. Arena, F. Gatti, A. Capoton
 ```
 
 ## FPS Results
-Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimesion as the input size, on 
+Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
   * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
   * Xavier AGX, Jetpack 4.3 (CUDA 10.0, CUDNN 7.6.3, tensorrt 6.0.1 );
   * Tx2, Jetpack 4.2 (CUDA 10.0, CUDNN 7.3.1, tensorrt 5.0.6 );
@@ -169,7 +169,7 @@ tkDNN implement and easy parser for darknet cfg files, a network can be converte
 tk::dnn::Network *net = tk::dnn::darknetParser("yolov4.cfg", "yolov4/layers", "coco.names");
 net->print();
 ```
-All models from darknet are now parsed directly from cfg, you still need to export the weights with the descripted tools in the previus section.
+All models from darknet are now parsed directly from cfg, you still need to export the weights with the described tools in the previous section.
 <details>
   <summary>Supported layers</summary>
   convolutional
@@ -203,7 +203,7 @@ cmake .. -DDEBUG=True
 make
 ```
 
-Once you have succesfully created your rt file, run the demo: 
+Once you have successfully created your rt file, run the demo: 
 ```
 ./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y
 ```
@@ -247,7 +247,7 @@ You should provide image_list.txt and label_list.txt, using training images. How
 ```
 bash scripts/download_validation.sh COCO
 ```
-to automatically download COCO2017 validation (inside demo folder) and create those needed file. Use BDD insted of COCO to download BDD validation. 
+to automatically download COCO2017 validation (inside demo folder) and create those needed file. Use BDD instead of COCO to download BDD validation. 
 
 Then a complete example using yolo3 and COCO dataset would be:
 ```
@@ -269,8 +269,8 @@ N.B.
 export TKDNN_BATCHSIZE=2
 # build tensorRT files
 ```
-This will create a TensorRT file with the desidered **max** batch size.
-The test will still run with a batch of 1, but the created tensorRT can manage the desidered batch size.
+This will create a TensorRT file with the desired **max** batch size.
+The test will still run with a batch of 1, but the created tensorRT can manage the desired batch size.
 
 ### Test batch Inference
 This will test the network with random input and check if the output of each batch is the same.
@@ -316,7 +316,7 @@ cd build
 ./map_demo dla34_cnet_FP32.rt c ../demo/COCO_val2017/all_labels.txt ../demo/config.yaml
 ```
 
-This demo also creates a json file named ```net_name_COCO_res.json``` containing all the detections computed. The detections are in COCO format, the correct format to subit the results to [CodaLab COCO detection challenge](https://competitions.codalab.org/competitions/20794#participate).
+This demo also creates a json file named ```net_name_COCO_res.json``` containing all the detections computed. The detections are in COCO format, the correct format to submit the results to [CodaLab COCO detection challenge](https://competitions.codalab.org/competitions/20794#participate).
 
 ## Existing tests and supported networks
 

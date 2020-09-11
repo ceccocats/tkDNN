@@ -201,7 +201,7 @@ namespace tk { namespace dnn {
 
         tk::dnn::Network *net = nullptr;
         
-        // layers without activations to retrive correct id number
+        // layers without activations to retrieve correct id number
         std::vector<tk::dnn::Layer*> netLayers;
 
         std::ifstream if_cfg(cfg_file);

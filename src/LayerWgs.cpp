@@ -105,7 +105,7 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         float2half(tmp_d, variance16_d, b_size);
         cudaMemcpy(variance16_h, variance16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
 
-        //conver scales
+        //convert scales
         float2half(scales_d, scales16_d, b_size);
         cudaMemcpy(scales16_h, scales16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
     
