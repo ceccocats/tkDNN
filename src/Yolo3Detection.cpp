@@ -3,14 +3,14 @@
 
 namespace tk { namespace dnn {
 
-bool Yolo3Detection::init(const std::string& tensor_path, const float conf_threshold, const int n_classes, const int n_batches) {
+bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh) {
 
     //convert network to tensorRT
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
 
     nBatches = n_batches;
-    confThreshold = conf_threshold;
+    confThreshold = conf_thresh;
     tk::dnn::dataDim_t idim = netRT->input_dim;    
     idim.n = nBatches;
 
@@ -110,38 +110,39 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
     detected.clear();
     for(int j=0; j<nDets; j++) {
         tk::dnn::Yolo::box b = dets[j].bbox;
-        int x0   = (b.x-b.w/2.);
-        int x1   = (b.x+b.w/2.);
-        int y0   = (b.y-b.h/2.);
-        int y1   = (b.y+b.h/2.);
-        int obj_class = -1;
-        float prob = 0;
+        float x0   = (b.x-b.w/2.);
+        float x1   = (b.x+b.w/2.);
+        float y0   = (b.y-b.h/2.);
+        float y1   = (b.y+b.h/2.);
+
+        // convert to image coords
+        x0 = x_ratio*x0;
+        x1 = x_ratio*x1;
+        y0 = y_ratio*y0;
+        y1 = y_ratio*y1;
+        
         for(int c=0; c<classes; c++) {
             if(dets[j].prob[c] >= confThreshold) {
-                obj_class = c;
-                prob = dets[j].prob[c];
+                int obj_class = c;
+                float prob = dets[j].prob[c];
+
+                tk::dnn::box res;
+                res.cl = obj_class;
+                res.prob = prob;
+                res.x = x0;
+                res.y = y0;
+                res.w = x1 - x0;
+                res.h = y1 - y0;
+
+                // FIXME: this shuld be useless
+                // if(mAP)
+                //     for(int c=0; c<classes; c++) 
+                //         res.probs.push_back(dets[j].prob[c]);
+
+                detected.push_back(res);
             }
         }
 
-        if(obj_class >= 0) {
-            // convert to image coords
-            x0 = x_ratio*x0;
-            x1 = x_ratio*x1;
-            y0 = y_ratio*y0;
-            y1 = y_ratio*y1;
-              
-            tk::dnn::box res;
-            res.cl = obj_class;
-            res.prob = prob;
-            res.x = x0;
-            res.y = y0;
-            res.w = x1 - x0;
-            res.h = y1 - y0;
-            if(mAP)
-                for(int c=0; c<classes; c++) 
-                    res.probs.push_back(dets[j].prob[c]);
-            detected.push_back(res);
-        }
     }
     batchDetected.push_back(detected);
 }

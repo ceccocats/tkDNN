@@ -95,7 +95,7 @@ dnnType* DeformConv2d::infer(dataDim_t &dim, dnnType* srcData) {
     // split conv2d outputs into offset and mask
     checkCuda(cudaMemcpy(offset, output_conv, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
     checkCuda(cudaMemcpy(mask, output_conv + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-    // kernel sigmoide
+    // kernel sigmoid
     activationSIGMOIDForward(mask, mask, chunk_dim);
 
     // deformable convolution

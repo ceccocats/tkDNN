@@ -37,7 +37,7 @@ dnnType* Dense::infer(dataDim_t &dim, dnnType* srcData) {
     // place bias into dstData
     checkCuda( cudaMemcpy(dstData, bias_d, dim_y*sizeof(dnnType), cudaMemcpyDeviceToDevice) );
     
-    //do matrix moltiplication
+    //do matrix multiplication
     checkERROR( cublasSgemv(net->cublasHandle, CUBLAS_OP_T,
                             dim_x, dim_y,
                             &alpha,
