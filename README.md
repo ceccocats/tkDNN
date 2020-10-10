@@ -3,15 +3,18 @@ tkDNN is a Deep Neural Network library built with cuDNN and tensorRT primitives,
 The main goal of this project is to exploit NVIDIA boards as much as possible to obtain the best inference performance. It does not allow training. 
 
 
-If you use tkDNN in your research, please cite one of the following papers. For use in commercial solutions, write at gattifrancesco@hotmail.it and micaela.verucchi@unimore.it or refer to https://hipert.unimore.it/ .
+If you use tkDNN in your research, please cite the [following paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9212130&casa_token=sQTJXi7tJNoAAAAA:BguH9xCIY48MxbtDS3LXzIXzO-9sWArm7Hd7y7BwaLmqRuM_Gx8bOYizFPNMNtpo5K0kB-P-). For use in commercial solutions, write at gattifrancesco@hotmail.it and micaela.verucchi@unimore.it or refer to https://hipert.unimore.it/ .
 
 ```
-Accepted paper @ IRC 2020, will soon be published.
-M. Verucchi, L. Bartoli, F. Bagni, F. Gatti, P. Burgio and M. Bertogna, "Real-Time clustering and LiDAR-camera fusion on embedded platforms for self-driving cars",  in proceedings in IEEE Robotic Computing (2020)
-
-Accepted paper @ ETFA 2020, will soon be published.
-M. Verucchi, G. Brilli, D. Sapienza, M. Verasani, M. Arena, F. Gatti, A. Capotondi, R. Cavicchioli, M. Bertogna, M. Solieri
-"A Systematic Assessment of Embedded Neural Networks for Object Detection", in IEEE International Conference on Emerging Technologies and Factory Automation (2020)
+@inproceedings{verucchi2020systematic,
+  title={A Systematic Assessment of Embedded Neural Networks for Object Detection},
+  author={Verucchi, Micaela and Brilli, Gianluca and Sapienza, Davide and Verasani, Mattia and Arena, Marco and Gatti, Francesco and Capotondi, Alessandro and Cavicchioli, Roberto and Bertogna, Marko and Solieri, Marco},
+  booktitle={2020 25th IEEE International Conference on Emerging Technologies and Factory Automation (ETFA)},
+  volume={1},
+  pages={937--944},
+  year={2020},
+  organization={IEEE}
+}
 ```
 
 ## FPS Results
