@@ -316,7 +316,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
-        lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
+        lRTconv->setPadding(DimsHW{l->paddingH * l->dilationH, l->paddingW * l->dilationW});
+        lRTconv->setDilation(DimsHW{l->dilationH, l->dilationW});
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
     } else {
@@ -483,7 +484,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
     //std::cout<<"New plugin REORG\n";
-    IPlugin *plugin = new ReorgRT(l->stride);
+    IPlugin *plugin = new ReorgRT(l->stride, l->reorg3d);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;

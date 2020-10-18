@@ -85,6 +85,8 @@ namespace tk { namespace dnn {
             auto vec = fromStringToIntVec(value, ',');
             fields.n_mask = vec.size();
         }
+        else if(name.find("dilation") !=  std::string::npos)
+            fields.dilation = std::stoi(value);
         else if(name.find("layers") !=  std::string::npos)
             fields.layers = fromStringToIntVec(value, ',');
 
@@ -113,7 +115,7 @@ namespace tk { namespace dnn {
             std::string wgs = wgs_path + "/c" + std::to_string(netLayers.size()) + ".bin";
             //printf("%d (%d,%d) (%d,%d) (%d,%d) %s %d %d\n", f.filters, f.size_x, f.size_y, f.stride_x, f.stride_y, f.padding_x, f.padding_y, wgs.c_str(), f.batch_normalize, f.groups);
             tk::dnn::Conv2d *l= new tk::dnn::Conv2d(net, f.filters, f.size_x, f.size_y, f.stride_x, 
-                                f.stride_y, f.padding_x, f.padding_y, wgs, f.batch_normalize, false, f.groups);
+                                f.stride_y, f.padding_x, f.padding_y, f.dilation, f.dilation, wgs, f.batch_normalize, false, f.groups);
             netLayers.push_back(l);
         } else if(f.type == "maxpool") {
             if(f.stride_x == 1 && f.stride_y == 1)
@@ -152,8 +154,8 @@ namespace tk { namespace dnn {
             }
             netLayers.push_back(new tk::dnn::Route(net, layers.data(), layers.size(), f.groups, f.group_id));
 
-        } else if(f.type == "reorg") {
-            netLayers.push_back(new tk::dnn::Reorg(net, f.stride_x));
+        } else if(f.type == "reorg" || f.type == "reorg3d") {
+            netLayers.push_back(new tk::dnn::Reorg(net, f.stride_x, f.type == "reorg3d"));
 
         } else if(f.type == "region") {
             netLayers.push_back(new tk::dnn::Region(net, f.classes, f.coords, f.num));

@@ -25,6 +25,7 @@ namespace tk { namespace dnn {
         int pad = 0;
         int coords = 4;
         float scale_xy = 1;
+        int dilation = 1;
         std::vector<int> layers;
         std::string activation = "linear";
 

@@ -4,8 +4,9 @@
 class ReorgRT : public IPlugin {
 
 public:
-	ReorgRT(int stride) {
+	ReorgRT(int stride, bool reorg3d = false) {
 		this->stride = stride;
+		this->reorg3d = reorg3d;
 	}
 
 	~ReorgRT(){
@@ -21,9 +22,15 @@ public:
 	}
 
 	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		c = inputDims[0].d[0];
-		h = inputDims[0].d[1];
-		w = inputDims[0].d[2];
+		if (reorg3d) {
+			c = outputDims[0].d[0];
+			h = outputDims[0].d[1];
+			w = outputDims[0].d[2];
+		} else {
+			c = inputDims[0].d[0];
+			h = inputDims[0].d[1];
+			w = inputDims[0].d[2];
+		}
 	}
 
 	int initialize() override {
@@ -60,4 +67,5 @@ public:
 	}
 
 	int c, h, w, stride;
+	bool reorg3d;
 };
