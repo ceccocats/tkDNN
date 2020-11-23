@@ -11,7 +11,7 @@
 
 namespace tk { namespace dnn {
 
-Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy) : 
+Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy, double nms_thresh, nmsKind_t nsm_kind, int new_coords) : 
     Layer(net) {
     this->final = true;
 
@@ -19,6 +19,9 @@ Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_
     this->num = num;
     this->n_masks = n_masks;
     this->scaleXY = scale_xy;
+    this->nms_thresh = nms_thresh;
+    this->nsm_kind = nsm_kind;
+    this->new_coords = new_coords;
 
     // load anchors
     if(fname_weights != "") {
@@ -59,12 +62,21 @@ int entry_index(int batch, int location, int entry,
            entry*input_dim.w*input_dim.h + loc;
 }
 
-Yolo::box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride) {
+Yolo::box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride, int new_coords) {
     Yolo::box b;
-    b.x = (i + x[index + 0*stride]) / lw;
-    b.y = (j + x[index + 1*stride]) / lh;
-    b.w = exp(x[index + 2*stride]) * biases[2*n]   / w;
-    b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
+
+    if(new_coords == 0){
+        b.x = (i + x[index + 0*stride]) / lw;
+        b.y = (j + x[index + 1*stride]) / lh;
+        b.w = exp(x[index + 2*stride]) * biases[2*n]   / w;
+        b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
+    }
+    else{
+        b.x = (i + x[index + 0 * stride] * 2 - 0.5) / lw;
+        b.y = (j + x[index + 1 * stride] * 2 - 0.5) / lh;
+        b.w = x[index + 2 * stride] * x[index + 2 * stride] * 4 * biases[2 * n] / w;
+        b.h = x[index + 3 * stride] * x[index + 3 * stride] * 4 * biases[2 * n + 1] / h;
+    }
     return b;
 }
 
@@ -75,7 +87,10 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
-            activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
+            if (new_coords == 1)
+                activationLOGISTICForward(srcData + index, dstData + index, 4*dim.w*dim.h);
+            else
+                activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
 
             if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
             
@@ -116,7 +131,7 @@ void correct_yolo_boxes(Yolo::detection *dets, int n, int w, int h, int netw, in
     }
 }
 
-int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh) {
+int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords) {
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
@@ -140,7 +155,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
             if(objectness <= thresh) continue;
             int box_index  = entry_index(0, n*lw*lh + i, 0, classes, input_dim, output_dim);
             
-            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh);
+            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh, new_coords);
             dets[count].objectness = objectness;
             dets[count].classes = classes;
             for(j = 0; j < classes; ++j){
@@ -193,6 +208,32 @@ float yolo_box_iou(Yolo::box a, Yolo::box b)
     return yolo_box_intersection(a, b)/yolo_box_union(a, b);
 }
 
+void box_c(const Yolo::box a, const Yolo::box b, float& top, float& bot, float& left, float& right) {
+    top = std::min(a.y - a.h / 2, b.y - b.h / 2);
+    bot = std::max(a.y + a.h / 2, b.y + b.h / 2);
+    left = std::min(a.x - a.w / 2, b.x - b.w / 2);
+    right = std::max(a.x + a.w / 2, b.x + b.w / 2);
+}
+
+// https://github.com/Zzh-tju/DIoU-darknet
+// https://arxiv.org/abs/1911.08287
+float yolo_box_diou(const Yolo::box a, const Yolo::box b, const float nms_thresh=0.6)
+{
+    float top, bot, left, right;
+    box_c(a, b, top, bot, left, right);
+    float w = right - left;
+    float h = bot - top;
+    float c = w * w + h * h;
+    float iou = yolo_box_iou(a, b);
+    if (c == 0) 
+        return iou;
+    
+    float d = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+    float u = pow(d / c, nms_thresh);
+    float diou_term = u;
+    return iou - diou_term;
+}
+
 int yolo_nms_comparator(const void *pa, const void *pb)
 {
     Yolo::detection a = *(Yolo::detection *)pa;
@@ -219,8 +260,7 @@ Yolo::detection *Yolo::allocateDetections(int nboxes, int classes) {
     return dets;
 }
 
-void Yolo::mergeDetections(Yolo::detection *dets, int ndets, int classes) {
-    double nms_thresh = 0.45;
+void Yolo::mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh, nmsKind_t nsm_kind) {
     int total = ndets;
 
     int i, j, k;
@@ -246,13 +286,13 @@ void Yolo::mergeDetections(Yolo::detection *dets, int ndets, int classes) {
             box a = dets[i].bbox;
             for(j = i+1; j < total; ++j){
                 box b = dets[j].bbox;
-                if (yolo_box_iou(a, b) > nms_thresh){
+                if (nsm_kind == GREEDY_NMS && yolo_box_iou(a, b) > nms_thresh)
                     dets[j].prob[k] = 0;
-                }
+                else if (nsm_kind == DIOU_NMS && yolo_box_diou(a, b, nms_thresh) > nms_thresh)
+                    dets[j].prob[k] = 0;
             }
         }
     }
-
 }
 
 }}

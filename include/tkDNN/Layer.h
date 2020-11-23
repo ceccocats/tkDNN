@@ -610,24 +610,28 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
+    enum nmsKind_t {GREEDY_NMS=0, DIOU_NMS=1};
+
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS, int new_coords=0);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num, n_masks;
+    int classes, num, n_masks, new_coords;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     float scaleXY;
+    double nms_thresh;
+    nmsKind_t nsm_kind; 
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords=0);
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 8192;
+    static const int MAX_DETECTIONS = 8192*2;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
-    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
+    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS);
 };
 
 /**
