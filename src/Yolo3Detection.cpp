@@ -32,6 +32,9 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, c
         memcpy(yolo[i]->bias_h, yRT->bias, sizeof(dnnType)*num*nMasks*2);
         yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, yRT->c, yRT->h, yRT->w);
         yolo[i]->classesNames = yRT->classesNames;
+        yolo[i]->nms_thresh = yRT->nms_thresh;
+        yolo[i]->nsm_kind = (tk::dnn::Yolo::nmsKind_t) yRT->nms_kind;
+        yolo[i]->new_coords = yRT->new_coords;
     }
 
     dets = tk::dnn::Yolo::allocateDetections(tk::dnn::Yolo::MAX_DETECTIONS, classes);
@@ -102,9 +105,9 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
     nDets = 0;
     for(int i=0; i<netRT->pluginFactory->n_yolos; i++) {
         yolo[i]->dstData = rt_out[i];
-        yolo[i]->computeDetections(dets, nDets, netRT->input_dim.w, netRT->input_dim.h, confThreshold);
+        yolo[i]->computeDetections(dets, nDets, netRT->input_dim.w, netRT->input_dim.h, confThreshold, yolo[i]->new_coords);
     }
-    tk::dnn::Yolo::mergeDetections(dets, nDets, classes);
+    tk::dnn::Yolo::mergeDetections(dets, nDets, classes, yolo[0]->nms_thresh, yolo[0]->nsm_kind);
 
     // fill detected
     detected.clear();
