@@ -54,6 +54,10 @@ public:
 
     int id = 0;
     bool final;        //if the layer is the final one
+    uint n_params = 0;
+    uint feature_map_size = 0;
+    long unsigned MACC = 0;
+
 
     std::string getLayerName() {
         layerType_t type = getLayerType();

@@ -18,6 +18,8 @@ Layer::Layer(Network *net) {
         if(!net->addLayer(this))
             FatalError("Net reached max number of layers");    
     }
+
+    feature_map_size = input_dim.tot() + output_dim.tot();
 }
 
 Layer::~Layer() {
