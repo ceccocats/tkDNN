@@ -41,7 +41,7 @@ where
 
 N.b. By default it is used FP32 inference
 
-<!-- TODO: add gif -->
+[![tkDNN ShelfNet18 on MASA](https://img.youtube.com/vi/oiMzOLjo47A/0.jpg)](https://www.youtube.com/watch?v=oiMzOLjo47A "tkDNN ShelfNet18 on MASA")
 
 ## Existing tests and supported networks
 
