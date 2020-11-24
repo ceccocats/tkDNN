@@ -3,7 +3,7 @@
 Currently tkDNN supports only ShelfNet as semantic segmentation network.
 
 ## Export weights from Shelfnet
-To get the weights needed to run Mobilenet tests use [this](https://git.hipert.unimore.it/mverucchi/shelfnet) fork of a Pytorch implementation of Shelfnet network. 
+To get the weights needed to run Shelfnet tests use [this](https://git.hipert.unimore.it/mverucchi/shelfnet) fork of a Pytorch implementation of Shelfnet network. 
 
 ```
 git clone https://git.hipert.unimore.it/mverucchi/shelfnet
@@ -21,7 +21,7 @@ python export.py
 To run the semantic segmentation demo follow these steps (example with shelfnet_mapillary):
 ```
 rm shelfnet_mapillary_fp32.rt        # be sure to delete(or move) old tensorRT files
-export TKDNN_BATCHSIZE=4 # be sure you have batch size > than 1 if you want to run inference on images bigger than 1024
+export TKDNN_BATCHSIZE=4             # be sure you have batch size > than 1 if you want to run inference on images bigger than 1024
 ./test_shelfnet_mapillary            # run the yolo test (is slow)
 ./demo shelfnet_mapillary_fp32.rt ../demo/yolo_test.mp4 1 15
 ```
