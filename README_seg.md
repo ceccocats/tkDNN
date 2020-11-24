@@ -23,7 +23,7 @@ To run the semantic segmentation demo follow these steps (example with shelfnet_
 rm shelfnet_mapillary_fp32.rt        # be sure to delete(or move) old tensorRT files
 export TKDNN_BATCHSIZE=4             # be sure you have batch size > than 1 if you want to run inference on images bigger than 1024
 ./test_shelfnet_mapillary            # run the yolo test (is slow)
-./demo shelfnet_mapillary_fp32.rt ../demo/yolo_test.mp4 1 15
+./seg_demo shelfnet_mapillary_fp32.rt ../demo/yolo_test.mp4 1 15
 ```
 In general the demo program takes the following parameters:
 ```
