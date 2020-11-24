@@ -48,22 +48,37 @@ int main(int argc, char *argv[]) {
     int n_classes = 19;
     if(argc > 4)
         n_classes = atoi(argv[4]); 
-    bool show = true;
+    bool resize = false;
     if(argc > 5)
-        show = atoi(argv[5]); 
-    bool write_pred = false;
+        resize = atoi(argv[5]); 
+    int baseline_resize = 1024;
     if(argc > 6)
-        write_pred = atoi(argv[6]); 
-    
+        baseline_resize = atoi(argv[6]); 
+    bool show = true;
+    if(argc > 7)
+        show = atoi(argv[7]); 
+    bool write_pred = false;
+    if(argc > 8)
+        write_pred = atoi(argv[8]); 
 
+    if(resize && (baseline_resize < 0 || baseline_resize > 5000)) 
+        FatalError("Problem with baseline resize")
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
 
+    std::string net_name;
+    removePathAndExtension(net, net_name);
+    bool mapillary_15 = false; //TODO change me pls
+    if(n_classes == 15 && net_name == "shelfnet_mapillary_fp32") 
+        mapillary_15 = true;
+
+    //net initialization 
     tk::dnn::SegmentationNN segNN;
     segNN.init(net, n_classes, n_batch);
 
     int height = 0, width = 0;
-
+    int basewidth=baseline_resize,  hsize; 
+    
     if(write_pred){
         std::string gt_folder = "../demo/CityScapes_val/images/";
         std::string images_names = "../demo/CityScapes_val/all_images.txt";
@@ -85,9 +100,16 @@ int main(int argc, char *argv[]) {
 
         cv::VideoWriter resultVideo;
         if(SAVE_RESULT) {
-            int w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
-            int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-            resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(1024, 1024));
+            int w,h;
+            if(resize){
+                w = basewidth;
+                h = int((float(cap.get(cv::CAP_PROP_FRAME_HEIGHT))*float(basewidth/float(cap.get(cv::CAP_PROP_FRAME_WIDTH)))));
+            }
+            else{
+                w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+                h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+            }
+            resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
         }
 
         cv::Mat frame;
@@ -95,11 +117,17 @@ int main(int argc, char *argv[]) {
             cap >> frame; 
             if(!frame.data) 
                 break;
+
+            if(resize){
+                hsize  = int((float(frame.rows)*float(basewidth/float(frame.cols))));
+                cv::resize(frame, frame, cv::Size(basewidth, hsize));
+            }
+
             height = frame.rows;
             width = frame.cols;
 
             //inference
-            segNN.updateOriginal(frame);
+            segNN.updateOriginal(frame, true, mapillary_15);
             if(show)
                 segNN.draw();
 
