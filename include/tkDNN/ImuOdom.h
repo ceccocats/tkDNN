@@ -44,7 +44,7 @@ class ImuOdom {
         virtual ~ImuOdom() {}
 
         /**
-         * Method used for inizialize the class
+         * Method used for initialize the class
          * 
          * @return Success of the initialization
          */
@@ -141,7 +141,7 @@ class ImuOdom {
             //odomPOS = odomPOS + deltaP.cast<double>(); // V2
             odomROT = odomROT * q.normalized().toRotationMatrix();
             
-            // compute euler
+            // compute Euler
             auto newEULER = odomROT.eulerAngles(0, 1, 2);
             for(int i=0; i<3; i++) {
                 while( fabs(newEULER(i) - odomEULER(i)) > M_PI_2 )  {

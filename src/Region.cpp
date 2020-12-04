@@ -63,7 +63,7 @@ dnnType* Region::infer(dataDim_t &dim, dnnType* srcData) {
 }
 
 
-/* Intepret class */
+/* Interpret class */
 RegionInterpret::RegionInterpret(dataDim_t input_dim, dataDim_t output_dim, 
     int classes, int coords, int num, float thresh, std::string fname_weights) {
 

@@ -73,12 +73,12 @@ double computeMap(  std::vector<Frame> &images,const int classes,
  *                  all the recall levels are evaluated, otherwise only 
  *                  map_point recall levels are used. For COCO evaluation 
  *                  101 points are used.
- * @param map_step step used to increment IoU theshold
+ * @param map_step step used to increment IoU threshold
  * @param map_levels number of IoU step to perform
  * @param verbose is set to true, prints on screen additional info
  * @param write_on_file if set to true, the results produced by this function 
  *                      are written on file
- * @param net name of the considerd neural network 
+ * @param net name of the considered neural network 
  *
  * @return  mAP IoU_tresh:IoU_tresh+map_step*map_levels (e.g. mAP 0.5:0.95 when 
  *          map_step=0.05 and map_levels=10)
@@ -89,7 +89,7 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,
                 const int map_levels=10, const bool verbose=false, 
                 const bool write_on_file = false, std::string net = "");
 /**
- * This method computes the numper of True Positive (TP), False Positive (FP),
+ * This method computes the number of True Positive (TP), False Positive (FP),
  * False Negative (FN), precision, recall and f1-score.
  * Those values are computer over all the detections, over all the classes.
  *
@@ -101,7 +101,7 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,
  * @param verbose is set to true, prints on screen additional info
  * @param write_on_file if set to true, the results produced by this function 
  *                      are written on file
- * @param net name of the considerd neural network 
+ * @param net name of the considered neural network 
  */
 void computeTPFPFN( std::vector<Frame> &images,const int classes,
                     const float IoU_thresh=0.5, const float conf_thresh=0.3, 

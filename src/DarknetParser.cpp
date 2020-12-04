@@ -37,7 +37,10 @@ namespace tk { namespace dnn {
         std::string name,value;
         if(!divideNameAndValue(line, name, value))
             return false;
-        if(name.find("width") !=  std::string::npos)
+
+        if(name.find("new_coords") !=  std::string::npos)
+            fields.new_coords = std::stoi(value);
+        else if(name.find("width") !=  std::string::npos)
             fields.width = std::stoi(value);
         else if(name.find("height") !=  std::string::npos)
             fields.height = std::stoi(value);
@@ -79,6 +82,13 @@ namespace tk { namespace dnn {
             fields.group_id = std::stoi(value);
         else if(name.find("scale_x_y") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
+        else if(name.find("beta_nms") !=  std::string::npos)
+            fields.nms_thresh = std::stof(value);
+        else if(name.find("nms_kind") !=  std::string::npos){
+            if(value == "greedynms") fields.nms_kind = 0;
+            else if(value == "diounms") fields.nms_kind = 1;
+            else std::cout<<"Not supported nms_kind "<<value<<", setting to greedynms"<<std::endl;
+        }
         else if(name.find("from") !=  std::string::npos)
             fields.layers.push_back(std::stof(value));
         else if(name.find("mask") !=  std::string::npos){
@@ -161,7 +171,7 @@ namespace tk { namespace dnn {
         } else if(f.type == "yolo") {
             std::string wgs = wgs_path + "/g" + std::to_string(netLayers.size()) + ".bin";
             //printf("%d %d %s %d %f\n", f.classes, f.num/f.n_mask, wgs.c_str(), f.n_mask, f.scale_xy);
-            tk::dnn::Yolo *l = new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy);
+            tk::dnn::Yolo *l = new tk::dnn::Yolo(net, f.classes, f.num/f.n_mask, wgs, f.n_mask, f.scale_xy, f.nms_thresh, (tk::dnn::Yolo::nmsKind_t) f.nms_kind, f.new_coords);
             if(names.size() != f.classes)
                 FatalError("Mismatch between number of classes and names");
             l->classesNames = names;
@@ -201,7 +211,7 @@ namespace tk { namespace dnn {
 
         tk::dnn::Network *net = nullptr;
         
-        // layers without activations to retrive correct id number
+        // layers without activations to retrieve correct id number
         std::vector<tk::dnn::Layer*> netLayers;
 
         std::ifstream if_cfg(cfg_file);

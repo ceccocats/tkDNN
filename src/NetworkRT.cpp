@@ -163,7 +163,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
 	buf_input_idx = engineRT->getBindingIndex("data"); 
     buf_output_idx = engineRT->getBindingIndex("out");
-    std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
+    std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
@@ -529,7 +529,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
     //std::cout<<"New plugin YOLO\n";
-    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY);
+    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY, l->nms_thresh, l->nsm_kind, l->new_coords);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
@@ -739,12 +739,16 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     if(name.find("Yolo") == 0) {
         YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
                                 readBUF<int>(buf),   //num
-                                nullptr,
-                                readBUF<int>(buf));   //n_masks
+                                nullptr, //yolo
+                                readBUF<int>(buf), //n_masks
+                                readBUF<float>(buf), //scale_xy
+                                readBUF<float>(buf),  //nms_thresh 
+                                readBUF<int>(buf),  //nms_kind
+                                readBUF<int>(buf)  //new_coords
+                                );   
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
-        r->scaleXY = readBUF<float>(buf);
         for(int i=0; i<r->n_masks; i++)
             r->mask[i] = readBUF<dnnType>(buf);
         for(int i=0; i<r->n_masks*2*r->num; i++)

@@ -171,7 +171,7 @@ public:
 
 
 /**
-    Input layer (it doesnt need weigths)
+    Input layer (it doesn't need weights)
 */
 class Input : public Layer {
 
@@ -207,7 +207,7 @@ public:
 
 
 /**
-    Avaible activation functions
+    Available activation functions
 */
 typedef enum {
     ACTIVATION_ELU     = 100,
@@ -216,7 +216,7 @@ typedef enum {
 } tkdnnActivationMode_t;
 
 /**
-    Activation layer (it doesnt need weigths)
+    Activation layer (it doesn't need weights)
 */
 class Activation : public Layer {
 
@@ -318,9 +318,9 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     const bool bidirectional = true; /**> is the net bidir */
-    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    bool returnSeq = false;       /**> if false return only the result of last timestamp */
     int stateSize = 0; /**> number of hidden states */
-    int seqLen = 0;    /**> number of timesteps */
+    int seqLen = 0;    /**> number of timestamp */
     int numLayers = 1; /**> number of internal layers */
 
 protected:
@@ -367,7 +367,7 @@ public:
 
 
 /**
-    Deformable Convolutionl 2d layer
+    Deformable Convolutional 2d layer
 */  
 class DeformConv2d : public LayerWgs {
 
@@ -449,7 +449,7 @@ protected:
 
 
 /**
-    Avaible pooling functions (padding on tkDNN is not supported)
+    Available pooling functions (padding on tkDNN is not supported)
 */
 typedef enum {
     POOLING_MAX     = 0,
@@ -460,7 +460,7 @@ typedef enum {
 
 /**
     Pooling layer
-    currenty supported only 2d pooing (also on 3d input)
+    currently supported only 2d pooing (also on 3d input)
 */
 class Pooling : public Layer {
 
@@ -526,7 +526,7 @@ public:
 
 /**
     Reorg layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Reorg : public Layer {
 
@@ -559,7 +559,7 @@ public:
 
 /**
     Upsample layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Upsample : public Layer {
 
@@ -610,24 +610,28 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
+    enum nmsKind_t {GREEDY_NMS=0, DIOU_NMS=1};
+
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS, int new_coords=0);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num, n_masks;
+    int classes, num, n_masks, new_coords;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     float scaleXY;
+    double nms_thresh;
+    nmsKind_t nsm_kind; 
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords=0);
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 8192;
+    static const int MAX_DETECTIONS = 8192*2;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
-    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
+    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS);
 };
 
 /**

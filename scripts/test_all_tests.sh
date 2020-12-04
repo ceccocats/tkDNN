@@ -73,6 +73,7 @@ do
     print_output $? imuodom
 
     test_net yolo4
+    test_net yolo4x
     test_net yolo4_berkeley
     test_net yolo4tiny
     test_net yolo3
