@@ -167,25 +167,19 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
-    input_dim.n = 1;
-    input_dim.c = iDim.d[0];
-    input_dim.h = iDim.d[1];
-    input_dim.w = iDim.d[2];
+    input_dim = dataDim_t(iDim);
     input_dim.print();
 
     Dims oDim = engineRT->getBindingDimensions(buf_output_idx);
-    output_dim.n = 1;
-    output_dim.c = oDim.d[0];
-    output_dim.h = oDim.d[1];
-    output_dim.w = oDim.d[2];
+    output_dim = dataDim_t(oDim);
     output_dim.print();
 	
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
-        buffersDIM[i] = dataDim_t(1, dim.d[0], dim.d[1], dim.d[2]);
+        buffersDIM[i] = dataDim_t(dim);
         std::cout<<"RtBuffer "<<i<<"   dim: "; buffersDIM[i].print();
-        checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
+        checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*buffersDIM[i].tot()*sizeof(dnnType)));
     }
     checkCuda(cudaMalloc(&output, engineRT->getMaxBatchSize()*output_dim.tot()*sizeof(dnnType)));
 	checkCuda(cudaStreamCreate(&stream));
