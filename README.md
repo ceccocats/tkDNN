@@ -169,6 +169,16 @@ cd pytorch-ssd
 conda env create -f env_mobv2ssd.yml
 python run_ssd_live_demo.py mb2-ssd-lite <pth-model-fil> <labels-file>
 ```
+### 5)Export weights for CenterTrack
+To get the weights needed to run CenterTrack tests use [this](https://github.com/sapienzadavide/CenterTrack.git) fork of the original CenterTrack. 
+```
+git clone https://github.com/sapienzadavide/CenterTrack.git
+```
+* follow the instruction in the README.md and INSTALL.md
+
+```
+python demo.py tracking,ddd --load_model ../models/nuScenes_3Dtracking.pth --dataset nuscenes --pre_hm --track_thresh 0.1 --demo /path/to/image/or/folder/or/video/or/webcam --test_focal_length 633 --exp_wo --exp_wo_dim 512 --input_h 512 --input_w 512
+```
 
 ## Darknet Parser
 tkDNN implement and easy parser for darknet cfg files, a network can be converted with *tk::dnn::darknetParser*:
@@ -244,6 +254,15 @@ rm dla34_cnet3d_fp32.rt        # be sure to delete(or move) old tensorRT files
 The demo3D program takes the same parameters of the demo program:
 ```
 ./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes>
+```
+
+#### Run the 3D OD-tracking demo
+
+To run the 3D object detection & tracking demo follow these steps (example with CenterTrack based on DLA34):
+```
+rm dla34_cnet3d_track_fp32.rt  # be sure to delete(or move) old tensorRT files
+./test_dla34_cnet3d_track      # run the yolo test (is slow)
+./demo3D dla34_cnet3d_track_fp32.rt ../demo/yolo_test.mp4 t
 ```
 
 ### FP16 inference
