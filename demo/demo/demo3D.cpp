@@ -5,6 +5,7 @@
 #include <mutex>
 
 #include "CenternetDetection3D.h"
+#include "CenternetDetection3DTrack.h"
 
 bool gRun;
 bool SAVE_RESULT = false;
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
         n_classes = atoi(argv[4]); 
 
     tk::dnn::CenternetDetection3D cnet;
+    tk::dnn::CenternetDetection3DTrack ctrack;
 
     tk::dnn::DetectionNN3D *detNN;  
 
@@ -41,6 +43,9 @@ int main(int argc, char *argv[]) {
     {
         case 'c':
             detNN = &cnet;
+            break;
+        case 't':
+            detNN = &ctrack;
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
