@@ -36,16 +36,18 @@
 #define COL_PURPLEB "\033[1;35m"
 #define COL_CYANB "\033[1;36m"
 
+#define TKDNN_VERBOSE 0
+
 // Simple Timer 
-#define TIMER_START timespec start, end;                               \
+#define TKDNN_TSTART timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
-#define TIMER_STOP_C(col)  clock_gettime(CLOCK_MONOTONIC, &end);       \
+#define TKDNN_TSTOP_C(col, show)  clock_gettime(CLOCK_MONOTONIC, &end);       \
     double t_ns = ((double)(end.tv_sec - start.tv_sec) * 1.0e9 +       \
                   (double)(end.tv_nsec - start.tv_nsec))/1.0e6;        \
-    std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
+    if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
-#define TIMER_STOP TIMER_STOP_C(COL_CYANB)
+#define TKDNN_TSTOP TKDNN_TSTOP_C(COL_CYANB, TKDNN_VERBOSE)
 
 /********************************************************
  * Prints the error message, and exits
@@ -114,5 +116,10 @@ void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData,
                     dnnType* add_vector, int dim, dnnType mul);
 
 void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
+void printCudaMemUsage();
 void removePathAndExtension(const std::string &full_string, std::string &name);
+static inline bool isCudaPointer(void *data) {
+  cudaPointerAttributes attr;
+  return cudaPointerGetAttributes(&attr, data) == 0;
+}
 #endif //UTILS_H

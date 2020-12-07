@@ -49,9 +49,9 @@ int main() {
     
     // Inference
     {
-        TIMER_START
+        TKDNN_TSTART
         data = net.infer(dim, data);
-        TIMER_STOP
+        TKDNN_TSTOP
         dim.print();   
     }
 
@@ -157,9 +157,9 @@ int main() {
     {
         checkCuda(cudaMemcpyAsync(buffers[inputIndex], input_h, 1 * 28*28* sizeof(float), cudaMemcpyHostToDevice, stream));
         cudaStreamSynchronize(stream);  //want to test only the inference time
-        TIMER_START
+        TKDNN_TSTART
         context->enqueue(1, buffers, stream, nullptr);
-        TIMER_STOP
+        TKDNN_TSTOP
         checkCuda(cudaMemcpyAsync(output, buffers[outputIndex],10*sizeof(float), cudaMemcpyDeviceToHost, stream));
         cudaStreamSynchronize(stream);
     }

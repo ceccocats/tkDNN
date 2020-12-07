@@ -59,9 +59,14 @@ Network::Network(dataDim_t input_dim) {
 }
 
 Network::~Network() {
-
     checkCUDNN( cudnnDestroy(cudnnHandle) );
     checkERROR( cublasDestroy(cublasHandle) );
+}
+
+void Network::releaseLayers() {
+    for(int i=0; i<num_layers; i++)
+        delete layers[i];
+    num_layers = 0;
 }
 
 dnnType* Network::infer(dataDim_t &dim, dnnType* data) {
@@ -123,6 +128,7 @@ void Network::print() {
     }
     printCenteredTitle("", '=', 60);
     std::cout<<"\n";
+    printCudaMemUsage();
 }
 const char *Network::getNetworkRTName(const char *network_name){
     networkName = network_name;

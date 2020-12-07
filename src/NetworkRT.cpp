@@ -122,7 +122,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             input = Ilay->getOutput(0);
             input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
             
-            if(l->getLayerType() == LAYER_YOLO || l->final)
+            if(l->final)
                 networkRT->markOutput(*input);
             tensors[l] = input;
         }
@@ -134,6 +134,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         networkRT->markOutput(*input);
 
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
+        printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
 #if NV_TENSORRT_MAJOR >= 6                
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
@@ -162,7 +163,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
 	buf_input_idx = engineRT->getBindingIndex("data"); 
     buf_output_idx = engineRT->getBindingIndex("out");
-    std::cout<<"input idex = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
+    std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
@@ -448,12 +449,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
         // }
         // std::cout<<"\n";
     }
-    
-    IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
-    //IPlugin *plugin = new RouteRT();
-    //IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
-    checkNULL(lRT);
 
+    if(l->groups > 1){
+        IPlugin *plugin = new RouteRT(l->groups, l->group_id);
+        IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    IConcatenationLayer *lRT = networkRT->addConcatenation(tens, l->layers_n);
+    checkNULL(lRT);
     return lRT;
 }
 
@@ -525,7 +529,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
     //std::cout<<"New plugin YOLO\n";
-    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY);
+    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY, l->nms_thresh, l->nsm_kind, l->new_coords);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
@@ -594,7 +598,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
 
 bool NetworkRT::serialize(const char *filename) {
 
-    std::ofstream p(filename);
+    std::ofstream p(filename, std::ios::binary);
     if (!p) {
         FatalError("could not open plan output file");
         return false;
@@ -735,12 +739,16 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     if(name.find("Yolo") == 0) {
         YoloRT *r = new YoloRT(readBUF<int>(buf),    //classes
                                 readBUF<int>(buf),   //num
-                                nullptr,
-                                readBUF<int>(buf));   //n_masks
+                                nullptr, //yolo
+                                readBUF<int>(buf), //n_masks
+                                readBUF<float>(buf), //scale_xy
+                                readBUF<float>(buf),  //nms_thresh 
+                                readBUF<int>(buf),  //nms_kind
+                                readBUF<int>(buf)  //new_coords
+                                );   
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
-        r->scaleXY = readBUF<float>(buf);
         for(int i=0; i<r->n_masks; i++)
             r->mask[i] = readBUF<dnnType>(buf);
         for(int i=0; i<r->n_masks*2*r->num; i++)
@@ -765,9 +773,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
     } 
-/*
+
     if(name.find("Route") == 0) {
-        RouteRT *r = new RouteRT();
+        RouteRT *r = new RouteRT(readBUF<int>(buf),readBUF<int>(buf));
         r->in = readBUF<int>(buf);
         for(int i=0; i<RouteRT::MAX_INPUTS; i++)
             r->c_in[i] = readBUF<int>(buf);
@@ -776,7 +784,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
     } 
-*/
+
     if(name.find("Deformable") == 0) {
         DeformableConvRT *r = new DeformableConvRT(readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
                                                     readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),

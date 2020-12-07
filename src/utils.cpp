@@ -26,10 +26,11 @@ void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string
         std::string wget_cmd = "wget " + weights_url + " -O " + test_folder + "/weights.zip"; 
         std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
         std::string rm_cmd = "rm " + test_folder + "/weights.zip";
-        system(mkdir_cmd.c_str());
-        system(wget_cmd.c_str());
-        system(unzip_cmd.c_str());
-        system(rm_cmd.c_str());
+        int err = 0;
+        err = system(mkdir_cmd.c_str());
+        err = system(wget_cmd.c_str());
+        err = system(unzip_cmd.c_str());
+        err = system(rm_cmd.c_str());
     }
 }
 
@@ -194,6 +195,12 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
    vm_usage_kb     = vsize / 1024.0;  
    resident_set_kb = rss * page_size_kb;
+}
+
+void printCudaMemUsage() {
+    size_t free, total;
+    checkCuda( cudaMemGetInfo(&free, &total) );	 
+    std::cout<<"GPU free memory: "<<double(free)/1e6<<" mb.\n";
 }
 
 void removePathAndExtension(const std::string &full_string, std::string &name){

@@ -7,12 +7,12 @@
 namespace tk { namespace dnn {
 
 /**
-    Data rapresentation beetween layers
+    Data representation between layers
     n = batch size
     c = channels
-    h = heigth (lines)
+    h = height (lines)
     w = width  (rows)
-    l = lenght (3rd dimension)
+    l = length (3rd dimension)
 */
 struct dataDim_t {
 
@@ -40,9 +40,10 @@ class Network {
 public:
     Network(dataDim_t input_dim);
     virtual ~Network();
+    void releaseLayers();
 
     /**
-        Do inferece for every added layer
+        Do inference for every added layer
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
 

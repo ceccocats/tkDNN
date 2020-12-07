@@ -8,12 +8,15 @@ class YoloRT : public IPlugin {
 
 
 public:
-	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr, int n_masks=3, float scale_xy=1) {
+	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr, int n_masks=3, float scale_xy=1, float nms_thresh=0.45, int nms_kind=0, int new_coords=0) {
 
 		this->classes = classes;
 		this->num = num;
 		this->n_masks = n_masks;
 		this->scaleXY = scale_xy;
+		this->nms_thresh = nms_thresh;
+		this->nms_kind = nms_kind;
+		this->new_coords = new_coords;
 
         mask = new dnnType[n_masks];
         bias = new dnnType[num*n_masks*2];
@@ -64,7 +67,10 @@ public:
 		for (int b = 0; b < batchSize; ++b){
 			for(int n = 0; n < n_masks; ++n){
 				int index = entry_index(b, n*w*h, 0);
-				activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
+				if (new_coords == 1)
+					activationLOGISTICForward(srcData + index, dstData + index, 4*w*h, stream); //x,y,w,h
+				else
+					activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream); //x,y
 
 				if (this->scaleXY != 1) scalAdd(dstData + index, 2 * w*h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
 				
@@ -79,7 +85,7 @@ public:
 
 
 	virtual size_t getSerializationSize() override {
-		return 6*sizeof(int) + sizeof(float)+ n_masks*sizeof(dnnType) + num*n_masks*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
+		return 8*sizeof(int) + 2*sizeof(float)+ n_masks*sizeof(dnnType) + num*n_masks*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
 	}
 
 	virtual void serialize(void* buffer) override {
@@ -87,10 +93,13 @@ public:
 		tk::dnn::writeBUF(buf, classes);
 		tk::dnn::writeBUF(buf, num);
 		tk::dnn::writeBUF(buf, n_masks);
+		tk::dnn::writeBUF(buf, scaleXY);
+		tk::dnn::writeBUF(buf, nms_thresh);
+		tk::dnn::writeBUF(buf, nms_kind);
+		tk::dnn::writeBUF(buf, new_coords);
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
-		tk::dnn::writeBUF(buf, scaleXY);
         for(int i=0; i<n_masks; i++)
     		tk::dnn::writeBUF(buf, mask[i]);
         for(int i=0; i<n_masks*2*num; i++)
@@ -109,6 +118,9 @@ public:
 	int c, h, w;
     int classes, num, n_masks;
 	float scaleXY;
+	float nms_thresh;
+	int nms_kind;
+	int new_coords;
 	std::vector<std::string> classesNames;
 
     dnnType *mask;

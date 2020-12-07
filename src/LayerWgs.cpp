@@ -95,7 +95,6 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         cudaMemcpy(power16_h, power16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
 
         //mean array
-
         cudaMemcpy(tmp_d, mean_h, b_size*sizeof(float), cudaMemcpyHostToDevice);
         float2half(tmp_d, mean16_d, b_size);
         cudaMemcpy(mean16_h, mean16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
@@ -106,27 +105,17 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
         float2half(tmp_d, variance16_d, b_size);
         cudaMemcpy(variance16_h, variance16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
 
-        //conver scales
+        //convert scales
         float2half(scales_d, scales16_d, b_size);
         cudaMemcpy(scales16_h, scales16_d, b_size*sizeof(__half), cudaMemcpyDeviceToHost);
+    
+        cudaFree(tmp_d);
     }
 }
 
 LayerWgs::~LayerWgs() {
-
-    delete [] data_h;
-    delete [] bias_h;
-    checkCuda( cudaFree(data_d) );
-    checkCuda( cudaFree(bias_d) );
-
-    if(batchnorm) {
-        delete [] scales_h;
-        delete [] mean_h;
-        delete [] variance_h;
-        checkCuda( cudaFree(scales_d) );
-        checkCuda( cudaFree(mean_d) );
-        checkCuda( cudaFree(variance_d) );
-    }
+    releaseHost();
+    releaseDevice();
 }
 
 }}

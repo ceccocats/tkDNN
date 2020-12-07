@@ -63,7 +63,7 @@ double computeMap(  std::vector<Frame> &images,const int classes,
     
     int gt_checked = 0;
 
-    // for each detection comput IoU with groundtruth and match detetcion and 
+    // for each detection compute IoU with groundtruth and match detetcion and 
     // groundtruth with IoU greater than IoU_thresh
     for(auto &img:images){
         for(size_t i=0; i<img.det.size(); i++){
@@ -153,7 +153,7 @@ double computeMap(  std::vector<Frame> &images,const int classes,
         }
     }
 
-    //compute average precision for each class. Two methods are avaible, 
+    //compute average precision for each class. Two methods are available, 
     //based on map_points required
     double mean_average_precision = 0;
     double last_recall, last_precision, delta_recall;
@@ -287,7 +287,7 @@ void computeTPFPFN( std::vector<Frame> &images,const int classes,
         }
     }
 
-    //count all TP, FP, FN and compute precsion, recall and f1-score
+    //count all TP, FP, FN and compute precision, recall and f1-score
     double avg_precision = 0, avg_recall = 0, f1_score = 0;
     int TP = 0, FP = 0, FN = 0;
     for(size_t i=0; i<classes; i++){
@@ -314,5 +314,46 @@ void computeTPFPFN( std::vector<Frame> &images,const int classes,
 
     std::cout<<"avg precision: "<<avg_precision<<"\tavg recall: "<<avg_recall<<"\tavg f1 score:"<<f1_score<<std::endl;
 }
-    
+
+void printJsonCOCOFormat(std::ofstream *out_file, const std::string image_path, std::vector<tk::dnn::box> bbox, const int classes, const int w, const int h)
+{
+    int coco_ids[] = { 1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90 };
+    std::string id = image_path.substr(image_path.find("images/")+7, image_path.find(".jpg") - image_path.find("images/") -7);
+    int image_id = std::stoi(id);
+    for (int i = 0; i < bbox.size(); ++i) {
+        float xmin = bbox[i].x ;
+        float xmax = bbox[i].x + float(bbox[i].w);
+        float ymin = bbox[i].y;
+        float ymax = bbox[i].y + float(bbox[i].h);
+
+        //limit to image borders
+        if (xmin < 0) xmin = 0;
+        if (ymin < 0) ymin = 0;
+        if (xmax > w) xmax = w;
+        if (ymax > h) ymax = h;
+
+        float bx = xmin;
+        float by = ymin;
+        float bw = xmax - xmin;
+        float bh = ymax - ymin;
+
+        if(bbox[i].probs.size() == classes)
+            for (int j = 0; j < classes; ++j) {
+                //min threshold confidence is set in DetectionNN.h
+                if (bbox[i].probs[j] > 0) {
+
+                    *out_file <<    "{\"image_id\":" << image_id <<
+                                    ", \"category_id\":" << coco_ids[j] << 
+                                    ", \"bbox\":[" << bx << ", " << by << ", " << bw << ", " << bh << 
+                                    "], \"score\":" << bbox[i].probs[j] << "},\n";
+                }
+            }
+        else
+            *out_file <<    "{\"image_id\":" << image_id <<
+                            ", \"category_id\":" << coco_ids[bbox[i].cl] << 
+                            ", \"bbox\":[" << bx << ", " << by << ", " << bw << ", " << bh << 
+                            "], \"score\":" << bbox[i].prob << "},\n";
+    }
+}
+
 }}

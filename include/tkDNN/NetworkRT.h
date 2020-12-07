@@ -28,7 +28,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationMishRT.h"
 #include "pluginsRT/ReorgRT.h"
 #include "pluginsRT/RegionRT.h"
-//#include "pluginsRT/RouteRT.h"
+#include "pluginsRT/RouteRT.h"
 #include "pluginsRT/ShortcutRT.h"
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
@@ -91,7 +91,7 @@ public:
     }
 
     /**
-        Do inferece
+        Do inference
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
     void enqueue(int batchSize = 1);    

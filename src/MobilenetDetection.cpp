@@ -126,11 +126,13 @@ float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b){
     return iou;
 }
 
-bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes){
+bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
     imageSize = netRT->input_dim.h;
     classes = n_classes;
+    nBatches = n_batches;
+    confThreshold = conf_thresh;
 
     SSDSpec specs[N_SSDSPEC];
 
@@ -157,9 +159,9 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
     generate_ssd_priors(specs, N_SSDSPEC);
 
 #ifndef OPENCV_CUDACONTRIB
-    checkCuda(cudaMallocHost(&input, sizeof(dnnType) * netRT->input_dim.tot()));
+    checkCuda(cudaMallocHost(&input, sizeof(dnnType) * netRT->input_dim.tot() * nBatches));
 #endif
-    checkCuda(cudaMalloc(&input_d, sizeof(dnnType) * netRT->input_dim.tot()));
+    checkCuda(cudaMalloc(&input_d, sizeof(dnnType) * netRT->input_dim.tot() * nBatches));
 
     locations_h = (float *)malloc(N_COORDS * nPriors * sizeof(float));
     confidences_h = (float *)malloc(nPriors * classes * sizeof(float));
@@ -208,7 +210,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
     return 1;
 }
 
-void MobilenetDetection::preprocess(cv::Mat &frame){
+void MobilenetDetection::preprocess(cv::Mat &frame, const int bi){
 #ifdef OPENCV_CUDACONTRIB
         //move original image on GPU
         cv::cuda::GpuMat orig_img, frame_nomean;
@@ -224,7 +226,7 @@ void MobilenetDetection::preprocess(cv::Mat &frame){
 
         for(int i=0; i < netRT->input_dim.c; i++){
             int idx = i * imagePreproc.rows * imagePreproc.cols;
-            checkCuda( cudaMemcpy((void *)&input_d[idx], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
+            checkCuda( cudaMemcpy((void *)&input_d[idx + netRT->input_dim.tot()*bi], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
         }
 #else
         //resize image, remove mean, divide by std
@@ -237,17 +239,17 @@ void MobilenetDetection::preprocess(cv::Mat &frame){
         cv::split(imagePreproc, bgr);
         for (int i = 0; i < netRT->input_dim.c; i++){
             int idx = i * imagePreproc.rows * imagePreproc.cols;
-            memcpy((void *)&input[idx], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols * sizeof(dnnType));
+            memcpy((void *)&input[idx + netRT->input_dim.tot()*bi], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols * sizeof(dnnType));
         }
-        checkCuda(cudaMemcpyAsync(input_d, input, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
+        checkCuda(cudaMemcpyAsync(input_d+ netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
 #endif
 }
 
-void MobilenetDetection::postprocess(){
+void MobilenetDetection::postprocess(const int bi, const bool mAP){
     //get confidences and locations_h
     dnnType *rt_out[2];
-    rt_out[0] = (dnnType *)netRT->buffersRT[3];
-    rt_out[1] = (dnnType *)netRT->buffersRT[4];
+    rt_out[0] = (dnnType *)netRT->buffersRT[3]+ netRT->buffersDIM[3].tot()*bi;
+    rt_out[1] = (dnnType *)netRT->buffersRT[4]+ netRT->buffersDIM[4].tot()*bi;
 
     detected.clear();
 
@@ -255,8 +257,8 @@ void MobilenetDetection::postprocess(){
     checkCuda(cudaMemcpy(locations_h, rt_out[1], N_COORDS * nPriors * sizeof(float), cudaMemcpyDeviceToHost));
     convert_locatios_to_boxes_and_center();
 
-    int width =  originalSize.width;
-    int height =  originalSize.height;
+    int width =  originalSize[bi].width;
+    int height =  originalSize[bi].height;
 
     float *conf_per_class;
     for (int i = 1; i < classes; i++){
@@ -272,6 +274,10 @@ void MobilenetDetection::postprocess(){
                 b.y = locations_h[j * N_COORDS + 1];
                 b.w = locations_h[j * N_COORDS + 2];
                 b.h = locations_h[j * N_COORDS + 3];
+
+                if(mAP)
+                    for(int c=1; c<classes; c++) 
+                        b.probs.push_back(confidences_h[c * nPriors + j]);
 
                 boxes.push_back(b);
             }
@@ -298,6 +304,7 @@ void MobilenetDetection::postprocess(){
             boxes = remaining;
         }
     }
+    batchDetected.push_back(detected);
 }
 
 

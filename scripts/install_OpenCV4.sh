@@ -62,5 +62,5 @@ make -j4
 sudo make install
 sudo ldconfig
 
-cd '~/Downloads/opencv4/lib/python3.6/site-packages'
+cd ~/Downloads/opencv4/lib/python3.6/site-packages
 ln -s /usr/local/lib/python3.6/site-packages/cv2.cpython-36m-aarch64-linux-gnu.so cv2.so

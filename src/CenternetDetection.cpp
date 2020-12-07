@@ -3,10 +3,12 @@
 
 namespace tk { namespace dnn {
 
-bool CenternetDetection::init(const std::string& tensor_path, const int n_classes){
+bool CenternetDetection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     classes = n_classes;
+    nBatches = n_batches;
+    confThreshold = conf_thresh;
 
     dim = netRT->input_dim;
 
@@ -41,7 +43,7 @@ bool CenternetDetection::init(const std::string& tensor_path, const int n_classe
     trans = cv::Mat(cv::Size(3,2), CV_32F);
     trans2 = cv::Mat(cv::Size(3,2), CV_32F);
 
-    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot()));
+    checkCuda(cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot() * nBatches));
 
     dim_hm = tk::dnn::dataDim_t(1, 80, 128, 128, 1);
     dim_wh = tk::dnn::dataDim_t(1, 2, 128, 128, 1);
@@ -98,7 +100,7 @@ bool CenternetDetection::init(const std::string& tensor_path, const int n_classe
     checkCuda(cudaMemcpy(mean_d, mean, 3*sizeof(float), cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(stddev_d, stddev, 3*sizeof(float), cudaMemcpyHostToDevice));
 #else
-    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()));
+    checkCuda(cudaMallocHost(&input, sizeof(dnnType)*netRT->input_dim.tot()* nBatches));
     mean << 0.408, 0.447, 0.47;
     stddev << 0.289, 0.274, 0.278;
 #endif
@@ -120,13 +122,13 @@ bool CenternetDetection::init(const std::string& tensor_path, const int n_classe
 }
 
 
-void CenternetDetection::preprocess(cv::Mat &frame){
+void CenternetDetection::preprocess(cv::Mat &frame, const int bi){
      // -----------------------------------pre-process ------------------------------------------
     
     // auto start_t = std::chrono::steady_clock::now();
     // auto step_t = std::chrono::steady_clock::now();
     // auto end_t = std::chrono::steady_clock::now();
-    cv::Size sz = originalSize;
+    cv::Size sz = originalSize[bi];
     // std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
     cv::Size sz_old;
     float scale = 1.0;
@@ -212,7 +214,7 @@ void CenternetDetection::preprocess(cv::Mat &frame){
     // std::cout << " TIME normalize: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;
 
-    checkCuda(cudaMemcpy(input_d, d_ptrs, dim2.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+    checkCuda(cudaMemcpy(input_d+ netRT->input_dim.tot()*bi, d_ptrs, dim2.tot()*sizeof(dnnType), cudaMemcpyDeviceToDevice));
     
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME Memcpy to input_d: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
@@ -254,18 +256,18 @@ void CenternetDetection::preprocess(cv::Mat &frame){
         int idx = i*imageF.rows*imageF.cols;
         int ch = dim2.c-3 +i;
         // std::cout<<"i: "<<i<<", idx: "<<idx<<", ch: "<<ch<<std::endl;
-        memcpy((void*)&input[idx], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
+        memcpy((void*)&input[idx+ netRT->input_dim.tot()*bi], (void*)bgr[ch].data, imageF.rows*imageF.cols*sizeof(dnnType));
     }
-    checkCuda(cudaMemcpyAsync(input_d, input, dim2.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpyAsync(input_d+ netRT->input_dim.tot()*bi, input+ netRT->input_dim.tot()*bi, dim2.tot()*sizeof(dnnType), cudaMemcpyHostToDevice));
 #endif
 }
 
-void CenternetDetection::postprocess(){
+void CenternetDetection::postprocess(const int bi, const bool mAP){
     dnnType *rt_out[4];
-    rt_out[0] = (dnnType *)netRT->buffersRT[1];
-    rt_out[1] = (dnnType *)netRT->buffersRT[2];
-    rt_out[2] = (dnnType *)netRT->buffersRT[3]; 
-    rt_out[3] = (dnnType *)netRT->buffersRT[4]; 
+    rt_out[0] = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
+    rt_out[1] = (dnnType *)netRT->buffersRT[2]+ netRT->buffersDIM[2].tot()*bi;
+    rt_out[2] = (dnnType *)netRT->buffersRT[3]+ netRT->buffersDIM[3].tot()*bi; 
+    rt_out[3] = (dnnType *)netRT->buffersRT[4]+ netRT->buffersDIM[4].tot()*bi; 
 
     // auto start_t = std::chrono::steady_clock::now();
     // auto step_t = std::chrono::steady_clock::now();
@@ -370,10 +372,10 @@ void CenternetDetection::postprocess(){
                     // std::cout<<"th: "<<scores[j]<<" - cl: "<<clses[j]<<" i: "<<i<<std::endl;
                     //add coco bbox
                     //det[0:4], i, det[4]
-                    int x0   = target_coords[j*4];
-                    int y0   = target_coords[j*4+1];
-                    int x1   = target_coords[j*4+2];
-                    int y1   = target_coords[j*4+3];
+                    float x0   = target_coords[j*4];
+                    float y0   = target_coords[j*4+1];
+                    float x1   = target_coords[j*4+2];
+                    float y1   = target_coords[j*4+3];
                     int obj_class = clses[j];
                     float prob = scores[j];
                     // std::cout<<"("<<x0<<", "<<y0<<"),("<<x1<<", "<<y1<<")"<<std::endl;
@@ -389,6 +391,7 @@ void CenternetDetection::postprocess(){
             }
     }
     
+    batchDetected.push_back(detected);
     // end_t = std::chrono::steady_clock::now();
     // std::cout << " TIME detections: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;

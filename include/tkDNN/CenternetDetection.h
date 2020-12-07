@@ -73,9 +73,9 @@ public:
     CenternetDetection() {};
     ~CenternetDetection() {}; 
 
-    bool init(const std::string& tensor_path, const int n_classes=80);
-    void preprocess(cv::Mat &frame);
-    void postprocess();
+    bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1, const float conf_thresh=0.3);
+    void preprocess(cv::Mat &frame, const int bi=0);
+    void postprocess(const int bi=0,const bool mAP=false);
 };
 
 

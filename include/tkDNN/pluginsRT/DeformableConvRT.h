@@ -89,7 +89,7 @@ public:
 		for(int b=0; b<batchSize; b++) {
 			checkCuda(cudaMemcpy(offset, output_conv + b * 3 * chunk_dim, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
 			checkCuda(cudaMemcpy(mask, output_conv + b * 3 * chunk_dim + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-			// kernel sigmoide
+			// kernel sigmoid
 			activationSIGMOIDForward(mask, mask, chunk_dim);
 			// deformable convolution
 			dcnV2CudaForward(stat, handle, 

@@ -104,9 +104,9 @@ class DetectionNN3D {
             originalSize = frame.size();
             printCenteredTitle(" TENSORRT detection ", '=', 30); 
             {
-                TIMER_START
+                TKDNN_TSTART
                 preprocess(frame);
-                TIMER_STOP
+                TKDNN_TSTOP
                 if(save_times) *times<<t_ns<<";";
             }
 
@@ -114,18 +114,18 @@ class DetectionNN3D {
             tk::dnn::dataDim_t dim = netRT->input_dim;
             {
                 dim.print();
-                TIMER_START
+                TKDNN_TSTART
                 netRT->infer(dim, input_d);
-                TIMER_STOP
+                TKDNN_TSTOP
                 dim.print();
                 stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<";";
             }
 
             {
-                TIMER_START
+                TKDNN_TSTART
                 postprocess();
-                TIMER_STOP
+                TKDNN_TSTOP
                 if(save_times) *times<<t_ns<<"\n";
             }
         }              

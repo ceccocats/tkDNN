@@ -50,7 +50,7 @@ public:
     }
     void setFinal() { this->final = true; }
     dataDim_t input_dim, output_dim;
-    dnnType *dstData;  //where results will be putted
+    dnnType *dstData = nullptr;  //where results will be putted
 
     int id = 0;
     bool final;        //if the layer is the final one
@@ -108,29 +108,70 @@ public:
 
     // additional bias for DCN
     bool additional_bias;
-    dnnType *bias2_h, *bias2_d;
+    dnnType *bias2_h = nullptr, *bias2_d = nullptr;
 
     //batchnorm
     bool batchnorm;
-    dnnType *power_h;
-    dnnType *scales_h,   *scales_d;
-    dnnType *mean_h,     *mean_d;
-    dnnType *variance_h, *variance_d;
+    dnnType *power_h    = nullptr;
+    dnnType *scales_h   = nullptr,   *scales_d = nullptr;
+    dnnType *mean_h     = nullptr,     *mean_d = nullptr;
+    dnnType *variance_h = nullptr, *variance_d = nullptr;
 
     //fp16
-    __half *data16_h, *bias16_h;
-    __half *data16_d, *bias16_d;
-    __half *bias216_h, *bias216_d;
+    __half *data16_h  = nullptr, *bias16_h  = nullptr;
+    __half *data16_d  = nullptr, *bias16_d  = nullptr;
+    __half *bias216_h = nullptr, *bias216_d = nullptr;
 
-    __half *power16_h,    *power16_d;
-    __half *scales16_h,   *scales16_d;
-    __half *mean16_h,     *mean16_d;
-    __half *variance16_h, *variance16_d;
+    __half *power16_h    = nullptr,    *power16_d = nullptr;
+    __half *scales16_h   = nullptr,   *scales16_d = nullptr;
+    __half *mean16_h     = nullptr,     *mean16_d = nullptr;
+    __half *variance16_h = nullptr, *variance16_d = nullptr;
+
+    void releaseHost(bool release32 = true, bool release16 = true) {
+        if(release32) {
+            if(    data_h != nullptr) { delete []     data_h;     data_h = nullptr; }
+            if(    bias_h != nullptr) { delete []     bias_h;     bias_h = nullptr; }
+            if(   bias2_h != nullptr) { delete []    bias2_h;    bias2_h = nullptr; }
+            if(  scales_h != nullptr) { delete []   scales_h;   scales_h = nullptr; }
+            if(    mean_h != nullptr) { delete []     mean_h;     mean_h = nullptr; }
+            if(variance_h != nullptr) { delete [] variance_h; variance_h = nullptr; }
+            if(   power_h != nullptr) { delete []    power_h;    power_h = nullptr; }
+        }
+        if(net->fp16 && release16) {
+            if(    data16_h != nullptr) { delete []     data16_h;     data16_h = nullptr; }
+            if(    bias16_h != nullptr) { delete []     bias16_h;     bias16_h = nullptr; }
+            if(   bias216_h != nullptr) { delete []    bias216_h;    bias216_h = nullptr; }
+            if(  scales16_h != nullptr) { delete []   scales16_h;   scales16_h = nullptr; }
+            if(    mean16_h != nullptr) { delete []     mean16_h;     mean16_h = nullptr; }
+            if(variance16_h != nullptr) { delete [] variance16_h; variance16_h = nullptr; } 
+            if(   power16_h != nullptr) { delete []    power16_h;    power16_h = nullptr; }
+
+        }
+    }
+    void releaseDevice(bool release32 = true, bool release16 = true) {
+        if(release32) {
+            if(    data_d != nullptr) { cudaFree(    data_d);     data_d = nullptr; }
+            if(    bias_d != nullptr) { cudaFree(    bias_d);     bias_d = nullptr; }
+            if(   bias2_d != nullptr) { cudaFree(   bias2_d);    bias2_d = nullptr; }
+            if(  scales_d != nullptr) { cudaFree(  scales_d);   scales_d = nullptr; }
+            if(    mean_d != nullptr) { cudaFree(    mean_d);     mean_d = nullptr; }
+            if(variance_d != nullptr) { cudaFree(variance_d); variance_d = nullptr; }
+        }
+        if(net->fp16 && release16) {
+            if(    data16_d != nullptr) { cudaFree(    data16_d);     data16_d = nullptr; }
+            if(    bias16_d != nullptr) { cudaFree(    bias16_d);     bias16_d = nullptr; }
+            if(   bias216_d != nullptr) { cudaFree(   bias216_d);    bias216_d = nullptr; }
+            if(  scales16_d != nullptr) { cudaFree(  scales16_d);   scales16_d = nullptr; }
+            if(    mean16_d != nullptr) { cudaFree(    mean16_d);     mean16_d = nullptr; }
+            if(variance16_d != nullptr) { cudaFree(variance16_d); variance16_d = nullptr; } 
+            if(   power16_d != nullptr) { cudaFree(   power16_d);    power16_d = nullptr; }
+        }
+    }
 };
 
 
 /**
-    Input layer (it doesnt need weigths)
+    Input layer (it doesn't need weights)
 */
 class Input : public Layer {
 
@@ -166,7 +207,7 @@ public:
 
 
 /**
-    Avaible activation functions
+    Available activation functions
 */
 typedef enum {
     ACTIVATION_ELU     = 100,
@@ -175,7 +216,7 @@ typedef enum {
 } tkdnnActivationMode_t;
 
 /**
-    Activation layer (it doesnt need weigths)
+    Activation layer (it doesn't need weights)
 */
 class Activation : public Layer {
 
@@ -232,8 +273,8 @@ public:
 protected:
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
-    cudnnConvolutionFwdAlgo_t     algo;
-    cudnnConvolutionBwdDataAlgo_t bwAlgo;
+    cudnnConvolutionFwdAlgoPerf_t     algo;
+    cudnnConvolutionBwdDataAlgoPerf_t bwAlgo;
     cudnnTensorDescriptor_t biasTensorDesc;
 
     void initCUDNN(bool back = false);
@@ -277,9 +318,9 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     const bool bidirectional = true; /**> is the net bidir */
-    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    bool returnSeq = false;       /**> if false return only the result of last timestamp */
     int stateSize = 0; /**> number of hidden states */
-    int seqLen = 0;    /**> number of timesteps */
+    int seqLen = 0;    /**> number of timestamp */
     int numLayers = 1; /**> number of internal layers */
 
 protected:
@@ -326,7 +367,7 @@ public:
 
 
 /**
-    Deformable Convolutionl 2d layer
+    Deformable Convolutional 2d layer
 */  
 class DeformConv2d : public LayerWgs {
 
@@ -408,7 +449,7 @@ protected:
 
 
 /**
-    Avaible pooling functions (padding on tkDNN is not supported)
+    Available pooling functions (padding on tkDNN is not supported)
 */
 typedef enum {
     POOLING_MAX     = 0,
@@ -419,7 +460,7 @@ typedef enum {
 
 /**
     Pooling layer
-    currenty supported only 2d pooing (also on 3d input)
+    currently supported only 2d pooing (also on 3d input)
 */
 class Pooling : public Layer {
 
@@ -468,7 +509,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n); 
+    Route(Network *net, Layer **layers, int layers_n, int groups = 1, int group_id = 0); 
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
@@ -478,12 +519,14 @@ public:
     static const int MAX_LAYERS = 32;
     Layer *layers[MAX_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
+    int groups;
+    int group_id;
 };
 
 
 /**
     Reorg layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Reorg : public Layer {
 
@@ -516,7 +559,7 @@ public:
 
 /**
     Upsample layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Upsample : public Layer {
 
@@ -535,6 +578,7 @@ struct box {
     int cl;
     float x, y, w, h;
     float prob;
+    std::vector<float> probs;
 
     void print() 
     {
@@ -576,24 +620,28 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
+    enum nmsKind_t {GREEDY_NMS=0, DIOU_NMS=1};
+
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS, int new_coords=0);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num, n_masks;
+    int classes, num, n_masks, new_coords;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     float scaleXY;
+    double nms_thresh;
+    nmsKind_t nsm_kind; 
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords=0);
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 2048;
+    static const int MAX_DETECTIONS = 8192*2;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
-    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
+    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS);
 };
 
 /**
