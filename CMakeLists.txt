@@ -109,6 +109,9 @@ target_link_libraries(test_resnet101_cnet3d tkDNN)
 add_executable(test_dla34_cnet3d tests/centernet/dla34_cnet3d/dla34_cnet3d.cpp)
 target_link_libraries(test_dla34_cnet3d tkDNN)
 
+add_executable(test_dla34_cnet3d_track tests/centernet/dla34_cnet3d_track/dla34_cnet3d_track.cpp)
+target_link_libraries(test_dla34_cnet3d_track tkDNN)
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
