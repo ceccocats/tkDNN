@@ -33,6 +33,12 @@ int main(int argc, char *argv[]) {
     int n_classes = 3;
     if(argc > 4)
         n_classes = atoi(argv[4]); 
+    bool show = false;
+    if(argc > 5)
+        show = atoi(argv[5]);
+
+    if(!show)
+	SAVE_RESULT = true;
 
     tk::dnn::CenternetDetection3D cnet;
     tk::dnn::CenternetDetection3DTrack ctrack;
@@ -70,7 +76,8 @@ int main(int argc, char *argv[]) {
 
     cv::Mat frame;
     cv::Mat dnn_input;
-    cv::namedWindow("detection", cv::WINDOW_NORMAL);
+    if(show)
+	cv::namedWindow("detection", cv::WINDOW_NORMAL);
     
     std::vector<tk::dnn::box> detected_bbox;
 
@@ -86,9 +93,11 @@ int main(int argc, char *argv[]) {
         //inference
         detNN->update(dnn_input);
         frame = detNN->draw(frame);
-
-        cv::imshow("detection", frame);
-        cv::waitKey(1);
+	
+	if(show) {
+	    cv::imshow("detection", frame);
+            cv::waitKey(1);
+	}
         if(SAVE_RESULT)
             resultVideo << frame;
     }
