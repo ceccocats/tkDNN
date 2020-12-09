@@ -59,7 +59,7 @@ bool CenternetDetection3DTrack::init_preprocessing(){
 
 bool CenternetDetection3DTrack::init_pre_inf(){
     // initial steps: the first part of the network
-    const char *pre_img_conv1_bin = "/home/davide/Projects/repos/tkDNN/build/dla34_cnet3d_track/layers/base-pre_img_layer-0.bin";
+    const char *pre_img_conv1_bin = "dla34_cnet3d_track/layers/base-pre_img_layer-0.bin";
     const char *pre_hm_conv1_bin = "dla34_cnet3d_track/layers/base-pre_hm_layer-0.bin";
     const char *conv1_bin = "dla34_cnet3d_track/layers/base-base_layer-0.bin";
     const char *conv2_bin = "dla34_cnet3d_track/layers/base-level0-0.bin";
