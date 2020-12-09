@@ -62,7 +62,7 @@ class DetectionNN3D {
         float confThreshold = 0.3; /*threshold on the confidence of the boxes*/
 
         std::vector<tk::dnn::box> detected; /*bounding boxes in output*/
-        std::vector<double> stats; /*keeps track of inference times (ms)*/
+        std::vector<double> pre_stats, stats, post_stats, visual_stats; /*keeps track of inference times (ms)*/
         std::vector<std::string> classesNames;
 
         DetectionNN3D() {};
@@ -107,6 +107,7 @@ class DetectionNN3D {
                 TKDNN_TSTART
                 preprocess(frame);
                 TKDNN_TSTOP
+                pre_stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<";";
             }
 
@@ -126,6 +127,7 @@ class DetectionNN3D {
                 TKDNN_TSTART
                 postprocess();
                 TKDNN_TSTOP
+                post_stats.push_back(t_ns);
                 if(save_times) *times<<t_ns<<"\n";
             }
         }              

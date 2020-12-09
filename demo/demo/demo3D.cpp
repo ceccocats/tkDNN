@@ -105,11 +105,24 @@ int main(int argc, char *argv[]) {
     std::cout<<"detection end\n";   
     double mean = 0; 
     
+    std::cout<<COL_GREENB<<"\n\nTime preprocessing stats:\n";
+    std::cout<<"Min: "<<*std::min_element(detNN->pre_stats.begin(), detNN->pre_stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(detNN->pre_stats.begin(), detNN->pre_stats.end())<<" ms\n";    
+    for(int i=0; i<detNN->pre_stats.size(); i++) mean += detNN->pre_stats[i]; mean /= detNN->pre_stats.size();
+    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    mean=0;
     std::cout<<COL_GREENB<<"\n\nTime stats:\n";
     std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
     std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
     for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
     std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    mean=0;
+    std::cout<<COL_GREENB<<"\n\nTime postprocessing stats:\n";
+    std::cout<<"Min: "<<*std::min_element(detNN->post_stats.begin(), detNN->post_stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(detNN->post_stats.begin(), detNN->post_stats.end())<<" ms\n";    
+    for(int i=0; i<detNN->post_stats.size(); i++) mean += detNN->post_stats[i]; mean /= detNN->post_stats.size();
+    std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
+    
     
 
     return 0;
