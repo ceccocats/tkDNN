@@ -32,7 +32,7 @@ enum layerType_t {
     LAYER_YOLO
 };
 
-#define TKDNN_BN_MIN_EPSILON 1e-5
+#define TKDNN_BN_MIN_EPSILON 1e-6
 
 /** 
     Simple layer Father class
