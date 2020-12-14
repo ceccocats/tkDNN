@@ -31,6 +31,7 @@ using namespace nvinfer1;
 #include "pluginsRT/RegionRT.h"
 #include "pluginsRT/RouteRT.h"
 #include "pluginsRT/ShortcutRT.h"
+#include "pluginsRT/ScaleChannelsRT.h"
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
 #include "pluginsRT/ResizeLayerRT.h"
@@ -109,6 +110,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reorg *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, ScaleChannels *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Yolo *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeformConv2d *l);

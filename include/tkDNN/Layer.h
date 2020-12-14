@@ -28,6 +28,7 @@ enum layerType_t {
     LAYER_ROUTE,
     LAYER_REORG,
     LAYER_SHORTCUT,
+    LAYER_SCALECHANNELS,
     LAYER_UPSAMPLE,
     LAYER_REGION,
     LAYER_YOLO
@@ -78,6 +79,7 @@ public:
             case LAYER_ROUTE:               return "Route";            
             case LAYER_REORG:               return "Reorg";
             case LAYER_SHORTCUT:            return "Shortcut";
+            case LAYER_SCALECHANNELS:      return "ScaleChannels";
             case LAYER_UPSAMPLE:            return "Upsample";
             case LAYER_REGION:              return "Region";
             case LAYER_YOLO:                return "Yolo";
@@ -561,6 +563,25 @@ public:
 public:
     Layer *backLayer;
 };
+
+/**
+    ScaleChannels layer
+    channelwise-multiplication with another layer
+*/
+class ScaleChannels : public Layer {
+
+public:
+    ScaleChannels(Network *net, Layer *backLayer, int scale_wh); 
+    virtual ~ScaleChannels();
+    virtual layerType_t getLayerType() { return LAYER_SCALECHANNELS; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+public:
+    Layer *backLayer;
+    int scale_wh;
+};
+
 
 /**
     Upsample layer

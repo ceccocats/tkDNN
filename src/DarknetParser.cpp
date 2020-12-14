@@ -80,6 +80,8 @@ namespace tk { namespace dnn {
             fields.groups = std::stoi(value);
         else if(name.find("group_id") !=  std::string::npos)
             fields.group_id = std::stoi(value);
+        else if(name.find("scale_wh") !=  std::string::npos)
+            fields.scale_wh_in_scale_channels = std::stoi(value);
         else if(name.find("scale_x_y") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
         else if(name.find("beta_nms") !=  std::string::npos)
@@ -149,6 +151,18 @@ namespace tk { namespace dnn {
             if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to shortcut\n");
             //std::cout<<"shortcut to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
             netLayers.push_back(new tk::dnn::Shortcut(net, netLayers[layerIdx]));
+
+        } else if(f.type == "scale_channels") {
+            if(f.layers.size() != 1) FatalError("no layers to scale_channels\n");
+            int layerIdx = f.layers[0];
+            if(layerIdx < 0)
+                layerIdx = netLayers.size() + layerIdx; 
+            if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to scale_channels\n");
+
+            int scale_wh = f.scale_wh_in_scale_channels;
+            if(scale_wh != 0) FatalError("Currently only support scale_wh=0 in scale_channels\n")
+
+            netLayers.push_back(new tk::dnn::ScaleChannels(net, netLayers[layerIdx], scale_wh));
 
         } else if(f.type == "upsample") {
             netLayers.push_back(new tk::dnn::Upsample(net, f.stride_x));

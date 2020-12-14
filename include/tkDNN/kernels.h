@@ -28,6 +28,10 @@ void shortcutForward(dnnType *srcData, dnnType *dstData, int n1, int c1, int h1,
                      int n2, int c2, int h2, int w2, int s2,
                      cudaStream_t stream = cudaStream_t(0));
 
+void scaleChannelsForward(dnnType *in_w_h_c, int size, int channel_size, int batch_size, int scale_wh,
+                          dnnType *scales_c, dnnType *out, 
+                          cudaStream_t stream = cudaStream_t(0));
+
 void upsampleForward(dnnType *srcData, dnnType *dstData,
                      int n, int c, int h, int w, int s, int forward, float scale,
                      cudaStream_t stream = cudaStream_t(0));

@@ -242,6 +242,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Region*) l);
     if(type == LAYER_SHORTCUT)
         return convert_layer(input, (Shortcut*) l);
+    if(type == LAYER_SCALECHANNELS)
+        return convert_layer(input, (ScaleChannels*) l);
     if(type == LAYER_YOLO)
         return convert_layer(input, (Yolo*) l);
     if(type == LAYER_UPSAMPLE)
@@ -531,6 +533,18 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     }
 }
 
+ILayer* NetworkRT::convert_layer(ITensor *input, ScaleChannels *l) {
+    ITensor *back_tens = tensors[l->backLayer];
+
+    IPlugin *plugin = new ScaleChannelsRT(l->backLayer->output_dim, l->scale_wh);
+    ITensor **inputs = new ITensor*[2];
+    inputs[0] = input;
+    inputs[1] = back_tens; 
+    IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
+    checkNULL(lRT);
+    return lRT;
+}
+
 ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
@@ -697,6 +711,21 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         bdim.l = 1;
 
         ShortcutRT *r = new ShortcutRT(bdim);
+        r->c = readBUF<int>(buf);
+        r->h = readBUF<int>(buf);
+        r->w = readBUF<int>(buf);
+        return r;
+    } 
+
+    if(name.find("ScaleChannels") == 0) { //@note Have to be consistent with string in Layer.h
+        tk::dnn::dataDim_t bdim;
+        bdim.c = readBUF<int>(buf);
+        bdim.h = readBUF<int>(buf);
+        bdim.w = readBUF<int>(buf);
+        bdim.l = 1;
+
+        ScaleChannelsRT *r = new ScaleChannelsRT(bdim,
+                                                 readBUF<int>(buf)); //scale_wh
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
