@@ -26,6 +26,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.h"
 #include "pluginsRT/ActivationReLUCeilingRT.h"
 #include "pluginsRT/ActivationMishRT.h"
+#include "pluginsRT/ActivationSwishRT.h"
 #include "pluginsRT/ReorgRT.h"
 #include "pluginsRT/RegionRT.h"
 #include "pluginsRT/RouteRT.h"

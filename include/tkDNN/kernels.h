@@ -9,6 +9,7 @@ void activationReLUCeilingForward(dnnType *srcData, dnnType *dstData, int size, 
 void activationLOGISTICForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationSIGMOIDForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationMishForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream= cudaStream_t(0));
+void activationSwishForward(dnnType* srcData, dnnType* dstData, int size, cudaStream_t stream= cudaStream_t(0));
 
 void fill(dnnType *data, int size, dnnType val, cudaStream_t stream = cudaStream_t(0));
 
