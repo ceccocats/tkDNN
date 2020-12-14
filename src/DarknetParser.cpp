@@ -80,6 +80,8 @@ namespace tk { namespace dnn {
             fields.groups = std::stoi(value);
         else if(name.find("group_id") !=  std::string::npos)
             fields.group_id = std::stoi(value);
+        else if(name.find("scale_wh") !=  std::string::npos)
+            fields.scale_wh_in_scale_channels = std::stoi(value);
         else if(name.find("scale_x_y") !=  std::string::npos)
             fields.scale_xy = std::stof(value);
         else if(name.find("beta_nms") !=  std::string::npos)
@@ -134,7 +136,11 @@ namespace tk { namespace dnn {
                     f.padding_x, f.padding_y, tk::dnn::POOLING_MAX));
 
         } else if(f.type == "avgpool") {
-            netLayers.push_back(new tk::dnn::Pooling(net, f.size_x, f.size_y, f.stride_x, f.stride_y, 
+            auto output_dim = net->getOutputDim();
+            int stride = 1;
+            assert(f.padding_x == 0 && f.padding_y == 0);
+
+            netLayers.push_back(new tk::dnn::Pooling(net, output_dim.h, output_dim.w, stride, stride,
                 f.padding_x, f.padding_y, tk::dnn::POOLING_AVERAGE));
 
         } else if(f.type == "shortcut") {
@@ -145,6 +151,18 @@ namespace tk { namespace dnn {
             if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to shortcut\n");
             //std::cout<<"shortcut to "<<layerIdx<<" "<<netLayers[layerIdx]->getLayerName()<<"\n";
             netLayers.push_back(new tk::dnn::Shortcut(net, netLayers[layerIdx]));
+
+        } else if(f.type == "scale_channels") {
+            if(f.layers.size() != 1) FatalError("no layers to scale_channels\n");
+            int layerIdx = f.layers[0];
+            if(layerIdx < 0)
+                layerIdx = netLayers.size() + layerIdx; 
+            if(layerIdx < 0 || layerIdx >= netLayers.size()) FatalError("impossible to scale_channels\n");
+
+            int scale_wh = f.scale_wh_in_scale_channels;
+            if(scale_wh != 0) FatalError("Currently only support scale_wh=0 in scale_channels\n")
+
+            netLayers.push_back(new tk::dnn::ScaleChannels(net, netLayers[layerIdx], scale_wh));
 
         } else if(f.type == "upsample") {
             netLayers.push_back(new tk::dnn::Upsample(net, f.stride_x));
@@ -185,8 +203,10 @@ namespace tk { namespace dnn {
         if(netLayers.size() > 0 && f.activation != "linear") {
             tkdnnActivationMode_t act;
             if(f.activation == "relu") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_RELU);
+            else if(f.activation == "logistic") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_SIGMOID);
             else if(f.activation == "leaky") act = tk::dnn::ACTIVATION_LEAKY;
             else if(f.activation == "mish") act = tk::dnn::ACTIVATION_MISH;
+            else if(f.activation == "swish") act = tk::dnn::ACTIVATION_SWISH;
             else { FatalError("activation not supported: " + f.activation); }
             netLayers[netLayers.size()-1] = new tk::dnn::Activation(net, act);
         };

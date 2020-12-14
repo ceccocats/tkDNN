@@ -226,7 +226,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_SWISH)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -242,6 +242,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Region*) l);
     if(type == LAYER_SHORTCUT)
         return convert_layer(input, (Shortcut*) l);
+    if(type == LAYER_SCALECHANNELS)
+        return convert_layer(input, (ScaleChannels*) l);
     if(type == LAYER_YOLO)
         return convert_layer(input, (Yolo*) l);
     if(type == LAYER_UPSAMPLE)
@@ -421,6 +423,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         checkNULL(lRT);
         return lRT;
     }
+    else if(l->act_mode == ACTIVATION_SWISH) {
+        IPlugin *plugin = new ActivationSwishRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
     else {
         FatalError("this Activation mode is not yet implemented");
         return NULL;
@@ -523,6 +531,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
         checkNULL(lRT);
         return lRT;
     }
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input, ScaleChannels *l) {
+    ITensor *back_tens = tensors[l->backLayer];
+
+    IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kPROD);
+    checkNULL(lRT);
+    return lRT;
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
@@ -650,6 +666,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     }
     if(name.find("ActivationMish") == 0) {
         ActivationMishRT *a = new ActivationMishRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
+    if(name.find("ActivationSwish") == 0) {
+        ActivationSwishRT *a = new ActivationSwishRT();
         a->size = readBUF<int>(buf);
         return a;
     }

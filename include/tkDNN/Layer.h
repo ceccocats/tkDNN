@@ -19,6 +19,7 @@ enum layerType_t {
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
     LAYER_ACTIVATION_MISH,
+    LAYER_ACTIVATION_SWISH,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
     LAYER_MULADD,
@@ -27,6 +28,7 @@ enum layerType_t {
     LAYER_ROUTE,
     LAYER_REORG,
     LAYER_SHORTCUT,
+    LAYER_SCALECHANNELS,
     LAYER_UPSAMPLE,
     LAYER_REGION,
     LAYER_YOLO
@@ -68,6 +70,7 @@ public:
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
             case LAYER_ACTIVATION_MISH:     return "ActivationMish";
+            case LAYER_ACTIVATION_SWISH:     return "ActivationSwish";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
             case LAYER_MULADD:              return "MulAdd";
@@ -76,6 +79,7 @@ public:
             case LAYER_ROUTE:               return "Route";            
             case LAYER_REORG:               return "Reorg";
             case LAYER_SHORTCUT:            return "Shortcut";
+            case LAYER_SCALECHANNELS:      return "ScaleChannels";
             case LAYER_UPSAMPLE:            return "Upsample";
             case LAYER_REGION:              return "Region";
             case LAYER_YOLO:                return "Yolo";
@@ -212,7 +216,8 @@ public:
 typedef enum {
     ACTIVATION_ELU     = 100,
     ACTIVATION_LEAKY   = 101,
-    ACTIVATION_MISH   = 102
+    ACTIVATION_MISH    = 102,
+    ACTIVATION_SWISH   = 103
 } tkdnnActivationMode_t;
 
 /**
@@ -233,6 +238,8 @@ public:
             return LAYER_ACTIVATION_LEAKY;
         else if (act_mode == ACTIVATION_MISH)
             return LAYER_ACTIVATION_MISH;
+        else if (act_mode == ACTIVATION_SWISH)
+            return LAYER_ACTIVATION_SWISH;
         else
             return LAYER_ACTIVATION;
          };
@@ -556,6 +563,25 @@ public:
 public:
     Layer *backLayer;
 };
+
+/**
+    ScaleChannels layer
+    channelwise-multiplication with another layer
+*/
+class ScaleChannels : public Layer {
+
+public:
+    ScaleChannels(Network *net, Layer *backLayer, int scale_wh); 
+    virtual ~ScaleChannels();
+    virtual layerType_t getLayerType() { return LAYER_SCALECHANNELS; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+public:
+    Layer *backLayer;
+    int scale_wh;
+};
+
 
 /**
     Upsample layer

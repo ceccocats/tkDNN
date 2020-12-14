@@ -26,6 +26,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.h"
 #include "pluginsRT/ActivationReLUCeilingRT.h"
 #include "pluginsRT/ActivationMishRT.h"
+#include "pluginsRT/ActivationSwishRT.h"
 #include "pluginsRT/ReorgRT.h"
 #include "pluginsRT/RegionRT.h"
 #include "pluginsRT/RouteRT.h"
@@ -108,6 +109,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Reorg *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, ScaleChannels *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Yolo *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeformConv2d *l);
