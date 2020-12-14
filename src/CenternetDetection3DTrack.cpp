@@ -267,8 +267,8 @@ bool CenternetDetection3DTrack::init_visualization(const int n_classes){
 
     face_id.push_back({0,1,5,4});
     face_id.push_back({1,2,6, 5});
-    face_id.push_back({2,3,7,6});
     face_id.push_back({3,0,4,7});
+    face_id.push_back({2,3,7,6});
     // ([[0,1,5,4], [1,2,6, 5], [2,3,7,6], [3,0,4,7]]);
 }
 
@@ -809,20 +809,20 @@ cv::Mat CenternetDetection3DTrack::draw(cv::Mat &frame) {
                 aus.release();
                 for(int ind_f = 3; ind_f>=0; ind_f--) {
                     for(int j=0; j<4; j++) {
-                        cv::line(frame, cv::Point(res_corners.at(face_id.at(ind_f).at(j) * 2), 
-                                                res_corners.at(face_id.at(ind_f).at(j) * 2 + 1)),
-                                        cv::Point(res_corners.at(face_id.at(ind_f).at((j+1)%4) * 2), 
-                                                res_corners.at(face_id.at(ind_f).at((j+1)%4) * 2 + 1)), 
+                        cv::line(frame, cv::Point((int)res_corners.at(face_id.at(ind_f).at(j) * 2), 
+                                                (int)res_corners.at(face_id.at(ind_f).at(j) * 2 + 1)),
+                                        cv::Point((int)res_corners.at(face_id.at(ind_f).at((j+1)%4) * 2), 
+                                                (int)res_corners.at(face_id.at(ind_f).at((j+1)%4) * 2 + 1)), 
                                         tr_colors[tr_res[i].color], 2);
-                        if(ind_f == 0) {
-                            cv::line(frame, cv::Point(res_corners.at(face_id.at(ind_f).at(0) * 2), 
-                                                    res_corners.at(face_id.at(ind_f).at(0) * 2 + 1)),
-                                            cv::Point(res_corners.at(face_id.at(ind_f).at(2) * 2), 
-                                                    res_corners.at(face_id.at(ind_f).at(2) * 2 + 1)), tr_colors[tr_res[i].color], 2);
-                            cv::line(frame, cv::Point(res_corners.at(face_id.at(ind_f).at(1) * 2), 
-                                                    res_corners.at(face_id.at(ind_f).at(1) * 2 + 1)),
-                                            cv::Point(res_corners.at(face_id.at(ind_f).at(3) * 2), 
-                                                    res_corners.at(face_id.at(ind_f).at(3) * 2 + 1)), tr_colors[tr_res[i].color], 2);
+                        if(ind_f == 0 && j==3) {
+                            cv::line(frame, cv::Point((int)res_corners.at(face_id.at(ind_f).at(0) * 2), 
+                                                    (int)res_corners.at(face_id.at(ind_f).at(0) * 2 + 1)),
+                                            cv::Point((int)res_corners.at(face_id.at(ind_f).at(2) * 2), 
+                                                    (int)res_corners.at(face_id.at(ind_f).at(2) * 2 + 1)), tr_colors[tr_res[i].color], 2);
+                            cv::line(frame, cv::Point((int)res_corners.at(face_id.at(ind_f).at(1) * 2), 
+                                                    (int)res_corners.at(face_id.at(ind_f).at(1) * 2 + 1)),
+                                            cv::Point((int)res_corners.at(face_id.at(ind_f).at(3) * 2), 
+                                                    (int)res_corners.at(face_id.at(ind_f).at(3) * 2 + 1)), tr_colors[tr_res[i].color], 2);
                         }
                     }
                 }
@@ -838,8 +838,9 @@ cv::Mat CenternetDetection3DTrack::draw(cv::Mat &frame) {
                         bb3=res_corners[2*k+1];
                             
                 }
-                cv::rectangle(frame,  cv::Point(bb0, bb2), cv::Point(bb1, bb3), 
-                                                tr_colors[tr_res[i].color], thickness);                      
+                // if(not no_bbox):
+                // cv::rectangle(frame,  cv::Point(bb0, bb2), cv::Point(bb1, bb3), 
+                //                                 tr_colors[tr_res[i].color], thickness);                      
                 cv::rectangle(frame,  cv::Point(bb0, bb2 - text_size.height - thickness), 
                                     cv::Point(bb0 + text_size.width, bb2), tr_colors[tr_res[i].color], -1);                      
                                     
