@@ -31,7 +31,6 @@ using namespace nvinfer1;
 #include "pluginsRT/RegionRT.h"
 #include "pluginsRT/RouteRT.h"
 #include "pluginsRT/ShortcutRT.h"
-#include "pluginsRT/ScaleChannelsRT.h"
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
 #include "pluginsRT/ResizeLayerRT.h"
