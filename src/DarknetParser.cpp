@@ -134,7 +134,11 @@ namespace tk { namespace dnn {
                     f.padding_x, f.padding_y, tk::dnn::POOLING_MAX));
 
         } else if(f.type == "avgpool") {
-            netLayers.push_back(new tk::dnn::Pooling(net, f.size_x, f.size_y, f.stride_x, f.stride_y, 
+            auto output_dim = net->getOutputDim();
+            int stride = 1;
+            assert(f.padding_x == 0 && f.padding_y == 0);
+
+            netLayers.push_back(new tk::dnn::Pooling(net, output_dim.h, output_dim.w, stride, stride,
                 f.padding_x, f.padding_y, tk::dnn::POOLING_AVERAGE));
 
         } else if(f.type == "shortcut") {
