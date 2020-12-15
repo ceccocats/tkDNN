@@ -26,7 +26,7 @@ namespace tk { namespace dnn {
 
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
-NetworkRT::NetworkRT(Network *net, const char *name) {
+NetworkRT::NetworkRT(Network *net, const char *name, const char *input_name, const char *output_name) {
 
     float rt_ver = float(NV_TENSORRT_MAJOR) + 
                    float(NV_TENSORRT_MINOR)/10 + 
@@ -97,13 +97,13 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
             calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
                                             calib_table_name, 
-                                            "data"));
+                                            input_name));
             configRT->setInt8Calibrator(calibrator.get());
         }
 #endif
         
         // add input layer
-        ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
+        ITensor *input = networkRT->addInput(input_name, DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
 
@@ -130,7 +130,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             FatalError("conversion failed");
 
         //build tensorRT
-        input->setName("out");
+        input->setName(output_name);
         networkRT->markOutput(*input);
 
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
@@ -161,8 +161,8 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
-	buf_input_idx = engineRT->getBindingIndex("data"); 
-    buf_output_idx = engineRT->getBindingIndex("out");
+	buf_input_idx = engineRT->getBindingIndex(input_name); 
+    buf_output_idx = engineRT->getBindingIndex(output_name);
     std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
