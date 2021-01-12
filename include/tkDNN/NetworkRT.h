@@ -73,7 +73,7 @@ public:
 
     PluginFactory *pluginFactory;
 
-    NetworkRT(Network *net, const char *name, const char *input_name="data", const char *output_name="out");
+    NetworkRT(Network *net, const char *name, dimFormat_t dim_format=CHW, const char *input_name="data", const char *output_name="out");
     virtual ~NetworkRT();
 
     int getMaxBatchSize() {

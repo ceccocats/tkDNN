@@ -26,7 +26,7 @@ namespace tk { namespace dnn {
 
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
-NetworkRT::NetworkRT(Network *net, const char *name, const char *input_name, const char *output_name) {
+NetworkRT::NetworkRT(Network *net, const char *name, dimFormat_t dim_format, const char *input_name, const char *output_name) {
 
     float rt_ver = float(NV_TENSORRT_MAJOR) + 
                    float(NV_TENSORRT_MINOR)/10 + 
@@ -167,17 +167,17 @@ NetworkRT::NetworkRT(Network *net, const char *name, const char *input_name, con
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
-    input_dim = dataDim_t(iDim);
+    input_dim = dataDim_t(iDim, dim_format);
     input_dim.print();
 
     Dims oDim = engineRT->getBindingDimensions(buf_output_idx);
-    output_dim = dataDim_t(oDim);
+    output_dim = dataDim_t(oDim, dim_format);
     output_dim.print();
 	
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
-        buffersDIM[i] = dataDim_t(dim);
+        buffersDIM[i] = dataDim_t(dim, dim_format);
         std::cout<<"RtBuffer "<<i<<"   dim: "; buffersDIM[i].print();
         checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*buffersDIM[i].tot()*sizeof(dnnType)));
     }
