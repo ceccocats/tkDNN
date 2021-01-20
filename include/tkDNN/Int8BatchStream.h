@@ -11,8 +11,13 @@
 #include <fstream>
 #include <iomanip>
 #include <signal.h>
-#include <stdlib.h>    
+#include <stdlib.h>
+#ifdef __linux__    
 #include <unistd.h>
+#elif _WIN32
+#include <Windows.h>
+#endif
+
 #include <mutex>
 
 #include "NvInfer.h"

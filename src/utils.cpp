@@ -170,6 +170,7 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
    using std::ios_base;
    using std::ifstream;
    using std::string;
+   SYSTEM_INFO sysInfo;
 
    vm_usage_kb     = 0.0;
    resident_set_kb = 0.0;
@@ -191,8 +192,12 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
                >> O >> itrealvalue >> starttime >> vsize >> rss;
 
    stat_stream.close();
-
+#ifdef __linux__
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+#elif _WIN32
+ long page_size_kb = sysInfo.dwPageSize/1024;
+#endif
+
    vm_usage_kb     = vsize / 1024.0;  
    resident_set_kb = rss * page_size_kb;
 }

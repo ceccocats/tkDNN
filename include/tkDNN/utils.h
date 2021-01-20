@@ -12,7 +12,12 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+#include <Windows.h>
+#endif 
+
 #include <ios>
 
 
@@ -39,6 +44,7 @@
 #define TKDNN_VERBOSE 0
 
 // Simple Timer 
+#ifdef __linux__
 #define TKDNN_TSTART timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
@@ -48,6 +54,8 @@
     if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
 #define TKDNN_TSTOP TKDNN_TSTOP_C(COL_CYANB, TKDNN_VERBOSE)
+#elif _WIN32
+#endif 
 
 /********************************************************
  * Prints the error message, and exits
