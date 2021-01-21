@@ -15,10 +15,12 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif _WIN32
-#include <Windows.h>
-#endif 
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 #include <ios>
+#include <chrono>
 
 
 #define dnnType float
@@ -55,7 +57,13 @@
 
 #define TKDNN_TSTOP TKDNN_TSTOP_C(COL_CYANB, TKDNN_VERBOSE)
 #elif _WIN32
-#endif 
+#define TKDNN_TSTART auto start = std::chrono::high_resolution_clock::now();
+#define TKDNN_TSTOP auto stop = std::chrono::high_resolution_clock::now(); \
+std::chrono::duration<double> duration = stop -start;                      \
+auto time_ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);\
+double t_ns = time_ms.count();
+#endif
+
 
 /********************************************************
  * Prints the error message, and exits

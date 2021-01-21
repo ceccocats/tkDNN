@@ -2,7 +2,12 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>     /* srand, rand */
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+#include <Windows.h>
+#endif
+
 #include <mutex>
 #include "utils.h"
 
