@@ -9,6 +9,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
+
 namespace tk { namespace dnn {
 
 Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy, double nms_thresh, nmsKind_t nsm_kind, int new_coords) : 
@@ -209,10 +210,10 @@ float yolo_box_iou(Yolo::box a, Yolo::box b)
 }
 
 void box_c(const Yolo::box a, const Yolo::box b, float& top, float& bot, float& left, float& right) {
-    top = std::min(a.y - a.h / 2, b.y - b.h / 2);
-    bot = std::max(a.y + a.h / 2, b.y + b.h / 2);
-    left = std::min(a.x - a.w / 2, b.x - b.w / 2);
-    right = std::max(a.x + a.w / 2, b.x + b.w / 2);
+    top = (std::min)(a.y - a.h / 2, b.y - b.h / 2);
+    bot = (std::max)(a.y + a.h / 2, b.y + b.h / 2);
+    left = (std::min)(a.x - a.w / 2, b.x - b.w / 2);
+    right = (std::max)(a.x + a.w / 2, b.x + b.w / 2);
 }
 
 // https://github.com/Zzh-tju/DIoU-darknet
