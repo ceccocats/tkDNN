@@ -24,6 +24,7 @@ template<typename T> T readBUF(const char*& buffer)
 
 using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.h"
+#include "pluginsRT/ActivationLogisticRT.h"
 #include "pluginsRT/ActivationReLUCeilingRT.h"
 #include "pluginsRT/ActivationMishRT.h"
 #include "pluginsRT/ReorgRT.h"

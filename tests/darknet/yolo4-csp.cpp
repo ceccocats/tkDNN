@@ -5,19 +5,19 @@
 #include "DarknetParser.h"
 
 int main() {
-    std::string bin_path  = "yolo4x";
+    std::string bin_path  = "yolo4-csp";
     std::vector<std::string> input_bins = { 
         bin_path + "/layers/input.bin"
     };
     std::vector<std::string> output_bins = {
-        bin_path + "/debug/layer168_out.bin",
-        bin_path + "/debug/layer185_out.bin",
-        bin_path + "/debug/layer202_out.bin"
+        bin_path + "/debug/layer144_out.bin",
+        bin_path + "/debug/layer159_out.bin",
+        bin_path + "/debug/layer174_out.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4x.cfg";
+    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4-csp.cfg";
     std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/coco.names";
-    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/5MFjtNtgbDGdJEo/download");
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/AfzHE4BfTeEm2gH/download");
 
 
 

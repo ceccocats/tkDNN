@@ -72,8 +72,8 @@ Yolo::box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, 
         b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
     }
     else{
-        b.x = (i + x[index + 0 * stride] * 2 - 0.5) / lw;
-        b.y = (j + x[index + 1 * stride] * 2 - 0.5) / lh;
+        b.x = (i + x[index + 0 * stride] ) / lw;
+        b.y = (j + x[index + 1 * stride] ) / lh;
         b.w = x[index + 2 * stride] * x[index + 2 * stride] * 4 * biases[2 * n] / w;
         b.h = x[index + 3 * stride] * x[index + 3 * stride] * 4 * biases[2 * n + 1] / h;
     }
@@ -87,15 +87,18 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
-            if (new_coords == 1)
-                activationLOGISTICForward(srcData + index, dstData + index, 4*dim.w*dim.h);
-            else
+            std::cout<<"new_coords"<<new_coords<<std::endl;
+            if (new_coords == 1){
+                if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
+            }
+            else{
                 activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
 
-            if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
-            
-            index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
-            activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
+                if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
+                
+                index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
+                activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
+            }
         }
     }
 
