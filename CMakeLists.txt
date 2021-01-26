@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project (tkDNN CUDA)
+project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 if(UNIX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-deprecated-declarations -Wno-unused-variable")
@@ -34,7 +34,7 @@ include_directories(${CUDNN_INCLUDE_DIR})
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-add_library(kernels SHARED ${tkdnn_CUSRC})
+cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
 
 
