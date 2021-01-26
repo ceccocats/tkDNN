@@ -1,7 +1,7 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>     /* srand, rand */
-#include <unistd.h>
+//#include <unistd.h>
 #include <mutex>
 
 #include "CenternetDetection.h"
