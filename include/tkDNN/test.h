@@ -40,7 +40,7 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
         TKDNN_TSTOP
         dim1.print();   
     }
-    for(int i=0; i<outputs.size(); i++) cudnn_out[i] = outputs[i]->dstData;
+    for(int i=0; i<outputs.size(); i++) cudnn_out.push_back(outputs[i]->dstData);
 
     if(netRT != nullptr) {
         tk::dnn::dataDim_t dim2 = net->input_dim;
@@ -51,7 +51,7 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
             TKDNN_TSTOP
             dim2.print();
         }
-        for(int i=0; i<outputs.size(); i++) rt_out[i] = (dnnType*)netRT->buffersRT[i+1];
+        for(int i=0; i<outputs.size(); i++) rt_out.push_back((dnnType*)netRT->buffersRT[i+1]);
     }
 
     int ret_cudnn = 0, ret_tensorrt = 0, ret_cudnn_tensorrt = 0; 
