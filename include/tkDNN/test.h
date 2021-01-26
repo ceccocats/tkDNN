@@ -29,7 +29,8 @@ int testInference(std::vector<std::string> input_bins, std::vector<std::string> 
     readBinaryFile(input_bins[0], net->input_dim.tot(), &input_h, &data);
 
     // outputs
-    dnnType *cudnn_out[outputs.size()], *rt_out[outputs.size()]; 
+    //dnnType *cudnn_out[outputs.size()], *rt_out[outputs.size()];
+    std::vector<dnnType *> cudnn_out,rt_out;
 
     tk::dnn::dataDim_t dim1 =  net->input_dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30); {

@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-project (tkDNN)
+project (tkDNN CUDA)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 if(UNIX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-deprecated-declarations -Wno-unused-variable")
 endif()
 if(WIN32)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "/O2 /FS ")
+set(CMAKE_CXX_FLAGS "/O2 ")
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
 
@@ -33,7 +34,7 @@ include_directories(${CUDNN_INCLUDE_DIR})
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
+add_library(kernels SHARED ${tkdnn_CUSRC})
 target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
 
 
@@ -47,7 +48,7 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
 
 # gives problems in cross-compiling, probably malformed cmake config
-#find_package(yaml-cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Build Libraries
