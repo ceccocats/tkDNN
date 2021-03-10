@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sig_handler);
 
 
-    std::string net = "yolo3_berkeley.rt";
+    std::string net = "yolo4tiny_fp32.rt";
     if(argc > 1)
         net = argv[1]; 
     std::string input = "../demo/yolo_test.mp4";
