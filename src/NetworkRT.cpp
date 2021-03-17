@@ -137,9 +137,11 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
 #if NV_TENSORRT_MAJOR >= 6                
-        engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
+        //engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
+        engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildEngineWithConfig(*networkRT,*configRT),InferDeleter());
 #else 
-        engineRT = builderRT->buildCudaEngine(*networkRT);
+        //engineRT = builderRT->buildCudaEngine(*networkRT);
+        engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
 #endif
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")
@@ -561,7 +563,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
     checkNULL(lRT);
     lRT->setName( ("Deformable" + std::to_string(l->id)).c_str() );
-    delete(inputs);
+    delete[](inputs);
     // batchnorm
     void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {
@@ -629,7 +631,8 @@ bool NetworkRT::deserialize(const char *filename) {
 
     pluginFactory = new PluginFactory();
     runtimeRT = createInferRuntime(loggerRT);
-    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
+    //engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
+    engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(runtimeRT->deserializeCudaEngine(gieModelStream,size,(IPluginFactory*)pluginFactory),InferDeleter());
     //if (gieModelStream) delete [] gieModelStream;
 
     return true;
