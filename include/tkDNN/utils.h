@@ -110,6 +110,17 @@ double t_ns = time_ms.count();
       FatalError(_error.str());                                        \
     }                                                                  \
 }
+struct InferDeleter
+{
+    template <typename T>
+    void operator()(T* obj) const
+    {
+        if (obj)
+        {
+            obj->destroy();
+        }
+    }
+};
 
 typedef enum {
   ERROR_CUDNN = 2,
