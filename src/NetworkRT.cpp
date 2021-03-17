@@ -33,7 +33,8 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
                    float(NV_TENSORRT_PATCH)/100;
     std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
   
-    builderRT = createInferBuilder(loggerRT);
+   builderRT = std::unique_ptr<nvinfer1::IBuilder,InferDeleter>(createInferBuilder(loggerRT));
+    //builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
 #if NV_TENSORRT_MAJOR >= 5
@@ -630,7 +631,8 @@ bool NetworkRT::deserialize(const char *filename) {
     }
 
     pluginFactory = new PluginFactory();
-    runtimeRT = createInferRuntime(loggerRT);
+    //runtimeRT = createInferRuntime(loggerRT);
+    runtimeRT = std::unique_ptr<nvinfer1::IRuntime,InferDeleter>(createInferRuntime(loggerRT));
     //engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
     engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(runtimeRT->deserializeCudaEngine(gieModelStream,size,(IPluginFactory*)pluginFactory),InferDeleter());
     //if (gieModelStream) delete [] gieModelStream;
