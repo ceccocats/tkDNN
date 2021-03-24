@@ -5,6 +5,8 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif _WIN32
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <Windows.h>
 #endif 
 
