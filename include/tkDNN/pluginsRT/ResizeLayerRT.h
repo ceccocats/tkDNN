@@ -52,7 +52,7 @@ public:
 	}
 
 	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer);
+		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
 
 		tk::dnn::writeBUF(buf, o_c);
 		tk::dnn::writeBUF(buf, o_h);
@@ -61,6 +61,7 @@ public:
 		tk::dnn::writeBUF(buf, i_c);
 		tk::dnn::writeBUF(buf, i_h);
 		tk::dnn::writeBUF(buf, i_w);
+		assert(buf == a + getSerializationSize());
 	}
 
 	int i_c, i_h, i_w, o_c, o_h, o_w;

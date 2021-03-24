@@ -15,3 +15,4 @@ build/
 cmake-build-release/
 demo/COCO_val2017
 demo/BDD100K_val
+/.vs

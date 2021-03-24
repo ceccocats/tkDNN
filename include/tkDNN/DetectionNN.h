@@ -155,7 +155,6 @@ class DetectionNN {
             int x0, w, x1, y0, h, y1;
             int objClass;
             std::string det_class;
-
             int baseline = 0;
             float font_scale = 0.5;
             int thickness = 2;   

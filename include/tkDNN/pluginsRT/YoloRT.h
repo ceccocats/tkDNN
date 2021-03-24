@@ -89,21 +89,25 @@ public:
 	}
 
 	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer);
-		tk::dnn::writeBUF(buf, classes);
-		tk::dnn::writeBUF(buf, num);
-		tk::dnn::writeBUF(buf, n_masks);
-		tk::dnn::writeBUF(buf, scaleXY);
-		tk::dnn::writeBUF(buf, nms_thresh);
-		tk::dnn::writeBUF(buf, nms_kind);
-		tk::dnn::writeBUF(buf, new_coords);
-		tk::dnn::writeBUF(buf, c);
-		tk::dnn::writeBUF(buf, h);
-		tk::dnn::writeBUF(buf, w);
-        for(int i=0; i<n_masks; i++)
-    		tk::dnn::writeBUF(buf, mask[i]);
-        for(int i=0; i<n_masks*2*num; i++)
-    		tk::dnn::writeBUF(buf, bias[i]);
+		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
+		tk::dnn::writeBUF(buf, classes); std::cout << "Classes :" << classes << std::endl;
+		tk::dnn::writeBUF(buf, num); std::cout << "Num : " << num << std::endl;
+		tk::dnn::writeBUF(buf, n_masks); std::cout << "N_Masks" << n_masks << std::endl;
+		tk::dnn::writeBUF(buf, scaleXY); std::cout << "ScaleXY :" << scaleXY << std::endl;
+		tk::dnn::writeBUF(buf, nms_thresh); std::cout << "nms_thresh :" << nms_thresh << std::endl;
+		tk::dnn::writeBUF(buf, nms_kind); std::cout << "nms_kind : " << nms_kind << std::endl;
+		tk::dnn::writeBUF(buf, new_coords); std::cout << "new_coords : " << new_coords << std::endl;
+		tk::dnn::writeBUF(buf, c); std::cout << "C : " << c << std::endl;
+		tk::dnn::writeBUF(buf, h); std::cout << "H : " << h << std::endl;
+		tk::dnn::writeBUF(buf, w); std::cout << "C : " << c << std::endl;
+		for (int i = 0; i < n_masks; i++)
+		{
+			tk::dnn::writeBUF(buf, mask[i]); std::cout << "mask[i] : " << mask[i] << std::endl;
+		}
+		for (int i = 0; i < n_masks * 2 * num; i++)
+		{
+			tk::dnn::writeBUF(buf, bias[i]); std::cout << "bias[i] : " << bias[i] << std::endl;
+		}
 
 		// save classes names
 		for(int i=0; i<classes; i++) {
@@ -113,6 +117,8 @@ public:
 				tk::dnn::writeBUF(buf, tmp[j]);
 			}
 		}
+		std::cout << getSerializationSize() << std::endl;
+		assert(buf == a + getSerializationSize());
 	}
 
 	int c, h, w;
