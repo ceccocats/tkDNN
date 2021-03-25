@@ -60,7 +60,7 @@
 #define TKDNN_TSTART auto start = std::chrono::high_resolution_clock::now();
 #define TKDNN_TSTOP auto stop = std::chrono::high_resolution_clock::now(); \
 std::chrono::duration<double> duration = stop -start;                      \
-auto time_ms = std::chrono::duration_cast<std::chrono::microseconds>(duration);\
+auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);\
 double t_ns = time_ms.count();
 #endif
 

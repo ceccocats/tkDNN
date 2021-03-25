@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declara
 endif()
 if(WIN32)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "/O2 /FS ")
+set(CMAKE_CXX_FLAGS "/O1 /FS")
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
