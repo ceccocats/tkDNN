@@ -81,7 +81,7 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
   - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows)
-    - [Dependencies](#dependencies)
+    - [Dependencies-Windows](#dependencies-windows)
     - [Compiling tkDNN on Windows](#tkdnn-windows-compile)
     - [Run the demo on Windows](#run-the-demo-on-windows)
     - [FP16 interference windows](#fp16-windows)
@@ -364,7 +364,7 @@ This demo also creates a json file named ```net_name_COCO_res.json``` containing
 
 ##tkDNN on Windows 10 (experimental)
 
-### Dependencies
+### Dependencies-Windows 
 This branch should work on every NVIDIA GPU supported in windows with the following dependencies:
 
 * WINDOWS 10 1803 or HIGHER 
