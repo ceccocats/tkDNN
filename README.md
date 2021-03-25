@@ -80,6 +80,13 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
   - [mAP demo](#map-demo)
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
+  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows)
+    - [Dependencies](#dependencies)
+    - [Compiling tkDNN on Windows](#tkdnn-windows-compile)
+    - [Run the demo on Windows](#run-the-demo-on-windows)
+    - [FP16 interference windows](#fp16-windows)
+    - [INT8 interference windows](#int8-windows)
+  
 
 
 
@@ -354,6 +361,84 @@ This demo also creates a json file named ```net_name_COCO_res.json``` containing
 | yolo4_berkeley             | Yolov4 <sup>8</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)                          | 10        | 540x320       | [weights](https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download)     |
 | yolo4tiny             | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
 | yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 672x672       | [weights](https://cloud.hipert.unimore.it/s/BLPpiAigZJLorQD/download)     |
+
+##tkDNN on Windows 10 (experimental)
+
+### Dependencies
+This branch should work on every NVIDIA GPU supported in windows with the following dependencies:
+
+* WINDOWS 10 1803 or HIGHER 
+* CUDA 10.0 (Recommended CUDA 11.0 +)
+* CUDNN 7.6 (Recommended CUDNN 8.0.0 +)
+* TENSORRT 6.0.1 (Recommended TENSORRT 7.1 +)
+* OPENCV 3.4 (Recommended OPENCV 4.2.0 +)
+* MSVC 16.7 (Recommended MSVC 16.8/16.9)
+* YAML-CPP 0.5.2 
+* EIGEN3
+* 7ZIP (ADD TO PATH)
+* NINJA 1.10
+
+All the above mentioned dependencies except 7ZIP can be installed using Microsoft's [VCPKG](https://github.com/microsoft/vcpkg.git) .
+After bootstrapping VCPKG the dependencies can be built and installed using the following command :
+
+```vcpkg.exe install opencv4[tbb,jpeg,tiff,opengl,openmp,png,ffmpeg]:x64-windows yaml-cpp:x64-windows eigen3:x64-windows --x-install-root=C:\opt --x-buildtrees-root=C:\temp_vcpkg_build```
+
+After VCPKG finishes building and installing all the packages delete C:\temp_vcpkg_build and add C:\opt\x64-windows\bin and C:\opt\x64-windows\debug\bin to path 
+
+### Compiling tkDNN on Windows 
+
+tkDNN is built with cmake(3.15+) on windows along with ninja.Msbuild and NMake Makefiles are drastically slower when compiling the library compared to windows
+```
+git clone https://git.hipert.unimore.it/research-cv-chandirasekar/tkdnn-windows.git
+cd tkdnn-windows
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -G"Ninja" ..
+ninja -j4
+```
+
+### Run the demo on Windows 
+
+This example uses yolo4_tiny.\
+To run the object detection file create .rt file bu running:
+```
+.\test_yolo4tiny.exe
+```
+
+Once the rt file has been successfully create,run the demo using the following command:
+```
+.\demo.exe yolo4tiny_fp32.rt ..\demo\yolo_test.mp4 y 
+```
+ For general info on more demo paramters,check Run the demo section on top 
+
+### FP16 interference windows 
+
+This is an untested feature on windows.To run the object detection demo with FP16 interference follow the below steps(example with yolo4tiny):
+```
+set TKDNN_MODE=FP16
+del /f yolo4tiny_fp16.rt
+.\test_yolo4tiny.exe
+.\demo.exe yolo4tiny_fp16.rt ..\demo\yolo_test.mp4
+```
+
+### INT8 interference windows 
+To run object detection demo with INT8 (example with yolo4tiny):
+```
+set TKDNN_MODE=INT8
+set TKDNN_CALIB_LABEL_PATH=..\demo\COCO_val2017\all_labels.txt
+set TKDNN_CALIB_IMG_PATH=..\demo\COCO_val2017\all_images.txt
+del /f  yolo4tiny_int8.rt        # be sure to delete(or move) old tensorRT files
+.\test_yolo4tiny.exe           # run the yolo test (is slow)
+.\demo.exe yolo4tiny_int8.rt ..\demo\yolo_test.mp4 y
+
+```
+
+
+
+
+
+
+
 
 
 ## References
