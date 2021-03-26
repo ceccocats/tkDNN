@@ -229,7 +229,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_LOGISTIC)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -420,6 +420,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     } 
     else if(l->act_mode == ACTIVATION_MISH) {
         IPlugin *plugin = new ActivationMishRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else if(l->act_mode == ACTIVATION_LOGISTIC) {
+        IPlugin *plugin = new ActivationLogisticRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
@@ -660,6 +666,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         assert(buf == bufCheck + serialLength);
         return a;
     }
+    if(name.find("ActivationLogistic") == 0) {
+        ActivationLogisticRT *a = new ActivationLogisticRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
     if(name.find("ActivationCReLU") == 0) {
         float activationReluTemp = readBUF<float>(buf);
         //ActivationReLUCeiling *a = new ActivationReLUCeiling(readBUF<float>(buf));
@@ -784,17 +795,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         float nms_thresh_temp = readBUF<float>(buf);
         int nms_kind_temp = readBUF<int>(buf);
         int new_coords_temp = readBUF<int>(buf);
-        std::cout << classes_temp << ":" << num_temp << ":" << ":" << n_masks_temp << ":" << nms_thresh_temp << ":" << nms_kind_temp << ":" << new_coords_temp << std::endl;
 
        YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);  
 
-       /* std::cout << "classes : " << r->classes;
-        std::cout << "num : " << r->num;
-        std::cout << "n_masks : " << r->n_masks;
-        std::cout << "scalexy : " << r->scaleXY;
-        std::cout << "nms_thresh : " << r->nms_thresh;
-        std::cout << "nms_kind : " << r->nms_kind;
-        std::cout << "new_coords : " << r->new_coords;*/
 
 
         r->c = readBUF<int>(buf);
