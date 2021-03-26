@@ -187,6 +187,7 @@ namespace tk { namespace dnn {
             if(f.activation == "relu") act = tkdnnActivationMode_t(CUDNN_ACTIVATION_RELU);
             else if(f.activation == "leaky") act = tk::dnn::ACTIVATION_LEAKY;
             else if(f.activation == "mish") act = tk::dnn::ACTIVATION_MISH;
+            else if(f.activation == "logistic") act = tk::dnn::ACTIVATION_LOGISTIC;
             else { FatalError("activation not supported: " + f.activation); }
             netLayers[netLayers.size()-1] = new tk::dnn::Activation(net, act);
         };
