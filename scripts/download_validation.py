@@ -1,5 +1,4 @@
 import os
-from pathlib import Path 
 import urllib.request as dowReq
 import zipfile
 
