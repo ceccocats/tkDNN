@@ -224,11 +224,10 @@ namespace tk { namespace dnn {
         darknetFields_t fields; // will be filled with layers fields
         std::string line;
         while(std::getline(if_cfg, line)) {
-            // remove comments
+            // skip commented line
             std::size_t found = line.find("#");
-            if ( found != std::string::npos ) {
-                line = line.substr(0, found);
-            }
+            if ( found != std::string::npos )
+                continue;
 
             // skip empty lines
             if(line.size() == 0)
