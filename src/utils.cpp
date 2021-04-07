@@ -203,8 +203,7 @@ void getMemUsage(double& vm_usage_kb, double& resident_set_kb){
 #ifdef __linux__
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
 #elif _WIN32
-SYSTEM_INFO sysInfo;
- long page_size_kb = sysInfo.dwPageSize/1024;
+ long page_size_kb = 4096/1024;
 #endif
 
    vm_usage_kb     = vsize / 1024.0;  

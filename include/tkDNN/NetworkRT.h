@@ -55,16 +55,14 @@ class NetworkRT {
 
 public:
     nvinfer1::DataType dtRT;
-    //nvinfer1::IBuilder *builderRT;
-    std::unique_ptr<nvinfer1::IBuilder,InferDeleter> builderRT;
-    //nvinfer1::IRuntime *runtimeRT;
-    std::unique_ptr<nvinfer1::IRuntime,InferDeleter> runtimeRT;
+    nvinfer1::IBuilder *builderRT;
+    nvinfer1::IRuntime *runtimeRT;
     nvinfer1::INetworkDefinition *networkRT; 
 #if NV_TENSORRT_MAJOR >= 6  
     nvinfer1::IBuilderConfig *configRT;
 #endif
-    std::shared_ptr<nvinfer1::ICudaEngine> engineRT;
-   //nvinfer1::ICudaEngine *engineRT;
+    
+    nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
 
     const static int MAX_BUFFERS_RT = 10;

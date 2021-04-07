@@ -33,8 +33,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
                    float(NV_TENSORRT_PATCH)/100;
     std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
   
-   builderRT = std::unique_ptr<nvinfer1::IBuilder,InferDeleter>(createInferBuilder(loggerRT));
-    //builderRT = createInferBuilder(loggerRT);
+    builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
 #if NV_TENSORRT_MAJOR >= 5
@@ -138,8 +137,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
 #if NV_TENSORRT_MAJOR >= 6                
-        //engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
-        engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildEngineWithConfig(*networkRT,*configRT),InferDeleter());
+        engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
 #else 
         //engineRT = builderRT->buildCudaEngine(*networkRT);
         engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
@@ -637,10 +635,8 @@ bool NetworkRT::deserialize(const char *filename) {
     }
 
     pluginFactory = new PluginFactory();
-    //runtimeRT = createInferRuntime(loggerRT);
-    runtimeRT = std::unique_ptr<nvinfer1::IRuntime,InferDeleter>(createInferRuntime(loggerRT));
-    //engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
-    engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(runtimeRT->deserializeCudaEngine(gieModelStream,size,(IPluginFactory*)pluginFactory),InferDeleter());
+    runtimeRT = createInferRuntime(loggerRT);
+    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
     //if (gieModelStream) delete [] gieModelStream;
 
     return true;
@@ -673,7 +669,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     }
     if(name.find("ActivationCReLU") == 0) {
         float activationReluTemp = readBUF<float>(buf);
-        //ActivationReLUCeiling *a = new ActivationReLUCeiling(readBUF<float>(buf));
         ActivationReLUCeiling* a = new ActivationReLUCeiling(activationReluTemp);
         a->size = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
@@ -684,9 +679,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         int classesTemp = readBUF<int>(buf);
         int coordsTemp = readBUF<int>(buf);
         int numTemp = readBUF<int>(buf);
-        /*RegionRT *r = new RegionRT(readBUF<int>(buf),    //classes
-                                    readBUF<int>(buf),    //coords
-                                    readBUF<int>(buf));   //num8*/
         RegionRT* r = new RegionRT(classesTemp, coordsTemp, numTemp);
 
         r->c = readBUF<int>(buf);
@@ -698,7 +690,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
 
     if(name.find("Reorg") == 0) {
         int strideTemp = readBUF<int>(buf);
-        //ReorgRT *r = new ReorgRT(readBUF<int>(buf)); //stride
         ReorgRT *r = new ReorgRT(strideTemp);
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
@@ -723,15 +714,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     } 
 
     if(name.find("Pooling") == 0) {
-       /* MaxPoolFixedSizeRT *r = new MaxPoolFixedSizeRT( readBUF<int>(buf), //c
-                                                        readBUF<int>(buf), //h
-                                                        readBUF<int>(buf), //w
-                                                        readBUF<int>(buf), //n
-                                                        readBUF<int>(buf), //strideH
-                                                        readBUF<int>(buf), //strideW
-                                                        readBUF<int>(buf), //winSize
-                                                        readBUF<int>(buf)); //padding*/
-
         int cTemp = readBUF<int>(buf);
         int hTemp = readBUF<int>(buf);
         int wTemp = readBUF<int>(buf);
@@ -747,9 +729,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     }
 
     if(name.find("Resize") == 0) {
-        /*ResizeLayerRT *r = new ResizeLayerRT(readBUF<int>(buf), //o_c
-                                            readBUF<int>(buf), //o_h
-                                            readBUF<int>(buf)); //o_w*/
         int o_cTemp = readBUF<int>(buf);
         int o_hTemp = readBUF<int>(buf);
         int o_wTemp = readBUF<int>(buf);
@@ -822,7 +801,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         return r;
     } 
     if(name.find("Upsample") == 0) {
-        //UpsampleRT *r = new UpsampleRT(readBUF<int>(buf)); //stride
         int strideTemp = readBUF<int>(buf);
         UpsampleRT* r = new UpsampleRT(strideTemp);
         r->c = readBUF<int>(buf);
@@ -833,7 +811,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     } 
 
     if(name.find("Route") == 0) {
-        //RouteRT *r = new RouteRT(readBUF<int>(buf),readBUF<int>(buf));
         int groupsTemp = readBUF<int>(buf);
         int group_idTemp = readBUF<int>(buf);
         RouteRT* r = new RouteRT(groupsTemp, group_idTemp);
@@ -848,12 +825,6 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     } 
 
     if(name.find("Deformable") == 0) {
-        /*DeformableConvRT *r = new DeformableConvRT(readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
-                                                    readBUF<int>(buf), readBUF<int>(buf), readBUF<int>(buf),
-                                                    readBUF<int>(buf), readBUF<int>(buf),
-                                                    readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),
-                                                    readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),readBUF<int>(buf),
-                                                    nullptr); */
         int chuck_dimTemp = readBUF<int>(buf);
         int khTemp = readBUF<int>(buf);
         int kwTemp = readBUF<int>(buf);
