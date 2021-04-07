@@ -7,7 +7,6 @@
 #elif _WIN32
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <Windows.h>
 #endif 
 
 #include <mutex>
