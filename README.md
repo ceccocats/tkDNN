@@ -80,12 +80,13 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
   - [mAP demo](#map-demo)
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
-  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows)
+  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows-10-experimental)
     - [Dependencies-Windows](#dependencies-windows)
-    - [Compiling tkDNN on Windows](#tkdnn-windows-compile)
+    - [Compiling tkDNN on Windows](#compiling-tkdnn-on-windows)
     - [Run the demo on Windows](#run-the-demo-on-windows)
-    - [FP16 interference windows](#fp16-windows)
-    - [INT8 interference windows](#int8-windows)
+      - [FP16 inference windows](#fp16-inference-windows)
+      - [INT8 inference windows](#int8-inference-windows)
+    - [Known issues with tkDNN on Windows](#known-issues-with-tkdnn-on-windows)
   
 
 
@@ -362,26 +363,31 @@ This demo also creates a json file named ```net_name_COCO_res.json``` containing
 | yolo4tiny             | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
 | yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 672x672       | [weights](https://cloud.hipert.unimore.it/s/BLPpiAigZJLorQD/download)     |
 
-##tkDNN on Windows 10 (experimental)
+### tkDNN on Windows 10 (experimental)
 
 ### Dependencies-Windows 
 This branch should work on every NVIDIA GPU supported in windows with the following dependencies:
 
 * WINDOWS 10 1803 or HIGHER 
-* CUDA 10.0 (Recommended CUDA 11.0 +)
-* CUDNN 7.6 (Recommended CUDNN 8.0.0 +)
-* TENSORRT 6.0.1 (Recommended TENSORRT 7.1 +)
-* OPENCV 3.4 (Recommended OPENCV 4.2.0 +)
-* MSVC 16.7 (Recommended MSVC 16.8/16.9)
-* YAML-CPP 0.5.2 
+* CUDA 10.0 (Recommended CUDA 11.2 )
+* CUDNN 7.6 (Recommended CUDNN 8.1.1 )
+* TENSORRT 6.0.1 (Recommended TENSORRT 7.2.3.4 )
+* OPENCV 3.4 (Recommended OPENCV 4.2.0 )
+* MSVC 16.7 
+* YAML-CPP 
 * EIGEN3
 * 7ZIP (ADD TO PATH)
 * NINJA 1.10
 
+
 All the above mentioned dependencies except 7ZIP can be installed using Microsoft's [VCPKG](https://github.com/microsoft/vcpkg.git) .
 After bootstrapping VCPKG the dependencies can be built and installed using the following command :
 
-```vcpkg.exe install opencv4[tbb,jpeg,tiff,opengl,openmp,png,ffmpeg]:x64-windows yaml-cpp:x64-windows eigen3:x64-windows --x-install-root=C:\opt --x-buildtrees-root=C:\temp_vcpkg_build```
+```
+opencv4(normal) - vcpkg.exe install opencv4[tbb,jpeg,tiff,opengl,openmp,png,ffmpeg,eigen]:x64-windows yaml-cpp:x64-windows eigen3:x64-windows --x-install-root=C:\opt --x-buildtrees-root=C:\temp_vcpkg_build
+
+opencv4(cuda) - vcpkg.exe install opencv4[cuda,nonfree,contrib,eigen,tbb,jpeg,tiff,opengl,openmp,png,ffmpeg]:x64-windows yaml-cpp:x64-windows eigen3:x64-windows --x-install-root=C:\opt --x-buildtrees-root=C:\temp_vcpkg_build
+```
 
 After VCPKG finishes building and installing all the packages delete C:\temp_vcpkg_build and add C:\opt\x64-windows\bin and C:\opt\x64-windows\debug\bin to path 
 
@@ -411,7 +417,7 @@ Once the rt file has been successfully create,run the demo using the following c
 ```
  For general info on more demo paramters,check Run the demo section on top 
 
-### FP16 interference windows 
+### FP16 inference windows 
 
 This is an untested feature on windows.To run the object detection demo with FP16 interference follow the below steps(example with yolo4tiny):
 ```
@@ -421,7 +427,7 @@ del /f yolo4tiny_fp16.rt
 .\demo.exe yolo4tiny_fp16.rt ..\demo\yolo_test.mp4
 ```
 
-### INT8 interference windows 
+### INT8 inference windows 
 To run object detection demo with INT8 (example with yolo4tiny):
 ```
 set TKDNN_MODE=INT8
@@ -433,10 +439,13 @@ del /f  yolo4tiny_int8.rt        # be sure to delete(or move) old tensorRT files
 
 ```
 
+### Known issues with tkDNN on Windows
 
+Mobilenet and Centernet demos work properly only when built with msvc 16.7 in Release Mode,when built in debug mode for the mentioned networks one might encounter opencv assert errors
 
+All Darknet models work properly with demo using MSVC version(16.7-16.9)
 
-
+It is recommended to use Nvidia Driver(465+),Cuda unknown errors have been observed when using older drivers on pascal(SM 61) devices.
 
 
 

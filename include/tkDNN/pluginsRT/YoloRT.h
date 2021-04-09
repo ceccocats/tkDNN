@@ -120,7 +120,6 @@ public:
 				tk::dnn::writeBUF(buf, tmp[j]);
 			}
 		}
-		std::cout << getSerializationSize() << std::endl;
 		assert(buf == a + getSerializationSize());
 	}
 
