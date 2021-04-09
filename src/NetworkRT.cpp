@@ -648,7 +648,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
 
     std::string name(layerName);
-    std::cout<<name<<std::endl;
+    //std::cout<<name<<std::endl;
 
     if(name.find("ActivationLeaky") == 0) {
         ActivationLeakyRT *a = new ActivationLeakyRT();

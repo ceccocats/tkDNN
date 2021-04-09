@@ -59,8 +59,6 @@ public:
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
-		std::cout << "Upsample Serialization SIze" << getSerializationSize() << std::endl;
-
 		assert(buf == a + getSerializationSize());
 	}
 

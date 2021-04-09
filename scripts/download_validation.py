@@ -24,7 +24,7 @@ file1 = open(".\\..\\demo\\all_labels.txt","a")
 path1 = os.path.realpath(labelFolder)
 for file in os.listdir(labelFolder):
     valTemp = path1 + "\\" + file
-    valTemp = valTemp + " \n"
+    valTemp = valTemp + '\n'
     file1.write(valTemp)
 file1.close()
 
@@ -32,7 +32,7 @@ file2 = open(".\\..\\demo\\all_images.txt","a")
 path2 = os.path.realpath(imageFolder)
 for file in os.listdir(imageFolder):
     pathtemp = path2 + "\\" + file
-    pathtemp = pathtemp + " \n"
+    pathtemp = pathtemp + '\n'
     file2.write(pathtemp)
 file2.close()
 

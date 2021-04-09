@@ -25,7 +25,12 @@ int main(int argc, char *argv[]) {
     std::string net = "yolo4tiny_fp32.rt";
     if(argc > 1)
         net = argv[1]; 
-    std::string input = "..\..\..\demo\yolo_test.mp4";
+    #ifdef __linux__ 
+        std::string input = "../demo/yolo_test.mp4";
+    #elif _WIN32
+        std::string input = "..\\..\\..\\demo\\yolo_test.mp4";
+    #endif
+
     if(argc > 2)
         input = argv[2]; 
     char ntype = 'y';
