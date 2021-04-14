@@ -388,6 +388,7 @@ opencv4(normal) - vcpkg.exe install opencv4[tbb,jpeg,tiff,opengl,openmp,png,ffmp
 
 opencv4(cuda) - vcpkg.exe install opencv4[cuda,nonfree,contrib,eigen,tbb,jpeg,tiff,opengl,openmp,png,ffmpeg]:x64-windows yaml-cpp:x64-windows eigen3:x64-windows --x-install-root=C:\opt --x-buildtrees-root=C:\temp_vcpkg_build
 ```
+To build opencv4 with cuda and cudnn version corresponding to your cuda version,vcpkg's cudnn portfile needs to be modified by adding ```$ENV{CUDA_PATH}```  at lines 16 and 17 in the portfile.cmake 
 
 After VCPKG finishes building and installing all the packages delete C:\temp_vcpkg_build and add C:\opt\x64-windows\bin and C:\opt\x64-windows\debug\bin to path 
 
@@ -395,7 +396,7 @@ After VCPKG finishes building and installing all the packages delete C:\temp_vcp
 
 tkDNN is built with cmake(3.15+) on windows along with ninja.Msbuild and NMake Makefiles are drastically slower when compiling the library compared to windows
 ```
-git clone https://git.hipert.unimore.it/research-cv-chandirasekar/tkdnn-windows.git
+git clone https://github.com/ceccocats/tkDNN.git
 cd tkdnn-windows
 mkdir build
 cd build
@@ -416,6 +417,7 @@ Once the rt file has been successfully create,run the demo using the following c
 .\demo.exe yolo4tiny_fp32.rt ..\demo\yolo_test.mp4 y 
 ```
  For general info on more demo paramters,check Run the demo section on top 
+ To run the test_all_tests.sh on windows,use git bash or msys2 
 
 ### FP16 inference windows 
 
