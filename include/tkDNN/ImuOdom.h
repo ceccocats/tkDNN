@@ -1,7 +1,14 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>     /* srand, rand */
+
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+#define _USE_MATH_DEFINES
+#include <math.h>
+#endif 
+
 #include <mutex>
 #include <Eigen/Dense>
 #include "utils.h"

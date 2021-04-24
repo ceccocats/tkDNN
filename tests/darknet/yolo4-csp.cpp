@@ -19,8 +19,6 @@ int main() {
     std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/coco.names";
     downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/AfzHE4BfTeEm2gH/download");
 
-
-
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
     net->print();

@@ -4,7 +4,10 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>    
+#ifdef __linux__
 #include <unistd.h>
+#endif 
+
 #include <mutex>
 #include "utils.h"
 
@@ -14,7 +17,7 @@
 
 #include "tkdnn.h"
 
-// #define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+//#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
 #ifdef OPENCV_CUDACONTRIB
 #include <opencv2/cudawarping.hpp>
@@ -150,7 +153,6 @@ class DetectionNN {
             int x0, w, x1, y0, h, y1;
             int objClass;
             std::string det_class;
-
             int baseline = 0;
             float font_scale = 0.5;
             int thickness = 2;   
