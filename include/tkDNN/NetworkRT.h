@@ -6,6 +6,7 @@
 #include "Network.h"
 #include "Layer.h"
 #include "NvInfer.h"
+#include <memory>
 
 namespace tk { namespace dnn {
 
@@ -60,6 +61,7 @@ public:
 #if NV_TENSORRT_MAJOR >= 6  
     nvinfer1::IBuilderConfig *configRT;
 #endif
+    
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
 
@@ -115,6 +117,9 @@ public:
 
     bool serialize(const char *filename);
     bool deserialize(const char *filename);
+
+
+
 };
 
 }}

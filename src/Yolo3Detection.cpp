@@ -94,9 +94,10 @@ void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
 void Yolo3Detection::postprocess(const int bi, const bool mAP){
 
     //get yolo outputs
-    dnnType *rt_out[netRT->pluginFactory->n_yolos]; 
-    for(int i=0; i<netRT->pluginFactory->n_yolos; i++) 
-        rt_out[i] = (dnnType*)netRT->buffersRT[i+1] + netRT->buffersDIM[i+1].tot()*bi;
+    std::vector<float *> rt_out;
+    //dnnType *rt_out[netRT->pluginFactory->n_yolos];
+    for(int i=0; i<netRT->pluginFactory->n_yolos; i++)
+        rt_out.push_back((dnnType*)netRT->buffersRT[i+1] + netRT->buffersDIM[i+1].tot()*bi);
 
     float x_ratio =  float(originalSize[bi].width) / float(netRT->input_dim.w);
     float y_ratio =  float(originalSize[bi].height) / float(netRT->input_dim.h);
