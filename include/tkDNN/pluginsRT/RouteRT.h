@@ -75,7 +75,7 @@ public:
 	}
 
 	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer);
+		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
 		tk::dnn::writeBUF(buf, groups);
 		tk::dnn::writeBUF(buf, group_id);
 		tk::dnn::writeBUF(buf, in);
@@ -85,6 +85,7 @@ public:
 		tk::dnn::writeBUF(buf, c);
 		tk::dnn::writeBUF(buf, h);
 		tk::dnn::writeBUF(buf, w);
+		assert(buf == a + getSerializationSize());
 	}
 
 	static const int MAX_INPUTS = 4;
