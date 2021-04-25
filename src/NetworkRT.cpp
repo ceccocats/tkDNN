@@ -667,6 +667,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         a->size = readBUF<int>(buf);
         return a;
     }
+    if(name.find("ActivationLogistic") == 0) {
+        ActivationLogisticRT *a = new ActivationLogisticRT();
+        a->size = readBUF<int>(buf);
+        return a;
+    }
     if(name.find("ActivationCReLU") == 0) {
         float activationReluTemp = readBUF<float>(buf);
         ActivationReLUCeiling* a = new ActivationReLUCeiling(activationReluTemp);

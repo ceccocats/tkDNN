@@ -96,7 +96,6 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
                 activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
 
                 if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
-
                 index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
                 activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
             }
