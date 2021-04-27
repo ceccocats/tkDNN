@@ -18,7 +18,7 @@ inline int GET_BLOCKS(const int N)
 }
 
 
-__device__ float dmcn_im2col_bilinear(const float *bottom_data, const int data_width,
+__device__ __host__  float dmcn_im2col_bilinear(const float *bottom_data, const int data_width,
   const int height, const int width, float h, float w) {
 int h_low = floor(h);
 int w_low = floor(w);

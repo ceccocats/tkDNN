@@ -9,6 +9,7 @@
 #include "Layer.h"
 #include "kernels.h"
 
+
 namespace tk { namespace dnn {
 
 Yolo::Yolo(Network *net, int classes, int num, std::string fname_weights, int n_masks, float scale_xy, double nms_thresh, nmsKind_t nsm_kind, int new_coords) : 
@@ -72,8 +73,8 @@ Yolo::box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, 
         b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
     }
     else{
-        b.x = (i + x[index + 0 * stride] * 2 - 0.5) / lw;
-        b.y = (j + x[index + 1 * stride] * 2 - 0.5) / lh;
+        b.x = (i + x[index + 0 * stride] ) / lw;
+        b.y = (j + x[index + 1 * stride] ) / lh;
         b.w = x[index + 2 * stride] * x[index + 2 * stride] * 4 * biases[2 * n] / w;
         b.h = x[index + 3 * stride] * x[index + 3 * stride] * 4 * biases[2 * n + 1] / h;
     }
@@ -87,15 +88,17 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
-            if (new_coords == 1)
-                activationLOGISTICForward(srcData + index, dstData + index, 4*dim.w*dim.h);
-            else
+            std::cout<<"new_coords"<<new_coords<<std::endl;
+            if (new_coords == 1){
+                if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
+            }
+            else{
                 activationLOGISTICForward(srcData + index, dstData + index, 2*dim.w*dim.h);
 
-            if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
-            
-            index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
-            activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
+                if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
+                index = entry_index(b, n*dim.w*dim.h, 4, classes, input_dim, output_dim);
+                activationLOGISTICForward(srcData + index, dstData + index, (1+classes)*dim.w*dim.h);
+            }
         }
     }
 
@@ -209,10 +212,10 @@ float yolo_box_iou(Yolo::box a, Yolo::box b)
 }
 
 void box_c(const Yolo::box a, const Yolo::box b, float& top, float& bot, float& left, float& right) {
-    top = std::min(a.y - a.h / 2, b.y - b.h / 2);
-    bot = std::max(a.y + a.h / 2, b.y + b.h / 2);
-    left = std::min(a.x - a.w / 2, b.x - b.w / 2);
-    right = std::max(a.x + a.w / 2, b.x + b.w / 2);
+    top = (std::min)(a.y - a.h / 2, b.y - b.h / 2);
+    bot = (std::max)(a.y + a.h / 2, b.y + b.h / 2);
+    left = (std::min)(a.x - a.w / 2, b.x - b.w / 2);
+    right = (std::max)(a.x + a.w / 2, b.x + b.w / 2);
 }
 
 // https://github.com/Zzh-tju/DIoU-darknet
