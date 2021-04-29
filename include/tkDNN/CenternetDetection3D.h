@@ -74,22 +74,18 @@ private:
     int *ids_out;
 
     struct threshold op;
-    float peakThreshold = 0.2;
-    float centerThreshold = 0.3; //default 0.5
     cv::Mat corners, pts3DHomo;  
 
-    std::vector<box3D> detected3D;
-    std::vector<int>cls3D;
     std::vector<std::vector<int>> face_id;
 
 public:
     CenternetDetection3D() {};
     ~CenternetDetection3D() {}; 
 
-    bool init(const std::string& tensor_path, const int n_classes=3);
-    void preprocess(cv::Mat &frame);
-    void postprocess();
-    cv::Mat draw(cv::Mat &frame);
+    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3);
+    void preprocess(cv::Mat &frame, const int bi=0);
+    void postprocess(const int bi=0,const bool mAP=false);
+    void draw(std::vector<cv::Mat>& frames);
 };
 
 

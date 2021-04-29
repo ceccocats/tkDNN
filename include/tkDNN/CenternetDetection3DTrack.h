@@ -145,6 +145,7 @@ private:
     int count_det;
     //tracks
     std::vector<struct trackingRes> tr_res;
+    std::vector<std::vector<struct trackingRes>> batchTracked;
     int count_tr;
     int track_id=0;
   
@@ -153,7 +154,7 @@ private:
     bool init_pre_inf();
     bool init_postprocessing();
     bool init_visualization(const int n_classes);
-    void pre_inf();
+    void pre_inf(const int bi);
     void _get_additional_inputs();
     cv::Mat transform_preds_with_trans(float x1, float x2);
     void tracking();
@@ -161,11 +162,11 @@ private:
 public:
     tk::dnn::Network *pre_phase_net = nullptr;
     CenternetDetection3DTrack() {};
-    ~CenternetDetection3DTrack() {}; 
-    bool init(const std::string& tensor_path, const int n_classes=3);
-    void preprocess(cv::Mat &frame);
-    void postprocess();
-    cv::Mat draw(cv::Mat &frame);
+    ~CenternetDetection3DTrack() {};
+    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3);
+    void preprocess(cv::Mat &frame, const int bi=0);
+    void postprocess(const int bi=0,const bool mAP=false);
+    void draw(std::vector<cv::Mat>& frames);
 };
 
 
