@@ -82,8 +82,8 @@ public:
     CenternetDetection3D() {};
     ~CenternetDetection3D() {}; 
 
-    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3);
-    void preprocess(cv::Mat &frame, const int bi=0);
+    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3, const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
+    void preprocess(cv::Mat &frame, const int bi=0, const std::vector<cv::Size>& stream_size=std::vector<cv::Size>());
     void postprocess(const int bi=0,const bool mAP=false);
     void draw(std::vector<cv::Mat>& frames);
 };

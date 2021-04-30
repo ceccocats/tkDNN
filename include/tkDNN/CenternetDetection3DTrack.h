@@ -74,6 +74,10 @@ private:
     #endif
     float *d_ptrs;
 
+    std::vector<cv::Mat> inputCalibs;
+
+    std::vector<cv::Size> sz_old;
+
     cv::Mat src;
     cv::Mat dst;
     cv::Mat dst2;  
@@ -124,7 +128,7 @@ private:
 
     /* visualization */
     cv::Mat r;
-    cv::Mat calibs;
+    std::vector<cv::Mat> calibs;
     cv::Mat corners, pts3DHomo;  
 
     std::vector<std::vector<int>> face_id;
@@ -163,8 +167,8 @@ public:
     tk::dnn::Network *pre_phase_net = nullptr;
     CenternetDetection3DTrack() {};
     ~CenternetDetection3DTrack() {};
-    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3);
-    void preprocess(cv::Mat &frame, const int bi=0);
+    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3, const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
+    void preprocess(cv::Mat &frame, const int bi=0, const std::vector<cv::Size>& stream_size=std::vector<cv::Size>());
     void postprocess(const int bi=0,const bool mAP=false);
     void draw(std::vector<cv::Mat>& frames);
 };

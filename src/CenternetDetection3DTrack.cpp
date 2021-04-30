@@ -4,14 +4,15 @@
 namespace tk { namespace dnn {
 
 
-bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh) {
+bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n_classes, const int n_batches, 
+                                    const float conf_thresh, const std::vector<cv::Mat>& k_calibs) {
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     
     dim = netRT->input_dim;
     dim.c = 3;
     nBatches = n_batches;
     confThreshold = conf_thresh;
-
+    inputCalibs = k_calibs;
     init_preprocessing();
     init_pre_inf();
     init_postprocessing();
@@ -37,7 +38,10 @@ bool CenternetDetection3DTrack::init_preprocessing(){
     dst2.at<float>(2,0)=dst2.at<float>(1,0) + (-dst2.at<float>(0,1)+dst2.at<float>(1,1) );
     dst2.at<float>(2,1)=dst2.at<float>(1,1) + (dst2.at<float>(0,0)-dst2.at<float>(1,0) );
 
-
+    for(int bi=0; bi<nBatches; bi++) {
+        sz_old.push_back(cv::Size(0,0));
+    }
+    
 #ifdef OPENCV_CUDACONTRIB
 
     checkCuda( cudaMalloc(&mean_d, 3 * sizeof(float)) );
@@ -183,19 +187,16 @@ bool CenternetDetection3DTrack::init_postprocessing(){
 
     checkCuda( cudaMallocHost(&target_coords, 4 * K *sizeof(float)) );
 
-    calibs = cv::Mat(cv::Size(4,3), CV_32F);
-    calibs.at<float>(0,0) = 633.0;
-    calibs.at<float>(0,1) = 0.0;
-    calibs.at<float>(0,2) = 0.0; //w/2
-    calibs.at<float>(0,3) = 0.0;
-    calibs.at<float>(1,0) = 0.0;
-    calibs.at<float>(1,1) = 633.0;
-    calibs.at<float>(1,2) = 0.0; //h/2
-    calibs.at<float>(1,3) = 0.0;
-    calibs.at<float>(2,0) = 0.0;
-    calibs.at<float>(2,1) = 0.0;
-    calibs.at<float>(2,2) = 1.0;
-    calibs.at<float>(2,3) = 0.0;
+    for(int bi=0; bi<nBatches; bi++) {
+        cv::Mat calibs_ = cv::Mat::zeros(cv::Size(4,3), CV_32F);        
+        if(inputCalibs.size() == 0 || inputCalibs[bi].empty()) {
+            calibs_.at<float>(0,0) = 633.0;
+            calibs_.at<float>(1,1) = 633.0;
+            calibs_.at<float>(2,2) = 1.0;
+        }
+        calibs_.at<float>(2,2) = 1.0;
+        calibs.push_back(calibs_);
+    }
 
     // Alloc array used in the kernel 
     checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
@@ -288,17 +289,25 @@ void CenternetDetection3DTrack::pre_inf(const int bi){
     checkCuda( cudaDeviceSynchronize() );
 }
 
-void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi){
+void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi, const std::vector<cv::Size>& stream_size){
     // -----------------------------------pre-process ------------------------------------------
     batchTracked.clear();
     cv::Size sz = originalSize[bi];
-    cv::Size sz_old;
     float scale = 1.0;
     float new_height = sz.height * scale;
     float new_width = sz.width * scale;
-    if(sz.height != sz_old.height && sz.width != sz_old.width){
-        calibs.at<float>(0,2) = new_width / 2.0f;
-        calibs.at<float>(1,2) = new_height /2.0f;
+    if(sz.height != sz_old[bi].height && sz.width != sz_old[bi].width){
+        if(inputCalibs.size() == 0 || inputCalibs[bi].empty()) {
+            calibs[bi].at<float>(0,2) = new_width / 2.0f;
+            calibs[bi].at<float>(1,2) = new_height /2.0f;
+        }
+        else {
+            calibs[bi].at<float>(0,0) = inputCalibs[bi].at<float>(0,0) * dim.w / stream_size[bi].width;
+            calibs[bi].at<float>(0,2) = inputCalibs[bi].at<float>(0,2) * dim.w / stream_size[bi].width;
+            calibs[bi].at<float>(1,1) = inputCalibs[bi].at<float>(1,1) * dim.h / stream_size[bi].height;
+            calibs[bi].at<float>(1,2) = inputCalibs[bi].at<float>(1,2) * dim.h / stream_size[bi].height;
+        }
+        
         float c[] = {new_width / 2.0f, new_height /2.0f};
         float s[] = {dim.w, dim.h};
         // float s = new_width >= new_height ? new_width : new_height;
@@ -324,7 +333,7 @@ void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi){
         trans2 = cv::getAffineTransform( dst2, src );
         trans2.convertTo(trans_out, CV_32F);
     }
-    sz_old = sz;
+    sz_old[bi] = sz;
 #ifdef OPENCV_CUDACONTRIB
     std::cout<<"OPENCV CPMTROB\n";
     cv::cuda::GpuMat im_Orig; 
@@ -358,7 +367,7 @@ void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi){
 #else
     std::cout<<"NO OPENCV CPMTROB\n";
     cv::Mat imageF;
-    // resize(frame, imageF, cv::Size(new_width, new_height));
+    //resize(frame, imageF, cv::Size(512, 512));
     imageF = frame;
     sz = imageF.size();
  
@@ -701,9 +710,9 @@ void CenternetDetection3DTrack::postprocess(const int bi, const bool mAP) {
         new_det_res.dim[2] = dim_[i+2*K];
         
         // unproject_2d_to_3d
-        new_det_res.z = dep[i] - calibs.at<float>(2,3);
-        new_det_res.x = ((float)new_det_res.ct.at<float>(0,0) * dep[i] - calibs.at<float>(0,3) - calibs.at<float>(0,2) * new_det_res.z) / calibs.at<float>(0,0);
-        new_det_res.y = ((float)new_det_res.ct.at<float>(0,1) * dep[i] - calibs.at<float>(1,3) - calibs.at<float>(1,2) * new_det_res.z) / calibs.at<float>(1,1) + (dim_[i] / 2);
+        new_det_res.z = dep[i] - calibs[bi].at<float>(2,3);
+        new_det_res.x = ((float)new_det_res.ct.at<float>(0,0) * dep[i] - calibs[bi].at<float>(0,3) - calibs[bi].at<float>(0,2) * new_det_res.z) / calibs[bi].at<float>(0,0);
+        new_det_res.y = ((float)new_det_res.ct.at<float>(0,1) * dep[i] - calibs[bi].at<float>(1,3) - calibs[bi].at<float>(1,2) * new_det_res.z) / calibs[bi].at<float>(1,1) + (dim_[i] / 2);
         
         // alpha2rot_y
         // idx = rot[:, 1] > rot[:, 5]
@@ -714,7 +723,7 @@ void CenternetDetection3DTrack::postprocess(const int bi, const bool mAP) {
             new_det_res.alpha = std::atan2(rot[2*K + i], rot[3*K + i]) -0.5 * M_PI;
         else
             new_det_res.alpha = std::atan2(rot[6*K + i], rot[7*K + i]) +0.5 * M_PI;
-        new_det_res.rot_y = (new_det_res.alpha + std::atan2((float)new_det_res.ct.at<float>(0,0) - calibs.at<float>(0,2), calibs.at<float>(0,0)));
+        new_det_res.rot_y = (new_det_res.alpha + std::atan2((float)new_det_res.ct.at<float>(0,0) - calibs[bi].at<float>(0,2), calibs[bi].at<float>(0,0)));
         new_det_res.ct = new_det_res.ct + new_det_res.tr;   //dest  
         det_res.push_back(new_det_res);    
 
@@ -804,7 +813,7 @@ void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
                     }
                     
                     aus.release();
-                    aus = calibs * pts3DHomo;
+                    aus = calibs[bi] * pts3DHomo;
                     std::vector<float> res_corners;
                     for(int k=0; k<8; k++) {
                         res_corners.push_back(aus.at<float>(0,k) / aus.at<float>(2,k));

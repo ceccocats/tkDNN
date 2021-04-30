@@ -3,7 +3,8 @@
 
 namespace tk { namespace dnn {
 
-bool CenternetDetection3D::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh) {
+bool CenternetDetection3D::init(const std::string& tensor_path, const int n_classes, const int n_batches, 
+                                const float conf_thresh, const std::vector<cv::Mat>& k_calibs) {
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     classes = n_classes;
@@ -156,7 +157,7 @@ bool CenternetDetection3D::init(const std::string& tensor_path, const int n_clas
     // ([[0,1,5,4], [1,2,6, 5], [2,3,7,6], [3,0,4,7]]);
 }
 
-void CenternetDetection3D::preprocess(cv::Mat &frame, const int bi){
+void CenternetDetection3D::preprocess(cv::Mat &frame, const int bi, const std::vector<cv::Size>& stream_size){
      // -----------------------------------pre-process ------------------------------------------
     
     // auto start_t = std::chrono::steady_clock::now();
