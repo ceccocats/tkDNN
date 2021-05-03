@@ -749,7 +749,7 @@ void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
     int thickness = 2;
     for(int bi=0; bi<frames.size(); ++bi) {
         // draw dets
-        for(int i=0; i<tr_res[bi].size(); i++) {
+        for(int i=0; tr_res.size() != 0 && i<tr_res[bi].size(); i++) {
             t = tr_res[bi][i];
             id = t.tracking_id;
             txt = classesNames[t.det_res.cl-1]+'-'+std::to_string(id); //forse ha bisogno di cl-1
