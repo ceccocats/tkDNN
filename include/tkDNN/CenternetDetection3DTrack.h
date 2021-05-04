@@ -76,12 +76,12 @@ public:
 
     std::vector<cv::Mat> inputCalibs;
 
-    std::vector<cv::Size> sz_old;
+    std::vector<cv::Size> szOld;
 
     cv::Mat src;
     cv::Mat dst;
     cv::Mat dst2;  
-    cv::Mat trans, trans2, trans_out;
+    cv::Mat trans, trans2, transOut;
 
     /* pre inf */
     bool iter0;
@@ -131,27 +131,25 @@ public:
     std::vector<cv::Mat> calibs;
     cv::Mat corners, pts3DHomo;  
 
-    std::vector<std::vector<int>> face_id;
-    cv::Scalar tr_colors[256];
+    std::vector<std::vector<int>> faceId;
+    cv::Scalar trColors[256];
     bool view2d = false;
 
     //processing
     struct threshold op;
-    float out_thresh = 0.1;
-    float new_thresh = 0.3;
-    float vis_thresh = 0.3;
-    float peakThreshold = 0.2;
-    float centerThreshold = 0.3; //default 0.5
+    float outThresh = 0.1;
+    float newThresh = 0.3;
+    // float peakThreshold = 0.2;
+    // float centerThreshold = 0.3; //default 0.5
     
 
     //detections
-    std::vector<struct detectionRes> det_res;
-    int count_det;
+    std::vector<struct detectionRes> detRes;
+    int countDet;
     //tracks
-    std::vector<std::vector<struct trackingRes>> tr_res;
-    std::vector<std::vector<struct trackingRes>> batchTracked;
-    std::vector<int> count_tr;
-    std::vector<int> track_id;
+    std::vector<std::vector<struct trackingRes>> trRes;
+    std::vector<int> countTr;
+    std::vector<int> trackId;
   
     
     bool init_preprocessing();
@@ -168,7 +166,7 @@ public:
     CenternetDetection3DTrack() {};
     ~CenternetDetection3DTrack() {};
     bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3, const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
-    void preprocess(cv::Mat &frame, const int bi=0, const std::vector<cv::Size>& stream_size=std::vector<cv::Size>());
+    void preprocess(cv::Mat &frame, const int bi=0);
     void postprocess(const int bi=0,const bool mAP=false);
     void draw(std::vector<cv::Mat>& frames);
 };

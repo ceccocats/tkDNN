@@ -54,7 +54,7 @@ class DetectionNN3D {
          * @param frame original frame to adapt for inference.
          * @param bi batch index
          */
-        virtual void preprocess(cv::Mat &frame, const int bi=0 , const std::vector<cv::Size>& stream_size=std::vector<cv::Size>()) = 0;
+        virtual void preprocess(cv::Mat &frame, const int bi=0) = 0;
 
         /**
          * This method postprocess the output of the NN to obtain the correct 
@@ -102,7 +102,7 @@ class DetectionNN3D {
          *            box are needed, as in some cases for the mAP calculation.
          */
         void update(std::vector<cv::Mat>& frames, const int cur_batches=1, bool save_times=false, 
-                    std::ofstream *times=nullptr, const bool mAP=false, const std::vector<cv::Size>& stream_size=std::vector<cv::Size>()){
+                    std::ofstream *times=nullptr, const bool mAP=false){
             if(save_times && times==nullptr)
                 FatalError("save_times set to true, but no valid ofstream given");
             if(cur_batches > nBatches)
@@ -116,7 +116,7 @@ class DetectionNN3D {
                     if(!frames[bi].data)
                         FatalError("No image data feed to detection");
                     originalSize.push_back(frames[bi].size());
-                    preprocess(frames[bi], bi, stream_size);   
+                    preprocess(frames[bi], bi);   
                 }
                 TKDNN_TSTOP
                 pre_stats.push_back(t_ns); 

@@ -96,8 +96,6 @@ int main(int argc, char *argv[]) {
         int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
         resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
     }
-    cv::Size sz_resize = cv::Size(512,512); 
-    std::vector<cv::Size> sz_orig;
     cv::Mat frame;
     if(show)
 	    cv::namedWindow("detection", cv::WINDOW_NORMAL);
@@ -108,15 +106,11 @@ int main(int argc, char *argv[]) {
     while(gRun) {
         batch_dnn_input.clear();
         batch_frame.clear();
-        sz_orig.clear();
         
         for(int bi=0; bi< n_batch; ++bi){
             cap >> frame; 
             if(!frame.data) 
                 break;
-            sz_orig.push_back(frame.size());
-            if(calibs.size() != 0)
-                resize(frame, frame, sz_resize);
             batch_frame.push_back(frame);
 
             // this will be resized to the net format
@@ -126,13 +120,11 @@ int main(int argc, char *argv[]) {
             break;  
  
         //inference
-        detNN->update(batch_dnn_input, n_batch, false, nullptr, false, sz_orig);
+        detNN->update(batch_dnn_input, n_batch, false, nullptr, false);
         detNN->draw(batch_frame);
 
         if(show){
             for(int bi=0; bi< n_batch; ++bi){
-                if(calibs.size() != 0)
-                    resize(batch_frame[bi], batch_frame[bi], sz_orig[bi]);
                 cv::imshow("detection", batch_frame[bi]);
                 cv::waitKey(1);
             }
