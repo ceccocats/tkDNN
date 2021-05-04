@@ -13,12 +13,13 @@ bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n
     nBatches = n_batches;
     confThreshold = conf_thresh;
     inputCalibs = k_calibs;
+    tr_res.resize(nBatches);
     init_preprocessing();
     init_pre_inf();
     init_postprocessing();
     init_visualization(n_classes);
     
-    count_tr = 0;
+    count_tr.resize(nBatches, 0);
 }
 
 bool CenternetDetection3DTrack::init_preprocessing(){
@@ -29,6 +30,7 @@ bool CenternetDetection3DTrack::init_preprocessing(){
     trans = cv::Mat(cv::Size(3,2), CV_32F);
     trans2 = cv::Mat(cv::Size(3,2), CV_32F);
     trans_out = cv::Mat(cv::Size(3,2), CV_32F);
+
 
     dst2.at<float>(0,0)=width * 0.5;
     dst2.at<float>(0,1)=width * 0.5;
@@ -372,6 +374,8 @@ void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi, const s
     sz = imageF.size();
  
     cv::warpAffine(imageF, imageF, trans, cv::Size(dim.w, dim.h), cv::INTER_LINEAR );
+
+    cv::imshow("warp", imageF);
  
     sz = imageF.size();
     imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
@@ -414,7 +418,7 @@ cv::Mat CenternetDetection3DTrack::transform_preds_with_trans(float x1, float x2
     return trans_out * target_coords;
 }
 
-void CenternetDetection3DTrack::tracking(){
+void CenternetDetection3DTrack::tracking(int bi){
    
     float item_size[count_det];
     int item_cl[count_det];
@@ -427,44 +431,44 @@ void CenternetDetection3DTrack::tracking(){
         dets[i*2+1] = det_res[i].ct.at<float>(0,1);
     }
     
-    float track_size[count_tr];
-    int track_cl[count_tr];
-    float tracks[2*count_tr];
-    for(int i=0; i<count_tr; i++){
-        track_size[i] = (tr_res[i].det_res.bb1.at<float>(0,0) - tr_res[i].det_res.bb0.at<float>(0,0)) * 
-                        (tr_res[i].det_res.bb1.at<float>(0,1) - tr_res[i].det_res.bb0.at<float>(0,1));
-        track_cl[i] = tr_res[i].det_res.cl;
-        tracks[i*2] = tr_res[i].det_res.ct.at<float>(0,0);
-        tracks[i*2+1] = tr_res[i].det_res.ct.at<float>(0,1);
+    float track_size[count_tr[bi]];
+    int track_cl[count_tr[bi]];
+    float tracks[2*count_tr[bi]];
+    for(int i=0; i<count_tr[bi]; i++){
+        track_size[i] = (tr_res[bi][i].det_res.bb1.at<float>(0,0) - tr_res[bi][i].det_res.bb0.at<float>(0,0)) * 
+                        (tr_res[bi][i].det_res.bb1.at<float>(0,1) - tr_res[bi][i].det_res.bb0.at<float>(0,1));
+        track_cl[i] = tr_res[bi][i].det_res.cl;
+        tracks[i*2] = tr_res[bi][i].det_res.ct.at<float>(0,0);
+        tracks[i*2+1] = tr_res[bi][i].det_res.ct.at<float>(0,1);
     } 
-    float dist[count_tr*count_det];
+    float dist[count_tr[bi]*count_det];
     bool invalid;
-    for(int i=0; i<count_tr; i++){
+    for(int i=0; i<count_tr[bi]; i++){
         for(int j=0; j<count_det; j++){
-            dist[j*count_tr+i] =  pow((tracks[i*2] - dets[j*2]), 2) + 
+            dist[j*count_tr[bi]+i] =  pow((tracks[i*2] - dets[j*2]), 2) + 
                             pow((tracks[i*2+1] - dets[j*2+1]), 2);
-            invalid = dist[j*count_tr+i] > track_size[i] || dist[j*count_tr+i] > item_size[j] || item_cl[j] != track_cl[i];
-            dist[j*count_tr+i] = dist[j*count_tr+i] + invalid * (1 << 18);
+            invalid = dist[j*count_tr[bi]+i] > track_size[i] || dist[j*count_tr[bi]+i] > item_size[j] || item_cl[j] != track_cl[i];
+            dist[j*count_tr[bi]+i] = dist[j*count_tr[bi]+i] + invalid * (1 << 18);
         }
     }
-    int matched_indices[2*count_tr];
+    int matched_indices[2*count_tr[bi]];
     float min_tr;
     int min_idtr=-1;
-    for(int i=0; i<count_tr; i++) {
+    for(int i=0; i<count_tr[bi]; i++) {
         matched_indices[i*2] = -1;
         matched_indices[i*2+1] = -1;
     }
     for(int i=0; i<count_det; i++){
         min_tr=(1 << 18);
-        for(int j=0; j<count_tr; j++){
-            if(dist[i*count_tr+j]<min_tr) {
-                min_tr = dist[i*count_tr+j];
+        for(int j=0; j<count_tr[bi]; j++){
+            if(dist[i*count_tr[bi]+j]<min_tr) {
+                min_tr = dist[i*count_tr[bi]+j];
                 min_idtr = j;
             }
         }
         if(min_tr < (1<<16)) {
             for(int j=0; j<count_det; j++){
-                dist[j*count_tr+min_idtr] = (1 << 18);
+                dist[j*count_tr[bi]+min_idtr] = (1 << 18);
             }
             matched_indices[2*min_idtr] = min_idtr;
             matched_indices[2*min_idtr+1] = i;
@@ -474,10 +478,10 @@ void CenternetDetection3DTrack::tracking(){
     bool unmatched_dets[count_det];
     for(int i=0; i<count_det; i++)
         unmatched_dets[i] = false;
-    bool unmatched_tracks[count_tr];
-    for(int i=0; i<count_tr; i++) 
+    bool unmatched_tracks[count_tr[bi]];
+    for(int i=0; i<count_tr[bi]; i++) 
         unmatched_tracks[i] = false;
-    for(int i=0; i<count_tr; i++) {
+    for(int i=0; i<count_tr[bi]; i++) {
         if(matched_indices[2*i] != -1)
             unmatched_tracks[matched_indices[2*i]]=true;
         
@@ -486,84 +490,84 @@ void CenternetDetection3DTrack::tracking(){
     }
 
     //match
-    for(int i=0; i<count_tr; i++) {
+    for(int i=0; i<count_tr[bi]; i++) {
         if(matched_indices[2*i+1] != -1 && matched_indices[2*i] != -1) { //second condition is optional
             int tr_id = matched_indices[2*i];
             int d_id = matched_indices[2*i+1];
             
-            // tr_res[tr_id].det_res = det_res[d_id];
-            tr_res[tr_id].det_res.score = det_res[d_id].score;
-            tr_res[tr_id].det_res.cl = det_res[d_id].cl;
-            tr_res[tr_id].det_res.ct = det_res[d_id].ct;
-            tr_res[tr_id].det_res.tr = det_res[d_id].tr;
-            tr_res[tr_id].det_res.bb0 = det_res[d_id].bb0;
-            tr_res[tr_id].det_res.bb1 = det_res[d_id].bb1;
-            tr_res[tr_id].det_res.dep = det_res[d_id].dep;
-            tr_res[tr_id].det_res.dim[0] = det_res[d_id].dim[0];
-            tr_res[tr_id].det_res.dim[1] = det_res[d_id].dim[1];
-            tr_res[tr_id].det_res.dim[2] = det_res[d_id].dim[2];
-            tr_res[tr_id].det_res.alpha = det_res[d_id].alpha;
-            tr_res[tr_id].det_res.x = det_res[d_id].x;
-            tr_res[tr_id].det_res.y = det_res[d_id].y;
-            tr_res[tr_id].det_res.z = det_res[d_id].z;
-            tr_res[tr_id].det_res.rot_y = det_res[d_id].rot_y;
-            // tr_res[matched_indices[2*i]].tracking_id = ; is the same 
-            // tr_res[matched_indices[2*i]].color = ; is the same
-            tr_res[tr_id].age = 1; 
-            tr_res[tr_id].active = tr_res[tr_id].active+1;
+            // tr_res[bi][tr_id].det_res = det_res[d_id];
+            tr_res[bi][tr_id].det_res.score = det_res[d_id].score;
+            tr_res[bi][tr_id].det_res.cl = det_res[d_id].cl;
+            tr_res[bi][tr_id].det_res.ct = det_res[d_id].ct;
+            tr_res[bi][tr_id].det_res.tr = det_res[d_id].tr;
+            tr_res[bi][tr_id].det_res.bb0 = det_res[d_id].bb0;
+            tr_res[bi][tr_id].det_res.bb1 = det_res[d_id].bb1;
+            tr_res[bi][tr_id].det_res.dep = det_res[d_id].dep;
+            tr_res[bi][tr_id].det_res.dim[0] = det_res[d_id].dim[0];
+            tr_res[bi][tr_id].det_res.dim[1] = det_res[d_id].dim[1];
+            tr_res[bi][tr_id].det_res.dim[2] = det_res[d_id].dim[2];
+            tr_res[bi][tr_id].det_res.alpha = det_res[d_id].alpha;
+            tr_res[bi][tr_id].det_res.x = det_res[d_id].x;
+            tr_res[bi][tr_id].det_res.y = det_res[d_id].y;
+            tr_res[bi][tr_id].det_res.z = det_res[d_id].z;
+            tr_res[bi][tr_id].det_res.rot_y = det_res[d_id].rot_y;
+            // tr_res[bi][matched_indices[2*i]].tracking_id = ; is the same 
+            // tr_res[bi][matched_indices[2*i]].color = ; is the same
+            tr_res[bi][tr_id].age = 1; 
+            tr_res[bi][tr_id].active = tr_res[bi][tr_id].active+1;
         }
     }
     //delete target umatched track
     int new_count_tr = 0;
-    for(int i=0; i<count_tr; i++) {
+    for(int i=0; i<count_tr[bi]; i++) {
         if(unmatched_tracks[i]) 
             new_count_tr++;
     }
-    if(new_count_tr == 0 && count_tr != 0) {        //reset
-        tr_res.clear();
-        count_tr = 0;
+    if(new_count_tr == 0 && count_tr[bi] != 0) {        //reset
+        tr_res[bi].clear();
+        count_tr[bi] = 0;
     }
 
-    int old_count_tr = count_tr;
-    if(count_tr != 0 && new_count_tr != count_tr) {
+    int old_count_tr = count_tr[bi];
+    if(count_tr[bi] != 0 && new_count_tr != count_tr[bi]) {
         std::vector<struct trackingRes> new_tr_res;
         int id_new_tr=0;
-        for(int i=0; i<count_tr; i++) {
+        for(int i=0; i<count_tr[bi]; i++) {
             if(unmatched_tracks[i]) {
                 struct trackingRes new_tr_res_;
-                // new_tr_res_new_det_res.det_res = tr_res[i].det_res;
-                new_tr_res_.det_res.score = tr_res[i].det_res.score;
-                new_tr_res_.det_res.cl = tr_res[i].det_res.cl;
-                new_tr_res_.det_res.ct = tr_res[i].det_res.ct;
-                new_tr_res_.det_res.tr = tr_res[i].det_res.tr;
-                new_tr_res_.det_res.bb0 = tr_res[i].det_res.bb0;
-                new_tr_res_.det_res.bb1 = tr_res[i].det_res.bb1;
-                new_tr_res_.det_res.dep = tr_res[i].det_res.dep;
-                new_tr_res_.det_res.dim[0] = tr_res[i].det_res.dim[0];
-                new_tr_res_.det_res.dim[1] = tr_res[i].det_res.dim[1];
-                new_tr_res_.det_res.dim[2] = tr_res[i].det_res.dim[2];
-                new_tr_res_.det_res.alpha = tr_res[i].det_res.alpha;
-                new_tr_res_.det_res.x = tr_res[i].det_res.x;
-                new_tr_res_.det_res.y = tr_res[i].det_res.y;
-                new_tr_res_.det_res.z = tr_res[i].det_res.z;
-                new_tr_res_.det_res.rot_y = tr_res[i].det_res.rot_y;
-                new_tr_res_.tracking_id = tr_res[i].tracking_id;
-                new_tr_res_.age = tr_res[i].age;
-                new_tr_res_.active = tr_res[i].active;
-                new_tr_res_.color = tr_res[i].color;
+                // new_tr_res_new_det_res.det_res = tr_res[bi][i].det_res;
+                new_tr_res_.det_res.score = tr_res[bi][i].det_res.score;
+                new_tr_res_.det_res.cl = tr_res[bi][i].det_res.cl;
+                new_tr_res_.det_res.ct = tr_res[bi][i].det_res.ct;
+                new_tr_res_.det_res.tr = tr_res[bi][i].det_res.tr;
+                new_tr_res_.det_res.bb0 = tr_res[bi][i].det_res.bb0;
+                new_tr_res_.det_res.bb1 = tr_res[bi][i].det_res.bb1;
+                new_tr_res_.det_res.dep = tr_res[bi][i].det_res.dep;
+                new_tr_res_.det_res.dim[0] = tr_res[bi][i].det_res.dim[0];
+                new_tr_res_.det_res.dim[1] = tr_res[bi][i].det_res.dim[1];
+                new_tr_res_.det_res.dim[2] = tr_res[bi][i].det_res.dim[2];
+                new_tr_res_.det_res.alpha = tr_res[bi][i].det_res.alpha;
+                new_tr_res_.det_res.x = tr_res[bi][i].det_res.x;
+                new_tr_res_.det_res.y = tr_res[bi][i].det_res.y;
+                new_tr_res_.det_res.z = tr_res[bi][i].det_res.z;
+                new_tr_res_.det_res.rot_y = tr_res[bi][i].det_res.rot_y;
+                new_tr_res_.tracking_id = tr_res[bi][i].tracking_id;
+                new_tr_res_.age = tr_res[bi][i].age;
+                new_tr_res_.active = tr_res[bi][i].active;
+                new_tr_res_.color = tr_res[bi][i].color;
                 id_new_tr++;
                 new_tr_res.push_back(new_tr_res_);
             }
         }
         
-        if(count_tr) {
-            tr_res.clear();
+        if(count_tr[bi]) {
+            tr_res[bi].clear();
         }
-        count_tr = new_count_tr;
-        tr_res=new_tr_res;
+        count_tr[bi] = new_count_tr;
+        tr_res[bi]=new_tr_res;
     }
     
-    int count_tr_ = count_tr;
+    int count_tr_ = count_tr[bi];
     for(int i=0; i<count_det; i++) {
         if((!unmatched_dets[i]) && det_res[i].score > new_thresh) {
             count_tr_ ++;
@@ -587,10 +591,10 @@ void CenternetDetection3DTrack::tracking(){
             new_tr_res_.age = 1; 
             new_tr_res_.active = 1;
             new_tr_res_.color = rand() % 256;
-            tr_res.push_back(new_tr_res_);
+            tr_res[bi].push_back(new_tr_res_);
         }
     }
-    count_tr = count_tr_;
+    count_tr[bi] = count_tr_;
     
     if(track_id==1000)
         track_id=0;
@@ -729,8 +733,8 @@ void CenternetDetection3DTrack::postprocess(const int bi, const bool mAP) {
 
     }    
     // track step
-    tracking();
-    batchTracked.push_back(tr_res);
+    tracking(bi);
+    batchTracked.push_back(tr_res[bi]);
 }
 
 void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {

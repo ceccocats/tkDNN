@@ -1,11 +1,11 @@
 #ifndef CENTERNETDETECTION3DTRACK_H
 #define CENTERNETDETECTION3DTRACK_H
 
+#include <opencv2/videoio.hpp>
+#include "opencv2/opencv.hpp"
 #include "kernels.h"
 #include "utils.h"
 #include "tkdnn.h"
-#include <opencv2/videoio.hpp>
-#include "opencv2/opencv.hpp"
 #include <time.h>
 #include <vector>
 #include <numeric>      // std::iota
@@ -51,7 +51,7 @@ struct trackingRes
 
 class CenternetDetection3DTrack : public DetectionNN3D
 {
-private:
+public:
     tk::dnn::dataDim_t dim;
     tk::dnn::dataDim_t dim2;
     tk::dnn::dataDim_t dim_hm; 
@@ -148,9 +148,9 @@ private:
     std::vector<struct detectionRes> det_res;
     int count_det;
     //tracks
-    std::vector<struct trackingRes> tr_res;
+    std::vector<std::vector<struct trackingRes>> tr_res;
     std::vector<std::vector<struct trackingRes>> batchTracked;
-    int count_tr;
+    std::vector<int> count_tr;
     int track_id=0;
   
     
@@ -161,7 +161,7 @@ private:
     void pre_inf(const int bi);
     void _get_additional_inputs();
     cv::Mat transform_preds_with_trans(float x1, float x2);
-    void tracking();
+    void tracking(int bi);
 
 public:
     tk::dnn::Network *pre_phase_net = nullptr;
