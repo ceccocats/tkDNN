@@ -151,7 +151,7 @@ public:
     std::vector<std::vector<struct trackingRes>> tr_res;
     std::vector<std::vector<struct trackingRes>> batchTracked;
     std::vector<int> count_tr;
-    int track_id=0;
+    std::vector<int> track_id;
   
     
     bool init_preprocessing();
@@ -161,7 +161,7 @@ public:
     void pre_inf(const int bi);
     void _get_additional_inputs();
     cv::Mat transform_preds_with_trans(float x1, float x2);
-    void tracking(int bi);
+    void tracking(const int bi);
 
 public:
     tk::dnn::Network *pre_phase_net = nullptr;

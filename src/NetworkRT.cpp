@@ -140,7 +140,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
 #else 
         //engineRT = builderRT->buildCudaEngine(*networkRT);
-        engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
+        engineRT = builderRT->buildCudaEngine(*networkRT);
 #endif
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")

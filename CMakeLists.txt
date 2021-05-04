@@ -46,6 +46,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
+if(OpenCV_CUDA_VERSION)
+    add_compile_definitions(OPENCV_CUDACONTRIB)
+endif()
 
 # gives problems in cross-compiling, probably malformed cmake config
 find_package(yaml-cpp REQUIRED)

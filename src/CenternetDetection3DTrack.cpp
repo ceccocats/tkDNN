@@ -14,12 +14,12 @@ bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n
     confThreshold = conf_thresh;
     inputCalibs = k_calibs;
     tr_res.resize(nBatches);
+    count_tr.resize(nBatches, 0);
     init_preprocessing();
     init_pre_inf();
     init_postprocessing();
     init_visualization(n_classes);
     
-    count_tr.resize(nBatches, 0);
 }
 
 bool CenternetDetection3DTrack::init_preprocessing(){
@@ -203,6 +203,11 @@ bool CenternetDetection3DTrack::init_postprocessing(){
     // Alloc array used in the kernel 
     checkCuda( cudaMalloc(&src_out, K *sizeof(float)) );
     checkCuda( cudaMalloc(&ids_out, K *sizeof(int)) );
+
+    for(int bi=0; bi<nBatches; bi++){
+        track_id.push_back(0);
+        count_tr.push_back(0);
+    }
 }
 
 bool CenternetDetection3DTrack::init_visualization(const int n_classes){
@@ -293,7 +298,6 @@ void CenternetDetection3DTrack::pre_inf(const int bi){
 
 void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi, const std::vector<cv::Size>& stream_size){
     // -----------------------------------pre-process ------------------------------------------
-    batchTracked.clear();
     cv::Size sz = originalSize[bi];
     float scale = 1.0;
     float new_height = sz.height * scale;
@@ -375,7 +379,7 @@ void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi, const s
  
     cv::warpAffine(imageF, imageF, trans, cv::Size(dim.w, dim.h), cv::INTER_LINEAR );
 
-    cv::imshow("warp", imageF);
+    //cv::imshow("warp", imageF);
  
     sz = imageF.size();
     imageF.convertTo(imageF, CV_32FC3, 1/255.0); 
@@ -418,8 +422,7 @@ cv::Mat CenternetDetection3DTrack::transform_preds_with_trans(float x1, float x2
     return trans_out * target_coords;
 }
 
-void CenternetDetection3DTrack::tracking(int bi){
-   
+void CenternetDetection3DTrack::tracking(const int bi) {
     float item_size[count_det];
     int item_cl[count_det];
     float dets[2*count_det];
@@ -495,7 +498,7 @@ void CenternetDetection3DTrack::tracking(int bi){
             int tr_id = matched_indices[2*i];
             int d_id = matched_indices[2*i+1];
             
-            // tr_res[bi][tr_id].det_res = det_res[d_id];
+            // tr_res[tr_id].det_res = det_res[d_id];
             tr_res[bi][tr_id].det_res.score = det_res[d_id].score;
             tr_res[bi][tr_id].det_res.cl = det_res[d_id].cl;
             tr_res[bi][tr_id].det_res.ct = det_res[d_id].ct;
@@ -527,7 +530,6 @@ void CenternetDetection3DTrack::tracking(int bi){
         tr_res[bi].clear();
         count_tr[bi] = 0;
     }
-
     int old_count_tr = count_tr[bi];
     if(count_tr[bi] != 0 && new_count_tr != count_tr[bi]) {
         std::vector<struct trackingRes> new_tr_res;
@@ -535,7 +537,7 @@ void CenternetDetection3DTrack::tracking(int bi){
         for(int i=0; i<count_tr[bi]; i++) {
             if(unmatched_tracks[i]) {
                 struct trackingRes new_tr_res_;
-                // new_tr_res_new_det_res.det_res = tr_res[bi][i].det_res;
+                // new_tr_res_new_det_res.det_res = tr_res[i].det_res;
                 new_tr_res_.det_res.score = tr_res[bi][i].det_res.score;
                 new_tr_res_.det_res.cl = tr_res[bi][i].det_res.cl;
                 new_tr_res_.det_res.ct = tr_res[bi][i].det_res.ct;
@@ -587,17 +589,24 @@ void CenternetDetection3DTrack::tracking(int bi){
             new_tr_res_.det_res.y = det_res[i].y;
             new_tr_res_.det_res.z = det_res[i].z;
             new_tr_res_.det_res.rot_y = det_res[i].rot_y;
-            new_tr_res_.tracking_id = track_id++; 
+            new_tr_res_.tracking_id = track_id[bi]++; 
             new_tr_res_.age = 1; 
             new_tr_res_.active = 1;
             new_tr_res_.color = rand() % 256;
-            tr_res[bi].push_back(new_tr_res_);
+            if(tr_res.size() <= bi) {
+                std::vector<struct trackingRes> v_new_tr_res_;
+                v_new_tr_res_.push_back(new_tr_res_);    
+                tr_res.push_back(v_new_tr_res_);
+            }
+            else
+                tr_res[bi].push_back(new_tr_res_);
         }
     }
+
     count_tr[bi] = count_tr_;
     
-    if(track_id==1000)
-        track_id=0;
+    if(track_id[bi]==1000)
+        track_id[bi]=0;
     det_res.clear();
     
 }
@@ -747,8 +756,8 @@ void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
     int thickness = 2;
     for(int bi=0; bi<frames.size(); ++bi) {
         // draw dets
-        for(int i=0; i<batchTracked[bi].size(); i++) {
-            t = batchTracked[bi][i];
+        for(int i=0; tr_res.size() != 0 && i<tr_res[bi].size(); i++) {
+            t = tr_res[bi][i];
             id = t.tracking_id;
             txt = classesNames[t.det_res.cl-1]+'-'+std::to_string(id); //forse ha bisogno di cl-1
             cv::Size text_size = getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
