@@ -4,7 +4,7 @@
 //#include <unistd.h>
 #include <mutex>
 
-#include "CenternetDetection3D.h"
+#include "CenterTrack.h"
 
 bool gRun;
 bool SAVE_RESULT = false;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sig_handler);
 
 
-    std::string net = "dla34_cnet3d_fp32.rt";
+    std::string net = "dla34_cnet3d_track_fp32.rt";
     if(argc > 1)
         net = argv[1]; 
     #ifdef __linux__ 
@@ -45,22 +45,24 @@ int main(int argc, char *argv[]) {
         show = atoi(argv[6]); 
     float conf_thresh=0.3;
     if(argc > 7)
-        conf_thresh = atof(argv[7]);     
-
+        conf_thresh = atof(argv[7]);   
+    bool t3d = true;
+    if(argc > 8)
+        t3d = atoi(argv[8]);
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
 
     if(!show)
 	SAVE_RESULT = true;
 
-    tk::dnn::CenternetDetection3D cnet;
+    tk::dnn::CenterTrack ctrack;
 
-    tk::dnn::DetectionNN3D *detNN;  
+    tk::dnn::TrackingNN *trackNN;  
 
     switch(ntype)
     {
         case 'c':
-            detNN = &cnet;
+            trackNN = &ctrack;
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
@@ -75,7 +77,7 @@ int main(int argc, char *argv[]) {
     // calibs.push_back(calib);
     // calibs.push_back(calib);
     // calibs.push_back(calib);
-    detNN->init(net, n_classes, n_batch, conf_thresh, calibs);
+    trackNN->init(net, n_classes, n_batch, conf_thresh, t3d, calibs);
 
     gRun = true;
 
@@ -115,8 +117,8 @@ int main(int argc, char *argv[]) {
             break;  
  
         //inference
-        detNN->update(batch_dnn_input, n_batch, false, nullptr, false);
-        detNN->draw(batch_frame);
+        trackNN->update(batch_dnn_input, n_batch, false, nullptr, false);
+        trackNN->draw(batch_frame);
 
         if(show){
             for(int bi=0; bi< n_batch; ++bi){
@@ -132,21 +134,21 @@ int main(int argc, char *argv[]) {
     double mean = 0; 
     
     std::cout<<COL_GREENB<<"\n\nTime preprocessing stats:\n";
-    std::cout<<"Min: "<<*std::min_element(detNN->pre_stats.begin(), detNN->pre_stats.end())<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(detNN->pre_stats.begin(), detNN->pre_stats.end())<<" ms\n";    
-    for(int i=0; i<detNN->pre_stats.size(); i++) mean += detNN->pre_stats[i]; mean /= detNN->pre_stats.size();
+    std::cout<<"Min: "<<*std::min_element(trackNN->pre_stats.begin(), trackNN->pre_stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(trackNN->pre_stats.begin(), trackNN->pre_stats.end())<<" ms\n";    
+    for(int i=0; i<trackNN->pre_stats.size(); i++) mean += trackNN->pre_stats[i]; mean /= trackNN->pre_stats.size();
     std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
     mean=0;
     std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
-    for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
+    std::cout<<"Min: "<<*std::min_element(trackNN->stats.begin(), trackNN->stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(trackNN->stats.begin(), trackNN->stats.end())<<" ms\n";    
+    for(int i=0; i<trackNN->stats.size(); i++) mean += trackNN->stats[i]; mean /= trackNN->stats.size();
     std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
     mean=0;
     std::cout<<COL_GREENB<<"\n\nTime postprocessing stats:\n";
-    std::cout<<"Min: "<<*std::min_element(detNN->post_stats.begin(), detNN->post_stats.end())<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(detNN->post_stats.begin(), detNN->post_stats.end())<<" ms\n";    
-    for(int i=0; i<detNN->post_stats.size(); i++) mean += detNN->post_stats[i]; mean /= detNN->post_stats.size();
+    std::cout<<"Min: "<<*std::min_element(trackNN->post_stats.begin(), trackNN->post_stats.end())<<" ms\n";    
+    std::cout<<"Max: "<<*std::max_element(trackNN->post_stats.begin(), trackNN->post_stats.end())<<" ms\n";    
+    for(int i=0; i<trackNN->post_stats.size(); i++) mean += trackNN->post_stats[i]; mean /= trackNN->post_stats.size();
     std::cout<<"Avg: "<<mean<<" ms\n"<<COL_END;   
     
     

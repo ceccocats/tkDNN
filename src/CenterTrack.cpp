@@ -1,16 +1,17 @@
-#include "CenternetDetection3DTrack.h"
+#include "CenterTrack.h"
 
 
 namespace tk { namespace dnn {
 
 
-bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n_classes, const int n_batches, 
-                                    const float conf_thresh, const std::vector<cv::Mat>& k_calibs) {
+bool CenterTrack::init(const std::string& tensor_path, const int n_classes, const int n_batches, 
+                                    const float conf_thresh, const bool mode_3d, const std::vector<cv::Mat>& k_calibs) {
     netRT         = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     dim           = netRT->input_dim;
     dim.c         = 3;
     nBatches      = n_batches;
     confThreshold = conf_thresh;
+    mode3D = mode_3d;
     inputCalibs   = k_calibs;
     init_preprocessing();
     init_pre_inf();
@@ -18,7 +19,7 @@ bool CenternetDetection3DTrack::init(const std::string& tensor_path, const int n
     init_visualization(n_classes);
 }
 
-bool CenternetDetection3DTrack::init_preprocessing(){
+bool CenterTrack::init_preprocessing(){
     //image transformation
     src      = cv::Mat(cv::Size(2,3), CV_32F);
     dst      = cv::Mat(cv::Size(2,3), CV_32F);
@@ -60,12 +61,12 @@ bool CenternetDetection3DTrack::init_preprocessing(){
     checkCuda( cudaMalloc(&d_ptrs, dim.tot() * sizeof(float)) );
 }
 
-bool CenternetDetection3DTrack::init_pre_inf(){
+bool CenterTrack::init_pre_inf(){
     // initial steps: the first part of the network
-    const char *pre_img_conv1_bin = "dla34_cnet3d_track/layers/base-pre_img_layer-0.bin";
-    const char *pre_hm_conv1_bin  = "dla34_cnet3d_track/layers/base-pre_hm_layer-0.bin";
-    const char *conv1_bin         = "dla34_cnet3d_track/layers/base-base_layer-0.bin";
-    const char *conv2_bin         = "dla34_cnet3d_track/layers/base-level0-0.bin";
+    const char *pre_img_conv1_bin = "dla34_ctrack/layers/base-pre_img_layer-0.bin";
+    const char *pre_hm_conv1_bin  = "dla34_ctrack/layers/base-pre_hm_layer-0.bin";
+    const char *conv1_bin         = "dla34_ctrack/layers/base-base_layer-0.bin";
+    const char *conv2_bin         = "dla34_ctrack/layers/base-level0-0.bin";
     dim_in0 = tk::dnn::dataDim_t(1, 3, 512, 512, 1);
     dim_in1 = tk::dnn::dataDim_t(1, 1, 512, 512, 1);
     
@@ -82,9 +83,9 @@ bool CenternetDetection3DTrack::init_pre_inf(){
     dnnType *i0_h, *i1_h, *i2_h;
     // dnnType *i0_d, *i1_d, *i2_d;
 
-    // const char *input_bin = "dla34_cnet3d_track/debug/input.bin";
-    // const char *pre_img_bin = "dla34_cnet3d_track/debug/pre_imgages.bin";
-    // const char *pre_hm_bin = "dla34_cnet3d_track/debug/pre_hms.bin";
+    // const char *input_bin = "dla34_ctrack/debug/input.bin";
+    // const char *pre_img_bin = "dla34_ctrack/debug/pre_imgages.bin";
+    // const char *pre_hm_bin = "dla34_ctrack/debug/pre_hms.bin";
     // readBinaryFile(pre_img_bin, dim_in0.tot(), &i0_h, &img_d);
     // readBinaryFile(pre_hm_bin, dim_in1.tot(), &i1_h, &hm_d);
     // readBinaryFile(input_bin, dim_in0.tot(), &i2_h, &input_pre_inf_d);
@@ -114,7 +115,7 @@ bool CenternetDetection3DTrack::init_pre_inf(){
     return true;
 }
 
-bool CenternetDetection3DTrack::init_postprocessing(){
+bool CenterTrack::init_postprocessing(){
     srand(0); //seed = 0 for random colors
 
     dim_hm              = tk::dnn::dataDim_t(1, 10, 128, 128, 1);
@@ -203,7 +204,7 @@ bool CenternetDetection3DTrack::init_postprocessing(){
     trackId.resize(nBatches, 0);
 }
 
-bool CenternetDetection3DTrack::init_visualization(const int n_classes){
+bool CenterTrack::init_visualization(const int n_classes){
     classes = n_classes;
     // const char *kitti_class_name[] = {
     //         "person", "car", "bicycle"};
@@ -275,11 +276,11 @@ bool CenternetDetection3DTrack::init_visualization(const int n_classes){
     // ([[0,1,5,4], [1,2,6, 5], [2,3,7,6], [3,0,4,7]]);
 }
 
-void CenternetDetection3DTrack::_get_additional_inputs(){
+void CenterTrack::_get_additional_inputs(){
     //None no additional input
 }
 
-void CenternetDetection3DTrack::pre_inf(const int bi){
+void CenterTrack::pre_inf(const int bi){
     TKDNN_TSTART
     tk::dnn::dataDim_t dim_aus;
     pre_phase_net->infer(dim_aus, nullptr);
@@ -289,7 +290,7 @@ void CenternetDetection3DTrack::pre_inf(const int bi){
     checkCuda( cudaDeviceSynchronize() );
 }
 
-void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi){
+void CenterTrack::preprocess(cv::Mat &frame, const int bi){
     cv::Size sz = originalSize[bi];
     // float scale = 1.0;
     float new_height = dim.h;//sz.height * scale;
@@ -403,7 +404,7 @@ void CenternetDetection3DTrack::preprocess(cv::Mat &frame, const int bi){
     checkCuda( cudaDeviceSynchronize() );
 }
 
-cv::Mat CenternetDetection3DTrack::transform_preds_with_trans(float x1, float x2){
+cv::Mat CenterTrack::transform_preds_with_trans(float x1, float x2){
     cv::Mat target_coords(cv::Size(1,3), CV_32F);
     target_coords.at<float>(0,0) = x1;
     target_coords.at<float>(0,1) = x2;
@@ -411,7 +412,7 @@ cv::Mat CenternetDetection3DTrack::transform_preds_with_trans(float x1, float x2
     return transOut * target_coords;
 }
 
-void CenternetDetection3DTrack::tracking(const int bi) {
+void CenterTrack::tracking(const int bi) {
     float item_size[countDet];
     int item_cl[countDet];
     float dets[2*countDet];
@@ -600,7 +601,7 @@ void CenternetDetection3DTrack::tracking(const int bi) {
     
 }
 
-void CenternetDetection3DTrack::postprocess(const int bi, const bool mAP) {
+void CenterTrack::postprocess(const int bi, const bool mAP) {
     dnnType *rt_out[9];
     rt_out[0] = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
     rt_out[1] = (dnnType *)netRT->buffersRT[2]+ netRT->buffersDIM[2].tot()*bi;
@@ -734,7 +735,7 @@ void CenternetDetection3DTrack::postprocess(const int bi, const bool mAP) {
     tracking(bi);
 }
 
-void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
+void CenterTrack::draw(std::vector<cv::Mat>& frames) {
     struct trackingRes t;
     float sc;
     int id;
@@ -755,7 +756,7 @@ void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
             cv::Size text_size = getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
             
             if(t.det_res.score > confThreshold){// && t.active!=0) {
-                if(view2d) {
+                if(!mode3D) {
                     cv::rectangle(frames[bi],  
                                     cv::Point(t.det_res.bb0.at<float>(0,0) * scale_x, t.det_res.bb0.at<float>(0,1) * scale_y), 
                                     cv::Point(t.det_res.bb1.at<float>(0,0) * scale_x, t.det_res.bb1.at<float>(0,1) * scale_y), 
@@ -776,7 +777,7 @@ void CenternetDetection3DTrack::draw(std::vector<cv::Mat>& frames) {
                                     cv::Scalar(255, 0, 255), 2);
                 }
                 //3d
-                if(!view2d && t.det_res.z > 1){
+                if(mode3D && t.det_res.z > 1){
                     r.at<float>(0,0) = std::cos(t.det_res.rot_y);
                     r.at<float>(0,2) = std::sin(t.det_res.rot_y);
                     r.at<float>(2,0) = -std::sin(t.det_res.rot_y);

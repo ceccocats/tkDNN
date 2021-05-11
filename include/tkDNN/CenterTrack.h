@@ -1,5 +1,5 @@
-#ifndef CENTERNETDETECTION3DTRACK_H
-#define CENTERNETDETECTION3DTRACK_H
+#ifndef CENTERTRACK_H
+#define CENTERTRACK_H
 
 #include <opencv2/videoio.hpp>
 #include "opencv2/opencv.hpp"
@@ -11,7 +11,7 @@
 #include <numeric>      // std::iota
 #include <algorithm>    // std::sort
 
-#include "DetectionNN3D.h"
+#include "TrackingNN.h"
 
 #include "kernelsThrust.h"
 
@@ -49,7 +49,7 @@ struct trackingRes
     int color;
 };
 
-class CenternetDetection3DTrack : public DetectionNN3D
+class CenterTrack : public TrackingNN
 {
 public:
     tk::dnn::dataDim_t dim;
@@ -133,7 +133,7 @@ public:
 
     std::vector<std::vector<int>> faceId;
     cv::Scalar trColors[256];
-    bool view2d = false;
+    bool mode3D;
 
     //processing
     struct threshold op;
@@ -163,9 +163,11 @@ public:
 
 public:
     tk::dnn::Network *pre_phase_net = nullptr;
-    CenternetDetection3DTrack() {};
-    ~CenternetDetection3DTrack() {};
-    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, const float conf_thresh=0.3, const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
+    CenterTrack() {};
+    ~CenterTrack() {};
+    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, 
+              const float conf_thresh=0.3, const bool mode_3d=true, 
+              const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
     void preprocess(cv::Mat &frame, const int bi=0);
     void postprocess(const int bi=0,const bool mAP=false);
     void draw(std::vector<cv::Mat>& frames);
@@ -176,4 +178,4 @@ public:
 } // namespace tk
 
 
-#endif /*CENTERNETDETECTION3DTRACK_H*/
+#endif /*CENTERTRACK_H*/

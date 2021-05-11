@@ -46,9 +46,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
-if(OpenCV_CUDA_VERSION)
-    add_compile_definitions(OPENCV_CUDACONTRIB)
-endif()
+# if(OpenCV_CUDA_VERSION)
+#     add_compile_definitions(OPENCV_CUDACONTRIB)
+# endif()
 
 # gives problems in cross-compiling, probably malformed cmake config
 find_package(yaml-cpp REQUIRED)
@@ -120,8 +120,8 @@ target_link_libraries(test_resnet101_cnet3d tkDNN)
 add_executable(test_dla34_cnet3d tests/centernet/dla34_cnet3d/dla34_cnet3d.cpp)
 target_link_libraries(test_dla34_cnet3d tkDNN)
 
-add_executable(test_dla34_cnet3d_track tests/centernet/dla34_cnet3d_track/dla34_cnet3d_track.cpp)
-target_link_libraries(test_dla34_cnet3d_track tkDNN)
+add_executable(test_dla34_ctrack tests/centertrack/dla34_ctrack/dla34_ctrack.cpp)
+target_link_libraries(test_dla34_ctrack tkDNN)
 
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
@@ -135,6 +135,9 @@ target_link_libraries(demo tkDNN)
 
 add_executable(demo3D demo/demo/demo3D.cpp)
 target_link_libraries(demo3D tkDNN)
+
+add_executable(demoTracker demo/demo/demoTracker.cpp)
+target_link_libraries(demoTracker tkDNN)
 
 #-------------------------------------------------------------------------------
 # Install
