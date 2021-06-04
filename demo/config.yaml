@@ -1,5 +1,5 @@
-classes     : 80    #number of classes
-map_points  : 101   #number of recall points (0 for all, 101 for COCO, 11 PascalVOC)
+classes     : 13    #number of classes
+map_points  : 0   #number of recall points (0 for all, 101 for COCO, 11 PascalVOC)
 map_levels  : 10    #number of IoU step for the AP
 map_step    : 0.05  #step of IoU
 IoU_thresh  : 0.5   #starting IoU threshold
