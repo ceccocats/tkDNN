@@ -347,21 +347,21 @@ void CenternetDetection::postprocess(const int bi, const bool mAP){
         new_pt1.at<float>(0,0)=static_cast<float>(trans2.at<double>(0,0))*bbx0[i] +
                                 static_cast<float>(trans2.at<double>(0,1))*bby0[i] +
                                 static_cast<float>(trans2.at<double>(0,2))*1.0;
-        new_pt1.at<float>(0,1)=static_cast<float>(trans2.at<double>(1,0))*bbx0[i] +
+        new_pt1.at<float>(1,0)=static_cast<float>(trans2.at<double>(1,0))*bbx0[i] +
                                 static_cast<float>(trans2.at<double>(1,1))*bby0[i] +
                                 static_cast<float>(trans2.at<double>(1,2))*1.0;
 
         new_pt2.at<float>(0,0)=static_cast<float>(trans2.at<double>(0,0))*bbx1[i] +
                                 static_cast<float>(trans2.at<double>(0,1))*bby1[i] +
                                 static_cast<float>(trans2.at<double>(0,2))*1.0;
-        new_pt2.at<float>(0,1)=static_cast<float>(trans2.at<double>(1,0))*bbx1[i] +
+        new_pt2.at<float>(1,0)=static_cast<float>(trans2.at<double>(1,0))*bbx1[i] +
                                 static_cast<float>(trans2.at<double>(1,1))*bby1[i] +
                                 static_cast<float>(trans2.at<double>(1,2))*1.0;
 
         target_coords[i*4] = new_pt1.at<float>(0,0);
-        target_coords[i*4+1] = new_pt1.at<float>(0,1);
+        target_coords[i*4+1] = new_pt1.at<float>(1,0);
         target_coords[i*4+2] = new_pt2.at<float>(0,0);
-        target_coords[i*4+3] = new_pt2.at<float>(0,1);
+        target_coords[i*4+3] = new_pt2.at<float>(1,0);
     }
        
     detected.clear();
