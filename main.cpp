@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
 #endif
 {
     init_logging();
+    handler::init_bag();
     utility::string_t port = U("8080");
     if(argc == 2)
     {

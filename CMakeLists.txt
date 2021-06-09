@@ -56,7 +56,7 @@ find_package(yaml-cpp REQUIRED)
 #-------------------------------------------------------------------------------
 # Build Libraries
 #-------------------------------------------------------------------------------
-file(GLOB tkdnn_SRC "src/*.cpp")
+file(GLOB tkdnn_SRC "src/*.cpp",src/*.c)
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -85,7 +85,7 @@ set(Casablanca_LIBRARIES "-lboost_log -lboost_log_setup -lboost_thread -lboost_s
 # If no CMakeLists.txt file changes when a source is added or removed then the generated build system cannot know
 # when to ask CMake to regenerate.
 
-file(GLOB_RECURSE SOURCE_FILES "main.cpp" "handler.cpp" "src/*.cpp")
+file(GLOB_RECURSE SOURCE_FILES "main.cpp" "handler.cpp" "src/*.cpp","src/*.c")
 
 add_executable(baggageAPI ${SOURCE_FILES})
 set(Casablanca_LIBRARIES "-lboost_log -lboost_log_setup -lboost_thread -lboost_system -lcrypto -lssl -lcpprest -lpthread" )

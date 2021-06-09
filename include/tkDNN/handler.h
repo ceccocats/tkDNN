@@ -17,7 +17,7 @@ class handler
 
         pplx::task<void>open(){return m_listener.open();}
         pplx::task<void>close(){return m_listener.close();}
-
+    static void init_bag();
     protected:
 
     private:

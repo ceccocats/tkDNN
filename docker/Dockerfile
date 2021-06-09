@@ -27,5 +27,5 @@ COPY --chown=baggageai:baggageai . files/
 #RUN aws s3 cp s3://dim-bai-s3-dev-developer-space/smiths_29_objects/libBaggageAI.so files/
 
 WORKDIR /home/baggageai/files
-#RUN chmod 777 run.sh
+RUN chmod 777 run.sh
 #ENTRYPOINT ["./run.sh"]
