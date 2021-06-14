@@ -122,16 +122,25 @@ add_executable(demo demo/demo/demo.cpp)
 target_link_libraries(demo tkDNN)
 
 #-------------------------------------------------------------------------------
-# Install
+# Install and Uninstall
 #-------------------------------------------------------------------------------
 #if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 #    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
 #         CACHE PATH "default install path" FORCE)
 #endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY include/ DESTINATION include/)
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS tkDNN kernels DESTINATION lib)
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
-        DESTINATION "share/tkDNN/cmake/" # target directory
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake" # source directory
+        DESTINATION "share/tkDNN" # target directory
 )
 
+# uninstall target 
+if(NOT TARGET uninstall) 
+  configure_file( 
+      "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in" 
+      "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake" 
+      IMMEDIATE @ONLY) 
+ 
+  add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake) 
+endif() 
