@@ -42,6 +42,7 @@ target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
 # External Libraries
 #-------------------------------------------------------------------------------
 find_package(Eigen3 REQUIRED)
+include_directories("Eigen DIR: " ${EIGEN3_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
