@@ -10,6 +10,8 @@
 
 bool gRun;
 bool SAVE_RESULT = false;
+bool save_detections = true;
+std::ofstream outfile;
 
 void sig_handler(int signo) {
     std::cout<<"request gateway stop\n";
@@ -101,6 +103,11 @@ int main(int argc, char *argv[]) {
     std::vector<cv::Mat> batch_frame;
     std::vector<cv::Mat> batch_dnn_input;
 
+    if(save_detections)
+	outfile.open("detections.txt", std::ofstream::out);
+
+    int frame_num = -1;
+
     while(gRun) {
         batch_dnn_input.clear();
         batch_frame.clear();
@@ -122,6 +129,22 @@ int main(int argc, char *argv[]) {
         detNN->update(batch_dnn_input, n_batch);
         detNN->draw(batch_frame);
 
+	if(save_detections){
+	    frame_num++;
+	    tk::dnn::box b;
+	    for(int bi=0; bi<batch_frame.size(); ++bi){
+                for(int i=0; i < detNN->batchDetected[bi].size(); i++) { 
+                    b = detNN->batchDetected[bi][i];
+                    int x0   		 = b.x;
+                    int w  		 = b.w;
+                    int y0   		 = b.y;
+                    int h  		 = b.h;
+	            std::string det_class = detNN->classesNames[b.cl];
+	            outfile<<frame_num<<" "<<det_class<<" "<<x0<<" "<<w<<" "<<y0<<" "<<h<<"\n";
+                }
+            }
+	}
+
         if(show){
             for(int bi=0; bi< n_batch; ++bi){
                 cv::imshow("detection", batch_frame[bi]);
@@ -131,6 +154,9 @@ int main(int argc, char *argv[]) {
         if(n_batch == 1 && SAVE_RESULT)
             resultVideo << frame;
     }
+
+    if(save_detections)
+        outfile.close();
 
     std::cout<<"detection end\n";   
     double mean = 0; 
