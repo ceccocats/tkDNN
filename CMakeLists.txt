@@ -17,7 +17,13 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
-add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+if(TKDNN_PATH)
+    message("SET TKDNN_PATH:"${TKDNN_PATH})
+    add_definitions(-DTKDNN_PATH="${TKDNN_PATH}")
+else()
+    add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
 
 #-------------------------------------------------------------------------------
 # CUDA
@@ -137,4 +143,6 @@ install(TARGETS test_rtinference demo map_demo DESTINATION bin)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
         DESTINATION "share/tkDNN/cmake/" # target directory
 )
-
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests/" # source directory
+        DESTINATION "share/tkDNN/tests" # target directory
+)
