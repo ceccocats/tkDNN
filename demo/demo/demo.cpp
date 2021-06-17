@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
                     int y0   		 = b.y;
                     int h  		 = b.h;
 	            std::string det_class = detNN->classesNames[b.cl];
-	            outfile<<frame_num<<" "<<det_class<<" "<<x0<<" "<<w<<" "<<y0<<" "<<h<<"\n";
+	            outfile<<frame_num<<";"<<det_class<<";"<<x0<<";"<<w<<";"<<y0<<";"<<h<<"\n";
                 }
             }
 	}
