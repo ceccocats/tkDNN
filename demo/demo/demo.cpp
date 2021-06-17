@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
     std::vector<cv::Mat> batch_dnn_input;
 
     if(save_detections)
-	outfile.open("detections.txt", std::ofstream::out);
+	outfile.open("detections.csv", std::ofstream::out);
 
     int frame_num = -1;
 
