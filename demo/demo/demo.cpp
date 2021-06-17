@@ -135,12 +135,8 @@ int main(int argc, char *argv[]) {
 	    for(int bi=0; bi<batch_frame.size(); ++bi){
                 for(int i=0; i < detNN->batchDetected[bi].size(); i++) { 
                     b = detNN->batchDetected[bi][i];
-                    int x0   		 = b.x;
-                    int w  		 = b.w;
-                    int y0   		 = b.y;
-                    int h  		 = b.h;
 	            std::string det_class = detNN->classesNames[b.cl];
-	            outfile<<frame_num<<";"<<det_class<<";"<<x0<<";"<<w<<";"<<y0<<";"<<h<<"\n";
+	            outfile<<frame_num<<";"<<det_class<<";"<<b.x<<";"<<b.y<<";"<<b.x+b.w<<";"<<b.y+b.h<<"\n";
                 }
             }
 	}
