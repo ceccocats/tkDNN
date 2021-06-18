@@ -3,8 +3,15 @@
 
 #include <string>
 #include "utils.h"
+#include "NvInfer.h"
 
 namespace tk { namespace dnn {
+
+enum dimFormat_t {
+    CHW,
+    NCHW,
+    //NHWC
+};
 
 /**
     Data representation between layers
@@ -19,6 +26,32 @@ struct dataDim_t {
     int n, c, h, w, l;
 
     dataDim_t() : n(1), c(1), h(1), w(1), l(1) {};
+
+    dataDim_t(nvinfer1::Dims &d, dimFormat_t df) {
+            switch(df) {
+                case CHW:
+                    n=1;
+                    c = d.d[0] ? d.d[0] : 1;
+                    h = d.d[1] ? d.d[1] : 1;
+                    w = d.d[2] ? d.d[2] : 1;
+                    l = d.d[3] ? d.d[3] : 1;
+                    break;
+                case NCHW:
+                    n = d.d[0] ? d.d[0] : 1;
+                    c = d.d[1] ? d.d[1] : 1;
+                    h = d.d[2] ? d.d[2] : 1;
+                    w = d.d[3] ? d.d[3] : 1;
+                    l = d.d[4] ? d.d[4] : 1;
+                    break;
+                // case NHWC:
+                //     n = d.d[0] ? d.d[0] : 1;
+                //     h = d.d[1] ? d.d[1] : 1;
+                //     w = d.d[2] ? d.d[2] : 1;
+                //     c = d.d[3] ? d.d[3] : 1;
+                //     l = d.d[4] ? d.d[4] : 1;
+                //     break;
+            }
+        };
 
     dataDim_t(int _n, int _c, int _h, int _w, int _l = 1) :
         n(_n), c(_c), h(_h), w(_w), l(_l) {};
