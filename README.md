@@ -225,6 +225,7 @@ Once you have successfully created your rt file, run the demo:
 ./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y
 ```
 In general the demo program takes 7 parameters:
+
 ```
 ./demo <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh>
 ```
@@ -241,6 +242,13 @@ N.b. By default it is used FP32 inference
 
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
+
+## PYTHON
+To run the an object detection demo with python (example with yolov4):
+```
+python darknetTR.py build/yolo4_fp16.rt --video=demo/yolo_test.mp4
+```
+
 
 ### FP16 inference
 

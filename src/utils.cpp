@@ -1,6 +1,48 @@
 #include "utils.h"
 #include <string.h>
 
+void *xmalloc(size_t size) {
+    void *ptr=malloc(size);
+    if(!ptr) {
+        malloc_error();
+    }
+    return ptr;
+}
+
+void *xcalloc(size_t nmemb, size_t size) {
+    void *ptr=calloc(nmemb,size);
+    if(!ptr) {
+        calloc_error();
+    }
+    return ptr;
+}
+
+void *xrealloc(void *ptr, size_t size) {
+    ptr=realloc(ptr,size);
+    if(!ptr) {
+        realloc_error();
+    }
+    return ptr;
+}
+
+void malloc_error()
+{
+    fprintf(stderr, "xMalloc error\n");
+    exit(EXIT_FAILURE);
+}
+
+void calloc_error()
+{
+    fprintf(stderr, "Calloc error\n");
+    exit(EXIT_FAILURE);
+}
+
+void realloc_error()
+{
+    fprintf(stderr, "Realloc error\n");
+    exit(EXIT_FAILURE);
+}
+
 void printCenteredTitle(const char *title, char fill, int dim) {
 
     int len = strlen(title);
