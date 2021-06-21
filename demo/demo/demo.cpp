@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
     std::vector<cv::Mat> batch_dnn_input;
 
     if(save_detections)
-	outfile.open("detections.csv", std::ofstream::out);
+    	outfile.open("detections.csv", std::ofstream::out);
 
     int frame_num = -1;
 
@@ -129,17 +129,17 @@ int main(int argc, char *argv[]) {
         detNN->update(batch_dnn_input, n_batch);
         detNN->draw(batch_frame);
 
-	if(save_detections){
-	    frame_num++;
-	    tk::dnn::box b;
-	    for(int bi=0; bi<batch_frame.size(); ++bi){
-                for(int i=0; i < detNN->batchDetected[bi].size(); i++) { 
-                    b = detNN->batchDetected[bi][i];
-	            std::string det_class = detNN->classesNames[b.cl];
-	            outfile<<frame_num<<";"<<det_class<<";"<<b.x<<";"<<b.y<<";"<<b.x+b.w<<";"<<b.y+b.h<<"\n";
+        if(save_detections){
+            frame_num++;
+            tk::dnn::box b;
+            for(int bi=0; bi<batch_frame.size(); ++bi){
+                    for(int i=0; i < detNN->batchDetected[bi].size(); i++) { 
+                        b = detNN->batchDetected[bi][i];
+                        std::string det_class = detNN->classesNames[b.cl];
+                        outfile<<frame_num<<";"<<det_class<<";"<<b.x<<";"<<b.y<<";"<<b.x+b.w<<";"<<b.y+b.h<<"\n";
+                    }
                 }
-            }
-	}
+        }
 
         if(show){
             for(int bi=0; bi< n_batch; ++bi){
