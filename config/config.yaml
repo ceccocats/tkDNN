@@ -1,0 +1,15 @@
+classes1     : 13    #number of classes
+conf_thresh1 : 0.3   #threshold on the condifence of the bbox
+net1        : ../demo/yolo4x_fp16.rt
+classes2     : 13    #number of classes
+conf_thresh2 : 0.3   #threshold on the condifence of the bbox
+net2        : ../demo/yolo4x_fp16.rt
+classes3     : 13    #number of classes
+conf_thresh3 : 0.3   #threshold on the condifence of the bbox
+net3        : ../demo/yolo4x_fp16.rt
+classes4     : 13    #number of classes
+conf_thresh4 : 0.3   #threshold on the condifence of the bbox
+net4        : ../demo/yolo4x_fp16.rt
+classes5     : 13    #number of classes
+conf_thresh5 : 0.3   #threshold on the condifence of the bbox
+net5        : ../demo/yolo4x_fp16.rt

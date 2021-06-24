@@ -31,9 +31,12 @@ struct PR
     void print();
 };
 
-void readmAPParams( const char* config_filename, int& classes, int& map_points, 
-                    int& map_levels, float& map_step, float& IoU_thresh, 
-                    float& conf_thresh, bool& verbose);
+void readmAPParams( const char* config_filename, int& classes1,float& conf_thresh1
+    , int& classes2,float& conf_thresh2
+    , int& classes3,float& conf_thresh3
+    , int& classes4,float& conf_thresh4
+    , int& classes5,float& conf_thresh5
+                    );
 
 /**
  * This method computes the mean Average Precision for a set of detections and 
@@ -113,4 +116,5 @@ void printJsonCOCOFormat(std::ofstream *out_file, const std::string image_path, 
 
 }}
 #endif /*EVALUATION_H*/
+
 

@@ -1,6 +1,5 @@
 #include "evaluation.h"
 #include <fstream>
-
 namespace tk { namespace dnn {
 
 void Frame::print() const{
@@ -16,17 +15,23 @@ void PR::print(){
     std::cout<<"precision: "<<precision<<" recall: "<<recall<<" tp: "<<tp<<" fp:"<<fp<<" fn:"<<fn<<std::endl;
 }
 
-void readmAPParams( const char* config_filename, int& classes, int& map_points, 
-                    int& map_levels, float& map_step, float& IoU_thresh, 
-                    float& conf_thresh, bool& verbose) {
+void readmAPParams( const char* config_filename, int& classes1,float& conf_thresh1
+    , int& classes2,float& conf_thresh2
+    , int& classes3,float& conf_thresh3
+    , int& classes4,float& conf_thresh4
+    , int& classes5,float& conf_thresh5
+                    ) {
     YAML::Node config   = YAML::LoadFile(config_filename);
-    classes     = config["classes"].as<int>();
-    map_points  = config["map_points"].as<int>();
-    map_levels  = config["map_levels"].as<int>();
-    map_step    = config["map_step"].as<float>();
-    IoU_thresh  = config["IoU_thresh"].as<float>();
-    conf_thresh = config["conf_thresh"].as<float>();
-    verbose     = config["verbose"].as<bool>();
+    classes1     = config["classes1"].as<int>();
+    conf_thresh1 = config["conf_thresh1"].as<float>();
+    classes2     = config["classes2"].as<int>();
+    conf_thresh2 = config["conf_thresh2"].as<float>();
+    classes3     = config["classes3"].as<int>();
+    conf_thresh3 = config["conf_thresh3"].as<float>();
+    classes4     = config["classes4"].as<int>();
+    conf_thresh4 = config["conf_thresh4"].as<float>();
+    classes5    = config["classes5"].as<int>();
+    conf_thresh5 = config["conf_thresh5"].as<float>();
 }
 
 /* Credits to https://github.com/AlexeyAB/darknet/blob/master/src/detector.c*/
