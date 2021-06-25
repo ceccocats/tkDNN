@@ -113,12 +113,12 @@ cv::Mat image_to_mat(image img)
     int h=0;
     int w=0;
     int channels;
-    const char *config_filename = "../config/config.yaml";
-    const char * net1="../config/yolo4x_fp16.rt";
-    const char * net2="../config/yolo4x_fp16.rt";
-    const char * net3="../config/yolo4x_fp16.rt";
-    const char * net4="../config/yolo4x_fp16.rt";
-    const char * net5="../config/yolo4x_fp16.rt";    
+    const char *config_filename = "config/config.yaml";
+    const char * net1="config/yolo4x_fp16.rt";
+    const char * net2="config/yolo4x_fp16.rt";
+    const char * net3="config/yolo4x2_fp16.rt";
+    const char * net4="config/yolo4x2_fp16.rt";
+    const char * net5="config/yolo4x_fp16.rt";    
     int classes1 , classes2 , classes3 , classes4 , classes5,len;
     char * img_data;
 
@@ -200,25 +200,17 @@ string name_from_path(string path)
     idata = stbi_load_from_memory(sockData, len, &w, &h, &channels, 0);
     im = load_image_file(idata, channels, 0, 0, w, h);
     batch_dnn_input.clear();
-    batch_frames.clear();
+    //batch_frames.clear();
     gray=image_to_mat(im);
 //    free(im);
     cv::Mat in[] = {gray, gray,gray};
     cv::merge(in, 3, frame);
-    
-    batch_frames.push_back(frame);
-    int height = frame.rows;
-    int width = frame.cols;
-    
     batch_dnn_input.push_back(frame.clone());
-    
-   
     json::value response;
     vector<json::value> jsonArray;
    
-     detected_bbox1.clear();
+    detected_bbox1.clear();
     detNN1->update(batch_dnn_input,1);
-    std::cout<<batch_dnn_input.rows<<" "<<batch_dnn_input.cols<<"\n";
     detected_bbox1 = detNN1->detected;
     
     for(auto d1:detected_bbox1){	
@@ -233,8 +225,10 @@ string name_from_path(string path)
         jsonArray.push_back(detection);
 }
      detected_bbox2.clear();
+    batch_dnn_input.clear();
+    batch_dnn_input.push_back(frame.clone());
     detNN2->update(batch_dnn_input,1);
-    std::cout<<batch_dnn_input.rows<<" "<<batch_dnn_input.cols<<"\n";
+   // std::cout<<batch_dnn_input[0].size()<<" testing3\n";
     detected_bbox2 = detNN2->detected;
 
     for(auto d2:detected_bbox2){	
@@ -249,6 +243,8 @@ string name_from_path(string path)
         jsonArray.push_back(detection);
 }
      detected_bbox3.clear();
+    batch_dnn_input.clear();
+    batch_dnn_input.push_back(frame.clone());
     detNN3->update(batch_dnn_input,1);
     detected_bbox3 = detNN3->detected;
     for(auto d3:detected_bbox3){	
@@ -263,6 +259,8 @@ string name_from_path(string path)
         jsonArray.push_back(detection);
 }
      detected_bbox4.clear();
+    batch_dnn_input.clear();
+    batch_dnn_input.push_back(frame.clone());
     detNN4->update(batch_dnn_input,1);
     detected_bbox4 = detNN4->detected;
 

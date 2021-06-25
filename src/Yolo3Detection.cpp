@@ -118,7 +118,6 @@ void Yolo3Detection::postprocess(const int bi, const bool mAP){
         float x1   = (b.x+b.w/2.);
         float y0   = (b.y-b.h/2.);
         float y1   = (b.y+b.h/2.);
-        std::cout<<b.x<<"\n";
 
         // convert to image coords
         x0 = x_ratio*x0;
