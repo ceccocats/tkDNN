@@ -14,6 +14,8 @@ mkdir build #build folder will be created and project will be build in that fold
 cd build #Name of the folder
 
 #Building commands
+cmake ..
+make -j16
 #cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" ../
 #cmake --build . --target BaggageAIApi -- -j4
 

@@ -28,4 +28,4 @@ COPY --chown=baggageai:baggageai . files/
 
 WORKDIR /home/baggageai/files
 RUN chmod 777 run.sh
-#ENTRYPOINT ["./run.sh"]
+ENTRYPOINT ["./run.sh"]

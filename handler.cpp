@@ -114,10 +114,10 @@ cv::Mat image_to_mat(image img)
     int w=0;
     int channels;
     const char *config_filename = "config/config.yaml";
-    const char * net1="config/yolo4x_fp16.rt";
-    const char * net2="config/yolo4x_fp16.rt";
-    const char * net3="config/yolo4x2_fp16.rt";
-    const char * net4="config/yolo4x2_fp16.rt";
+    const char * net1="config/yolo4x_fp32.rt";
+    const char * net2="config/yolo4x_fp32.rt";
+    const char * net3="config/yolo4x_fp32.rt";
+    const char * net4="config/yolo4x_fp32.rt";
     const char * net5="config/yolo4x_fp16.rt";    
     int classes1 , classes2 , classes3 , classes4 , classes5,len;
     char * img_data;
@@ -132,6 +132,8 @@ cv::Mat image_to_mat(image img)
     tk::dnn::DetectionNN *detNN3;
     tk::dnn::Yolo3Detection yolo4;
     tk::dnn::DetectionNN *detNN4;
+     tk::dnn::Yolo3Detection yolo5;
+    tk::dnn::DetectionNN *detNN5;
     unsigned char * sockData;
     
     std::vector<cv::Mat> batch_frames;
@@ -140,11 +142,13 @@ cv::Mat image_to_mat(image img)
     std::vector<std::string> classesNames2;
     std::vector<std::string> classesNames3;
     std::vector<std::string> classesNames4;
+     std::vector<std::string> classesNames5;
     std::vector<tk::dnn::Frame> images;
     std::vector<tk::dnn::box> detected_bbox1;
     std::vector<tk::dnn::box> detected_bbox2;
     std::vector<tk::dnn::box> detected_bbox3;
     std::vector<tk::dnn::box> detected_bbox4;
+    std::vector<tk::dnn::box> detected_bbox5;
     //read parametersi
     handler::handler(utility::string_t url):m_listener(url)
 {
@@ -171,6 +175,9 @@ string name_from_path(string path)
     detNN4 = &yolo4;
     detNN4->init(net4, classes4, 1, conf_thresh4);
     classesNames4=detNN4-> classesNames;
+    detNN5 = &yolo5;
+    detNN5->init(net5, classes5, 1, conf_thresh5);
+    classesNames5=detNN5-> classesNames;
     return;}
 
 
@@ -193,9 +200,9 @@ string name_from_path(string path)
                 ustring = {v.begin(),v.end()};
                 len = ustring.size();
             }).wait();
-    //printSize(ustring);
-    BOOST_LOG_TRIVIAL(info) << "[" << name_from_path(string(__FILE__)) << "  " << __LINE__ << "] " << "Detection Started";
     unsigned char *idata;
+try {    //printSize(ustring);
+    BOOST_LOG_TRIVIAL(info) << "[" << name_from_path(string(__FILE__)) << "  " << __LINE__ << "] " << "Detection Started";
     sockData = (unsigned char *)ustring.c_str();
     idata = stbi_load_from_memory(sockData, len, &w, &h, &channels, 0);
     im = load_image_file(idata, channels, 0, 0, w, h);
@@ -275,7 +282,24 @@ string name_from_path(string path)
         detection["prob"] = json::value::number(d4.prob);
         jsonArray.push_back(detection);
 }
-     try{
+     detected_bbox5.clear();
+    batch_dnn_input.clear();
+    batch_dnn_input.push_back(frame.clone());
+    detNN5->update(batch_dnn_input,1);
+    detected_bbox5 = detNN5->detected;
+
+    for(auto d5:detected_bbox5){        
+        std::cout<<"5"<<" "<<d5.cl<< " "<< d5.prob << " "<< d5.x << " "<< d5.y << " "<< d5.w << " "<< d5.h <<"\n";
+            json::value detection;
+        detection["label"] = json::value::string(classesNames5[d5.cl]);
+        detection["x"] = json::value::number(d5.x);
+        detection["y"] = json::value::number(d5.y);
+        detection["w"] = json::value::number(d5.w);
+        detection["h"] = json::value::number(d5.h);
+        detection["prob"] = json::value::number(d5.prob);
+        jsonArray.push_back(detection);
+}
+
             response["detections"] = json::value::array(jsonArray);   //JSON Response
 //        free(jsonArray);
         request.reply(status_codes::OK,response.serialize());

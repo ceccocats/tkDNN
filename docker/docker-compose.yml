@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  baggageai-server-tkdnn:
+    image: baggageai:server-tkdnn
+    ports:
+      - 8080:8080
+    volumes:
+      - BAI_logs:/home/baggageai/log
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    restart: on-failure
+    deploy:
+      replicas: 1       #Keep replicas 1 only for GPU
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3 
+   
+volumes:
+  BAI_logs:
+    external: true
