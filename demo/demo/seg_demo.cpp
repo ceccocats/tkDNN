@@ -66,15 +66,6 @@ int main(int argc, char *argv[]) {
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
 
-    std::string net_name;
-    removePathAndExtension(net, net_name);
-    bool mapillary_15_colormap = false; 
-    if( n_classes == 15 && 
-        (   net_name == "shelfnet_mapillary_fp32" || 
-            net_name == "shelfnet_mapillary_fp16" || 
-            net_name == "shelfnet_mapillary_int8"   )   ) 
-        mapillary_15_colormap = true;
-
     //net initialization 
     tk::dnn::SegmentationNN segNN;
     segNN.init(net, n_classes, n_batch);
@@ -130,7 +121,7 @@ int main(int argc, char *argv[]) {
             width = frame.cols;
 
             //inference
-            segNN.updateOriginal(frame, true, mapillary_15_colormap);
+            segNN.updateOriginal(frame, true);
             if(show)
                 segNN.draw();
 

@@ -18,8 +18,8 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 ```
 
 ### What's new (20 July 2021)
-- [x] Support to sematic segmentation [REAME](readme/README_seg.md)
-- [] Support to TensorRT8 (WIP)
+- [x] Support to sematic segmentation [REAME](docs/README_seg.md)
+- [ ] Support to TensorRT8 (WIP)
 
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 

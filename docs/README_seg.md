@@ -39,13 +39,10 @@ where
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization but save the video into result.mp4 (if n-batches ==1)
 *  ```<write-pred>``` if set to 0 (default) the demo will run, otherwise the evaluation of a dataset will run and the output of the segmentation will be saved. Attention: this is under development and paths are embedded, so change them in the code in advance.
 
-N.b. By default it is used FP32 inference
-
-<center>
+NB) By default it is used FP32 inference
+NB) The batching is not used to work on more streams, rather to work on more tiles of the same image. Shelfnet never resized the input image, therefore for images greater than 1024x1024 tiles of 1024x1024 are given in input to the network in batch. 
 
 ![gif](output.gif "Results on yolo_test.mp4")  
-
-</center>
 
 For other demo videos refer to [this playlist](https://www.youtube.com/playlist?list=PLv0nEQYDD45y5EdSiywwCGPBmJVUzIWwe).
 
@@ -59,6 +56,22 @@ For other demo videos refer to [this playlist](https://www.youtube.com/playlist?
 
 1. Zhuang, Juntang, et al. "ShelfNet for fast semantic segmentation." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2019.
 
+
+## FPS Results
+
+Inference FPS of shelfnet with tkDNN, average of 1200 images on
+  * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
+
+| Platform   | Test                     | Phase   | FP32, ms  | FP32, FPS | FP16, ms  |	FP16, FPS  | INT8, ms |	INT8, FPS | 
+| :------:   | :-----:                  | :-----: | :-----:   | :-----:   | :-----:   |	:-----:    | :-----:  |	:-----:   | 
+| RTX 2080Ti | shelfnet 1024x1024 (B=1) | pre     | 6.11863   |  163.435  |   5.81465 |  171.979   |  5.88699 |   169.866 |
+| RTX 2080Ti | shelfnet 1024x1024 (B=1) | inf     | 11.5464   |  86.6074  |   7.35396 |  135.981   |  6.37623 |   156.832 |
+| RTX 2080Ti | shelfnet 1024x1024 (B=1) | post    | 4.09058   |  244.464  |   3.91961 |  255.128   |  4.07343 |   245.493 |
+| RTX 2080Ti | shelfnet 1024x1024 (B=1) | tot     | 21.7556   |  45.9652  |   17.0882 |  58.5199   |  16.3366 |   61.2121 |
+| RTX 2080Ti | shelfnet 2048x2048 (B=4) | pre     | 25.435    |  39.3158  |   25.2953 |  39.5331   |  25.9303 |   38.565  | 
+| RTX 2080Ti | shelfnet 2048x2048 (B=4) | inf     | 36.5015   |  27.3961  |   17.0534 |  58.6395   |  15.6061 |   64.0773 |  
+| RTX 2080Ti | shelfnet 2048x2048 (B=4) | post    | 17.3917   |  57.4985  |   17.1649 |  58.2583   |  17.5539 |   56.9675 |  
+| RTX 2080Ti | shelfnet 2048x2048 (B=4) | tot     | 79.3283   |  12.6058  |   59.5136 |  16.8029   |  59.0903 |   16.9233 |  
 
 ## Known issues
 

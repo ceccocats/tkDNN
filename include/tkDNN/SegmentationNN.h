@@ -97,7 +97,7 @@ class SegmentationNN {
          * 
          * @param bi batch index
          */
-        void postprocess(const int bi=0, bool appy_colormap = true, bool mapillary_15=false) {
+        void postprocess(const int bi=0, bool appy_colormap = true) {
             dnnType *rt_out = (dnnType *)netRT->buffersRT[1]+ netRT->buffersDIM[1].tot()*bi;
 
             dataDim_t odim = netRT->output_dim;
@@ -112,7 +112,7 @@ class SegmentationNN {
             cv::Mat colored;
 
             if(appy_colormap)
-                colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, mapillary_15);
+                colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, classes);
             else{
                 cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
                 colored_fp32.convertTo(colored, CV_8UC1);
@@ -234,7 +234,7 @@ class SegmentationNN {
             }
         }     
 
-        void updateOriginal(cv::Mat frame, bool apply_colormap=true, bool mapillary_15=false){
+        void updateOriginal(cv::Mat frame, bool apply_colormap=true){
 
             std::vector<cv::Mat> splitted_frames;
             int H, W, net_H, net_W;
@@ -347,7 +347,7 @@ class SegmentationNN {
                     cv::Mat colored;
 
                     if(apply_colormap)
-                        colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, mapillary_15);
+                        colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, classes);
                     else{
                         cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
                         colored_fp32.convertTo(colored, CV_8UC1);
