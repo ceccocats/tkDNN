@@ -41,8 +41,13 @@ where
 
 N.b. By default it is used FP32 inference
 
+<center>
 
-![gif](output.gif "Results on yolo_test.mp4") 
+![gif](output.gif "Results on yolo_test.mp4")  
+
+</center>
+
+For other demo videos refer to [this playlist](https://www.youtube.com/playlist?list=PLv0nEQYDD45y5EdSiywwCGPBmJVUzIWwe).
 
 
 ## Existing tests and supported networks
