@@ -119,6 +119,16 @@ target_link_libraries(test_resnet101_cnet tkDNN)
 add_executable(test_dla34_cnet tests/centernet/dla34_cnet/dla34_cnet.cpp)
 target_link_libraries(test_dla34_cnet tkDNN)
 
+# SHELFNET
+add_executable(test_shelfnet tests/shelfnet/shelfnet.cpp)
+target_link_libraries(test_shelfnet tkDNN)
+
+add_executable(test_shelfnet_berkeley tests/shelfnet/shelfnet_berkeley.cpp)
+target_link_libraries(test_shelfnet_berkeley tkDNN)
+
+add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
+target_link_libraries(test_shelfnet_mapillary tkDNN)
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
@@ -128,6 +138,9 @@ target_link_libraries(map_demo tkDNN)
 
 add_executable(demo demo/demo/demo.cpp)
 target_link_libraries(demo tkDNN)
+
+add_executable(seg_demo demo/demo/seg_demo.cpp)
+target_link_libraries(seg_demo tkDNN)
 
 #-------------------------------------------------------------------------------
 # Install

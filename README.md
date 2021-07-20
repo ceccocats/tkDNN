@@ -17,6 +17,10 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 }
 ```
 
+### What's new (20 July 2021)
+- [x] Support to sematic segmentation [README](docs/README_seg.md)
+- [ ] Support to TensorRT8 (WIP)
+
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
   * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
@@ -89,16 +93,21 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
     - [Known issues with tkDNN on Windows](#known-issues-with-tkdnn-on-windows)
   
 
-
-
-
 ## Dependencies
-This branch works on every NVIDIA GPU that supports the dependencies:
-* CUDA 10.0
-* CUDNN 7.603
-* TENSORRT 6.01
-* OPENCV 3.4
-* yaml-cpp 0.5.2 (sudo apt install libyaml-cpp-dev)
+This branch works on every NVIDIA GPU that supports the following (latest tested) dependencies:
+* CUDA 11.0 (or >= 10)
+* cuDNN 8.0.4 (or >= 7.3)
+* TensorRT 7.2.0 (or >=5)
+* OpenCV 4.5.2 (or >=4)
+* cmake 3.21 (or >= 3.15)
+* yaml-cpp 0.5.2
+* eigen3 3.3.4
+* curl 7.58
+
+```
+sudo apt install libyaml-cpp-dev curl libeigen3-dev
+
+```
 
 ## About OpenCV
 To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh```. It will download and compile OpenCV in Download folder.

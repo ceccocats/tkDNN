@@ -2,6 +2,7 @@
 #define KERNELSTHRUST_H
 
 
+#include <thrust/extrema.h>
 #include <thrust/sort.h>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
@@ -9,6 +10,8 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/gather.h>
 #include <thrust/copy.h>
+#include <thrust/device_ptr.h>
+
 
 #include "tkdnn.h"
 
@@ -35,5 +38,7 @@ void topKxyAddOffset(int * ids_begin, const int K, const int size, int *intxs_be
                      float *xs_begin, float *ys_begin, dnnType *src_begin, float *src_out, int *ids_out);
 void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 
             dnnType *src_begin, float *bbx0, float *bbx1, float *bby0, float *bby1, float *src_out, int *ids_out);
+
+void maxElem(dnnType *src_begin, dnnType *dst_begin, const int c, const int h, const int w);
 
 #endif //KERNELSTHRUST_H

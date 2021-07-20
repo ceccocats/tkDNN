@@ -4,9 +4,8 @@
 class ActivationLeakyRT : public IPlugin {
 
 public:
-	ActivationLeakyRT() {
-
-
+	ActivationLeakyRT(float s) {
+		slope = s;
 	}
 
 	~ActivationLeakyRT(){
@@ -42,13 +41,13 @@ public:
 	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
 		activationLEAKYForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, stream);
+											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, slope, stream);
 		return 0;
 	}
 
 
 	virtual size_t getSerializationSize() override {
-		return 1*sizeof(int);
+		return 1*sizeof(int) + 1*sizeof(float);
 	}
 
 	virtual void serialize(void* buffer) override {
@@ -58,4 +57,5 @@ public:
 	}
 
 	int size;
+	float slope;
 };

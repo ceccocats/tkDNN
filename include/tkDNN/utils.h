@@ -40,7 +40,7 @@
 #define COL_PURPLEB "\033[1;35m"
 #define COL_CYANB "\033[1;36m"
 
-#define TKDNN_VERBOSE 0
+#define TKDNN_VERBOSE 1
 
 // Simple Timer 
 #ifdef __linux__
