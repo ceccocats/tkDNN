@@ -5,11 +5,12 @@
 
 namespace tk { namespace dnn {
 
-Activation::Activation(Network *net, int act_mode, const float ceiling) : 
+Activation::Activation(Network *net, int act_mode, const float ceiling, const float slope) : 
     Layer(net) {
 
-    this->act_mode = act_mode;
-    this->ceiling = ceiling;
+    this->act_mode  = act_mode;
+    this->ceiling   = ceiling;
+    this->slope     = slope;
     checkCuda( cudaMalloc(&dstData, input_dim.tot()*sizeof(dnnType)) );
 
     if(int(act_mode) < 100) {
@@ -46,11 +47,14 @@ Activation::~Activation() {
 
 dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
     if(act_mode == ACTIVATION_LEAKY) {
-        activationLEAKYForward(srcData, dstData, dim.tot());
-
+        activationLEAKYForward(srcData, dstData, dim.tot(), this->slope);
     }
     else if(act_mode == ACTIVATION_MISH) {
         activationMishForward(srcData, dstData, dim.tot());
+
+    }
+    else if(act_mode == ACTIVATION_LOGISTIC) {
+        activationLOGISTICForward(srcData, dstData, dim.tot());
 
     } else {
         dnnType alpha = dnnType(1);

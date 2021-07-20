@@ -24,7 +24,10 @@ namespace tk { namespace dnn {
         int num = 1;
         int pad = 0;
         int coords = 4;
+        int nms_kind = 0;
+        int new_coords= 0;
         float scale_xy = 1;
+        float nms_thresh = 0.45;
         std::vector<int> layers;
         std::string activation = "linear";
 

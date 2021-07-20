@@ -42,7 +42,7 @@ do
     echo -e "${ORANGE}Batch $TKDNN_BATCHSIZE ${NC}"
     
     test_inference yolo4_320 $mode
-    test_inference yolo4_416 $mode
+    test_inference yolo4 $mode
     test_inference yolo4_512 $mode
     test_inference yolo4_608 $mode
     test_inference yolo4tiny $mode

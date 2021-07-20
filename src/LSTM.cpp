@@ -87,17 +87,22 @@ LSTM::LSTM( Network *net, int hiddensize, bool returnSeq, std::string fname_weig
     checkCUDNN(cudnnCreateRNNDescriptor(&rnnDesc));
 
 #if CUDNN_MAJOR > 7
-    checkCUDNN(cudnnSetRNNDescriptor_v6(net->cudnnHandle,
+    checkCUDNN(cudnnSetRNNDescriptor_v6(net->cudnnHandle,rnnDesc, stateSize, numLayers, dropoutDesc,
+                                        cudnnRNNInputMode_t::CUDNN_LINEAR_INPUT,
+            //(bidirectional ? cudnnDirectionMode_t::CUDNN_BIDIRECTIONAL : cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL),
+                                        cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL,
+                                        cudnnRNNMode_t::CUDNN_LSTM,
+                                        cudnnRNNAlgo_t::CUDNN_RNN_ALGO_STANDARD,
+                                        net->dataType));
 #else
-    checkCUDNN(cudnnSetRNNDescriptor(net->cudnnHandle,
-#endif
-        rnnDesc, stateSize, numLayers, dropoutDesc,
+    checkCUDNN(cudnnSetRNNDescriptor(net->cudnnHandle,rnnDesc, stateSize, numLayers, dropoutDesc,
         cudnnRNNInputMode_t::CUDNN_LINEAR_INPUT,
         //(bidirectional ? cudnnDirectionMode_t::CUDNN_BIDIRECTIONAL : cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL),
         cudnnDirectionMode_t::CUDNN_UNIDIRECTIONAL,
         cudnnRNNMode_t::CUDNN_LSTM,
         cudnnRNNAlgo_t::CUDNN_RNN_ALGO_STANDARD,
         net->dataType));
+#endif
 
 
     // Get temp space sizes

@@ -12,8 +12,12 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+#ifdef __linux__
 #include <unistd.h>
+#endif
+
 #include <ios>
+#include <chrono>
 
 
 #define dnnType float
@@ -39,6 +43,7 @@
 #define TKDNN_VERBOSE 0
 
 // Simple Timer 
+#ifdef __linux__
 #define TKDNN_TSTART timespec start, end;                               \
                     clock_gettime(CLOCK_MONOTONIC, &start);            
 
@@ -48,6 +53,14 @@
     if(show) std::cout<<col<<"Time:"<<std::setw(16)<<t_ns<<" ms\n"<<COL_END; 
 
 #define TKDNN_TSTOP TKDNN_TSTOP_C(COL_CYANB, TKDNN_VERBOSE)
+#elif _WIN32
+#define TKDNN_TSTART auto start = std::chrono::high_resolution_clock::now();
+#define TKDNN_TSTOP auto stop = std::chrono::high_resolution_clock::now(); \
+std::chrono::duration<double> duration = stop -start;                      \
+auto time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);\
+double t_ns = time_ms.count();
+#endif
+
 
 /********************************************************
  * Prints the error message, and exits

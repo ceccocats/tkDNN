@@ -4,7 +4,7 @@
 #include "utils.h"
 
 void activationELUForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
-void activationLEAKYForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
+void activationLEAKYForward(dnnType *srcData, dnnType *dstData, int size, float slope, cudaStream_t stream = cudaStream_t(0));
 void activationReLUCeilingForward(dnnType *srcData, dnnType *dstData, int size, const float ceiling, cudaStream_t stream = cudaStream_t(0));
 void activationLOGISTICForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
 void activationSIGMOIDForward(dnnType *srcData, dnnType *dstData, int size, cudaStream_t stream = cudaStream_t(0));
@@ -24,7 +24,7 @@ void softmaxForward(float *input, int n, int batch, int batch_offset,
                     int groups, int group_offset, int stride, float temp, float *output, cudaStream_t stream = cudaStream_t(0));
 
 void shortcutForward(dnnType *srcData, dnnType *dstData, int n1, int c1, int h1, int w1, int s1,
-                     int n2, int c2, int h2, int w2, int s2,
+                     int n2, int c2, int h2, int w2, int s2, bool mul,
                      cudaStream_t stream = cudaStream_t(0));
 
 void upsampleForward(dnnType *srcData, dnnType *dstData,

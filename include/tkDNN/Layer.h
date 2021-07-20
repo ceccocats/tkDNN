@@ -19,8 +19,10 @@ enum layerType_t {
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
     LAYER_ACTIVATION_MISH,
+    LAYER_ACTIVATION_LOGISTIC,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
+    LAYER_RESIZE,
     LAYER_MULADD,
     LAYER_POOLING,
     LAYER_SOFTMAX,
@@ -72,8 +74,10 @@ public:
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
             case LAYER_ACTIVATION_MISH:     return "ActivationMish";
+            case LAYER_ACTIVATION_LOGISTIC: return "ActivationLogistic";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
+            case LAYER_RESIZE:              return "Resize";
             case LAYER_MULADD:              return "MulAdd";
             case LAYER_POOLING:             return "Pooling";
             case LAYER_SOFTMAX:             return "Softmax";
@@ -216,7 +220,8 @@ public:
 typedef enum {
     ACTIVATION_ELU     = 100,
     ACTIVATION_LEAKY   = 101,
-    ACTIVATION_MISH   = 102
+    ACTIVATION_MISH   = 102,
+    ACTIVATION_LOGISTIC   = 103
 } tkdnnActivationMode_t;
 
 /**
@@ -227,8 +232,9 @@ class Activation : public Layer {
 public:
     int act_mode;
     float ceiling;
+    float slope;
 
-    Activation(Network *net, int act_mode, const float ceiling=0.0); 
+    Activation(Network *net, int act_mode, const float ceiling=0.0, const float slope=0.1); 
     virtual ~Activation();
     virtual layerType_t getLayerType() { 
         if(act_mode == CUDNN_ACTIVATION_CLIPPED_RELU)
@@ -237,6 +243,8 @@ public:
             return LAYER_ACTIVATION_LEAKY;
         else if (act_mode == ACTIVATION_MISH)
             return LAYER_ACTIVATION_MISH;
+        else if (act_mode == ACTIVATION_LOGISTIC)
+            return LAYER_ACTIVATION_LOGISTIC;
         else
             return LAYER_ACTIVATION;
          };
@@ -431,6 +439,23 @@ public:
 
 };
 
+enum ResizeMode_t { NEAREST= 0, 
+                    LINEAR= 1};
+
+/**
+    Resize layer
+*/
+class Resize : public Layer {
+
+public:
+    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false, ResizeMode_t mode=NEAREST);
+    virtual ~Resize();
+    virtual layerType_t getLayerType() { return LAYER_RESIZE; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    ResizeMode_t mode;
+};
 
 /**
     MulAdd layer
@@ -551,7 +576,7 @@ public:
 class Shortcut : public Layer {
 
 public:
-    Shortcut(Network *net, Layer *backLayer); 
+    Shortcut(Network *net, Layer *backLayer, bool mul=false); 
     virtual ~Shortcut();
     virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
 
@@ -559,6 +584,7 @@ public:
 
 public:
     Layer *backLayer;
+    bool mul = false;
 };
 
 /**
@@ -614,24 +640,28 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
+    enum nmsKind_t {GREEDY_NMS=0, DIOU_NMS=1};
+
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS, int new_coords=0);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num, n_masks;
+    int classes, num, n_masks, new_coords;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     float scaleXY;
+    double nms_thresh;
+    nmsKind_t nsm_kind; 
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords=0);
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 8192;
+    static const int MAX_DETECTIONS = 8192*2;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
-    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
+    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS);
 };
 
 /**

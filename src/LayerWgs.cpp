@@ -32,6 +32,7 @@ LayerWgs::LayerWgs(Network *net, int inputs, int outputs,
 
     this->batchnorm = batchnorm;
     if(batchnorm) {
+        
         readBinaryFile(weights_path.c_str(), outputs, &scales_h, &scales_d, seek);
         seek += outputs;
         readBinaryFile(weights_path.c_str(), outputs, &mean_h, &mean_d, seek);

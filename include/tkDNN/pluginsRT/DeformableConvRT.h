@@ -116,7 +116,7 @@ public:
 	}
 
 	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer);
+		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
 		tk::dnn::writeBUF(buf, chunk_dim);
 		tk::dnn::writeBUF(buf, kh);
 		tk::dnn::writeBUF(buf, kw);
@@ -163,6 +163,7 @@ public:
         for(int i=0; i<dim_ones; i++)
     		tk::dnn::writeBUF(buf, aus[i]);
 		free(aus);
+		assert(buf == a + getSerializationSize());
 	}
 
 	cublasStatus_t stat; 
