@@ -59,8 +59,9 @@ For other demo videos refer to [this playlist](https://www.youtube.com/playlist?
 
 ## FPS Results
 
-Inference FPS of shelfnet with tkDNN, average of 1200 images on
+Inference FPS of shelfnet with tkDNN, average of 1200 images on:
   * RTX 2080Ti (CUDA 10.2, TensorRT 7.0.0, Cudnn 7.6.5);
+  * Xavier AGX, Jetpack 4.3 (CUDA 10.0, CUDNN 7.6.3, tensorrt 6.0.1 );
 
 | Platform   | Test                     | Phase   | FP32, ms  | FP32, FPS | FP16, ms  |	FP16, FPS  | INT8, ms |	INT8, FPS | 
 | :------:   | :-----:                  | :-----: | :-----:   | :-----:   | :-----:   |	:-----:    | :-----:  |	:-----:   | 
@@ -72,6 +73,15 @@ Inference FPS of shelfnet with tkDNN, average of 1200 images on
 | RTX 2080Ti | shelfnet 2048x2048 (B=4) | inf     | 36.5015   |  27.3961  |   17.0534 |  58.6395   |  15.6061 |   64.0773 |  
 | RTX 2080Ti | shelfnet 2048x2048 (B=4) | post    | 17.3917   |  57.4985  |   17.1649 |  58.2583   |  17.5539 |   56.9675 |  
 | RTX 2080Ti | shelfnet 2048x2048 (B=4) | tot     | 79.3283   |  12.6058  |   59.5136 |  16.8029   |  59.0903 |   16.9233 |  
+| AGX Xavier | shelfnet 1024x1024 (B=1) | pre     | 8.0174    |  124.729  |   7.5117  |  133.126   |  7.47333 |   133.809 |
+| AGX Xavier | shelfnet 1024x1024 (B=1) | inf     | 72.4173   |  13.8089  |   37.505  |  26.6631   |  31.3286 |   31.9197 |
+| AGX Xavier | shelfnet 1024x1024 (B=1) | post    | 8.89958   |  112.365  |   8.83576 |  113.176   |  9.42655 |   106.083 |
+| AGX Xavier | shelfnet 1024x1024 (B=1) | tot     | 89.3342   |  11.1939  |   53.8525 |  18.5692   |  48.2285 |   20.7346 |
+| AGX Xavier | shelfnet 2048x2048 (B=4) | pre     | 47.1454   |  21.211   |   21.6475 |  46.1947   |  21.4201 |   46.6851 | 
+| AGX Xavier | shelfnet 2048x2048 (B=4) | inf     | 266.537   |  3.75183  |   128.321 |  7.79293   |  107.621 |   9.29185 |  
+| AGX Xavier | shelfnet 2048x2048 (B=4) | post    | 44.0711   |  22.6906  |   40.1732 |  24.8922   |  39.873  |   25.0796 |  
+| AGX Xavier | shelfnet 2048x2048 (B=4) | tot     | 357.753   |  2.79522  |   190.142 |  5.25922   |  168.914 |   5.92016 |  
+
 
 ## Known issues
 
