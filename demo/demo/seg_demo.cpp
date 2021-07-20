@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     std::string net = "shelfnet_fp32.rt";
     if(argc > 1)
         net = argv[1]; 
-    std::string input = "../../ShelfNet/ShelfNet18_realtime/data/leftImg8bit/test/modena/000302.png";
+    std::string input = "../demo/yolo_test.mp4";
     if(argc > 2)
         input = argv[2]; 
     int n_batch = 1;
@@ -68,9 +68,12 @@ int main(int argc, char *argv[]) {
 
     std::string net_name;
     removePathAndExtension(net, net_name);
-    bool mapillary_15 = false; //TODO change me pls
-    if(n_classes == 15 && net_name == "shelfnet_mapillary_fp32") 
-        mapillary_15 = true;
+    bool mapillary_15_colormap = false; 
+    if( n_classes == 15 && 
+        (   net_name == "shelfnet_mapillary_fp32" || 
+            net_name == "shelfnet_mapillary_fp16" || 
+            net_name == "shelfnet_mapillary_int8"   )   ) 
+        mapillary_15_colormap = true;
 
     //net initialization 
     tk::dnn::SegmentationNN segNN;
@@ -127,7 +130,7 @@ int main(int argc, char *argv[]) {
             width = frame.cols;
 
             //inference
-            segNN.updateOriginal(frame, true, mapillary_15);
+            segNN.updateOriginal(frame, true, mapillary_15_colormap);
             if(show)
                 segNN.draw();
 

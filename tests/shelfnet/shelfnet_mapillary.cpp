@@ -85,6 +85,7 @@ int main()
 
     downloadWeightsifDoNotExist(input_bin, "shelfnet_mapillary", "https://cloud.hipert.unimore.it/s/6WnZCKLjik7xrny/download");
 
+    // Mapillary Vistas has originally 66 classes, but we reduced them to 15 to improve the results on the categories of our interest.
     int classes = 15;
 
     // Network layout    

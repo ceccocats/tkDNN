@@ -113,7 +113,7 @@ cv::Mat vizFloat2colorMap(cv::Mat map,double min, double max, bool mapillary_15)
     return falseColorsMap;
 }
 
-cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim, double min, double max, bool mapillary_15) {
+cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int img_h, int img_w, double min, double max, bool mapillary_15) {
     dnnType *data = nullptr;
 
     // copy to CPU
@@ -135,8 +135,7 @@ cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim, doub
         raw.copyTo(grid.rowRange(r*dim.h, r*dim.h + dim.h).colRange(c*dim.w, c*dim.w + dim.w));
     }
 
-    float ar = float(dim.w)/dim.h;
-    cv::Size vdim(ar*imgdim, imgdim);
+    cv::Size vdim(img_w, img_h);
     cv::Mat viz;
     cv::resize(grid, viz, vdim, 0, 0, 0);
     
@@ -150,7 +149,7 @@ cv::Mat vizData2Mat(dnnType *dataInput, tk::dnn::dataDim_t dim, int imgdim, doub
 cv::Mat vizLayer2Mat(tk::dnn::Network *net, int layer, int imgdim) {
     if(layer >= net->num_layers)
         FatalError("Could not viz layer\n");
-    return vizData2Mat(net->layers[layer]->dstData, net->layers[layer]->output_dim, imgdim);
+    return vizData2Mat(net->layers[layer]->dstData, net->layers[layer]->output_dim, imgdim, imgdim);
 
     //cv::imwrite("viz/layer" + std::to_string(layer) + ".png", viz);
     //cv::imshow("layer", viz);

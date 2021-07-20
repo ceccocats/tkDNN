@@ -112,7 +112,7 @@ class SegmentationNN {
             cv::Mat colored;
 
             if(appy_colormap)
-                colored = vizData2Mat(tmpOutData_h, vdim, 1024, 0, classes, mapillary_15);
+                colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, mapillary_15);
             else{
                 cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
                 colored_fp32.convertTo(colored, CV_8UC1);
@@ -347,7 +347,7 @@ class SegmentationNN {
                     cv::Mat colored;
 
                     if(apply_colormap)
-                        colored = vizData2Mat(tmpOutData_h, vdim, 1024, 0, classes, mapillary_15);
+                        colored = vizData2Mat(tmpOutData_h, vdim, netRT->input_dim.h, netRT->input_dim.w, 0, classes, mapillary_15);
                     else{
                         cv::Mat colored_fp32 (cv::Size(odim.w, odim.h),CV_32FC1, tmpOutData_h);
                         colored_fp32.convertTo(colored, CV_8UC1);
