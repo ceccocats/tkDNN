@@ -11,6 +11,7 @@ namespace tk { namespace dnn {
         int channels = 3;
         int batch_normalize=0;
         int groups = 1;
+        int group_id = 0;
         int filters=1;
         int size_x=1;
         int size_y=1;
@@ -23,7 +24,10 @@ namespace tk { namespace dnn {
         int num = 1;
         int pad = 0;
         int coords = 4;
+        int nms_kind = 0;
+        int new_coords= 0;
         float scale_xy = 1;
+        float nms_thresh = 0.45;
         std::vector<int> layers;
         std::string activation = "linear";
 

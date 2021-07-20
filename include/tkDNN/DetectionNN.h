@@ -4,7 +4,10 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>    
+#ifdef __linux__
 #include <unistd.h>
+#endif 
+
 #include <mutex>
 #include "utils.h"
 
@@ -14,7 +17,7 @@
 
 #include "tkdnn.h"
 
-// #define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
+//#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
 #ifdef OPENCV_CUDACONTRIB
 #include <opencv2/cudawarping.hpp>
@@ -76,15 +79,15 @@ class DetectionNN {
         ~DetectionNN(){};
 
         /**
-         * Method used to inialize the class, allocate memory and compute 
+         * Method used to initialize the class, allocate memory and compute 
          * needed data.
          * 
-         * @param tensor_path path to the rt file og the NN.
+         * @param tensor_path path to the rt file of the NN.
          * @param n_classes number of classes for the given dataset.
          * @param n_batches maximum number of batches to use in inference
          * @return true if everything is correct, false otherwise.
          */
-        virtual bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1) = 0;
+        virtual bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1, const float conf_thresh=0.3) = 0;
         
         /**
          * This method performs the whole detection of the NN.
@@ -141,16 +144,15 @@ class DetectionNN {
         }      
 
         /**
-         * Method to draw boundixg boxes and labels on a frame.
+         * Method to draw bounding boxes and labels on a frame.
          * 
-         * @param frames orginal frame to draw bounding box on.
+         * @param frames original frame to draw bounding box on.
          */
         void draw(std::vector<cv::Mat>& frames) {
             tk::dnn::box b;
             int x0, w, x1, y0, h, y1;
             int objClass;
             std::string det_class;
-
             int baseline = 0;
             float font_scale = 0.5;
             int thickness = 2;   

@@ -19,6 +19,7 @@ enum layerType_t {
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
     LAYER_ACTIVATION_MISH,
+    LAYER_ACTIVATION_LOGISTIC,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
     LAYER_RESIZE,
@@ -69,6 +70,7 @@ public:
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
             case LAYER_ACTIVATION_MISH:     return "ActivationMish";
+            case LAYER_ACTIVATION_LOGISTIC: return "ActivationLogistic";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
             case LAYER_RESIZE:              return "Resize";
@@ -173,7 +175,7 @@ public:
 
 
 /**
-    Input layer (it doesnt need weigths)
+    Input layer (it doesn't need weights)
 */
 class Input : public Layer {
 
@@ -209,16 +211,17 @@ public:
 
 
 /**
-    Avaible activation functions
+    Available activation functions
 */
 typedef enum {
     ACTIVATION_ELU     = 100,
     ACTIVATION_LEAKY   = 101,
-    ACTIVATION_MISH   = 102
+    ACTIVATION_MISH   = 102,
+    ACTIVATION_LOGISTIC   = 103
 } tkdnnActivationMode_t;
 
 /**
-    Activation layer (it doesnt need weigths)
+    Activation layer (it doesn't need weights)
 */
 class Activation : public Layer {
 
@@ -236,6 +239,8 @@ public:
             return LAYER_ACTIVATION_LEAKY;
         else if (act_mode == ACTIVATION_MISH)
             return LAYER_ACTIVATION_MISH;
+        else if (act_mode == ACTIVATION_LOGISTIC)
+            return LAYER_ACTIVATION_LOGISTIC;
         else
             return LAYER_ACTIVATION;
          };
@@ -276,8 +281,8 @@ public:
 protected:
     cudnnFilterDescriptor_t filterDesc;
     cudnnConvolutionDescriptor_t convDesc;
-    cudnnConvolutionFwdAlgo_t     algo;
-    cudnnConvolutionBwdDataAlgo_t bwAlgo;
+    cudnnConvolutionFwdAlgoPerf_t     algo;
+    cudnnConvolutionBwdDataAlgoPerf_t bwAlgo;
     cudnnTensorDescriptor_t biasTensorDesc;
 
     void initCUDNN(bool back = false);
@@ -321,9 +326,9 @@ public:
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
     const bool bidirectional = true; /**> is the net bidir */
-    bool returnSeq = false;       /**> if false return only the result of last timestep */
+    bool returnSeq = false;       /**> if false return only the result of last timestamp */
     int stateSize = 0; /**> number of hidden states */
-    int seqLen = 0;    /**> number of timesteps */
+    int seqLen = 0;    /**> number of timestamp */
     int numLayers = 1; /**> number of internal layers */
 
 protected:
@@ -370,7 +375,7 @@ public:
 
 
 /**
-    Deformable Convolutionl 2d layer
+    Deformable Convolutional 2d layer
 */  
 class DeformConv2d : public LayerWgs {
 
@@ -469,7 +474,7 @@ protected:
 
 
 /**
-    Avaible pooling functions (padding on tkDNN is not supported)
+    Available pooling functions (padding on tkDNN is not supported)
 */
 typedef enum {
     POOLING_MAX     = 0,
@@ -480,7 +485,7 @@ typedef enum {
 
 /**
     Pooling layer
-    currenty supported only 2d pooing (also on 3d input)
+    currently supported only 2d pooing (also on 3d input)
 */
 class Pooling : public Layer {
 
@@ -529,7 +534,7 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n); 
+    Route(Network *net, Layer **layers, int layers_n, int groups = 1, int group_id = 0); 
     virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
@@ -539,12 +544,14 @@ public:
     static const int MAX_LAYERS = 32;
     Layer *layers[MAX_LAYERS];  //ids of layers to be merged
     int layers_n; //number of layers
+    int groups;
+    int group_id;
 };
 
 
 /**
     Reorg layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Reorg : public Layer {
 
@@ -578,7 +585,7 @@ public:
 
 /**
     Upsample layer
-    Mantain same dimension but change C*H*W distribution
+    Maintains same dimension but change C*H*W distribution
 */
 class Upsample : public Layer {
 
@@ -629,24 +636,28 @@ public:
         int sort_class;
     };
 
-    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1);
+    enum nmsKind_t {GREEDY_NMS=0, DIOU_NMS=1};
+
+    Yolo(Network *net, int classes, int num, std::string fname_weights,int n_masks=3, float scale_xy=1, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS, int new_coords=0);
     virtual ~Yolo();
     virtual layerType_t getLayerType() { return LAYER_YOLO; };
 
-    int classes, num, n_masks;
+    int classes, num, n_masks, new_coords;
     dnnType *mask_h, *mask_d; //anchors
     dnnType *bias_h, *bias_d; //anchors
     float scaleXY;
+    double nms_thresh;
+    nmsKind_t nsm_kind; 
     std::vector<std::string> classesNames;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
-    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh);
+    int computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords=0);
 
     dnnType *predictions;
 
-    static const int MAX_DETECTIONS = 8192;
+    static const int MAX_DETECTIONS = 8192*2;
     static Yolo::detection *allocateDetections(int nboxes, int classes);
-    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes);
+    static void             mergeDetections(Yolo::detection *dets, int ndets, int classes, double nms_thresh=0.45, nmsKind_t nsm_kind=GREEDY_NMS);
 };
 
 /**

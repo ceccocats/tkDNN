@@ -63,7 +63,7 @@ double computeMap(  std::vector<Frame> &images,const int classes,
     
     int gt_checked = 0;
 
-    // for each detection comput IoU with groundtruth and match detetcion and 
+    // for each detection compute IoU with groundtruth and match detetcion and 
     // groundtruth with IoU greater than IoU_thresh
     for(auto &img:images){
         for(size_t i=0; i<img.det.size(); i++){
@@ -153,7 +153,7 @@ double computeMap(  std::vector<Frame> &images,const int classes,
         }
     }
 
-    //compute average precision for each class. Two methods are avaible, 
+    //compute average precision for each class. Two methods are available, 
     //based on map_points required
     double mean_average_precision = 0;
     double last_recall, last_precision, delta_recall;
@@ -287,7 +287,7 @@ void computeTPFPFN( std::vector<Frame> &images,const int classes,
         }
     }
 
-    //count all TP, FP, FN and compute precsion, recall and f1-score
+    //count all TP, FP, FN and compute precision, recall and f1-score
     double avg_precision = 0, avg_recall = 0, f1_score = 0;
     int TP = 0, FP = 0, FN = 0;
     for(size_t i=0; i<classes; i++){

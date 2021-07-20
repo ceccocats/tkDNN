@@ -89,7 +89,7 @@ public:
 		for(int b=0; b<batchSize; b++) {
 			checkCuda(cudaMemcpy(offset, output_conv + b * 3 * chunk_dim, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
 			checkCuda(cudaMemcpy(mask, output_conv + b * 3 * chunk_dim + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice)); 
-			// kernel sigmoide
+			// kernel sigmoid
 			activationSIGMOIDForward(mask, mask, chunk_dim);
 			// deformable convolution
 			dcnV2CudaForward(stat, handle, 
@@ -116,7 +116,7 @@ public:
 	}
 
 	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer);
+		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
 		tk::dnn::writeBUF(buf, chunk_dim);
 		tk::dnn::writeBUF(buf, kh);
 		tk::dnn::writeBUF(buf, kw);
@@ -163,6 +163,7 @@ public:
         for(int i=0; i<dim_ones; i++)
     		tk::dnn::writeBUF(buf, aus[i]);
 		free(aus);
+		assert(buf == a + getSerializationSize());
 	}
 
 	cublasStatus_t stat; 

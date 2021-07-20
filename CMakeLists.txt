@@ -1,8 +1,15 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 
 project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-deprecated-declarations -Wno-unused-variable")
+if(UNIX)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-deprecated-declarations -Wno-unused-variable ")
+endif()
+if(WIN32)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc")
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif(WIN32)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
 
 # project specific flags
@@ -10,7 +17,13 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
-add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+if(TKDNN_PATH)
+    message("SET TKDNN_PATH:"${TKDNN_PATH})
+    add_definitions(-DTKDNN_PATH="${TKDNN_PATH}")
+else()
+    add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
 
 #-------------------------------------------------------------------------------
 # CUDA
@@ -28,19 +41,21 @@ include_directories(${CUDNN_INCLUDE_DIR})
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
+target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
 
 
 #-------------------------------------------------------------------------------
 # External Libraries
 #-------------------------------------------------------------------------------
 find_package(Eigen3 REQUIRED)
+message("Eigen DIR: " ${EIGEN3_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
 
 # gives problems in cross-compiling, probably malformed cmake config
-#find_package(yaml-cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Build Libraries
@@ -48,7 +63,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
 file(GLOB tkdnn_SRC "src/*.cpp")
 set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
@@ -77,6 +92,7 @@ foreach(test_SRC ${darknet_SRC})
     set(test_NAME test_${test_NAME})
     add_executable(${test_NAME} ${test_SRC})
     target_link_libraries(${test_NAME} tkDNN)
+    install(TARGETS ${test_NAME} DESTINATION bin)
 endforeach()
 
 # MOBILENET
@@ -136,7 +152,10 @@ target_link_libraries(seg_demo tkDNN)
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/)
 install(TARGETS tkDNN kernels DESTINATION lib)
+install(TARGETS test_simple test_mnist test_mnistRT test_rtinference demo map_demo DESTINATION bin)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
         DESTINATION "share/tkDNN/cmake/" # target directory
 )
-
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests/" # source directory
+        DESTINATION "share/tkDNN/tests" # target directory
+)

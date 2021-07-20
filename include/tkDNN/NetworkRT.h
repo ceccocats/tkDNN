@@ -6,6 +6,7 @@
 #include "Network.h"
 #include "Layer.h"
 #include "NvInfer.h"
+#include <memory>
 
 namespace tk { namespace dnn {
 
@@ -24,11 +25,12 @@ template<typename T> T readBUF(const char*& buffer)
 
 using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.h"
+#include "pluginsRT/ActivationLogisticRT.h"
 #include "pluginsRT/ActivationReLUCeilingRT.h"
 #include "pluginsRT/ActivationMishRT.h"
 #include "pluginsRT/ReorgRT.h"
 #include "pluginsRT/RegionRT.h"
-//#include "pluginsRT/RouteRT.h"
+#include "pluginsRT/RouteRT.h"
 #include "pluginsRT/ShortcutRT.h"
 #include "pluginsRT/YoloRT.h"
 #include "pluginsRT/UpsampleRT.h"
@@ -59,6 +61,7 @@ public:
 #if NV_TENSORRT_MAJOR >= 6  
     nvinfer1::IBuilderConfig *configRT;
 #endif
+    
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
 
@@ -91,7 +94,7 @@ public:
     }
 
     /**
-        Do inferece
+        Do inference
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
     void enqueue(int batchSize = 1);    
@@ -115,6 +118,9 @@ public:
 
     bool serialize(const char *filename);
     bool deserialize(const char *filename);
+
+
+
 };
 
 }}

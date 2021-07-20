@@ -52,6 +52,10 @@ dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
     else if(act_mode == ACTIVATION_MISH) {
         activationMishForward(srcData, dstData, dim.tot());
 
+    }
+    else if(act_mode == ACTIVATION_LOGISTIC) {
+        activationLOGISTICForward(srcData, dstData, dim.tot());
+
     } else {
         dnnType alpha = dnnType(1);
         dnnType beta  = dnnType(0);

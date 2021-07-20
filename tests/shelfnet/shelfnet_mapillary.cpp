@@ -83,7 +83,8 @@ const char *trans[] = {
 int main()
 {
 
-    downloadWeightsifDoNotExist(input_bin, "shelfnet_mapillary", "https://cloud.hipert.unimore.it/s/6WnZCKLjik7xrny/download");
+    // downloadWeightsifDoNotExist(input_bin, "shelfnet_mapillary", "");
+    // download the weights from here:  https://cloud.hipert.unimore.it/f/652476
 
     // Mapillary Vistas has originally 66 classes, but we reduced them to 15 to improve the results on the categories of our interest.
     int classes = 15;
