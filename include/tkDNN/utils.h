@@ -12,8 +12,14 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+
 #ifdef __linux__
 #include <unistd.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+#include <yaml-cpp/yaml.h>
 #endif
 
 #include <ios>
@@ -131,6 +137,7 @@ void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData,
 void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
 void printCudaMemUsage();
 void removePathAndExtension(const std::string &full_string, std::string &name);
+void readCalibrationMatrix(const std::string& path, cv::Mat& calib_mat);
 static inline bool isCudaPointer(void *data) {
   cudaPointerAttributes attr;
   return cudaPointerGetAttributes(&attr, data) == 0;

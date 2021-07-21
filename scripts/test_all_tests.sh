@@ -91,10 +91,11 @@ do
     #test_net csresnext50-panet-spp_berkeley
     test_net resnet101_cnet
     test_net dla34_cnet
+    test_net dla34_cnet3d
     test_net mobilenetv2ssd
     test_net mobilenetv2ssd512
     test_net bdd-mobilenetv2ssd
-    test_net dla34_cnet3d_track
+    test_net dla34_ctrack
 done
 
 echo "If errors occured, check logfile $out_file" 

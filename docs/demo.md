@@ -77,12 +77,15 @@ To run the 3D object detection demo follow these steps (example with CenterNet b
 ```
 rm dla34_cnet3d_fp32.rt        # be sure to delete(or move) old tensorRT files
 ./test_dla34_cnet3d            # run the yolo test (is slow)
-./demo3D dla34_cnet3d_fp32.rt ../demo/yolo_test.mp4 c
+./demo3D dla34_cnet3d_fp32.rt ../demo/yolo_test.mp4 NULL c
 ```
 The demo3D program takes the same parameters of the demo program:
 ```
-./demo3D <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh>
+./demo3D <network-rt-file> <path-to-video> <calibration-file> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh>
 ```
+where
+
+* ```calibration-file``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
 
 ### Object Detection and Tracking
 
@@ -90,16 +93,17 @@ To run the 3D object detection & tracking demo follow these steps (example with 
 ```
 rm dla34_ctrack_fp32.rt  # be sure to delete(or move) old tensorRT files
 ./test_dla34_ctrack      # run the yolo test (is slow)
-./demoTracker dla34_ctrack_fp32.rt ../demo/yolo_test.mp4 c
+./demoTracker dla34_ctrack_fp32.rt ../demo/yolo_test.mp4 NULL c
 ```
 
 The demoTracker program takes the same parameters of the demo program:
 ```
-./demoTracker <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh> <2D/3D-flag>
+./demoTracker <network-rt-file> <path-to-video> <calibration-file> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh> <2D/3D-flag>
 ```
 
 where
 
+* ```calibration-file``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
 *  ```<2D/3D-flag>``` if set to 0 the demo will be in the 2D mode, while if set to 1 the demo will be in the 3D mode (Default is 1 - 3D mode).
 
 ### FP16 inference
