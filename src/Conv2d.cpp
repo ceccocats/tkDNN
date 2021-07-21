@@ -166,6 +166,11 @@ Conv2d::Conv2d( Network *net, int out_ch, int kernelH, int kernelW,
     }
     initCUDNN(deConv);
 
+    if(this->groups != 1)
+        MACC = kernelH*kernelW*output_dim.c*output_dim.w*output_dim.h;
+    else
+        MACC = input_dim.c*kernelH*kernelW*output_dim.c*output_dim.w*output_dim.h;
+
     // allocate warkspace
     if (ws_sizeInBytes!=0) {
         checkCuda( cudaMalloc(&workSpace, ws_sizeInBytes) );

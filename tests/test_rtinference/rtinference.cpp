@@ -1,4 +1,5 @@
 #include<iostream>
+#include<algorithm>
 #include "tkdnn.h"
 #include <stdlib.h>     /* srand, rand */
 
@@ -17,6 +18,8 @@ int main(int argc, char *argv[]) {
 
     //convert network to tensorRT
     tk::dnn::NetworkRT netRT(NULL, argv[1]);
+
+    
     
     tk::dnn::dataDim_t idim = netRT.input_dim;
     tk::dnn::dataDim_t odim = netRT.output_dim;
@@ -29,6 +32,7 @@ int main(int argc, char *argv[]) {
 
     int ret_tensorrt = 0; 
     std::cout<<"Testing with batchsize: "<<BATCH_SIZE<<"\n";
+    std::vector<double> stats;
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     float total_time = 0;
     for(int i=0; i<64; i++) {
@@ -46,18 +50,43 @@ int main(int argc, char *argv[]) {
         netRT.infer(dim, input_d);
         TKDNN_TSTOP
         total_time+= t_ns;
+        if(i> 1)
+        stats.push_back(t_ns);
 
         // control output
-        std::cout<<"Output Buffers: "<<netRT.getBuffersN()-1<<"\n";
+        // std::cout<<"Output Buffers: "<<netRT.getBuffersN()-1<<"\n";
+        std::cout<<"Img: "<<i<<"\n";
 	for(int o=1; o<netRT.getBuffersN(); o++) {
             for(int b=1; b<BATCH_SIZE; b++) {
                 dnnType *out_d = (dnnType*) netRT.buffersRT[o];
                 dnnType *out0_d = out_d;
                 dnnType *outI_d = out_d + netRT.buffersDIM[o].tot()*b;
-                ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d) == 0 ? 0 : ERROR_TENSORRT;
+                ret_tensorrt |= checkResult(netRT.buffersDIM[o].tot(), outI_d, out0_d,true, 10, false) == 0 ? 0 : ERROR_TENSORRT;
             }
         }
     }
-    std::cout<<"avg: "<<total_time/64.<<std::endl;
+
+    double min = *std::min_element(stats.begin(), stats.end())/BATCH_SIZE;
+    double max = *std::max_element(stats.begin(), stats.end())/BATCH_SIZE;
+    double mean =0;
+    for(int i=0; i<stats.size(); i++) mean += stats[i]; mean /= stats.size();
+    mean /=BATCH_SIZE;
+
+    std::cout<<"Min: "<<min<<" ms\n";    
+    std::cout<<"Max: "<<max<<" ms\n";    
+    std::cout<<"Avg: "<<mean<<" ms\t"<<1000/(mean)<<" FPS\n"<<COL_END;   
+
+
+    std::ofstream times;
+    times.open("times_rtinference.csv", std::ios_base::app);
+
+    std::string net_name;
+    removePathAndExtension(argv[1], net_name);
+
+    times << net_name<< "_" << BATCH_SIZE << ";" << mean << ";" << min << ";" << max << ";" << 1000./mean << "\n";
+
+    times.close();
+
     return ret_tensorrt;
 }
+

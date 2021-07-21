@@ -92,7 +92,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device){
         delete [] vec;
 }
 
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit, bool verbose) {
 
     dnnType *data_h, *correct_h;
     const float eps = 0.02f;
@@ -127,13 +127,15 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int 
         delete [] correct_h;
     }
 
-    std::cout<<" | ";
-    if(diffs == 0)
-        std::cout<<COL_GREENB<<"OK";
-    else
-        std::cout<<COL_REDB<<"Wrongs: "<<diffs;
+    if(verbose){
+        std::cout<<" | ";
+        if(diffs == 0)
+            std::cout<<COL_GREENB<<"OK";
+        else
+            std::cout<<COL_REDB<<"Wrongs: "<<diffs;
 
-    std::cout<<COL_END<<" ~"<<eps<<"\n";
+        std::cout<<COL_END<<" ~"<<eps<<"\n";
+    }
     return diffs;
 }
 

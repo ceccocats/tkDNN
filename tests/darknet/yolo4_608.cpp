@@ -5,7 +5,7 @@
 #include "DarknetParser.h"
 
 int main() {
-    std::string bin_path  = "yolo4";
+    std::string bin_path  = "yolo4_608";
     std::vector<std::string> input_bins = { 
         bin_path + "/layers/input.bin"
     };
@@ -15,9 +15,9 @@ int main() {
         bin_path + "/debug/layer161_out.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = "../tests/darknet/cfg/yolo4.cfg";
+    std::string cfg_path  = "../tests/darknet/cfg/yolo4_608.cfg";
     std::string name_path = "../tests/darknet/names/coco.names";
-    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/982LxTQcNQfFQc4/download");
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/Bg9r7kqDFJiFB4c/download");
 
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);

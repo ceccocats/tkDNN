@@ -23,6 +23,18 @@ int main() {
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
     net->print();
 
+//     for(int i=0; i<net->num_layers; i++) {
+//         if(net->layers[i]->getLayerType() == tk::dnn::LAYER_CONV2D) {
+//             tk::dnn::Conv2d *c = (tk::dnn::Conv2d*) net->layers[i];
+//             c->releaseDevice();
+//             c->releaseHost(true, false);
+//         }
+//         if(net->layers[i]->dstData != nullptr) {
+//             cudaFree(net->layers[i]->dstData);
+//             net->layers[i]->dstData = nullptr;
+//         }
+//    }
+
     //convert network to tensorRT
     tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
