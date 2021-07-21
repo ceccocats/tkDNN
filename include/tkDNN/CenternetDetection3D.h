@@ -61,6 +61,8 @@ private:
     #endif
     cv::Mat r;
     float *d_ptrs;
+    
+    cv::Size sz_old;
 
     cv::Mat src;
     cv::Mat dst;

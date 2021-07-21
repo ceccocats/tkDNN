@@ -106,17 +106,22 @@ bool CenternetDetection3D::init(const std::string& tensor_path, const int n_clas
             calibs_.at<float>(0,2) = 604.0814;
             calibs_.at<float>(1,1) = 707.0493;
             calibs_.at<float>(1,2) = 180.5066;
+            calibs_.at<float>(0,3) = 45.75831;
+            calibs_.at<float>(1,3) = -0.3454157;
+            calibs_.at<float>(2,2) = 1.0;
+            calibs_.at<float>(2,3) = 0.004981016;
         }
         else {
-            calibs_.at<float>(0,0) = inputCalibs[bi].at<float>(0,0) * dim.w / 1440;
-            calibs_.at<float>(0,2) = inputCalibs[bi].at<float>(0,2) * dim.w / 1440;
-            calibs_.at<float>(1,1) = inputCalibs[bi].at<float>(1,1) * dim.h / 1080;
-            calibs_.at<float>(1,2) = inputCalibs[bi].at<float>(1,2) * dim.h / 1080;
+            calibs_.at<float>(0,0) = inputCalibs[bi].at<float>(0,0);// * (1440.0/dim.w);// / 1440;
+            calibs_.at<float>(0,2) = inputCalibs[bi].at<float>(0,2);// * (1440.0/dim.w);// / 1440;
+            calibs_.at<float>(1,1) = inputCalibs[bi].at<float>(1,1);// * (1080.0/dim.h);//dim.h / 1080;
+            calibs_.at<float>(1,2) = inputCalibs[bi].at<float>(1,2);// * (1080.0/dim.h);//dim.h / 1080;
+            calibs_.at<float>(2,2) = 1.0;
         }
-        calibs_.at<float>(0,3) = 45.75831;
-        calibs_.at<float>(1,3) = -0.3454157;
-        calibs_.at<float>(2,2) = 1.0;
-        calibs_.at<float>(2,3) = 0.004981016;
+        // calibs_.at<float>(0,3) = 45.75831;
+        // calibs_.at<float>(1,3) = -0.3454157;
+        // calibs_.at<float>(2,2) = 1.0;
+        // calibs_.at<float>(2,3) = 0.004981016;
         calibs.push_back(calibs_);
     }
 
@@ -165,16 +170,21 @@ bool CenternetDetection3D::init(const std::string& tensor_path, const int n_clas
 }
 
 void CenternetDetection3D::preprocess(cv::Mat &frame, const int bi){    
-    // auto start_t = std::chrono::steady_clock::now();
-    // auto step_t = std::chrono::steady_clock::now();
-    // auto end_t = std::chrono::steady_clock::now();
     cv::Size sz = originalSize[bi];
-    // std::cout<<"image: "<<sz.width<<", "<<sz.height<<std::endl;
-    cv::Size sz_old;
-    float scale = 1.0;
-    float new_height = sz.height * scale;
-    float new_width = sz.width * scale;
+    float new_height = dim.h;//sz.height * scale;
+    float new_width = dim.w;//sz.width * scale;
     if(sz.height != sz_old.height && sz.width != sz_old.width){
+
+        if(inputCalibs.size() == 0 || inputCalibs[bi].empty()) {
+            calibs[bi].at<float>(0,2) = new_width / 2.0f;
+            calibs[bi].at<float>(1,2) = new_height /2.0f;
+        }
+        else {
+            calibs[bi].at<float>(0,0) = inputCalibs[bi].at<float>(0,0) * 2.0 * dim.w / sz.width;
+            calibs[bi].at<float>(0,2) = inputCalibs[bi].at<float>(0,2) * dim.w / sz.width ;
+            calibs[bi].at<float>(1,1) = inputCalibs[bi].at<float>(1,1) * 2.0 * dim.h / sz.height;
+            calibs[bi].at<float>(1,2) = inputCalibs[bi].at<float>(1,2) * dim.h / sz.height;
+        }
         float c[] = {new_width / 2.0f, new_height /2.0f};
         float s[] = {new_width, new_height};
         // ----------- get_affine_transform
@@ -206,13 +216,13 @@ void CenternetDetection3D::preprocess(cv::Mat &frame, const int bi){
     }
     sz_old = sz;
 #ifdef OPENCV_CUDACONTRIB
-    std::cout<<"OPENCV CPMTROB\n";
+    // std::cout<<"OPENCV CPMTROB\n";
     cv::cuda::GpuMat im_Orig; 
     cv::cuda::GpuMat imageF1_d, imageF2_d;
         
     im_Orig = cv::cuda::GpuMat(frame);
-    // cv::cuda::resize (im_Orig, imageF1_d, cv::Size(new_width, new_height)); 
-    imageF1_d = im_Orig;
+    cv::cuda::resize (im_Orig, imageF1_d, cv::Size(dim.w, dim.h));//cv::Size(new_width, new_height)); 
+    // imageF1_d = im_Orig;
     checkCuda( cudaDeviceSynchronize() );
     
     sz = imageF1_d.size();
@@ -252,10 +262,10 @@ void CenternetDetection3D::preprocess(cv::Mat &frame, const int bi){
     // std::cout << " TIME Memcpy to input_d: " << std::chrono::duration_cast<std::chrono:: microseconds>(end_t - step_t).count() << "  us" << std::endl;
     // step_t = end_t;
 #else
-    std::cout<<"NO OPENCV CPMTROB\n";
+    // std::cout<<"NO OPENCV CPMTROB\n";
     cv::Mat imageF;
-    // resize(frame, imageF, cv::Size(new_width, new_height));
-    imageF = frame;
+    resize(frame, imageF, cv::Size(dim.w, dim.h));//cv::Size(new_width, new_height));
+    // imageF = frame;
     sz = imageF.size();
     // std::cout<<"size: "<<sz.height<<" "<<sz.width<<" - "<<std::endl;
     // end_t = std::chrono::steady_clock::now();
@@ -485,37 +495,40 @@ void CenternetDetection3D::draw(std::vector<cv::Mat>& frames) {
     int thickness = 2;   
     
     for(int bi=0; bi<frames.size(); ++bi){
+        float scale_x = float(originalSize[bi].width)/dim.w;
+        float scale_y = float(originalSize[bi].height)/dim.h;
+        resize(frames[bi], frames[bi], originalSize[bi]);
         // draw dets
         for(int i=0; i<batchDetected[bi].size(); i++) {
             b = batchDetected[bi][i];
 
             for(int ind_f = 3; ind_f>=0; ind_f--) {
                 for(int j=0; j<4; j++) {
-                    cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(j) * 2), 
-                                            b.corners.at(faceId.at(ind_f).at(j) * 2 + 1)),
-                                    cv::Point(b.corners.at(faceId.at(ind_f).at((j+1)%4) * 2), 
-                                            b.corners.at(faceId.at(ind_f).at((j+1)%4) * 2 + 1)), 
+                    cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(j) * 2) * scale_x, 
+                                            b.corners.at(faceId.at(ind_f).at(j) * 2 + 1) * scale_y),
+                                    cv::Point(b.corners.at(faceId.at(ind_f).at((j+1)%4) * 2) * scale_x, 
+                                            b.corners.at(faceId.at(ind_f).at((j+1)%4) * 2 + 1) * scale_y), 
                                     colors[b.cl], 2);
                     if(ind_f == 0) {
-                        cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(0) * 2), 
-                                                b.corners.at(faceId.at(ind_f).at(0) * 2 + 1)),
-                                        cv::Point(b.corners.at(faceId.at(ind_f).at(2) * 2), 
-                                                b.corners.at(faceId.at(ind_f).at(2) * 2 + 1)), colors[b.cl], 2);
-                        cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(1) * 2), 
-                                                b.corners.at(faceId.at(ind_f).at(1) * 2 + 1)),
-                                        cv::Point(b.corners.at(faceId.at(ind_f).at(3) * 2), 
-                                                b.corners.at(faceId.at(ind_f).at(3) * 2 + 1)), colors[b.cl], 2);
+                        cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(0) * 2)  * scale_x, 
+                                                b.corners.at(faceId.at(ind_f).at(0) * 2 + 1)* scale_y),
+                                        cv::Point(b.corners.at(faceId.at(ind_f).at(2) * 2)  * scale_x, 
+                                                b.corners.at(faceId.at(ind_f).at(2) * 2 + 1) * scale_y), colors[b.cl], 2);
+                        cv::line(frames[bi], cv::Point(b.corners.at(faceId.at(ind_f).at(1) * 2)* scale_x, 
+                                                b.corners.at(faceId.at(ind_f).at(1) * 2 + 1)* scale_y),
+                                        cv::Point(b.corners.at(faceId.at(ind_f).at(3) * 2)* scale_x, 
+                                                b.corners.at(faceId.at(ind_f).at(3) * 2 + 1)* scale_y), colors[b.cl], 2);
                     }
                 }
             }
             // draw label
             cv::Size text_size = getTextSize(classesNames[b.cl], cv::FONT_HERSHEY_SIMPLEX, font_scale, thickness, &baseline);
-            cv::rectangle(frames[bi],  cv::Point(b.corners.at(faceId.at(0).at(0) * 2), 
-                                            b.corners.at(faceId.at(0).at(0) * 2 + 1)), 
-                                cv::Point((b.corners.at(faceId.at(0).at(0) * 2) + text_size.width - 2), 
-                                            (b.corners.at(faceId.at(0).at(0) * 2 + 1)) - text_size.height - 2), colors[b.cl], -1);                      
-            cv::putText(frames[bi], classesNames[b.cl], cv::Point(b.corners.at(faceId.at(0).at(0) * 2),  
-                                                            b.corners.at(faceId.at(0).at(0) * 2 + 1) - (baseline / 2)), 
+            cv::rectangle(frames[bi],  cv::Point(b.corners.at(faceId.at(0).at(0) * 2)* scale_x, 
+                                            b.corners.at(faceId.at(0).at(0) * 2 + 1)* scale_y), 
+                                cv::Point((b.corners.at(faceId.at(0).at(0) * 2)* scale_x + text_size.width - 2), 
+                                            (b.corners.at(faceId.at(0).at(0) * 2 + 1)* scale_y - text_size.height - 2)), colors[b.cl], -1);                      
+            cv::putText(frames[bi], classesNames[b.cl], cv::Point(b.corners.at(faceId.at(0).at(0) * 2)* scale_x,  
+                                                            (b.corners.at(faceId.at(0).at(0) * 2 + 1)* scale_y - (baseline / 2))), 
                                                 cv::FONT_HERSHEY_SIMPLEX, font_scale, cv::Scalar(255, 255, 255), thickness);
         }
     }
