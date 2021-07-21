@@ -113,15 +113,15 @@ Steps needed to do inference on tkDNN with a custom neural network.
 
 ## Exporting weights
 
-For specific details on how to export weights see ./docs/exporting_weights.md
+For specific details on how to export weights see [here](./docs/exporting_weights.md)
 
 ## Run the demo 
 
-For specific details on how to run the demos see ./docs/demo.md
+For specific details on how to run the demos see [here](./docs/demo.md)
 
 ## mAP demo
 
-For specific details on how to run the mAP demo see ./docs/mAP_demo.md
+For specific details on how to run the mAP demo see [here](./docs/mAP_demo.md)
 
 ## Existing tests and supported networks
 
@@ -155,7 +155,7 @@ For specific details on how to run the mAP demo see ./docs/mAP_demo.md
 
 ### tkDNN on Windows 10 (experimental)
 
-For specific details on how to run the demos on Windows 10 see ./docs/windows.md
+For specific details on how to run the demos on Windows 10 see [here](./docs/windows.md)
 
 ## References
 

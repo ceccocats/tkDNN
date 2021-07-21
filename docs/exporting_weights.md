@@ -8,7 +8,7 @@
     - [3)Export weights for CenterNet](#3export-weights-for-centernet)
     - [4)Export weights for MobileNetSSD](#4export-weights-for-mobilenetssd)
     - [5)Export weights for CenterTrack](#5export-weights-for-centertrack)
- - [Darknet Parser](#darkent-parser)
+ - [Darknet Parser](#darknet-parser)
 
 ## How to export weights
 

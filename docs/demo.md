@@ -22,13 +22,13 @@
 ## Index
 
  - [Run the demo](#run-the-demo)
-    - [2D Object Detection](#object-detection-2d)
-    - [3D Object Detection](#object-detection-3d)
-    - [Object Detection & Tracking](#object-detection-tracking)
+    - [2D Object Detection](#2d-object-detection)
+    - [3D Object Detection](#3d-object-detection)
+    - [Object Detection and Tracking](#object-detection-and-tracking)
     - [FP16 inference](#fp16-inference)
     - [INT8 inference](#int8-inference)
     - [Batching](#batching)
-    - [Run the demo on Windows](#demo-windows)
+    - [Run the demo on Windows](#run-the-demo-on-windows)
 
 ## Run the demo 
 
@@ -84,7 +84,7 @@ The demo3D program takes the same parameters of the demo program:
 ./demo3D <network-rt-file> <path-to-video> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh>
 ```
 
-### Object Detection & Tracking
+### Object Detection and Tracking
 
 To run the 3D object detection & tracking demo follow these steps (example with CenterTrack based on DLA34):
 ```
