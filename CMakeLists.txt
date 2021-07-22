@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 
 project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -17,7 +17,13 @@ if(DEBUG)
     add_definitions(-DDEBUG)
 endif()
 
-add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+if(TKDNN_PATH)
+    message("SET TKDNN_PATH:"${TKDNN_PATH})
+    add_definitions(-DTKDNN_PATH="${TKDNN_PATH}")
+else()
+    add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
 
 #-------------------------------------------------------------------------------
 # CUDA
@@ -25,7 +31,7 @@ add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 find_package(CUDA 9.0 REQUIRED)
 SET(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61 )
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 
 find_package(CUDNN REQUIRED)
 include_directories(${CUDNN_INCLUDE_DIR})
@@ -42,6 +48,7 @@ target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
 # External Libraries
 #-------------------------------------------------------------------------------
 find_package(Eigen3 REQUIRED)
+message("Eigen DIR: " ${EIGEN3_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
@@ -88,6 +95,7 @@ foreach(test_SRC ${darknet_SRC})
     set(test_NAME test_${test_NAME})
     add_executable(${test_NAME} ${test_SRC})
     target_link_libraries(${test_NAME} tkDNN)
+    install(TARGETS ${test_NAME} DESTINATION bin)
 endforeach()
 
 # MOBILENET
@@ -117,8 +125,20 @@ target_link_libraries(test_dla34_cnet tkDNN)
 add_executable(test_dla34_cnet3d tests/centernet/dla34_cnet3d/dla34_cnet3d.cpp)
 target_link_libraries(test_dla34_cnet3d tkDNN)
 
+# CENTERTRACK
+
 add_executable(test_dla34_ctrack tests/centertrack/dla34_ctrack/dla34_ctrack.cpp)
 target_link_libraries(test_dla34_ctrack tkDNN)
+
+# SHELFNET
+add_executable(test_shelfnet tests/shelfnet/shelfnet.cpp)
+target_link_libraries(test_shelfnet tkDNN)
+
+add_executable(test_shelfnet_berkeley tests/shelfnet/shelfnet_berkeley.cpp)
+target_link_libraries(test_shelfnet_berkeley tkDNN)
+
+add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
+target_link_libraries(test_shelfnet_mapillary tkDNN)
 
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
@@ -136,6 +156,9 @@ target_link_libraries(demo3D tkDNN)
 add_executable(demoTracker demo/demo/demoTracker.cpp)
 target_link_libraries(demoTracker tkDNN)
 
+add_executable(seg_demo demo/demo/seg_demo.cpp)
+target_link_libraries(seg_demo tkDNN)
+
 #-------------------------------------------------------------------------------
 # Install
 #-------------------------------------------------------------------------------
@@ -146,7 +169,10 @@ target_link_libraries(demoTracker tkDNN)
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/)
 install(TARGETS tkDNN kernels DESTINATION lib)
+install(TARGETS test_simple test_mnist test_mnistRT test_rtinference demo map_demo DESTINATION bin)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
         DESTINATION "share/tkDNN/cmake/" # target directory
 )
-
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests/" # source directory
+        DESTINATION "share/tkDNN/tests" # target directory
+)

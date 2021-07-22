@@ -139,8 +139,8 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 #if NV_TENSORRT_MAJOR >= 6                
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
 #else 
-        //engineRT = builderRT->buildCudaEngine(*networkRT);
         engineRT = builderRT->buildCudaEngine(*networkRT);
+        //engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
 #endif
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")
@@ -237,6 +237,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Flatten*) l);
     if(type == LAYER_RESHAPE)
         return convert_layer(input, (Reshape*) l);
+    if(type == LAYER_RESIZE)
+        return convert_layer(input, (Resize*) l);
     if(type == LAYER_REORG)
         return convert_layer(input, (Reorg*) l);
     if(type == LAYER_REGION)
@@ -390,13 +392,13 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         
 #if NV_TENSORRT_MAJOR < 6                
         // plugin version
-        IPlugin *plugin = new ActivationLeakyRT();
+        IPlugin *plugin = new ActivationLeakyRT(l->slope);
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
 #else 
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
-        lRT->setAlpha(0.1);
+        lRT->setAlpha(l->slope);
         checkNULL(lRT);
         return lRT;
 #endif
@@ -479,10 +481,20 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Reshape *l) {
     // std::cout<<"convert Reshape\n";
 
-    l->output_dim.print();
     IPlugin *plugin = new ReshapeRT(l->output_dim);
     IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
     checkNULL(lRT);
+    return lRT;
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input, Resize *l) {
+    // std::cout<<"convert Resize\n";
+
+    IResizeLayer *lRT = networkRT->addResize(*input); //default is kNEAREST
+    checkNULL(lRT);
+    Dims d{};
+    lRT->setResizeMode(ResizeMode(l->mode));
+    lRT->setOutputDimensions(DimsCHW{l->output_dim.c, l->output_dim.h, l->output_dim.w});
     return lRT;
 }
 
@@ -513,7 +525,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     
     ITensor *back_tens = tensors[l->backLayer];
 
-    if(l->backLayer->output_dim.c == l->output_dim.c)
+    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul) 
     {
         IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
         checkNULL(lRT);
@@ -522,7 +534,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     else
     {
         // plugin version
-        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim);
+        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim, l->mul);
         ITensor **inputs = new ITensor*[2];
         inputs[0] = input;
         inputs[1] = back_tens; 
@@ -651,7 +663,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     //std::cout<<name<<std::endl;
 
     if(name.find("ActivationLeaky") == 0) {
-        ActivationLeakyRT *a = new ActivationLeakyRT();
+        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
         a->size = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return a;
@@ -710,7 +722,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         bdim.w = readBUF<int>(buf);
         bdim.l = 1;
 
-        ShortcutRT *r = new ShortcutRT(bdim);
+        ShortcutRT *r = new ShortcutRT(bdim, readBUF<bool>(buf));
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);

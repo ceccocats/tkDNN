@@ -88,7 +88,6 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
-            std::cout<<"new_coords"<<new_coords<<std::endl;
             if (new_coords == 1){
                 if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
             }
