@@ -4,6 +4,7 @@
 //#include <unistd.h>
 #include <mutex>
 
+#include "demo_utils.h"
 #include "CenternetDetection3D.h"
 
 bool gRun;
