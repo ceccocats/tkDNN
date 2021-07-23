@@ -1,8 +1,6 @@
-# mAP demo
+# Run the mAP demo
 
-## Run the mAP demo
-
-To compute mAP, precision, recall and f1score, run the map_demo.
+To compute mAP, precision, recall and f1score to evaluate 2D object detectors, run the map_demo.
 
 A validation set is needed. 
 To download COCO_val2017 (80 classes) run (form the root folder): 

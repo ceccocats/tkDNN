@@ -1,8 +1,6 @@
-# tkDNN Demo
+# 2D Object Detection with tkDNN
 
-## Supported Network
-
-2D Object Detection:
+## Supported Networks
 
 * Yolo4, Yolo4-csp, Yolo4x, Yolo4_berkeley, Yolo4tiny
 * Yolo3, Yolo3_berkeley, Yolo3_coco4, Yolo3_flir, Yolo3_512, Yolo3tiny, Yolo3tiny_512
@@ -11,28 +9,12 @@
 * Resnet101_cnet, Dla34_cnet
 * Mobilenetv2ssd, Mobilenetv2ssd512, Bdd-mobilenetv2ssd
 
-3D Object Detection:
-
-* Dla34_cnet3d
-
-2D/3D Object Detection and Tracking:
-
-* Dla34_cnet3d_track
-
 ## Index
 
- - [Run the demo](#run-the-demo)
-    - [2D Object Detection](#2d-object-detection)
-    - [3D Object Detection](#3d-object-detection)
-    - [Object Detection and Tracking](#object-detection-and-tracking)
-    - [FP16 inference](#fp16-inference)
-    - [INT8 inference](#int8-inference)
-    - [Batching](#batching)
-    - [Run the demo on Windows](#run-the-demo-on-windows)
-
-## Run the demo 
-
-N.b. By default it is used FP32 inference
+ - [2D Object Detection](#2d-object-detection)
+ - [FP16 inference](#fp16-inference)
+ - [INT8 inference](#int8-inference)
+ - [Batching](#batching)
 
 ### 2D Object Detection
 This is an example using yolov4.
@@ -66,45 +48,11 @@ where
 *  ```<show-flag>``` if set to 0 the demo will not show the visualization but save the video into result.mp4 (if n-batches ==1)
 *  ```<conf-thresh>``` confidence threshold for the detector. Only bounding boxes with threshold greater than conf-thresh will be displayed.
 
-
+N.B. By default it is used FP32 inference
 
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
-### 3D Object Detection
-
-To run the 3D object detection demo follow these steps (example with CenterNet based on DLA34):
-```
-rm dla34_cnet3d_fp32.rt        # be sure to delete(or move) old tensorRT files
-./test_dla34_cnet3d            # run the yolo test (is slow)
-./demo3D dla34_cnet3d_fp32.rt ../demo/yolo_test.mp4 NULL c
-```
-The demo3D program takes the same parameters of the demo program:
-```
-./demo3D <network-rt-file> <path-to-video> <calibration-file> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh>
-```
-where
-
-* ```calibration-file``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
-
-### Object Detection and Tracking
-
-To run the 3D object detection & tracking demo follow these steps (example with CenterTrack based on DLA34):
-```
-rm dla34_ctrack_fp32.rt  # be sure to delete(or move) old tensorRT files
-./test_dla34_ctrack      # run the yolo test (is slow)
-./demoTracker dla34_ctrack_fp32.rt ../demo/yolo_test.mp4 NULL c
-```
-
-The demoTracker program takes the same parameters of the demo program:
-```
-./demoTracker <network-rt-file> <path-to-video> <calibration-file> <kind-of-network> <number-of-classes> <n-batches> <show-flag> <conf-thresh> <2D/3D-flag>
-```
-
-where
-
-* ```calibration-file``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
-*  ```<2D/3D-flag>``` if set to 0 the demo will be in the 2D mode, while if set to 1 the demo will be in the 3D mode (Default is 1 - 3D mode).
 
 ### FP16 inference
 
@@ -115,7 +63,7 @@ rm yolo3_fp16.rt        # be sure to delete(or move) old tensorRT files
 ./test_yolo3            # run the yolo test (is slow)
 ./demo yolo3_fp16.rt ../demo/yolo_test.mp4 y
 ```
-N.b. Using FP16 inference will lead to some errors in the results (first or second decimal). 
+N.B. Using FP16 inference will lead to some errors in the results (first or second decimal). 
 
 ### INT8 inference
 
@@ -169,49 +117,3 @@ rm yolo3_fp32.rt                   # be sure to delete(or move) old tensorRT fil
 ./test_yolo3                       # build RT file
 ./test_rtinference yolo3_fp32.rt 4 # test with a batch size of 4
 ```
-
-### Run the demo on Windows 
-
-This example uses yolo4_tiny.\
-To run the object detection file create .rt file bu running:
-```
-.\test_yolo4tiny.exe
-```
-
-Once the rt file has been successfully create,run the demo using the following command:
-```
-.\demo.exe yolo4tiny_fp32.rt ..\demo\yolo_test.mp4 y 
-```
- For general info on more demo paramters,check Run the demo section on top 
- To run the test_all_tests.sh on windows,use git bash or msys2 
-
-### FP16 inference windows 
-
-This is an untested feature on windows.To run the object detection demo with FP16 interference follow the below steps(example with yolo4tiny):
-```
-set TKDNN_MODE=FP16
-del /f yolo4tiny_fp16.rt
-.\test_yolo4tiny.exe
-.\demo.exe yolo4tiny_fp16.rt ..\demo\yolo_test.mp4
-```
-
-### INT8 inference windows 
-To run object detection demo with INT8 (example with yolo4tiny):
-```
-set TKDNN_MODE=INT8
-set TKDNN_CALIB_LABEL_PATH=..\demo\COCO_val2017\all_labels.txt
-set TKDNN_CALIB_IMG_PATH=..\demo\COCO_val2017\all_images.txt
-del /f  yolo4tiny_int8.rt        # be sure to delete(or move) old tensorRT files
-.\test_yolo4tiny.exe           # run the yolo test (is slow)
-.\demo.exe yolo4tiny_int8.rt ..\demo\yolo_test.mp4 y
-
-```
-
-### Known issues with tkDNN on Windows
-
-Mobilenet and Centernet demos work properly only when built with msvc 16.7 in Release Mode,when built in debug mode for the mentioned networks one might encounter opencv assert errors
-
-All Darknet models work properly with demo using MSVC version(16.7-16.9)
-
-It is recommended to use Nvidia Driver(465+),Cuda unknown errors have been observed when using older drivers on pascal(SM 61) devices.
-

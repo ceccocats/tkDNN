@@ -8,6 +8,7 @@
     - [3)Export weights for CenterNet](#3export-weights-for-centernet)
     - [4)Export weights for MobileNetSSD](#4export-weights-for-mobilenetssd)
     - [5)Export weights for CenterTrack](#5export-weights-for-centertrack)
+    - [6)Export weights for ShelfNet](#6export-weights-for-shelfnet)
  - [Darknet Parser](#darknet-parser)
 
 ## How to export weights
@@ -30,7 +31,7 @@ make
 mkdir layers debug
 ./darknet export <path-to-cfg-file> <path-to-weights> layers
 ```
-N.b. Use compilation with CPU (leave GPU=0 in Makefile) if you also want debug. 
+N.B. Use compilation with CPU (leave GPU=0 in Makefile) if you also want debug. 
 
 ### 2)Export weights for DLA34 and ResNet101 
 To get weights and outputs needed to run the tests dla34 and resnet101 use the Python script and the Anaconda environment included in the repository.   
@@ -70,6 +71,19 @@ git clone https://github.com/sapienzadavide/CenterTrack.git
 
 ```
 python demo.py tracking,ddd --load_model ../models/nuScenes_3Dtracking.pth --dataset nuscenes --pre_hm --track_thresh 0.1 --demo /path/to/image/or/folder/or/video/or/webcam --test_focal_length 633 --exp_wo --exp_wo_dim 512 --input_h 512 --input_w 512
+```
+
+### 6)Export weights for ShelfNet
+To get the weights needed to run Shelfnet tests use [this](https://git.hipert.unimore.it/mverucchi/shelfnet) fork of a Pytorch implementation of Shelfnet network. 
+
+```
+git clone https://git.hipert.unimore.it/mverucchi/shelfnet
+cd shelfnet 
+cd ShelfNet18_realtime
+conda env create --file shelfnet_env.yml
+conda activate shelfnet
+mkdir layer debug
+python export.py
 ```
 
 ## Darknet Parser

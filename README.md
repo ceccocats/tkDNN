@@ -19,6 +19,7 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 
 ### What's new (20 July 2021)
 - [x] Support to sematic segmentation [README](docs/README_seg.md)
+- [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
 - [ ] Support to TensorRT8 (WIP)
 
 ## FPS Results
@@ -70,15 +71,13 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
 - [tkDNN](#tkdnn)
   - [Index](#index)
   - [Dependencies](#dependencies)
-  - [About OpenCV](#about-opencv)
   - [How to compile this repo](#how-to-compile-this-repo)
   - [Workflow](#workflow)
-  - [How to export weights](#how-to-export-weights)
-  - [Run the demo](#run-the-demo)
-  - [mAP demo](#map-demo)
+  - [Exporting weights](#exporting-weights)
+  - [Run the demos](#run-the-demos)
+  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows-10-experimental)
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
-  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows-10-experimental)
   
 
 ## Dependencies
@@ -97,7 +96,7 @@ sudo apt install libyaml-cpp-dev curl libeigen3-dev
 
 ```
 
-## About OpenCV
+#### About OpenCV
 To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh```. It will download and compile OpenCV in Download folder.
 ```
 bash scripts/install_OpenCV4.sh
@@ -125,15 +124,21 @@ Steps needed to do inference on tkDNN with a custom neural network.
 
 ## Exporting weights
 
-For specific details on how to export weights see [here](./docs/exporting_weights.md)
+For specific details on how to export weights see [HERE](./docs/exporting_weights.md).
 
-## Run the demo 
+## Run the demos 
 
-For specific details on how to run the demos see [here](./docs/demo.md)
+For specific details on how to run:
+- 2D object detection demos, details on FP16, INT8 and batching see [HERE](./docs/demo.md).
+- segmentation demos see [HERE](./docs/README_seg.md).
+- 2D/3D object detection and tracking demos see [HERE](./docs/README_2d3dtracking.md).
+- mAP demo to evaluate 2D object detectors see [HERE](./docs/mAP_demo.md).
 
-## mAP demo
+![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
-For specific details on how to run the mAP demo see [here](./docs/mAP_demo.md)
+## tkDNN on Windows 10 (experimental)
+
+For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows.md).
 
 ## Existing tests and supported networks
 
@@ -160,14 +165,20 @@ For specific details on how to run the mAP demo see [here](./docs/mAP_demo.md)
 | resnet101_cnet    | Centernet (Resnet101 backend)<sup>4</sup>     | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/5BTjHMWBcJk8g3i/download)     |
 | csresnext50-panet-spp    | Cross Stage Partial Network <sup>7</sup>     | [COCO 2014](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/Kcs4xBozwY4wFx8/download)     |
 | yolo4             | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
+| yolo4_320         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 320x320       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
+| yolo4_512         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
+| yolo4_608         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 608x608       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
 | yolo4_berkeley             | Yolov4 <sup>8</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)                          | 10        | 540x320       | [weights](https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download)     |
 | yolo4tiny             | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
-| yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 640x640       | [weights](https://cloud.hipert.unimore.it/s/5MFjtNtgbDGdJEo/download)     |
+| yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 
+| yolo4tiny_512           | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
+80        | 640x640       | [weights](https://cloud.hipert.unimore.it/s/5MFjtNtgbDGdJEo/download)     |
 | yolo4x-cps            | Scaled Yolov4 <sup>10</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/AfzHE4BfTeEm2gH/download)     |
+| shelfnet              | ShelfNet18_realtime<sup>11</sup>                      | [Cityscapes](https://www.cityscapes-dataset.com/)                          | 19        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/mEDZMRJaGCFWSJF/download)                                                                   |
+| shelfnet_berkeley              | ShelfNet18_realtime<sup>11</sup>                           | [DeepDrive](https://bdd-data.berkeley.edu/)                          | 20        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download)                                                                   |
+| dla34_cnet3d        | Centernet3D (DLA34 backend)<sup>4</sup>         | [KITTI 2017](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d)                          | 1        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/2MDyWGzQsTKMjmR/download)     |
+| dla34_ctrack        | CenterTrack (DLA34 backend)<sup>12</sup>         | [NuScenes 3D](https://www.nuscenes.org/)                          | 7        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/rjNfgGL9FtAXLHp/download)     |
 
-### tkDNN on Windows 10 (experimental)
-
-For specific details on how to run the demos on Windows 10 see [here](./docs/windows.md)
 
 ## References
 
@@ -181,3 +192,5 @@ For specific details on how to run the demos on Windows 10 see [here](./docs/win
 8. Bochkovskiy, Alexey, Chien-Yao Wang, and Hong-Yuan Mark Liao. "YOLOv4: Optimal Speed and Accuracy of Object Detection." arXiv preprint arXiv:2004.10934 (2020).
 9. Bochkovskiy, Alexey, "Yolo v4, v3 and v2 for Windows and Linux" (https://github.com/AlexeyAB/darknet)
 10. Wang, Chien-Yao, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. "Scaled-YOLOv4: Scaling Cross Stage Partial Network." arXiv preprint arXiv:2011.08036 (2020).
+11. Zhuang, Juntang, et al. "ShelfNet for fast semantic segmentation." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2019.
+12. Zhou, Xingyi, Vladlen Koltun, and Philipp Krähenbühl. "Tracking objects as points." European Conference on Computer Vision. Springer, Cham, 2020.
