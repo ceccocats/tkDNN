@@ -82,7 +82,7 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
 
 ## Dependencies
 This branch works on every NVIDIA GPU that supports the following (latest tested) dependencies:
-* CUDA 11.0 (or >= 10)
+* CUDA 11.0 (or >= 10) [the segmentation only works with CUDA 10 for now]
 * cuDNN 8.0.4 (or >= 7.3)
 * TensorRT 7.2.0 (or >=5)
 * OpenCV 4.5.2 (or >=4)
