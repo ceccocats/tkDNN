@@ -72,8 +72,6 @@ do
     # ./test_imuodom &>> $out_file
     # print_output $? imuodom
 
-    test_net shelfnet
-    test_net shelfnet_berkeley
     test_net yolo4
     test_net yolo4_320
     test_net yolo4_320_coco2
@@ -82,6 +80,7 @@ do
     test_net yolo4-csp
     test_net yolo4x
     test_net yolo4_berkeley
+    test_net yolo4_berkeley_f1
     test_net yolo4tiny
     test_net yolo4tiny_512
     test_net yolo3
@@ -103,6 +102,8 @@ do
     test_net mobilenetv2ssd512
     test_net bdd-mobilenetv2ssd
     test_net dla34_ctrack
+    test_net shelfnet
+    test_net shelfnet_berkeley
 done
 
 echo "If errors occured, check logfile $out_file" 
