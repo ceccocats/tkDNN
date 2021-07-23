@@ -18,6 +18,8 @@ where
 
 * ```<calibration-file>``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
 
+![demo](https://user-images.githubusercontent.com/11939259/126784875-c4285497-d369-424f-abda-58274cd747ac.gif)
+
 ## Object Detection and Tracking
 
 To run the 3D object detection & tracking demo follow these steps (example with CenterTrack based on DLA34):
@@ -37,6 +39,7 @@ where
 * ```<calibration-file>``` is the camera calibration file (opencv format). It is important that the file contains entry "camera_matrix" with sub-entry "rows", "cols", "data". If you do not want to pass the calibration file, pass "NULL" instead.
 *  ```<2D/3D-flag>``` if set to 0 the demo will be in the 2D mode, while if set to 1 the demo will be in the 3D mode (Default is 1 - 3D mode).
 
+![demo](https://user-images.githubusercontent.com/11939259/126784878-513fa9e8-864a-4c24-b4bd-199737184708.gif)
 
 ## FPS Results
 
