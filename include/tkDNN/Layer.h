@@ -56,8 +56,8 @@ public:
 
     int id = 0;
     bool final;        //if the layer is the final one
-    uint n_params = 0;
-    uint feature_map_size = 0;
+    unsigned int n_params = 0;
+    unsigned int feature_map_size = 0;
     long unsigned MACC = 0;
 
 
