@@ -12,8 +12,10 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
+
 #ifdef __linux__
 #include <unistd.h>
+
 #endif
 
 #include <ios>

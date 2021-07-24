@@ -32,12 +32,14 @@ void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
             int *topk_inds, float *topk_ys, float *topk_xs);
 // void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs, const int size, const int K, const int n_classes);            
 void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev);
+void transformDep(float *src_begin, float *src_end, float *dst_begin, float *dst_end);
 void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op);
 void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, const int wh, int *clses, int *xs, int *ys);
 void topKxyAddOffset(int * ids_begin, const int K, const int size, int *intxs_begin, int *intys_begin, 
                      float *xs_begin, float *ys_begin, dnnType *src_begin, float *src_out, int *ids_out);
 void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 
             dnnType *src_begin, float *bbx0, float *bbx1, float *bby0, float *bby1, float *src_out, int *ids_out);
+void getRecordsFromTopKId(int * ids_begin, const int K, const int ch, const int size, dnnType *src_begin, float *src_out, int *ids_out);
 
 void maxElem(dnnType *src_begin, dnnType *dst_begin, const int c, const int h, const int w);
 

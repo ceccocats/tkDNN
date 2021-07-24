@@ -2,19 +2,6 @@
 
 Currently tkDNN supports only ShelfNet as semantic segmentation network.
 
-## Export weights from Shelfnet
-To get the weights needed to run Shelfnet tests use [this](https://git.hipert.unimore.it/mverucchi/shelfnet) fork of a Pytorch implementation of Shelfnet network. 
-
-```
-git clone https://git.hipert.unimore.it/mverucchi/shelfnet
-cd shelfnet 
-cd ShelfNet18_realtime
-conda env create --file shelfnet_env.yml
-conda activate shelfnet
-mkdir layer debug
-python export.py
-```
-
 
 ## Run the demo
 
@@ -42,19 +29,11 @@ where
 NB) By default it is used FP32 inference
 NB) The batching is not used to work on more streams, rather to work on more tiles of the same image. Shelfnet never resized the input image, therefore for images greater than 1024x1024 tiles of 1024x1024 are given in input to the network in batch. 
 
-![gif](output.gif "Results on yolo_test.mp4")  
+![demo](https://user-images.githubusercontent.com/11939259/126784236-38d24fc3-02df-4514-81c4-497e87e40b65.gif "Results on yolo_test.mp4")  
 
 For other demo videos refer to [this playlist](https://www.youtube.com/playlist?list=PLv0nEQYDD45y5EdSiywwCGPBmJVUzIWwe).
 
-
-## Existing tests and supported networks
-
-| Test Name         | Network                                       | Dataset                                                       | N Classes | Input size    | Weights                                                                   |
-| :---------------- | :-------------------------------------------- | :-----------------------------------------------------------: | :-------: | :-----------: | :------------------------------------------------------------------------ |
-| shelfnet              | ShelfNet18_realtime<sup>1</sup>                           | [Cityscapes](https://www.cityscapes-dataset.com/)                          | 19        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/mEDZMRJaGCFWSJF/download)                                                                   |
-| shelfnet_berkeley              | ShelfNet18_realtime<sup>1</sup>                           | [DeepDrive](https://bdd-data.berkeley.edu/)                          | 20        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download)                                                                   |
-
-1. Zhuang, Juntang, et al. "ShelfNet for fast semantic segmentation." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2019.
+NB) The gif and the videos are obtained with Mapillary Vistas weights, that we cannot publicly share due to its license restrictions. However, you can train Shelfnet using Mapillary and [this](https://git.hipert.unimore.it/mverucchi/shelfnet) fork of the original repo.
 
 
 ## FPS Results
