@@ -227,7 +227,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_LOGISTIC)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_SWISH || type == LAYER_ACTIVATION_LOGISTIC)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -420,6 +420,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     } 
     else if(l->act_mode == ACTIVATION_MISH) {
         IPlugin *plugin = new ActivationMishRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else if(l->act_mode == ACTIVATION_SWISH) {
+        IPlugin *plugin = new ActivationSwishRT();
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
@@ -670,6 +676,12 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
     }
     if(name.find("ActivationMish") == 0) {
         ActivationMishRT *a = new ActivationMishRT();
+        a->size = readBUF<int>(buf);
+        assert(buf == bufCheck + serialLength);
+        return a;
+    }
+    if(name.find("ActivationSwish") == 0) {
+        ActivationSwishRT *a = new ActivationSwishRT();
         a->size = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return a;

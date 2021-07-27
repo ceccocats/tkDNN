@@ -19,6 +19,7 @@ enum layerType_t {
     LAYER_ACTIVATION_CRELU,
     LAYER_ACTIVATION_LEAKY,
     LAYER_ACTIVATION_MISH,
+    LAYER_ACTIVATION_SWISH,
     LAYER_ACTIVATION_LOGISTIC,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
@@ -74,6 +75,7 @@ public:
             case LAYER_ACTIVATION_CRELU:    return "ActivationCReLU";
             case LAYER_ACTIVATION_LEAKY:    return "ActivationLeaky";
             case LAYER_ACTIVATION_MISH:     return "ActivationMish";
+            case LAYER_ACTIVATION_SWISH:    return "ActivationSwish";
             case LAYER_ACTIVATION_LOGISTIC: return "ActivationLogistic";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
@@ -221,7 +223,8 @@ typedef enum {
     ACTIVATION_ELU     = 100,
     ACTIVATION_LEAKY   = 101,
     ACTIVATION_MISH   = 102,
-    ACTIVATION_LOGISTIC   = 103
+    ACTIVATION_LOGISTIC   = 103,
+    ACTIVATION_SWISH = 104
 } tkdnnActivationMode_t;
 
 /**
@@ -243,6 +246,8 @@ public:
             return LAYER_ACTIVATION_LEAKY;
         else if (act_mode == ACTIVATION_MISH)
             return LAYER_ACTIVATION_MISH;
+        else if (act_mode == ACTIVATION_SWISH)
+            return LAYER_ACTIVATION_SWISH;
         else if (act_mode == ACTIVATION_LOGISTIC)
             return LAYER_ACTIVATION_LOGISTIC;
         else
