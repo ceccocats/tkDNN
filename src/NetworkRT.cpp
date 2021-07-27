@@ -254,7 +254,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_LOGISTIC)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_SWISH || type == LAYER_ACTIVATION_LOGISTIC)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -648,6 +648,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     }
     else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU){
         IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kELU);
+    else if(l->act_mode == ACTIVATION_SWISH) {
+        IPlugin *plugin = new ActivationSwishRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else if(l->act_mode == ACTIVATION_LOGISTIC) {
+        IPlugin *plugin = new ActivationLogisticRT();
+        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -1030,6 +1039,36 @@ void NetworkRT::destroy() {
     if(builderActive) {
         delete engineRT;
         delete builderRT;
+
+
+IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
+    const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
+
+    std::string name(layerName);
+    //std::cout<<name<<std::endl;
+
+    if(name.find("ActivationLeaky") == 0) {
+        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
+        a->size = readBUF<int>(buf);
+        assert(buf == bufCheck + serialLength);
+        return a;
+    }
+    if(name.find("ActivationMish") == 0) {
+        ActivationMishRT *a = new ActivationMishRT();
+        a->size = readBUF<int>(buf);
+        assert(buf == bufCheck + serialLength);
+        return a;
+    }
+    if(name.find("ActivationSwish") == 0) {
+        ActivationSwishRT *a = new ActivationSwishRT();
+        a->size = readBUF<int>(buf);
+        assert(buf == bufCheck + serialLength);
+        return a;
+    }
+    if(name.find("ActivationLogistic") == 0) {
+        ActivationLogisticRT *a = new ActivationLogisticRT();
+        a->size = readBUF<int>(buf);
+        return a;
     }
 }
 #elif NV_TENSORRT_MAJOR <=7
