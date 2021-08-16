@@ -40,16 +40,14 @@ using namespace nvinfer1;
 #include "pluginsRT/ReshapeRT.h"
 #include "pluginsRT/MaxPoolingFixedSizeRT.h"
 
-/*
-class PluginFactory : IPlugin
+class PluginFactory : IPluginFactory
 {
 public:
     YoloRT *yolos[16];
     int n_yolos;
 
 	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength);
-};*/
-
+};
 
 
 
@@ -76,6 +74,7 @@ public:
     dnnType *output;
     cudaStream_t stream;
 
+    PluginFactory *pluginFactory;
 
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();

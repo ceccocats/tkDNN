@@ -1,7 +1,8 @@
 #include<cassert>
 #include "../kernels.h"
 
-class DeformableConvRT : public IPluginV2 {
+
+class DeformableConvRT : public IPlugin {
 
 
 
@@ -26,8 +27,6 @@ public:
 		this->o_c = o_c;
 		this->o_h = o_h;
 		this->o_w = o_w;
-		this->defRT = deformable;
-
 		height_ones = (i_h + 2 * ph - (1 * (kh - 1) + 1)) / sh + 1;
 		width_ones = (i_w + 2 * pw - (1 * (kw - 1) + 1)) / sw + 1;
 		dim_ones = i_c * kh * kw * 1 * height_ones * width_ones;
@@ -39,6 +38,7 @@ public:
 		checkCuda( cudaMalloc(&mask, chunk_dim*sizeof(dnnType)));
 		checkCuda( cudaMalloc(&ones_d2, dim_ones*sizeof(dnnType)));
 		if(deformable != nullptr) {
+			this->defRT = deformable;
 			checkCuda( cudaMemcpy(data_d, deformable->data_d, sizeof(dnnType)*i_c * o_c * kh * kw * 1, cudaMemcpyDeviceToDevice) );
 			checkCuda( cudaMemcpy(bias2_d, deformable->bias2_d, sizeof(dnnType)*o_c, cudaMemcpyDeviceToDevice) );
             checkCuda( cudaMemcpy(ones_d1, deformable->ones_d1, sizeof(dnnType)*height_ones*width_ones, cudaMemcpyDeviceToDevice) );
@@ -61,78 +61,27 @@ public:
 		cublasDestroy(handle);
 	}
 
-	DeformableConvRT(const void *data,size_t length){
-	    const char* buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
-	    chunk_dim = readBUF<int>(buf);
-	    kh = readBUF<int>(buf);
-	    kw = readBUF<int>(buf);
-	    sh = readBUF<int>(buf);
-	    sw = readBUF<int>(buf);
-	    ph = readBUF<int>(buf);
-	    pw = readBUF<int>(buf);
-	    deformableGroup = readBUF<int>(buf);
-	    i_n = readBUF<int>(buf);
-	    i_c = readBUF<int>(buf);
-	    i_h = readBUF<int>(buf);
-	    i_w = readBUF<int>(buf);
-	    o_n = readBUF<int>(buf);
-	    o_c = readBUF<int>(buf);
-	    o_h = readBUF<int>(buf);
-	    o_w = readBUF<int>(buf);
-	    dnnType *aus = new dnnType[chunk_dim*2];
-	    for(int i=0;i<chunk_dim*2;i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda(cudaMemcpy(offset,aus,sizeof(dnnType)*2*chunk_dim,cudaMemcpyHostToDevice));
-	    free(aus);
-
-	    aus = new dnnType[chunk_dim];
-	    for(int i=0;i<chunk_dim;i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda(cudaMemcpy(mask,aus,sizeof(dnnType)*chunk_dim,cudaMemcpyHostToDevice));
-	    free(aus);
-
-	    aus = new dnnType[i_c*o_c*kh*kw*1];
-	    for(int i=0;i<(i_c*o_c*kh*kw*1);i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda(cudaMemcpy(data_d,aus,sizeof(dnnType)*(i_c*o_c*kh*kw*1),cudaMemcpyHostToDevice));
-	    free(aus);
-
-	    aus = new dnnType[o_c];
-	    for(int i=0; i < o_c; i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda( cudaMemcpy(bias2_d, aus, sizeof(dnnType)*o_c, cudaMemcpyHostToDevice) );
-	    free(aus);
-
-	    aus = new dnnType[height_ones * width_ones];
-	    for(int i=0; i<height_ones * width_ones; i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda( cudaMemcpy(ones_d1, aus, sizeof(dnnType)*height_ones * width_ones, cudaMemcpyHostToDevice) );
-	    free(aus);
-
-	    aus = new dnnType[dim_ones];
-	    for(int i=0; i<dim_ones; i++)
-	        aus[i] = readBUF<dnnType>(buf);
-	    checkCuda( cudaMemcpy(ones_d2, aus, sizeof(dnnType)*dim_ones, cudaMemcpyHostToDevice) );
-	    free(aus);
-
-	    assert(buf == bufCheck + length);
+	int getNbOutputs() const override {
+		return 1;
 	}
 
-	int getNbOutputs() const NOEXCEPT override {return 1;}
-
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) NOEXCEPT override {
-		return Dims3{defRT->output_dim.c, defRT->output_dim.h, defRT->output_dim.w};
+	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
+		return DimsCHW{defRT->output_dim.c, defRT->output_dim.h, defRT->output_dim.w};
 	}
 
-	void configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs,DataType type,PluginFormat format,int maxBatchSize) NOEXCEPT override { }
+	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override { }
 
-	int initialize() NOEXCEPT override {return 0;}
+	int initialize() override {
+		return 0;
+	}
 
-	virtual void terminate() NOEXCEPT override { }
+	virtual void terminate() override { }
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override {	return 0;}
+	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
+		return 0;
+	}
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) NOEXCEPT override {
+	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *output_conv = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
 
@@ -160,12 +109,13 @@ public:
 		return 0;
 	}
 
-	virtual size_t getSerializationSize() const NOEXCEPT override {
+
+	virtual size_t getSerializationSize() override {
 		return 16 * sizeof(int) + chunk_dim * 3 * sizeof(dnnType) + (i_c * o_c * kh * kw * 1 ) * sizeof(dnnType) +
 			   o_c * sizeof(dnnType) + height_ones * width_ones * sizeof(dnnType) + dim_ones * sizeof(dnnType);
 	}
 
-	virtual void serialize(void* buffer) const NOEXCEPT override {
+	virtual void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
 		tk::dnn::writeBUF(buf, chunk_dim);
 		tk::dnn::writeBUF(buf, kh);
@@ -216,35 +166,6 @@ public:
 		assert(buf == a + getSerializationSize());
 	}
 
-	void destroy() NOEXCEPT override {delete this;}
-
-	bool supportsFormat(DataType type,PluginFormat format) const NOEXCEPT override{
-	    return true;
-	    //todo assert
-	}
-	const char *getPluginNamespace() const NOEXCEPT override{
-	return mPluginNamespace.c_str();
-	}
-
-	void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-	    mPluginNamespace = pluginNamespace;
-	}
-
-	const char *getPluginType() const NOEXCEPT override{
-	    return "DeformableConvRT_tkDNN";
-	}
-
-	const char *getPluginVersion() const NOEXCEPT override{
-	    return "1";
-	}
-
-	IPluginV2* clone() const NOEXCEPT override{
-	    DeformableConvRT *p = new DeformableConvRT(chunk_dim,kh,kw,sh,sw,ph,pw,deformableGroup,i_n,i_c,i_h,i_w,o_n,o_c,o_h,o_w,defRT);
-	    p->setPluginNamespace(mPluginNamespace.c_str());
-	    return p;
-	}
-
-
 	cublasStatus_t stat; 
 	cublasHandle_t handle; 
 	int i_n, i_c, i_h, i_w;
@@ -272,90 +193,4 @@ public:
 	
 	
 	tk::dnn::DeformConv2d *defRT;
-
-private:
-    std::string mPluginNamespace;
 };
-
-class DeformableConvRTPluginCreator : public IPluginCreator{
-public:
-    DeformableConvRTPluginCreator(){
-        mPluginAttributes.emplace_back(PluginField("chunk_dim",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("kh",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("kw",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("sh",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("sw",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("ph",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("pw",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("deformableGroup",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("i_n",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("i_c",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("i_h",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("i_w",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_n",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_c",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_h",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_w",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("defRT",nullptr,PluginFieldType::kUNKNOWN,1));
-        mFC.nbFields = mPluginAttributes.size();
-        mFC.fields = mPluginAttributes.data();
-    }
-
-    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-        mPluginNamespace = pluginNamespace;
-    }
-
-    const char *getPluginNamespace() const NOEXCEPT override {
-        return mPluginNamespace.c_str();
-    }
-
-    IPluginV2 *deserializePlugin(const char *name,const void *serialData,size_t serialLength) NOEXCEPT override{
-        DeformableConvRT *pluginObj = new DeformableConvRT(serialData,serialLength);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    IPluginV2 *createPlugin(const char* name,const PluginFieldCollection *fc) NOEXCEPT override{
-        const PluginField *fields = fc->fields;
-        int chunk_dim = *(static_cast<const int *>(fields[0].data));
-        int kh = *(static_cast<const int *>(fields[1].data));
-        int kw = *(static_cast<const int *>(fields[2].data));
-        int sh = *(static_cast<const int *>(fields[3].data));
-        int sw = *(static_cast<const int *>(fields[4].data));
-        int ph = *(static_cast<const int *>(fields[5].data));
-        int pw = *(static_cast<const int *>(fields[6].data));
-        int deformableGroup = *(static_cast<const int *>(fields[7].data));
-        int i_n = *(static_cast<const int *>(fields[8].data));
-        int i_c = *(static_cast<const int *>(fields[9].data));
-        int i_h = *(static_cast<const int *>(fields[10].data));
-        int i_w = *(static_cast<const int *>(fields[11].data));
-        int o_n = *(static_cast<const int *>(fields[12].data));
-        int o_c = *(static_cast<const int *>(fields[13].data));
-        int o_h = *(static_cast<const int *>(fields[14].data));
-        int o_w = *(static_cast<const int *>(fields[14].data));
-        DeformConv2d *defRT = const_cast<DeformConv2d *>(static_cast<const DeformConv2d *>(fields[15].data));
-        DeformableConvRT *pluginObj = new DeformableConvRT(chunk_dim,kh,kw,sh,sw,ph,pw,deformableGroup,i_n,i_c,i_h,i_w,o_n,o_c,o_h,o_w,defRT);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    const char *getPluginName() const NOEXCEPT override{
-        return "DeformableConvRT_tkDNN";
-    }
-
-    const char *getPluginVersion() const NOEXCEPT override{
-        return "1";
-    }
-
-    const PluginFieldCollection *getFieldNames() NOEXCEPT override{
-        return &mFC;
-    }
-
-private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
-    std::string mPluginNamespace;
-};
-
-REGISTER_TENSORRT_PLUGIN(DeformableConvRTPluginCreator);
-

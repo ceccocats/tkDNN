@@ -8,7 +8,7 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(BatchStream& stream, int firstBatch
     mCalibTableFilePath(calibTableFilePath),
     mInputBlobName(inputBlobName.c_str()),
     mReadCache(readCache) {
-    nvinfer1::Dims4 dims = mStream.getDims();
+    nvinfer1::DimsNCHW dims = mStream.getDims();
     mInputCount = mStream.getBatchSize() * dims.c() * dims.h() * dims.w();
     checkCuda(cudaMalloc(&mDeviceInput, mInputCount * sizeof(float)));
     mStream.reset(firstBatch);

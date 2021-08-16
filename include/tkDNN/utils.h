@@ -11,7 +11,6 @@
 #include "cuda_runtime_api.h"
 #include <cublas_v2.h>
 #include <cudnn.h>
-#include <NvInferVersion.h>
 
 
 #ifdef __linux__
@@ -21,15 +20,6 @@
 
 #include <ios>
 #include <chrono>
-
-
-
-
-#if NV_TENSORRT_MAJOR > 7
-#define NOEXCEPT noexcept
-#else
-#define NOEXCEPT
-#endif
 
 
 #define dnnType float
