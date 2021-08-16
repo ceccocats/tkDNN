@@ -60,6 +60,7 @@ bool CenterTrack::init_preprocessing(){
     checkCuda( cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot() * nBatches));
     checkCuda( cudaMalloc(&input_pre_inf_d, sizeof(dnnType)*dim.tot()));
     checkCuda( cudaMalloc(&d_ptrs, dim.tot() * sizeof(float)) );
+    return true;
 }
 
 bool CenterTrack::init_pre_inf(){
@@ -203,6 +204,7 @@ bool CenterTrack::init_postprocessing(){
     trRes.resize(nBatches);
     countTr.resize(nBatches, 0);
     trackId.resize(nBatches, 0);
+    return true;
 }
 
 bool CenterTrack::init_visualization(const int n_classes){
@@ -311,7 +313,7 @@ void CenterTrack::preprocess(cv::Mat &frame, const int bi){
         }
         
         float c[] = {new_width / 2.0f, new_height /2.0f};
-        float s[] = {dim.w, dim.h};
+        float s[] = {static_cast<float>(dim.w), static_cast<float>(dim.h)};
         // float s = new_width >= new_height ? new_width : new_height;
         // ----------- get_affine_transform
         // rot_rad = pi * 0 / 100 --> 0
