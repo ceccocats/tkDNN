@@ -1,61 +1,147 @@
-#include<cassert>
 #include "../kernels.h"
+#include <cassert>
 
-class ActivationLeakyRT : public IPlugin {
+class ActivationLeakyRT : public IPluginV2 {
 
 public:
-	ActivationLeakyRT(float s) {
-		slope = s;
-	}
+    ActivationLeakyRT(float s) { slope = s; }
 
-	~ActivationLeakyRT(){
+    ActivationLeakyRT(const void *data, size_t length)
+    {
+        const char* buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
+        slope = readBUF<float>(buf);
+        size = readBUF<int>(buf);
+        assert(buf == bufCheck + length);
 
-	}
+    }
 
-	int getNbOutputs() const override {
-		return 1;
-	}
+    ~ActivationLeakyRT() {}
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
-		return inputs[0];
-	}
+    int getNbOutputs() const NOEXCEPT override { return 1; }
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		size = 1;
-		for(int i=0; i<outputDims[0].nbDims; i++)
-			size *= outputDims[0].d[i];
-	}
+    Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override {
+        return inputs[0];
+    }
 
-	int initialize() override {
+    void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs,DataType type,PluginFormat format, int maxBatchSize) NOEXCEPT override
+    {
+        assert(type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
+        size = 1;
+        for (int i = 0; i < outputDims[0].nbDims; i++)
+            size *= outputDims[0].d[i];
+    }
 
-		return 0;
-	}
+    int initialize() NOEXCEPT override { return 0; }
 
-	virtual void terminate() override {
-	}
+    virtual void terminate() NOEXCEPT override {}
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
-		return 0;
-	}
+    virtual size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override {
+        return 0;
+    }
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
+    virtual int enqueue(int batchSize, void const *const *inputs, void *const *outputs, void *workspace,
+                        cudaStream_t stream) NOEXCEPT override {
+        activationLEAKYForward(
+                (dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
+                reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, slope,
+                stream);
+        return 0;
+    }
 
-		activationLEAKYForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, slope, stream);
-		return 0;
-	}
+    virtual size_t getSerializationSize() const NOEXCEPT override {
+        return 1 * sizeof(int) + 1 * sizeof(float);
+    }
 
+    virtual void serialize(void *buffer) const NOEXCEPT override {
+        char *buf = reinterpret_cast<char *>(buffer), *a = buf;
+        tk::dnn::writeBUF(buf, size);
+        assert(buf == a + getSerializationSize());
+    }
 
-	virtual size_t getSerializationSize() override {
-		return 1*sizeof(int) + 1*sizeof(float);
-	}
+    bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override {
+        return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
+    }
 
-	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, size);
-		assert(buf == a + getSerializationSize());
-	}
+    const char *getPluginType() const NOEXCEPT override {
+        return "ActivationLeakyRT_tkDNN";
+    }
 
-	int size;
-	float slope;
+    const char *getPluginVersion() const NOEXCEPT override {
+        return "1";
+    }
+
+    void destroy() NOEXCEPT override { delete this; }
+
+    const char *getPluginNamespace() const NOEXCEPT override {
+        return mPluginNamespace.c_str();
+    }
+
+    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override {
+        mPluginNamespace = pluginNamespace;
+    }
+
+    IPluginV2* clone() const NOEXCEPT override {
+        ActivationLeakyRT *p = new ActivationLeakyRT(slope);
+        p->setPluginNamespace(mPluginNamespace.c_str());
+        return p;
+    }
+
+    int size;
+    float slope;
+
+private:
+    std::string mPluginNamespace;
 };
+
+class ActivationLeakyRTPluginCreator : public IPluginCreator {
+public:
+    ActivationLeakyRTPluginCreator() {
+        mPluginAttributes.emplace_back(
+                PluginField("slope", nullptr, PluginFieldType::kFLOAT32, 1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+    }
+
+    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
+        mPluginNamespace = pluginNamespace;
+    }
+
+    IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override {
+        ActivationLeakyRT *pluginObj = new ActivationLeakyRT(serialData,serialLength);
+        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
+        return pluginObj;
+    }
+
+    const char *getPluginNamespace() const NOEXCEPT override {
+        return mPluginNamespace.c_str();
+    }
+
+    IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override {
+        const PluginField *fields = fc->fields;
+        assert(fc->nbFields == 1);
+        assert(fields[0].type == PluginFieldType::kFLOAT32);
+        float slope = *(static_cast<const float *>(fields[0].data));
+        ActivationLeakyRT *pluginObj = new ActivationLeakyRT(slope);
+        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
+        return  pluginObj;
+    }
+
+    const char *getPluginName() const NOEXCEPT override{
+        return "ActivationLeakyRT_tkDNN";
+    }
+
+    const char *getPluginVersion() const NOEXCEPT override{
+        return "1";
+    }
+
+    const PluginFieldCollection *getFieldNames() NOEXCEPT override{
+        return &mFC;
+    }
+
+private:
+    static PluginFieldCollection mFC;
+    static std::vector<PluginField> mPluginAttributes;
+    std::string mPluginNamespace;
+};
+
+REGISTER_TENSORRT_PLUGIN(ActivationLeakyRTPluginCreator);
