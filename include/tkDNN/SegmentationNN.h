@@ -183,7 +183,6 @@ class SegmentationNN {
 
             checkCuda(cudaMemcpyAsync(mean_d, mean.data(), mean.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
             checkCuda(cudaMemcpyAsync(stddev_d, stddev.data(), stddev.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
-            return true;
 
         }
         
