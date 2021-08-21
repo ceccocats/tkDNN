@@ -2,6 +2,7 @@
 #include "../kernels.h"
 #define YOLORT_CLASSNAME_W 256
 
+
 class YoloRT : public IPluginV2 {
 
 public:
@@ -49,11 +50,13 @@ public:
             classesNames[1] = std::string(tmp);
         }
         assert(buf == bufCheck + length);
+
     }
 
     ~YoloRT() {
 
     }
+
 
 
     int getNbOutputs() const NOEXCEPT override {
@@ -186,6 +189,7 @@ public:
     float nms_thresh;
     int nms_kind;
     int new_coords;
+    int NUM=0;
     std::vector<std::string> classesNames;
 
     dnnType *mask;

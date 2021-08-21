@@ -14,6 +14,7 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, c
     tk::dnn::dataDim_t idim = netRT->input_dim;    
     idim.n = nBatches;
 
+
     if(netRT->pluginFactory->n_yolos < 2 ) {
         FatalError("this is not yolo3");
     }

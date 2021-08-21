@@ -147,4 +147,6 @@ static inline bool isCudaPointer(void *data) {
   cudaPointerAttributes attr;
   return cudaPointerGetAttributes(&attr, data) == 0;
 }
+
+
 #endif //UTILS_H

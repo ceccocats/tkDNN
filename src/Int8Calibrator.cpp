@@ -9,12 +9,12 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(BatchStream& stream, int firstBatch
     mInputBlobName(inputBlobName.c_str()),
     mReadCache(readCache) {
     nvinfer1::Dims4 dims = mStream.getDims();
-    mInputCount = mStream.getBatchSize() * dims.c() * dims.h() * dims.w();
+    mInputCount = mStream.getBatchSize() + dims.d[1]*dims.d[2]*dims.d[3];
     checkCuda(cudaMalloc(&mDeviceInput, mInputCount * sizeof(float)));
     mStream.reset(firstBatch);
 }
 
-bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings) {
+bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings) NOEXCEPT {
     if (!mStream.next())
         return false;
 
@@ -24,7 +24,7 @@ bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int 
     return true;
 }
 
-const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length) {
+const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length) NOEXCEPT {
     mCalibrationCache.clear();
     assert(!mCalibTableFilePath.empty());
     std::ifstream input(mCalibTableFilePath, std::ios::binary);
@@ -38,7 +38,7 @@ const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length) {
     return length ? &mCalibrationCache[0] : nullptr;
 }
 
-void Int8EntropyCalibrator::writeCalibrationCache(const void* cache, size_t length) {
+void Int8EntropyCalibrator::writeCalibrationCache(const void* cache, size_t length) NOEXCEPT {
     assert(!mCalibTableFilePath.empty());
     std::ofstream output(mCalibTableFilePath, std::ios::binary);
     output.write(reinterpret_cast<const char*>(cache), length);
