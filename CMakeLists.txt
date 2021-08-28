@@ -33,12 +33,13 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
 
+
 find_package(CUDNN REQUIRED)
 include_directories(${CUDNN_INCLUDE_DIR})
 
 
 # compile
-file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu")
+file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu" )
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
 target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})

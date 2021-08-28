@@ -4,9 +4,9 @@
 #include "opencv2/opencv.hpp"
 
 #include "DetectionNN.h"
+#include "DarknetParser.h"
 
-namespace tk { namespace dnn { 
-
+namespace tk { namespace dnn {
 class Yolo3Detection : public DetectionNN
 {
 private:
@@ -19,12 +19,13 @@ private:
     tk::dnn::Yolo* getYoloLayer(int n=0);
 
     cv::Mat bgr_h;
+    std::vector<int> noYolos;
     
 public:
     Yolo3Detection() {};
     ~Yolo3Detection() {}; 
 
-    bool init(const std::string& tensor_path, const int n_classes=80, const int n_batches=1, const float conf_thresh=0.3);
+    bool init(const std::string& tensor_path,const std::string& cfg_path,const std::string& name_path,const int n_classes=80, const int n_batches=1, const float conf_thresh=0.3);
     void preprocess(cv::Mat &frame, const int bi=0);
     void postprocess(const int bi=0,const bool mAP=false);
 };

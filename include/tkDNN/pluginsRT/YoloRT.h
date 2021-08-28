@@ -31,6 +31,7 @@ public:
         classes = readBUF<int>(buf);
         num = readBUF<int>(buf);
         n_masks = readBUF<int>(buf);
+        std::cout<<n_masks<<std::endl;
         scaleXY = readBUF<float>(buf);
         nms_thresh = readBUF<float>(buf);
         nms_kind = readBUF<int>(buf);

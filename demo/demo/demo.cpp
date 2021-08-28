@@ -23,6 +23,18 @@ int main(int argc, char *argv[]) {
 
 
     std::string net = "yolo4tiny_fp32.rt";
+    #ifdef __linux__
+        std::string cfgPath = "../tests/darknet/cfg/yolo4tiny.cfg";
+    #elif _WIN32
+         std::string cfgPath = "..\\tests\\darknet\\cfg\\yolo4tiny.cfg";
+    #endif
+
+    #ifdef __linux__
+             std::string namePath = "../tests/darknet/names/coco.names";
+    #elif _WIN32
+            std::string namePath = "..\\tests\\darknet\\names\\coco.names";
+    #endif
+
     if(argc > 1)
         net = argv[1]; 
     #ifdef __linux__ 
@@ -31,23 +43,28 @@ int main(int argc, char *argv[]) {
         std::string input = "..\\..\\..\\demo\\yolo_test.mp4";
     #endif
 
+
     if(argc > 2)
-        input = argv[2]; 
-    char ntype = 'y';
+        cfgPath = argv[2];
     if(argc > 3)
-        ntype = argv[3][0]; 
-    int n_classes = 80;
+        namePath = argv[3];
     if(argc > 4)
-        n_classes = atoi(argv[4]); 
-    int n_batch = 1;
+        input = argv[4];
+    char ntype = 'y';
     if(argc > 5)
-        n_batch = atoi(argv[5]); 
-    bool show = true;
+        ntype = argv[5][0];
+    int n_classes = 80;
     if(argc > 6)
-        show = atoi(argv[6]); 
-    float conf_thresh=0.3;
+        n_classes = atoi(argv[6]);
+    int n_batch = 1;
     if(argc > 7)
-        conf_thresh = atof(argv[7]);     
+        n_batch = atoi(argv[7]);
+    bool show = true;
+    if(argc > 8)
+        show = atoi(argv[8]);
+    float conf_thresh=0.3;
+    if(argc > 9)
+        conf_thresh = atof(argv[9]);
 
     if(n_batch < 1 || n_batch > 64)
         FatalError("Batch dim not supported");
@@ -56,8 +73,8 @@ int main(int argc, char *argv[]) {
         SAVE_RESULT = true;
 
     tk::dnn::Yolo3Detection yolo;
-    tk::dnn::CenternetDetection cnet;
-    tk::dnn::MobilenetDetection mbnet;  
+    //tk::dnn::CenternetDetection cnet;
+    //tk::dnn::MobilenetDetection mbnet;
 
     tk::dnn::DetectionNN *detNN;  
 
@@ -67,17 +84,17 @@ int main(int argc, char *argv[]) {
             detNN = &yolo;
             break;
         case 'c':
-            detNN = &cnet;
+            //detNN = &cnet;
             break;
         case 'm':
-            detNN = &mbnet;
+            //detNN = &mbnet;
             n_classes++;
             break;
         default:
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    detNN->init(net, n_classes, n_batch, conf_thresh);
+    detNN->init(net,cfgPath,namePath,n_classes,n_batch,conf_thresh);
 
     gRun = true;
 

@@ -128,7 +128,7 @@ int main() {
 	builder->setMaxBatchSize(1);
 	config->setMaxWorkspaceSize(1 << 20);
 
-	auto engine = builder->buildCudaEngine(*network);
+	auto engine = builder->buildEngineWithConfig(*network,*config);
 	// we don't need the network any more
 	network->destroy();
 

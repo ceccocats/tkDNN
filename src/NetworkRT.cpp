@@ -11,7 +11,41 @@
 #include "NetworkRT.h"
 #include "Int8Calibrator.h"
 
+
 using namespace nvinfer1;
+
+PluginFieldCollection tk::dnn::ActivationLeakyRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ActivationReLUCeilingPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ActivationMishRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ActivationLogisticRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::DeformableConvRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::RegionRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ReorgRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::UpsampleRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ShortcutRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ReshapeRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::MaxPoolFixedSizeRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::ResizeLayerRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::YoloRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::RouteRTPluginCreator::mFC{};
+PluginFieldCollection tk::dnn::FlattenConcatRTPluginCreator::mFC{};
+
+
+std::vector<PluginField> tk::dnn::ActivationLeakyRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ActivationReLUCeilingPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ActivationMishRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ActivationLogisticRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::DeformableConvRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::RegionRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ReorgRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::UpsampleRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ShortcutRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ReshapeRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::MaxPoolFixedSizeRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::ResizeLayerRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::YoloRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::RouteRTPluginCreator::mPluginAttributes;
+std::vector<PluginField> tk::dnn::FlattenConcatRTPluginCreator::mPluginAttributes;
 
 // Logger for info/warning/errors
 class Logger : public ILogger {

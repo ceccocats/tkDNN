@@ -41,7 +41,7 @@ public:
 
 	virtual int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) NOEXCEPT override {
 
-		reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
+		reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
 					  reinterpret_cast<dnnType*>(outputs[0]), 
 					  batchSize, c, h, w, stride, stream);
 		return 0;

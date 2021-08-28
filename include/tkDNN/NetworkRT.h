@@ -7,6 +7,7 @@
 #include "Layer.h"
 #include "NvInfer.h"
 #include <memory>
+#include <tkDNN/kernels.h>
 
 namespace tk { namespace dnn {
 
@@ -49,7 +50,6 @@ public:
 
 	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength);
 };*/
-
 
 
 
