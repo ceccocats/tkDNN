@@ -1,4 +1,5 @@
 #include<cassert>
+#include <vector>
 #include "../kernels.h"
 #define YOLORT_CLASSNAME_W 256
 
@@ -27,11 +28,12 @@ public:
     }
 
     YoloRT(const void *data,size_t length){
+        std::vector<float> maskTemp,biasTemp;
+        std::cout<<"LENGTH : "<<length<<std::endl;
         const char* buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
         classes = readBUF<int>(buf);
         num = readBUF<int>(buf);
         n_masks = readBUF<int>(buf);
-        std::cout<<n_masks<<std::endl;
         scaleXY = readBUF<float>(buf);
         nms_thresh = readBUF<float>(buf);
         nms_kind = readBUF<int>(buf);
@@ -39,10 +41,16 @@ public:
         c = readBUF<int>(buf);
         h = readBUF<int>(buf);
         w = readBUF<int>(buf);
-        for(int i=0;i<n_masks;i++)
-            mask[i] = readBUF<dnnType>(buf);
-        for(int i=0;i<n_masks*2*num;i++)
-            bias[i] = readBUF<dnnType>(buf);
+        for(int i=0;i<n_masks;i++){
+            maskTemp.push_back(readBUF<dnnType>(buf));
+            std::cout<<maskTemp[i]<<std::endl;
+        }
+        for(int i=0;i<n_masks*2*num;i++){
+            biasTemp.push_back(readBUF<dnnType>(buf));
+            std::cout<<biasTemp[i]<<std::endl;
+        }
+        mask = maskTemp.data();
+        bias = biasTemp.data();
         classesNames.resize(classes);
         for(int i=0;i<classes;i++){
             char tmp[YOLORT_CLASSNAME_W];
@@ -133,6 +141,7 @@ public:
         char *buf = reinterpret_cast<char *>(buffer), *a = buf;
         tk::dnn::writeBUF(buf, classes);    //std::cout << "Classes :" << classes << std::endl;
         tk::dnn::writeBUF(buf, num);        //std::cout << "Num : " << num << std::endl;
+        std::cout<<num<<std::endl;
         tk::dnn::writeBUF(buf, n_masks);    //std::cout << "N_Masks" << n_masks << std::endl;
         tk::dnn::writeBUF(buf, scaleXY);    //std::cout << "ScaleXY :" << scaleXY << std::endl;
         tk::dnn::writeBUF(buf, nms_thresh); //std::cout << "nms_thresh :" << nms_thresh << std::endl;
@@ -265,8 +274,8 @@ public:
     }
 
 private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 

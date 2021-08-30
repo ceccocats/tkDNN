@@ -73,7 +73,8 @@ public:
 	}
 
 	const char *getPluginVersion() const NOEXCEPT override{
-	    return "UpsampleRT_tkDNN";
+	    static const char* UPSAMPLE_RT_PLUGIN = "UpsampleRT_TRT";
+	    return UPSAMPLE_RT_PLUGIN;
 	}
 
 	void destroy() NOEXCEPT override{delete this;}
@@ -128,7 +129,8 @@ public:
     }
 
     const char *getPluginName() const NOEXCEPT override{
-        return "UpsampleRT_tkDNN";
+        static const char* UPSAMPLE_RT_PLUGIN = "UpsampleRT_TRT";
+        return UPSAMPLE_RT_PLUGIN;
     }
 
     const char *getPluginVersion() const NOEXCEPT override{
@@ -139,9 +141,10 @@ public:
         return &mFC;
     }
 private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 
 REGISTER_TENSORRT_PLUGIN(UpsampleRTPluginCreator);
+

@@ -119,6 +119,7 @@ public:
 
     bool serialize(const char *filename);
     bool deserialize(const char *filename);
+    void destroy();
 
 
 

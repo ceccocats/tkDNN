@@ -352,10 +352,9 @@ public:
     }
 
 private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 
-REGISTER_TENSORRT_PLUGIN(DeformableConvRTPluginCreator);
 

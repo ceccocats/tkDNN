@@ -173,8 +173,8 @@ public:
         return &mFC;
     }
  private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 

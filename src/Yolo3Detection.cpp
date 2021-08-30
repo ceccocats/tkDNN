@@ -7,7 +7,7 @@ namespace tk { namespace dnn {
 
     //convert network to tensorRT
     std::cout<<(tensor_path).c_str()<<"\n";
-    netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
+    netRT = new tk::dnn::NetworkRT(nullptr, (tensor_path).c_str() );
 
     nBatches = n_batches;
     confThreshold = conf_thresh;

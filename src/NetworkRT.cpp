@@ -8,44 +8,12 @@
 
 #include "utils.h"
 #include "NvInfer.h"
+
 #include "NetworkRT.h"
 #include "Int8Calibrator.h"
 
 
 using namespace nvinfer1;
-
-PluginFieldCollection tk::dnn::ActivationLeakyRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ActivationReLUCeilingPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ActivationMishRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ActivationLogisticRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::DeformableConvRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::RegionRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ReorgRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::UpsampleRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ShortcutRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ReshapeRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::MaxPoolFixedSizeRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::ResizeLayerRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::YoloRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::RouteRTPluginCreator::mFC{};
-PluginFieldCollection tk::dnn::FlattenConcatRTPluginCreator::mFC{};
-
-
-std::vector<PluginField> tk::dnn::ActivationLeakyRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ActivationReLUCeilingPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ActivationMishRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ActivationLogisticRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::DeformableConvRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::RegionRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ReorgRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::UpsampleRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ShortcutRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ReshapeRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::MaxPoolFixedSizeRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::ResizeLayerRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::YoloRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::RouteRTPluginCreator::mPluginAttributes;
-std::vector<PluginField> tk::dnn::FlattenConcatRTPluginCreator::mPluginAttributes;
 
 // Logger for info/warning/errors
 class Logger : public ILogger {
@@ -590,7 +558,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
     //std::cout<<"convert Upsample\n";
 
-    //std::cout<<"New plugin UPSAMPLE\n";
+    std::cout<<"New plugin UPSAMPLE\n";
     IPluginV2 *plugin = new UpsampleRT(l->stride);
     IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
@@ -681,10 +649,20 @@ bool NetworkRT::deserialize(const char *filename) {
 
     runtimeRT = createInferRuntime(loggerRT);
     engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size);
+    std::cout<<size<<std::endl;
     //if (gieModelStream) delete [] gieModelStream;
 
     return true;
 }
+
+void NetworkRT::destroy() {
+    contextRT->destroy();
+    configRT->destroy();
+    engineRT->destroy();
+    builderRT->destroy();
+}
+
+
 
 
 /*
@@ -735,7 +713,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Reorg") == 0) {
         int strideTemp = readBUF<int>(buf);
@@ -745,7 +723,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Shortcut") == 0) {
         tk::dnn::dataDim_t bdim;
@@ -760,7 +738,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
         assert(buf == bufCheck + serialLength);
-    } 
+    }
 
     if(name.find("Pooling") == 0) {
         int cTemp = readBUF<int>(buf);
@@ -788,10 +766,10 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->i_w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Flatten") == 0) {
-        FlattenConcatRT *r = new FlattenConcatRT(); 
+        FlattenConcatRT *r = new FlattenConcatRT();
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
@@ -799,7 +777,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->cols = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Reshape") == 0) {
 
@@ -808,11 +786,11 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         new_dim.c = readBUF<int>(buf);
         new_dim.h = readBUF<int>(buf);
         new_dim.w = readBUF<int>(buf);
-        ReshapeRT *r = new ReshapeRT(new_dim); 
+        ReshapeRT *r = new ReshapeRT(new_dim);
         assert(buf == bufCheck + serialLength);
-        
+
         return r;
-    } 
+    }
 
     if(name.find("Yolo") == 0) {
 
@@ -824,7 +802,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         int nms_kind_temp = readBUF<int>(buf);
         int new_coords_temp = readBUF<int>(buf);
 
-       YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);  
+       YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);
 
 
 
@@ -848,7 +826,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
 
         yolos[n_yolos++] = r;
         return r;
-    } 
+    }
     if(name.find("Upsample") == 0) {
         int strideTemp = readBUF<int>(buf);
         UpsampleRT* r = new UpsampleRT(strideTemp);
@@ -857,7 +835,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Route") == 0) {
         int groupsTemp = readBUF<int>(buf);
@@ -871,7 +849,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     if(name.find("Deformable") == 0) {
         int chuck_dimTemp = readBUF<int>(buf);
@@ -924,7 +902,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         free(aus);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }
 
     FatalError("Cant deserialize Plugin");
     return NULL;

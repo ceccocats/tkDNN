@@ -157,9 +157,9 @@ public:
     const PluginFieldCollection *getFieldNames() NOEXCEPT override{
         return &mFC;
     }
-private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+public:
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 

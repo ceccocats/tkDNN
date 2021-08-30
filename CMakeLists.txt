@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 if(UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations -Wno-unused-variable ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations -Wno-unused-variable")
 endif()
 if(WIN32)
 set(CMAKE_CXX_STANDARD 11)
@@ -31,7 +31,7 @@ endif()
 find_package(CUDA 9.0 REQUIRED)
 SET(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -G -g)
 
 
 find_package(CUDNN REQUIRED)
@@ -41,8 +41,7 @@ include_directories(${CUDNN_INCLUDE_DIR})
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu" )
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
-target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES})
+
 
 
 #-------------------------------------------------------------------------------
@@ -65,12 +64,12 @@ find_package(yaml-cpp REQUIRED)
 # Build Libraries
 #-------------------------------------------------------------------------------
 file(GLOB tkdnn_SRC "src/*.cpp")
-set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+set(tkdnn_LIBS ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
-add_library(tkDNN SHARED ${tkdnn_SRC})
-target_link_libraries(tkDNN ${tkdnn_LIBS})
+cuda_add_library(tkDNN SHARED ${tkdnn_SRC} ${tkdnn_CUSRC})
+target_link_libraries(tkDNN ${tkdnn_LIBS} ${CUDA_CUBLAS_LIBRAY})
 
 #static 
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})
@@ -169,7 +168,7 @@ target_link_libraries(seg_demo tkDNN)
 #endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/ DESTINATION include/)
-install(TARGETS tkDNN kernels DESTINATION lib)
+install(TARGETS tkDNN  DESTINATION lib)
 install(TARGETS test_simple test_mnist test_mnistRT test_rtinference demo map_demo DESTINATION bin)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" # source directory
         DESTINATION "share/tkDNN/cmake/" # target directory

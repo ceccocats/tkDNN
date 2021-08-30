@@ -14,6 +14,7 @@ public:
     }
 
     ActivationReLUCeiling(const void *data, size_t length) {
+        std::cout<<"RELU CEILING DESERIALIZE"<<std::endl;
         const char *buf = reinterpret_cast<const char *>(data), *bufCheck = buf;
         ceiling = readBUF<float>(buf);
         size = readBUF<int>(buf);
@@ -140,9 +141,9 @@ public:
         return &mFC;
     }
 
-private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+public:
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 

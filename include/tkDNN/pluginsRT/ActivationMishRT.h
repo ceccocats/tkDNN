@@ -9,6 +9,7 @@ public:
     ~ActivationMishRT() {}
 
     ActivationMishRT(const void *data, size_t length) {
+        std::cout<<"DESERIALIZE MISH"<<std::endl;
         const char *buf = reinterpret_cast<const char *>(data), *bufCheck = buf;
         size = readBUF<int>(buf);
         assert(buf == bufCheck + length);
@@ -126,8 +127,8 @@ public:
     }
 
 private:
-    static PluginFieldCollection mFC;
-    static std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC;
+    std::vector<PluginField> mPluginAttributes;
     std::string mPluginNamespace;
 };
 
