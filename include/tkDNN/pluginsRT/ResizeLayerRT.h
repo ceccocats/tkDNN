@@ -1,165 +1,87 @@
 #include<cassert>
 #include "../kernels.h"
+#include <NvInfer.h>
+#include <vector>
+#include <utils.h>
 
-class ResizeLayerRT : public IPluginV2 {
+namespace nvinfer1 {
 
-public:
-	ResizeLayerRT(int c, int h, int w) {
-		o_c = c;
-		o_h = h;
-		o_w = w;	
-	}
+    class ResizeLayerRT : public IPluginV2 {
 
-	ResizeLayerRT(const void *data,size_t length){
-	    const char *buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
-	    o_c = readBUF<int>(buf);
-	    o_h = readBUF<int>(buf);
-	    o_w = readBUF<int>(buf);
-	    i_c = readBUF<int>(buf);
-	    i_h = readBUF<int>(buf);
-	    i_w = readBUF<int>(buf);
-	    assert(buf == bufCheck + length);
-	}
+    public:
+        ResizeLayerRT(int c, int h, int w) ;
 
-	~ResizeLayerRT(){
-	}
+        ResizeLayerRT(const void *data, size_t length) ;
 
-	int getNbOutputs() const NOEXCEPT override {
-		return 1;
-	}
+        ~ResizeLayerRT() ;
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) NOEXCEPT override {
-		return Dims3{o_c, o_h, o_w};
-	}
+        int getNbOutputs() const NOEXCEPT override ;
 
-	void configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs,DataType type,PluginFormat format,int maxBatchSize)  NOEXCEPT override {
-		i_c = inputDims[0].d[0];
-		i_h = inputDims[0].d[1];
-		i_w = inputDims[0].d[2];        
-	}
-
-	int initialize() NOEXCEPT override {return 0;}
-
-	virtual void terminate() NOEXCEPT override {}
-
-	virtual size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override {	return 0;}
-
-	virtual int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) NOEXCEPT override {
-    	// printf("%d %d %d %d %d %d\n", i_c, i_w, i_h, o_c, o_w, o_h);
-        resizeForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-					  reinterpret_cast<dnnType*>(outputs[0]), 
-					  batchSize, i_c, i_h, i_w, o_c, o_h, o_w, stream);
-		return 0;
-	}
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
 
-	virtual size_t getSerializationSize() const NOEXCEPT override {
-		return 6*sizeof(int);
-	}
+        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
+                            PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
-	virtual void serialize(void* buffer) const NOEXCEPT override {
-		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
+        int initialize() NOEXCEPT override ;
 
-		tk::dnn::writeBUF(buf, o_c);
-		tk::dnn::writeBUF(buf, o_h);
-		tk::dnn::writeBUF(buf, o_w);
+        void terminate() NOEXCEPT override ;
 
-		tk::dnn::writeBUF(buf, i_c);
-		tk::dnn::writeBUF(buf, i_h);
-		tk::dnn::writeBUF(buf, i_w);
-		assert(buf == a + getSerializationSize());
-	}
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
 
-	bool supportsFormat(DataType type,PluginFormat format) const NOEXCEPT override{
-	    return true;
-	    //todo assert
-	}
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
+                            cudaStream_t stream) NOEXCEPT override ;
 
-	const char *getPluginType() const NOEXCEPT override{
-	    return "ResizeLayerRT_tkDNN";
-	}
 
-	const char *getPluginVersion() const NOEXCEPT override{
-	    return "1";
-	}
-	void destroy() NOEXCEPT override{delete this;}
+        size_t getSerializationSize() const NOEXCEPT override ;
 
-	const char *getPluginNamespace() const NOEXCEPT override{
-	    return mPluginNamespace.c_str();
-	}
+        void serialize(void *buffer) const NOEXCEPT override ;
 
-	void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-	    mPluginNamespace = pluginNamespace;
-	}
-	IPluginV2 *clone() const NOEXCEPT override{
-	    ResizeLayerRT *p = new ResizeLayerRT(o_c,o_h,o_w);
-	    p->setPluginNamespace(mPluginNamespace.c_str());
-	    return p;
-	}
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
 
-	int i_c, i_h, i_w, o_c, o_h, o_w;
+        const char *getPluginType() const NOEXCEPT override ;
 
-private:
-    std::string mPluginNamespace;
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        void destroy() NOEXCEPT override ;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+
+        IPluginV2 *clone() const NOEXCEPT override ;
+
+        int i_c, i_h, i_w, o_c, o_h, o_w;
+
+    private:
+        std::string mPluginNamespace;
+    };
+
+    class ResizeLayerRTPluginCreator : public IPluginCreator {
+    public:
+        ResizeLayerRTPluginCreator() ;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override ;
+
+    private:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+
+    };
+
+    REGISTER_TENSORRT_PLUGIN(ResizeLayerRTPluginCreator);
 };
-
-class ResizeLayerRTPluginCreator : public IPluginCreator{
-public:
-    ResizeLayerRTPluginCreator(){
-        mPluginAttributes.emplace_back(PluginField("o_c",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_h",nullptr,PluginFieldType::kINT32,1));
-        mPluginAttributes.emplace_back(PluginField("o_w",nullptr,PluginFieldType::kINT32,1));
-        mFC.nbFields = mPluginAttributes.size();
-        mFC.fields = mPluginAttributes.data();
-    }
-
-    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-        mPluginNamespace = pluginNamespace;
-    }
-
-    const char *getPluginNamespace() const NOEXCEPT override{
-        return mPluginNamespace.c_str();
-    }
-
-    IPluginV2 *deserializePlugin(const char *name,const void *serialData,size_t serialLength) NOEXCEPT override{
-        ResizeLayerRT *pluginObj = new ResizeLayerRT(serialData,serialLength);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    IPluginV2 *createPlugin(const char *name,const PluginFieldCollection *fc) NOEXCEPT override{
-        const PluginField *fields = fc->fields;
-        assert(fc->nbFields == 3);
-        assert(fields[0].type == PluginFieldType::kINT32);
-        assert(fields[1].type == PluginFieldType::kINT32);
-        assert(fields[2].type == PluginFieldType::kINT32);
-        int oc = *(static_cast<const int *>(fields[0].data));
-        int oh = *(static_cast<const int *>(fields[1].data));
-        int ow = *(static_cast<const int *>(fields[2].data));
-        ResizeLayerRT *pluginObj = new ResizeLayerRT(oc,oh,ow);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    const char *getPluginName() const NOEXCEPT override{
-        return "ResizeLayerRT_tkDNN";
-    }
-
-    const char *getPluginVersion() const NOEXCEPT override{
-        return "1";
-    }
-
-    const PluginFieldCollection *getFieldNames() NOEXCEPT override{
-        return &mFC;
-    }
-
-
-private:
-    PluginFieldCollection mFC;
-    std::vector<PluginField> mPluginAttributes;
-    std::string mPluginNamespace;
-
-};
-
-REGISTER_TENSORRT_PLUGIN(ResizeLayerRTPluginCreator);
 

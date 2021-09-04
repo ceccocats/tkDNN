@@ -17,8 +17,8 @@ namespace tk { namespace dnn {
         if(sep == std::string::npos)
             return false;
         
-        name   = line.substr(0, sep);   
-        value  = line.substr(sep+1, line.size() - (sep+1));   
+        name   = line.substr(0, sep);
+        value  = line.substr(sep+1, line.size() - (sep+1));
         return true;
     }
 
@@ -322,7 +322,7 @@ namespace tk { namespace dnn {
             // skip empty lines
             if(line.empty())
                 continue;
-            if(count > lineNo && count <=20){
+            if(count > lineNo && count <=lineNo+30){
                     divideNameAndValue(line,name,value);
                     if(name == "mask "){
                         maskTemp = fromStringToFloatVec(value,',');
@@ -353,9 +353,8 @@ namespace tk { namespace dnn {
                     if(name == "beta_nms"){
                         nmsThreshTemp = std::stof(value);
                     }
-
-                count++;
             }
+            count++;
         }
         mask = maskTemp;
         anchors = anchorsTemp;

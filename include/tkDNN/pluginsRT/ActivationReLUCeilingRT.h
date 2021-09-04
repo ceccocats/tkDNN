@@ -1,150 +1,78 @@
 #include<cassert>
 #include "../kernels.h"
+#include <NvInfer.h>
+#include <vector>
+#include <utils.h>
 
+namespace nvinfer1 {
+    class ActivationReLUCeiling : public IPluginV2 {
 
-class ActivationReLUCeiling : public IPluginV2 {
+    public:
+        explicit ActivationReLUCeiling(const float ceiling) ;
 
-public:
-    ActivationReLUCeiling(const float ceiling) {
-        this->ceiling = ceiling;
-    }
+        ~ActivationReLUCeiling() ;
 
-    ~ActivationReLUCeiling() {
+        ActivationReLUCeiling(const void *data, size_t length) ;
 
-    }
+        int getNbOutputs() const NOEXCEPT override ;
 
-    ActivationReLUCeiling(const void *data, size_t length) {
-        std::cout<<"RELU CEILING DESERIALIZE"<<std::endl;
-        const char *buf = reinterpret_cast<const char *>(data), *bufCheck = buf;
-        ceiling = readBUF<float>(buf);
-        size = readBUF<int>(buf);
-        assert(buf == bufCheck + length);
-    }
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
-    int getNbOutputs() const NOEXCEPT override {
-        return 1;
-    }
+        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
-    Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override {
-        return inputs[0];
-    }
+        int initialize() NOEXCEPT override ;
 
-    void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
-                             PluginFormat format, int maxBatchSize) NOEXCEPT override {
-        assert(type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
-        size = 1;
-        for (int i = 0; i < outputDims[0].nbDims; i++)
-            size *= outputDims[0].d[i];
-    }
+        void terminate() NOEXCEPT override ;
 
-    int initialize() NOEXCEPT override { return 0; }
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
 
-    virtual void terminate() NOEXCEPT override {}
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,cudaStream_t stream) NOEXCEPT override ;
 
-    virtual size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override {
-        return 0;
-    }
+        size_t getSerializationSize() const NOEXCEPT override ;
 
-    virtual int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
-                        cudaStream_t stream) NOEXCEPT override {
-        activationReLUCeilingForward((dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
-                                     reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, ceiling, stream);
-        return 0;
-    }
+        void serialize(void *buffer) const NOEXCEPT override ;
 
+        IPluginV2 *clone() const NOEXCEPT override ;
 
-    virtual size_t getSerializationSize() const NOEXCEPT override {
-        return 1 * sizeof(int) + 1 * sizeof(float);
-    }
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
 
-    virtual void serialize(void *buffer) const NOEXCEPT override {
-        char *buf = reinterpret_cast<char *>(buffer), *a = buf;
-        tk::dnn::writeBUF(buf, ceiling);
-        tk::dnn::writeBUF(buf, size);
-        assert(buf = a + getSerializationSize());
+        void destroy() NOEXCEPT override ;
 
-    }
+        const char *getPluginType() const NOEXCEPT override ;
 
-    IPluginV2 *clone() const NOEXCEPT override {
-        ActivationReLUCeiling *p = new ActivationReLUCeiling(ceiling);
-        p->setPluginNamespace(mPluginNamespace.c_str());
-        return p;
-    }
+        const char *getPluginVersion() const NOEXCEPT override ;
 
-    bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override {
-        return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
-    }
+        const char *getPluginNamespace() const NOEXCEPT override ;
 
-    void destroy() NOEXCEPT override { delete this; };
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+        int size;
+        float ceiling;
+    private:
+        std::string mPluginNamespace;
+    };
 
-    const char *getPluginType() const NOEXCEPT override {
-        return "ActivationReLUCeilingRT_tkDNN";
-    }
+    class ActivationReLUCeilingPluginCreator : public IPluginCreator {
+    public:
+        ActivationReLUCeilingPluginCreator() ;
 
-    const char *getPluginVersion() const NOEXCEPT override {
-        return "1";
-    }
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-    const char *getPluginNamespace() const NOEXCEPT override {
-        return mPluginNamespace.c_str();
-    }
+        const char *getPluginNamespace() const NOEXCEPT override ;
 
-    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override {
-        mPluginNamespace = pluginNamespace;
-    }
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
 
-    int size;
-    float ceiling;
-private:
-    std::string mPluginNamespace;
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override ;
+
+    public:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+    REGISTER_TENSORRT_PLUGIN(ActivationReLUCeilingPluginCreator);
 };
-
-class ActivationReLUCeilingPluginCreator : public IPluginCreator {
-public:
-    ActivationReLUCeilingPluginCreator() {
-        mPluginAttributes.emplace_back(PluginField("ceiling", nullptr, PluginFieldType::kFLOAT32, 1));
-        mFC.nbFields = mPluginAttributes.size();
-        mFC.fields = mPluginAttributes.data();
-    }
-
-    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override {
-        mPluginNamespace = pluginNamespace;
-    }
-
-    const char *getPluginNamespace() const NOEXCEPT override {
-        return mPluginNamespace.c_str();
-    }
-
-    IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override {
-        ActivationReLUCeiling *pluginObj = new ActivationReLUCeiling(serialData, serialLength);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    IPluginV2 *createPlugin(const char *name,const PluginFieldCollection *fc) NOEXCEPT override{
-        const PluginField *fields = fc->fields;
-        float ceiling = *(static_cast<const float *>(fields[0].data));
-        ActivationReLUCeiling *pluginObj = new ActivationReLUCeiling(ceiling);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    const char *getPluginName() const NOEXCEPT override{
-        return "ActivationReLUCeilingRT_tkDNN";
-    }
-
-    const char *getPluginVersion() const NOEXCEPT override{
-        return "1";
-    }
-
-    const PluginFieldCollection *getFieldNames() NOEXCEPT override{
-        return &mFC;
-    }
-
-public:
-    PluginFieldCollection mFC;
-    std::vector<PluginField> mPluginAttributes;
-    std::string mPluginNamespace;
-};
-
-REGISTER_TENSORRT_PLUGIN(ActivationReLUCeilingPluginCreator);

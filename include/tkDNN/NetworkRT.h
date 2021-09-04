@@ -8,48 +8,25 @@
 #include "NvInfer.h"
 #include <memory>
 #include <tkDNN/kernels.h>
+#include <pluginsRT/ActivationLeakyRT.h>
+#include <pluginsRT/ActivationLogisticRT.h>
+#include <pluginsRT/ActivationMishRT.h>
+#include <pluginsRT/ActivationReLUCeilingRT.h>
+#include <pluginsRT/DeformableConvRT.h>
+#include <pluginsRT/FlattenConcatRT.h>
+#include <pluginsRT/MaxPoolingFixedSizeRT.h>
+#include <pluginsRT/RegionRT.h>
+#include <pluginsRT/ReorgRT.h>
+#include <pluginsRT/ReshapeRT.h>
+#include <pluginsRT/ResizeLayerRT.h>
+#include <pluginsRT/RouteRT.h>
+#include <pluginsRT/ShortcutRT.h>
+#include <pluginsRT/UpsampleRT.h>
+#include <pluginsRT/YoloRT.h>
 
 namespace tk { namespace dnn {
 
-template<typename T> void writeBUF(char*& buffer, const T& val)
-{
-    *reinterpret_cast<T*>(buffer) = val;
-    buffer += sizeof(T);
-}
-
-template<typename T> T readBUF(const char*& buffer)
-{
-    T val = *reinterpret_cast<const T*>(buffer);
-    buffer += sizeof(T);
-    return val;
-}
-
 using namespace nvinfer1;
-#include "pluginsRT/ActivationLeakyRT.h"
-#include "pluginsRT/ActivationLogisticRT.h"
-#include "pluginsRT/ActivationReLUCeilingRT.h"
-#include "pluginsRT/ActivationMishRT.h"
-#include "pluginsRT/ReorgRT.h"
-#include "pluginsRT/RegionRT.h"
-#include "pluginsRT/RouteRT.h"
-#include "pluginsRT/ShortcutRT.h"
-#include "pluginsRT/YoloRT.h"
-#include "pluginsRT/UpsampleRT.h"
-#include "pluginsRT/ResizeLayerRT.h"
-#include "pluginsRT/DeformableConvRT.h"
-#include "pluginsRT/FlattenConcatRT.h"
-#include "pluginsRT/ReshapeRT.h"
-#include "pluginsRT/MaxPoolingFixedSizeRT.h"
-
-/*
-class PluginFactory : IPlugin
-{
-public:
-    YoloRT *yolos[16];
-    int n_yolos;
-
-	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength);
-};*/
 
 
 

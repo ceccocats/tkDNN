@@ -34,6 +34,19 @@
 
 #define dnnType float
 
+template<typename T> void writeBUF(char*& buffer, const T& val)
+{
+    *reinterpret_cast<T*>(buffer) = val;
+    buffer += sizeof(T);
+}
+
+template<typename T> T readBUF(const char*& buffer)
+{
+    T val = *reinterpret_cast<const T*>(buffer);
+    buffer += sizeof(T);
+    return val;
+}
+
 
 // Colored output
 #define COL_END "\033[0m"

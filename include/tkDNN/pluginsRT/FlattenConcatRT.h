@@ -1,162 +1,81 @@
 #include<cassert>
+#include <NvInfer.h>
+#include <vector>
+#include <utils.h>
+namespace nvinfer1 {
+    class FlattenConcatRT : public IPluginV2 {
 
-class FlattenConcatRT : public IPluginV2 {
+    public:
+        FlattenConcatRT() ;
 
-public:
-	FlattenConcatRT() {
-		stat = cublasCreate(&handle);
-		if (stat != CUBLAS_STATUS_SUCCESS) {
-			printf ("CUBLAS initialization failed\n");
-			return;
-  		}
-	}
+        FlattenConcatRT(const void *data, size_t length) ;
 
-	FlattenConcatRT(const void *data,size_t length){
-	    const char *buf = reinterpret_cast<const char *>(data),*bufCheck=buf;
-	    c = readBUF<int>(buf);
-	    h = readBUF<int>(buf);
-	    w = readBUF<int>(buf);
-	    rows = readBUF<int>(buf);
-	    cols = readBUF<int>(buf);
-	    assert(buf == bufCheck + length);
-	}
+        ~FlattenConcatRT() ;
 
-	~FlattenConcatRT(){
+        int getNbOutputs() const NOEXCEPT override ;
 
-	}
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
-	int getNbOutputs() const NOEXCEPT override {
-		return 1;
-	}
+        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
+                            PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) NOEXCEPT override {
-		return Dims3{ inputs[0].d[0] * inputs[0].d[1] * inputs[0].d[2], 1, 1};
-	}
+        int initialize() NOEXCEPT override ;
 
-	void configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs,DataType type,PluginFormat format,int maxBatchSize) NOEXCEPT override {
-		assert(nbOutputs == 1 && nbInputs ==1);
-		rows = inputDims[0].d[0];
-		cols = inputDims[0].d[1] * inputDims[0].d[2];
-		c = inputDims[0].d[0] * inputDims[0].d[1] * inputDims[0].d[2];
-		h = 1;
-		w = 1;
-	}
+        void terminate() NOEXCEPT override ;
 
-	int initialize() NOEXCEPT override {return 0;}
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
 
-	virtual void terminate() NOEXCEPT  override {	checkERROR(cublasDestroy(handle));}
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace, cudaStream_t stream) NOEXCEPT override ;
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override {return 0;}
+        size_t getSerializationSize() const NOEXCEPT override ;
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) NOEXCEPT override {
-		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
-		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
-		checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*rows*cols*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+        void serialize(void *buffer) const NOEXCEPT override ;
 
-		checkERROR( cublasSetStream(handle, stream) );	
-		for(int i=0; i<batchSize; i++) {
-			float const alpha(1.0);
-			float const beta(0.0);
-			int offset = i*rows*cols;
-			checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, rows, cols, &alpha, srcData + offset, cols, &beta, srcData + offset, rows, dstData + offset, rows ));
-		}
-		return 0;
-	}
+        void destroy() NOEXCEPT override ;
 
-	virtual size_t getSerializationSize() const NOEXCEPT override {
-		return 5*sizeof(int);
-	}
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
 
-	virtual void serialize(void* buffer) const NOEXCEPT override {
-		char *buf = reinterpret_cast<char*>(buffer),*a = buf;
-		tk::dnn::writeBUF(buf, c);
-		tk::dnn::writeBUF(buf, h);
-		tk::dnn::writeBUF(buf, w);
-		tk::dnn::writeBUF(buf, rows);
-		tk::dnn::writeBUF(buf, cols);
-		assert(buf == a + getSerializationSize());
-	}
+        const char *getPluginType() const NOEXCEPT override ;
 
-	void destroy() NOEXCEPT override{delete this;}
+        const char *getPluginVersion() const NOEXCEPT override;
 
-	bool supportsFormat(DataType type,PluginFormat format) const NOEXCEPT override{
-	    return true;
-	}
+        const char *getPluginNamespace() const NOEXCEPT override ;
 
-	const char *getPluginType() const NOEXCEPT override{
-	    return "FlattenConcatRT_tkDNN";
-	}
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-	const char *getPluginVersion() const NOEXCEPT override{
-	    return "1";
-	}
+        IPluginV2 *clone() const NOEXCEPT override ;
 
-	const char *getPluginNamespace() const NOEXCEPT override{
-	    return mPluginNamespace.c_str();
-	}
+        int c, h, w;
+        int rows, cols;
+        cublasStatus_t stat;
+        cublasHandle_t handle;
+    private:
+        std::string mPluginNamespace;
+    };
 
-	void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-	    mPluginNamespace = pluginNamespace;
-	}
+    class FlattenConcatRTPluginCreator : public IPluginCreator {
+    public:
+        FlattenConcatRTPluginCreator() ;
 
-	IPluginV2 *clone() const NOEXCEPT override {
-	    FlattenConcatRT *p = new FlattenConcatRT();
-	    p->setPluginNamespace(mPluginNamespace.c_str());
-	    return p;
-	}
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-	int c, h, w;
-	int rows, cols;
-	cublasStatus_t stat; 
-	cublasHandle_t handle;
-private:
-    std::string mPluginNamespace;
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+
+        const char *getPluginVersion() const NOEXCEPT override;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override ;
+
+    private:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+    REGISTER_TENSORRT_PLUGIN(FlattenConcatRTPluginCreator);
 };
-
-class FlattenConcatRTPluginCreator : public IPluginCreator{
-public:
-    FlattenConcatRTPluginCreator(){
-        mPluginAttributes.clear();
-        mFC.nbFields = mPluginAttributes.size();
-        mFC.fields = mPluginAttributes.data();
-    }
-
-    void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override{
-        mPluginNamespace = pluginNamespace;
-    }
-
-    const char *getPluginNamespace() const NOEXCEPT override{
-        return mPluginNamespace.c_str();
-    }
-
-    IPluginV2 *deserializePlugin(const char *name,const void *serialData,size_t serialLength) NOEXCEPT override{
-        FlattenConcatRT *pluginObj = new FlattenConcatRT(serialData,serialLength);
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    IPluginV2 *createPlugin(const char *name,const PluginFieldCollection *fc) NOEXCEPT override{
-        FlattenConcatRT *pluginObj = new FlattenConcatRT();
-        pluginObj->setPluginNamespace(mPluginNamespace.c_str());
-        return pluginObj;
-    }
-
-    const char *getPluginName() const NOEXCEPT override{
-        return "FlattenConcatRT_tkDNN";
-    }
-
-    const char *getPluginVersion() const NOEXCEPT override{
-        return "1";
-    }
-
-    const PluginFieldCollection *getFieldNames() NOEXCEPT override{
-        return &mFC;
-    }
-
-private:
-    PluginFieldCollection mFC;
-    std::vector<PluginField> mPluginAttributes;
-    std::string mPluginNamespace;
-};
-
-REGISTER_TENSORRT_PLUGIN(FlattenConcatRTPluginCreator);
