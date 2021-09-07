@@ -3,7 +3,7 @@
 
 namespace tk { namespace dnn {
 
-bool CenternetDetection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh){
+bool CenternetDetection::init(const std::string& tensor_path, const std::string& cfg_path,const std::string& name_path,const int n_classes, const int n_batches, const float conf_thresh){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     classes = n_classes;

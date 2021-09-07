@@ -29,7 +29,7 @@ namespace tk { namespace dnn {
     for(int i=0; i<noYolos.size(); i++) {
         std::vector<float> maskTemp,anchorsTemp;
         std::vector<std::string> classNamesTemp;
-        int classes,nms_kind,coords,numTemp;
+        int nms_kind,coords,numTemp;
         float nmsthresh;
         loadYoloInfo(cfg_path,yolosLine[i],maskTemp,anchorsTemp,numTemp,classes,nmsthresh,nms_kind,coords);
         classNamesTemp = darknetReadNames(name_path);

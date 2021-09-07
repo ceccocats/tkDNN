@@ -45,14 +45,14 @@ int main(int argc, char *argv[]) {
 
 
     if(argc > 2)
-        cfgPath = argv[2];
+        cfgPath = argv[3];
     if(argc > 3)
-        namePath = argv[3];
+        namePath = argv[4];
     if(argc > 4)
-        input = argv[4];
+        input = argv[5];
     char ntype = 'y';
     if(argc > 5)
-        ntype = argv[5][0];
+        ntype = argv[2][0];
     int n_classes = 80;
     if(argc > 6)
         n_classes = atoi(argv[6]);
@@ -72,9 +72,14 @@ int main(int argc, char *argv[]) {
     if(!show)
         SAVE_RESULT = true;
 
+    if(ntype == 'c' || ntype == 'm'){
+        cfgPath = nullptr;
+        namePath = nullptr;
+
+    }
     tk::dnn::Yolo3Detection yolo;
-    //tk::dnn::CenternetDetection cnet;
-    //tk::dnn::MobilenetDetection mbnet;
+    tk::dnn::CenternetDetection cnet;
+    tk::dnn::MobilenetDetection mbnet;
 
     tk::dnn::DetectionNN *detNN;  
 
@@ -84,10 +89,10 @@ int main(int argc, char *argv[]) {
             detNN = &yolo;
             break;
         case 'c':
-            //detNN = &cnet;
+            detNN = &cnet;
             break;
         case 'm':
-            //detNN = &mbnet;
+            detNN = &mbnet;
             n_classes++;
             break;
         default:

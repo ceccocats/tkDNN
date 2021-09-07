@@ -657,8 +657,8 @@ bool NetworkRT::deserialize(const char *filename) {
 
 void NetworkRT::destroy() {
     contextRT->destroy();
-    configRT->destroy();
     engineRT->destroy();
+    configRT->destroy();
     builderRT->destroy();
 }
 
