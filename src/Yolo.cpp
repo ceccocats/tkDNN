@@ -137,7 +137,6 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
-    checkCuda(cudaDeviceSynchronize());
     checkCuda( cudaMemcpy(predictions, dstData, output_dim.tot()*sizeof(dnnType), cudaMemcpyDeviceToHost));
 
     int lw = output_dim.w;

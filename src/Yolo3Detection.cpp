@@ -45,7 +45,8 @@ namespace tk { namespace dnn {
         yolo[i]->bias_h = new dnnType[num*nMasks*2];
         memcpy(yolo[i]->mask_h, maskTempF, sizeof(dnnType)*nMasks);
         memcpy(yolo[i]->bias_h, biasTempF, sizeof(dnnType)*num*nMasks*2);
-        yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, channels, height, width);
+        auto dim = netRT->engineRT->getBindingDimensions(i+1);
+        yolo[i]->input_dim = yolo[i]->output_dim = tk::dnn::dataDim_t(1, dim.d[0], dim.d[1], dim.d[2]);
         yolo[i]->classesNames = classNamesTemp;
         yolo[i]->nms_thresh = nmsthresh;
         yolo[i]->nsm_kind = (tk::dnn::Yolo::nmsKind_t) nms_kind;
