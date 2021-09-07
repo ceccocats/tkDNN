@@ -1,15 +1,67 @@
 cmake_minimum_required(VERSION 3.15)
-
-project (tkDNN)
+project(tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-if(UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations -Wno-unused-variable -O3")
+set(CMAKE_CXX_STANDARD 14)
+
+find_package(CUDA 9.0 REQUIRED)
+if (CUDA_FOUND)
+    #Get CUDA compute capability
+    set(OUTPUTFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda_script) # No suffix required
+    set(CUDAFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/getCudaArch.cu)
+    execute_process(COMMAND nvcc -lcuda ${CUDAFILE} -o ${OUTPUTFILE})
+    execute_process(COMMAND ${OUTPUTFILE}
+            RESULT_VARIABLE CUDA_RETURN_CODE
+            OUTPUT_VARIABLE ARCH)
+
+    if(${CUDA_RETURN_CODE} EQUAL 0)
+        set(CUDA_SUCCESS "TRUE")
+    else()
+        set(CUDA_SUCCESS "FALSE")
+    endif()
+
+    if (${CUDA_SUCCESS})
+        message(STATUS "CUDA Architecture: ${ARCH}")
+        message(STATUS "CUDA Version: ${CUDA_VERSION_STRING}")
+        message(STATUS "CUDA Path: ${CUDA_TOOLKIT_ROOT_DIR}")
+        message(STATUS "CUDA Libararies: ${CUDA_LIBRARIES}")
+        message(STATUS "CUDA Performance Primitives: ${CUDA_npp_LIBRARY}")
+
+        set(CUDA_NVCC_FLAGS "${ARCH}")
+        add_definitions(-DGPU) #You may not require this
+
+    else()
+        message(WARNING ${ARCH})
+    endif()
 endif()
+
+SET(CUDA_SEPARABLE_COMPILATION ON)
+
+
+if(UNIX)
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fPIC -Wno-deprecated-declarations -Wno-unused-variable -O3")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
+    endif()
+
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fPIC -Wno-deprecated-declarations -Wno-unused-variable -g3")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -G -g)
+    endif()
+endif()
+
 if(WIN32)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc")
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61)
+    endif()
+
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_CXX_FLAGS "/Od /FS /EHsc")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61 -G -g)
+    endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
 
 # project specific flags
@@ -28,10 +80,8 @@ endif()
 #-------------------------------------------------------------------------------
 # CUDA
 #-------------------------------------------------------------------------------
-find_package(CUDA 9.0 REQUIRED)
-SET(CUDA_SEPARABLE_COMPILATION ON)
+
 #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61)
 
 
 find_package(CUDNN REQUIRED)

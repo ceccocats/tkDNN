@@ -110,6 +110,6 @@ namespace nvinfer1 {
         static std::vector<PluginField> mPluginAttributes;
         std::string mPluginNamespace;
     };
-
+    REGISTER_TENSORRT_PLUGIN(DeformableConvRTPluginCreator);
 };
 #endif
