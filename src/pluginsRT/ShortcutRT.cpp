@@ -50,6 +50,7 @@ void ShortcutRT::terminate() NOEXCEPT {}
 
 size_t ShortcutRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT { return 0; }
 
+#if NV_TENSORRT_MAJOR > 7
 int ShortcutRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                         cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -61,6 +62,20 @@ int ShortcutRT::enqueue(int batchSize, const void *const *inputs, void *const *o
 
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ShortcutRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                            cudaStream_t stream) {
+    dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType *srcDataBack = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
+    dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+
+    checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+    shortcutForward(srcDataBack, dstData, batchSize, c, h, w, 1, batchSize, bc, bh, bw, 1, mul, stream);
+
+    return 0;
+}
+#endif
+
 
 size_t ShortcutRT::getSerializationSize() const NOEXCEPT {
     return 6*sizeof(int) + sizeof(bool);
@@ -108,10 +123,8 @@ IPluginV2 *ShortcutRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 ShortcutRTPluginCreator::ShortcutRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("bDim",nullptr,PluginFieldType::kUNKNOWN,1));
-    mPluginAttributes.emplace_back(PluginField("mul",nullptr,PluginFieldType::kUNKNOWN,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

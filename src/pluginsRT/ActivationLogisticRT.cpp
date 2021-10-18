@@ -38,13 +38,21 @@ void ActivationLogisticRT::terminate() NOEXCEPT {}
 size_t ActivationLogisticRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
-
+#if NV_TENSORRT_MAJOR > 7
 int ActivationLogisticRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                                   cudaStream_t stream) NOEXCEPT {
     activationLOGISTICForward((dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
                               reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, stream);
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ActivationLogisticRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                      cudaStream_t stream) {
+    activationLOGISTICForward((dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
+                              reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, stream);
+    return 0;
+}
+#endif
 
 size_t ActivationLogisticRT::getSerializationSize() const NOEXCEPT {
     return 1 * sizeof(int);

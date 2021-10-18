@@ -27,8 +27,12 @@ namespace nvinfer1 {
 
         size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override;
 
+#if NV_TENSORRT_MAJOR > 7
         int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                     cudaStream_t stream) NOEXCEPT override;
+#elif NV_TENSORRT_MAJOR == 7
+        int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) override;
+#endif
 
 
         size_t getSerializationSize() const NOEXCEPT override;

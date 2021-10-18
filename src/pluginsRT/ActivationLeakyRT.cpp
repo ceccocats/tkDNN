@@ -42,6 +42,7 @@ size_t ActivationLeakyRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int ActivationLeakyRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                                cudaStream_t stream) NOEXCEPT {
     activationLEAKYForward(
@@ -51,6 +52,17 @@ int ActivationLeakyRT::enqueue(int batchSize, const void *const *inputs, void *c
     return 0;
 
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ActivationLeakyRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                   cudaStream_t stream) {
+    activationLEAKYForward(
+            (dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
+            reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, slope,
+            stream);
+    return 0;
+}
+#endif
+
 
 size_t ActivationLeakyRT::getSerializationSize() const NOEXCEPT {
     return 1 * sizeof(int) + 1 * sizeof(float);
@@ -94,8 +106,7 @@ IPluginV2* ActivationLeakyRT::clone() const NOEXCEPT {
 }
 
 ActivationLeakyRTPluginCreator::ActivationLeakyRTPluginCreator() {
-    mPluginAttributes.emplace_back(
-            PluginField("slope", nullptr, PluginFieldType::kFLOAT32, 1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

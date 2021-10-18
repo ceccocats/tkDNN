@@ -44,6 +44,7 @@ size_t UpsampleRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int UpsampleRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                         cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -53,6 +54,17 @@ int UpsampleRT::enqueue(int batchSize, const void *const *inputs, void *const *o
     upsampleForward(srcData, dstData, batchSize, c, h, w, stride, 1, 1, stream);
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t UpsampleRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                            cudaStream_t stream) {
+    dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+
+    fill(dstData, batchSize*c*h*w*stride*stride, 0.0, stream);
+    upsampleForward(srcData, dstData, batchSize, c, h, w, stride, 1, 1, stream);
+    return 0;
+}
+#endif
 
 size_t UpsampleRT::getSerializationSize() const NOEXCEPT {
     return 4*sizeof(int);
@@ -97,9 +109,8 @@ IPluginV2 *UpsampleRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 UpsampleRTPluginCreator::UpsampleRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("stride",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

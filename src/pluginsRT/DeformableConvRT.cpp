@@ -137,6 +137,7 @@ void DeformableConvRT::terminate() NOEXCEPT {}
 
 size_t DeformableConvRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {return 0;}
 
+#if NV_TENSORRT_MAJOR > 7
 int DeformableConvRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                               cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -165,6 +166,36 @@ int DeformableConvRT::enqueue(int batchSize, const void *const *inputs, void *co
     }
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t DeformableConvRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                  cudaStream_t stream) {
+    dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType *output_conv = (dnnType*)reinterpret_cast<const dnnType*>(inputs[1]);
+
+    // split conv2d outputs into offset to mask
+    for(int b=0; b<batchSize; b++) {
+        checkCuda(cudaMemcpy(offset, output_conv + b * 3 * chunk_dim, 2*chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        checkCuda(cudaMemcpy(mask, output_conv + b * 3 * chunk_dim + 2*chunk_dim, chunk_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice));
+        // kernel sigmoid
+        activationSIGMOIDForward(mask, mask, chunk_dim);
+        // deformable convolution
+        dcnV2CudaForward(stat, handle,
+                         srcData, data_d,
+                         bias2_d, ones_d1,
+                         offset, mask,
+                         reinterpret_cast<dnnType*>(outputs[0]), ones_d2,
+                         kh, kw,
+                         sh, sw,
+                         ph, pw,
+                         1, 1,
+                         deformableGroup, b,
+                         i_n, i_c, i_h, i_w,
+                         o_n, o_c, o_h, o_w,
+                         chunk_dim);
+    }
+    return 0;
+}
+#endif
 
 size_t DeformableConvRT::getSerializationSize() const NOEXCEPT {
     return 16 * sizeof(int) + chunk_dim * 3 * sizeof(dnnType) + (i_c * o_c * kh * kw * 1 ) * sizeof(dnnType) +
@@ -251,25 +282,8 @@ IPluginV2 *DeformableConvRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 DeformableConvRTPluginCreator::DeformableConvRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("chunk_dim",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("kh",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("kw",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("sh",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("sw",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("ph",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("pw",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("deformableGroup",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_n",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_c",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_h",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_w",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_n",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_c",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_h",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_w",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("defRT",nullptr,PluginFieldType::kUNKNOWN,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

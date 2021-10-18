@@ -38,12 +38,22 @@ void ActivationMishRT::terminate() NOEXCEPT {}
 
 size_t ActivationMishRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT  { return 0; }
 
+#if NV_TENSORRT_MAJOR > 7
 int ActivationMishRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
             cudaStream_t stream) NOEXCEPT {
     activationMishForward((dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
     reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, stream);
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ActivationMishRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                  cudaStream_t stream) {
+    activationMishForward((dnnType *) reinterpret_cast<const dnnType *>(inputs[0]),
+                          reinterpret_cast<dnnType *>(outputs[0]), batchSize * size, stream);
+    return 0;
+}
+#endif
+
 size_t ActivationMishRT::getSerializationSize() const NOEXCEPT  {
     return 1 * sizeof(int);
 }
@@ -79,6 +89,8 @@ IPluginV2 *ActivationMishRT::clone() const NOEXCEPT {
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
 }
+
+
 
 ActivationMishRTPluginCreator::ActivationMishRTPluginCreator() {
     mPluginAttributes.clear();

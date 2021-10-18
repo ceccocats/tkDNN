@@ -60,6 +60,7 @@ size_t RouteRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int RouteRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                      cudaStream_t stream) NOEXCEPT {
     dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
@@ -75,6 +76,22 @@ int RouteRT::enqueue(int batchSize, const void *const *inputs, void *const *outp
     }
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t RouteRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
+    dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+    for(int b=0; b<batchSize; b++) {
+        int offset = 0;
+        for(int i=0; i<in; i++) {
+            dnnType *input = (dnnType*)reinterpret_cast<const dnnType*>(inputs[i]);
+            int in_dim = c_in[i]*h*w;
+            int part_in_dim = in_dim / this->groups;
+            checkCuda( cudaMemcpyAsync(dstData + b*c*w*h + offset, input + b*c*w*h*groups + this->group_id*part_in_dim, part_in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream) );
+            offset += part_in_dim;
+        }
+    }
+    return 0;
+}
+#endif
 
 size_t RouteRT::getSerializationSize() const NOEXCEPT {
     return (6+MAX_INPUTS)*sizeof(int);
@@ -124,10 +141,8 @@ IPluginV2 *RouteRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 RouteRTPluginCreator::RouteRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("groups",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("group_id",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

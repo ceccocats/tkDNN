@@ -43,6 +43,7 @@ void RegionRT::terminate() NOEXCEPT {}
 
 size_t RegionRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT { return 0; }
 
+#if NV_TENSORRT_MAJOR > 7
 int RegionRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                       cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -68,6 +69,32 @@ int RegionRT::enqueue(int batchSize, const void *const *inputs, void *const *out
 
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t RegionRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
+    dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+
+    checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+
+    for (int b = 0; b < batchSize; ++b){
+        for(int n = 0; n < num; ++n){
+            int index = entry_index(b, n*w*h, 0);
+            activationLOGISTICForward(srcData + index, dstData + index, 2*w*h, stream);
+
+            index = entry_index(b, n*w*h, coords);
+            activationLOGISTICForward(srcData + index, dstData + index, w*h, stream);
+        }
+    }
+
+    //softmax start
+    int index = entry_index(0, 0, coords + 1);
+    softmaxForward(	srcData + index, classes, batchSize*num,
+                       (c*h*w)/num,
+                       w*h, 1, w*h, 1, dstData + index, stream);
+
+    return 0;
+}
+#endif
 
 size_t RegionRT::getSerializationSize() const NOEXCEPT {
     return 6*sizeof(int);
@@ -112,11 +139,8 @@ IPluginV2 *RegionRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 RegionRTPluginCreator::RegionRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("classes",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("coords",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("num",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

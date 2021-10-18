@@ -54,6 +54,7 @@ size_t FlattenConcatRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int FlattenConcatRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                              cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -69,6 +70,24 @@ int FlattenConcatRT::enqueue(int batchSize, const void *const *inputs, void *con
     }
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t FlattenConcatRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                 cudaStream_t stream) {
+    dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+    checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*rows*cols*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+
+    checkERROR( cublasSetStream(handle, stream) );
+    for(int i=0; i<batchSize; i++) {
+        float const alpha(1.0);
+        float const beta(0.0);
+        int offset = i*rows*cols;
+        checkERROR( cublasSgeam( handle, CUBLAS_OP_T, CUBLAS_OP_N, rows, cols, &alpha, srcData + offset, cols, &beta, srcData + offset, rows, dstData + offset, rows ));
+    }
+    return 0;
+}
+#endif
+
 
 size_t FlattenConcatRT::getSerializationSize() const NOEXCEPT {
     return 5*sizeof(int);
@@ -113,7 +132,6 @@ IPluginV2 *FlattenConcatRT::clone() const NOEXCEPT {
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
 }
-
 
 FlattenConcatRTPluginCreator::FlattenConcatRTPluginCreator() {
     mPluginAttributes.clear();

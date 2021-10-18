@@ -85,6 +85,7 @@ size_t YoloRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int YoloRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                     cudaStream_t stream) NOEXCEPT {
     dnnType *srcData = (dnnType *) reinterpret_cast<const dnnType *>(inputs[0]);
@@ -115,6 +116,38 @@ int YoloRT::enqueue(int batchSize, const void *const *inputs, void *const *outpu
     //std::cout<<"YOLO END\n";
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t YoloRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
+    dnnType *srcData = (dnnType *) reinterpret_cast<const dnnType *>(inputs[0]);
+    dnnType *dstData = reinterpret_cast<dnnType *>(outputs[0]);
+
+    checkCuda(cudaMemcpyAsync(dstData, srcData, batchSize * c * h * w * sizeof(dnnType), cudaMemcpyDeviceToDevice,
+                              stream));
+
+
+    for (int b = 0; b < batchSize; ++b) {
+        for (int n = 0; n < n_masks; ++n) {
+            int index = entry_index(b, n * w * h, 0);
+            if (new_coords == 1) {
+                if (this->scaleXY != 1)
+                    scalAdd(dstData + index, 2 * w * h, this->scaleXY, -0.5 * (this->scaleXY - 1), 1);
+            } else {
+                activationLOGISTICForward(srcData + index, dstData + index, 2 * w * h, stream); //x,y
+
+                if (this->scaleXY != 1)
+                    scalAdd(dstData + index, 2 * w * h, this->scaleXY, -0.5 * (this->scaleXY - 1), 1);
+
+                index = entry_index(b, n * w * h, 4);
+                activationLOGISTICForward(srcData + index, dstData + index, (1 + classes) * w * h, stream);
+            }
+        }
+    }
+
+    //std::cout<<"YOLO END\n";
+    return 0;
+}
+#endif
+
 
 size_t YoloRT::getSerializationSize() const NOEXCEPT {
     return 8 * sizeof(int) + 2 * sizeof(float) + n_masks * sizeof(dnnType) + num * n_masks * 2 * sizeof(dnnType) +
@@ -182,16 +215,8 @@ IPluginV2 *YoloRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 YoloRTPluginCreator::YoloRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("classes",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("num",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("yolo",nullptr,PluginFieldType::kUNKNOWN,1));
-    mPluginAttributes.emplace_back(PluginField("numMasks",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("scaleXY",nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("nmsThresh",nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("nmsKind",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("newCoords",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

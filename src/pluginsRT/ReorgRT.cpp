@@ -43,12 +43,22 @@ size_t ReorgRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
     return 0;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 int ReorgRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,cudaStream_t stream) NOEXCEPT {
     reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
                  reinterpret_cast<dnnType*>(outputs[0]),
                  batchSize, c, h, w, stride, stream);
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ReorgRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
+    reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
+                 reinterpret_cast<dnnType*>(outputs[0]),
+                 batchSize, c, h, w, stride, stream);
+    return 0;
+}
+#endif
+
 
 size_t ReorgRT::getSerializationSize() const NOEXCEPT {
     return 4*sizeof(int);
@@ -93,9 +103,8 @@ IPluginV2 *ReorgRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 ReorgRTPluginCreator::ReorgRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("stride",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

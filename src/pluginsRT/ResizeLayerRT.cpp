@@ -47,6 +47,7 @@ void ResizeLayerRT::terminate() NOEXCEPT {}
 
 size_t ResizeLayerRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT { return 0; }
 
+#if NV_TENSORRT_MAJOR > 7
 int ResizeLayerRT::enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
                            cudaStream_t stream) NOEXCEPT {
     resizeForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
@@ -54,6 +55,15 @@ int ResizeLayerRT::enqueue(int batchSize, const void *const *inputs, void *const
                   batchSize, i_c, i_h, i_w, o_c, o_h, o_w, stream);
     return 0;
 }
+#elif NV_TENSORRT_MAJOR == 7
+int32_t ResizeLayerRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                               cudaStream_t stream) {
+    resizeForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
+                  reinterpret_cast<dnnType*>(outputs[0]),
+                  batchSize, i_c, i_h, i_w, o_c, o_h, o_w, stream);
+    return 0;
+}
+#endif
 
 size_t ResizeLayerRT::getSerializationSize() const NOEXCEPT {
     return 6*sizeof(int);
@@ -101,11 +111,8 @@ IPluginV2 *ResizeLayerRT::clone() const NOEXCEPT {
     return p;
 }
 
-
 ResizeLayerRTPluginCreator::ResizeLayerRTPluginCreator() {
-    mPluginAttributes.emplace_back(PluginField("o_c",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_h",nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_w",nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.clear();
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }
