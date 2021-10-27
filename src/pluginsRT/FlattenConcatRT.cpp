@@ -4,12 +4,17 @@ using namespace  nvinfer1;
 std::vector<PluginField> FlattenConcatRTPluginCreator::mPluginAttributes;
 PluginFieldCollection FlattenConcatRTPluginCreator::mFC{};
 
-FlattenConcatRT::FlattenConcatRT() {
+FlattenConcatRT::FlattenConcatRT(int c, int h, int w, int rows, int cols) {
     stat = cublasCreate(&handle);
     if (stat != CUBLAS_STATUS_SUCCESS) {
         printf ("CUBLAS initialization failed\n");
         return;
     }
+    this->c = c;
+    this->h = h;
+    this->w = w;
+    this->rows = rows;
+    this->cols = cols;
 }
 
 FlattenConcatRT::FlattenConcatRT(const void *data, size_t length) {
@@ -30,16 +35,6 @@ int FlattenConcatRT::getNbOutputs() const NOEXCEPT {
 
 Dims FlattenConcatRT::getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT {
     return Dims3{ inputs[0].d[0] * inputs[0].d[1] * inputs[0].d[2], 1, 1};
-}
-
-void FlattenConcatRT::configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs,
-                                          DataType type, PluginFormat format, int maxBatchSize) NOEXCEPT {
-    assert(nbOutputs == 1 && nbInputs ==1);
-    rows = inputDims[0].d[0];
-    cols = inputDims[0].d[1] * inputDims[0].d[2];
-    c = inputDims[0].d[0] * inputDims[0].d[1] * inputDims[0].d[2];
-    h = 1;
-    w = 1;
 }
 
 int FlattenConcatRT::initialize() NOEXCEPT {
@@ -107,9 +102,7 @@ void FlattenConcatRT::destroy() NOEXCEPT {
     delete this;
 }
 
-bool FlattenConcatRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
-}
+
 
 const char *FlattenConcatRT::getPluginType() const NOEXCEPT {
     return "FlattenConcatRT_tkDNN";
@@ -127,10 +120,42 @@ void FlattenConcatRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
     mPluginNamespace = pluginNamespace;
 }
 
-IPluginV2 *FlattenConcatRT::clone() const NOEXCEPT {
-    auto *p = new FlattenConcatRT();
+IPluginV2IOExt *FlattenConcatRT::clone() const NOEXCEPT {
+    auto* p = new FlattenConcatRT(c, h, w, rows, cols);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
+}
+
+DataType FlattenConcatRT::getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const NOEXCEPT
+{
+    return DataType::kFLOAT;
+}
+
+void FlattenConcatRT::configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) NOEXCEPT
+{
+}
+
+void FlattenConcatRT::attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) NOEXCEPT
+{
+}
+
+bool FlattenConcatRT::isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const NOEXCEPT
+{
+    return false;
+}
+
+bool FlattenConcatRT::canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT
+{
+    return false;
+}
+
+bool FlattenConcatRT::supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int nbInputs, int nbOutputs) const NOEXCEPT
+{
+    return true;
+}
+
+void FlattenConcatRT::detachFromContext() NOEXCEPT
+{
 }
 
 FlattenConcatRTPluginCreator::FlattenConcatRTPluginCreator() {
@@ -147,15 +172,21 @@ const char *FlattenConcatRTPluginCreator::getPluginNamespace() const NOEXCEPT {
     return mPluginNamespace.c_str();
 }
 
-IPluginV2 *FlattenConcatRTPluginCreator::deserializePlugin(const char *name, const void *serialData,
+IPluginV2IOExt *FlattenConcatRTPluginCreator::deserializePlugin(const char *name, const void *serialData,
                                                            size_t serialLength) NOEXCEPT {
     auto *pluginObj = new FlattenConcatRT(serialData,serialLength);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }
 
-IPluginV2 *FlattenConcatRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
-    auto *pluginObj = new FlattenConcatRT();
+IPluginV2IOExt *FlattenConcatRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
+    const PluginField* fields = fc->fields;
+    int c = *(static_cast<const int*>(fields[0].data));
+    int h = *(static_cast<const int*>(fields[1].data));
+    int w = *(static_cast<const int*>(fields[2].data));
+    int rows = *(static_cast<const int*>(fields[3].data));
+    int cols = *(static_cast<const int*>(fields[4].data));
+    auto* pluginObj = new FlattenConcatRT(c, h, w, rows, cols);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }

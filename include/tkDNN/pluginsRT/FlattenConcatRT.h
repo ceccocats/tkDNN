@@ -3,10 +3,10 @@
 #include <vector>
 #include <utils.h>
 namespace nvinfer1 {
-    class FlattenConcatRT : public IPluginV2 {
+    class FlattenConcatRT : public IPluginV2IOExt {
 
     public:
-        FlattenConcatRT() ;
+        FlattenConcatRT(int c,int h,int w,int rows,int cols) ;
 
         FlattenConcatRT(const void *data, size_t length) ;
 
@@ -15,9 +15,6 @@ namespace nvinfer1 {
         int getNbOutputs() const NOEXCEPT override ;
 
         Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
-
-        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
-                            PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
         int initialize() NOEXCEPT override ;
 
@@ -37,8 +34,6 @@ namespace nvinfer1 {
 
         void destroy() NOEXCEPT override ;
 
-        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
-
         const char *getPluginType() const NOEXCEPT override ;
 
         const char *getPluginVersion() const NOEXCEPT override;
@@ -47,7 +42,21 @@ namespace nvinfer1 {
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-        IPluginV2 *clone() const NOEXCEPT override ;
+        IPluginV2IOExt *clone() const NOEXCEPT override ;
+
+        DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const NOEXCEPT override;
+
+        void configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) NOEXCEPT override;
+
+        void attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) NOEXCEPT override;
+
+        bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const NOEXCEPT override;
+
+        bool canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT override;
+
+        bool supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int nbInputs, int nbOutputs) const NOEXCEPT override;
+
+        void detachFromContext() NOEXCEPT override;
 
         int c, h, w;
         int rows, cols;
@@ -65,9 +74,9 @@ namespace nvinfer1 {
 
         const char *getPluginNamespace() const NOEXCEPT override ;
 
-        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+        IPluginV2IOExt *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
 
-        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+        IPluginV2IOExt *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
 
         const char *getPluginName() const NOEXCEPT override ;
 

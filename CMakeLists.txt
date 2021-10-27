@@ -51,13 +51,13 @@ endif()
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE MATCHES Release)
-        set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc")
-        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61)
+        set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc /Md")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
     endif()
 
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-        set(CMAKE_CXX_FLAGS "/Od /FS /EHsc")
-        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -arch=sm_61 -G -g)
+        set(CMAKE_CXX_FLAGS "/Od /FS /EHsc /MDd")
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -G -g)
     endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
@@ -92,7 +92,7 @@ include_directories(${CUDNN_INCLUDE_DIR})
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu" "src/pluginsRT/*.cpp")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
-target_link_libraries(kernels ${CUDA_CUBLAS_LIBRAY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 
 
 
@@ -121,7 +121,7 @@ set(tkdnn_LIBS kernels ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRAR
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${NVINFER_INCLUDES})
 add_library(tkDNN SHARED ${tkdnn_SRC})
-target_link_libraries(tkDNN ${tkdnn_LIBS} ${CUDA_CUBLAS_LIBRAY})
+target_link_libraries(tkDNN ${tkdnn_LIBS} ${CUDA_CUBLAS_LIBRARIES})
 
 #static 
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})

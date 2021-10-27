@@ -18,9 +18,9 @@ using namespace nvinfer1;
 // Logger for info/warning/errors
 class Logger : public ILogger {
     void log(Severity severity, const char* msg) NOEXCEPT override {
-#ifdef DEBUG
+//#ifdef DEBUG
         std::cout <<"TENSORRT LOG: "<< msg << std::endl;
-#endif
+//#endif
     }
 } loggerRT;
 
@@ -473,7 +473,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
 
-    IPluginV2 *plugin = new FlattenConcatRT();
+    IPluginV2IOExt *plugin = new FlattenConcatRT(l->c,l->h,l->w,l->rows,l->cols);
     IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;

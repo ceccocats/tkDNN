@@ -423,6 +423,8 @@ public:
     virtual layerType_t getLayerType() { return LAYER_FLATTEN; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    int c, h, w, rows, cols;
 };
 
 /**
