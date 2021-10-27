@@ -2,9 +2,11 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
-#include <iostream> 
-#include "kernels.h"
+#include <iostream>
 #include <errno.h>
+
+#include "kernels.h"
+#include "pluginsRT/DeformableConvRT.h"
 
 #define CUDA_KERNEL_LOOP(i, n)                          \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x;   \
@@ -17,6 +19,13 @@ inline int GET_BLOCKS(const int N)
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }
 
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection DeformableConvRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> DeformableConvRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(DeformableConvRTCreator);
+}}
 
 __device__ __host__  float dmcn_im2col_bilinear(const float *bottom_data, const int data_width,
   const int height, const int width, float h, float w) {
@@ -50,7 +59,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
   {
     //If n is a power of 2, ( i / n ) is equivalent to ( i ≫ log2 n ) and ( i % n ) is equivalent to ( i & n - 1 ).
     const int ind_on_w = index / width_col;
-    const int ind_on_w_on_h = ind_on_w / height_col; 
+    const int ind_on_w_on_h = ind_on_w / height_col;
     const int kk = 3 * 3;
     // index index of output matrix
     const int w_col = index % width_col;
@@ -83,10 +92,10 @@ __global__ void modulated_deformable_im2col_gpu_kernel(const int n,
         const int iter_member = (i * 3 + j);
         // const int data_offset_h_ptr = ((2 * (i * kernel_w + j)) * height_col + h_col) * width_col + w_col;
         const int data_offset_h_ptr = first_member + s_col2 * iter_member;
-        
+
         // const int data_offset_w_ptr = ((2 * (i * kernel_w + j) + 1) * height_col + h_col) * width_col + w_col;
         const int data_offset_w_ptr = s_col + first_member + s_col2 * iter_member;
-        
+
         // const int data_mask_hw_ptr = ((i * kernel_w + j) * height_col + h_col) * width_col + w_col;
         const int data_mask_hw_ptr = first_member + s_col * iter_member;
 
@@ -127,7 +136,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel_general_version(const int
   {
     //If n is a power of 2, ( i / n ) is equivalent to ( i ≫ log2 n ) and ( i % n ) is equivalent to ( i & n - 1 ).
     const int ind_on_w = index / width_col;
-    const int ind_on_w_on_h = ind_on_w / height_col; 
+    const int ind_on_w_on_h = ind_on_w / height_col;
     const int kk = kernel_h * kernel_w;
     // index index of output matrix
     const int w_col = index % width_col;
@@ -153,7 +162,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel_general_version(const int
     const float *data_offset_ptr = data_offset + add_ptr + add_ptr;
 
     const float *data_mask_ptr = data_mask + add_ptr;
-    
+
     #pragma unroll
     for (int i = 0; i < kernel_h; ++i) {
       #pragma unroll
@@ -161,10 +170,10 @@ __global__ void modulated_deformable_im2col_gpu_kernel_general_version(const int
         const int iter_member = (i * kernel_w + j);
         // const int data_offset_h_ptr = ((2 * (i * kernel_w + j)) * height_col + h_col) * width_col + w_col;
         const int data_offset_h_ptr = first_member + s_col2 * iter_member;
-        
+
         // const int data_offset_w_ptr = ((2 * (i * kernel_w + j) + 1) * height_col + h_col) * width_col + w_col;
         const int data_offset_w_ptr = s_col + first_member + s_col2 * iter_member;
-        
+
         // const int data_mask_hw_ptr = ((i * kernel_w + j) * height_col + h_col) * width_col + w_col;
         const int data_mask_hw_ptr = first_member + s_col * iter_member;
 
@@ -193,7 +202,7 @@ __global__ void modulated_deformable_im2col_gpu_kernel_general_version(const int
 
 void modulatedDeformableIm2colCuda(cudaStream_t stream,
   const float* data_im, const float* data_offset, const float* data_mask,
-  const int batch_size, const int channels, const int height_im, const int width_im, 
+  const int batch_size, const int channels, const int height_im, const int width_im,
   const int height_col, const int width_col,
   const int deformable_group, float* data_col) {
   // num_axes should be smaller than block size
@@ -202,9 +211,9 @@ void modulatedDeformableIm2colCuda(cudaStream_t stream,
   modulated_deformable_im2col_gpu_kernel
       <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS,
           0, stream>>>(
-      num_kernels, data_im, data_offset, data_mask, height_im, width_im, 
+      num_kernels, data_im, data_offset, data_mask, height_im, width_im,
       batch_size, channels, deformable_group, height_col, width_col, data_col);
-  
+
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess)
     FatalError("error in modulatedDeformableIm2colCuda: " + std::string(cudaGetErrorString(err)) + "\n");
@@ -212,9 +221,9 @@ void modulatedDeformableIm2colCuda(cudaStream_t stream,
 
 void modulatedDeformableIm2colCudaGeneralVersion(cudaStream_t stream,
   const float* data_im, const float* data_offset, const float* data_mask,
-  const int batch_size, const int channels, const int height_im, const int width_im, 
+  const int batch_size, const int channels, const int height_im, const int width_im,
   const int height_col, const int width_col, const int kernel_h, const int kenerl_w,
-  const int pad_h, const int pad_w, const int stride_h, const int stride_w, 
+  const int pad_h, const int pad_w, const int stride_h, const int stride_w,
   const int dilation_h, const int dilation_w,
   const int deformable_group, float* data_col) {
   // num_axes should be smaller than block size
@@ -226,13 +235,13 @@ void modulatedDeformableIm2colCudaGeneralVersion(cudaStream_t stream,
       num_kernels, data_im, data_offset, data_mask, height_im, width_im, kernel_h, kenerl_w,
       pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w, channel_per_deformable_group,
       batch_size, channels, deformable_group, height_col, width_col, data_col);
-  
+
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess)
     FatalError("error in modulatedDeformableIm2colCudaGeneralVersion: " + std::string(cudaGetErrorString(err)) + "\n");
 }
 
-void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle, 
+void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
                          float *input, float *weight,
                          float *bias, float *ones,
                          float *offset, float *mask,
@@ -242,11 +251,11 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
                          const int pad_h, const int pad_w,
                          const int dilation_h, const int dilation_w,
                          const int deformable_group, const int batch_id,
-                         const int in_n, const int in_c, const int in_h, const int in_w, 
+                         const int in_n, const int in_c, const int in_h, const int in_w,
                          const int out_n, const int out_c, const int out_h, const int out_w,
                          const int chunk_dim, cudaStream_t stream)
-{  
-  // stat and handle have be moved out to preserve 2 - 6 milliseconds every 100. 
+{
+  // stat and handle have be moved out to preserve 2 - 6 milliseconds every 100.
   const int batch = batch_id;
   const int channels = in_c;
   const int height = in_h;
@@ -256,22 +265,22 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
 
   const int height_out = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   const int width_out = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  
+
   long m = channels_out;
   long n = height_out * width_out;
   long k = 1;
   float alpha = 1.0;
   float beta = 0.0;
-  
-  stat = cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, 
-              n, m, k, &alpha, 
-              ones, k, bias, k, 
+
+  stat = cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N,
+              n, m, k, &alpha,
+              ones, k, bias, k,
               &beta, output + batch * out_c * out_h * out_w, n);
   if (stat != CUBLAS_STATUS_SUCCESS)
     FatalError("CUBLAS initialization failed\n");
 
   modulatedDeformableIm2colCuda(stream,
-                                input + batch * channels * height * width,  
+                                input + batch * channels * height * width,
                                 offset,// + b * 2 * int((float)chunk_dim / batch),
                                 mask,// + b * int((float)chunk_dim / batch),
                                     1, channels, height, width,
@@ -283,15 +292,15 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
   //                                   height_out, width_out, kernel_h, kernel_w,
   //                                   pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
   //                                   deformable_group, columns);
-  
+
   //(k * m)  x  (m * n)
   // Y = WC
   k = channels * kernel_h * kernel_w;
   beta = 1.0;
-  
-  stat = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 
-              n, m, k, &alpha, 
-              columns, n, weight, k, 
+
+  stat = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
+              n, m, k, &alpha,
+              columns, n, weight, k,
               &beta, output + batch * out_c * out_h * out_w, n);
 
   if (stat != CUBLAS_STATUS_SUCCESS)

@@ -1,8 +1,18 @@
 #include "kernels.h"
 #include "assert.h"
 
-__global__ void shortcut_kernel(int size, int minw, int minh, int minc, int stride, int sample, int batch, 
-                                int w1, int h1, int c1, dnnType *add, 
+#include "pluginsRT/ShortcutRT.h"
+
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection ShortcutRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> ShortcutRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(ShortcutRTCreator);
+}}
+
+__global__ void shortcut_kernel(int size, int minw, int minh, int minc, int stride, int sample, int batch,
+                                int w1, int h1, int c1, dnnType *add,
                                 int w2, int h2, int c2, float s1, float s2, dnnType *out)
 {
     int id = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -21,8 +31,8 @@ __global__ void shortcut_kernel(int size, int minw, int minh, int minc, int stri
     //out[out_index] += add[add_index];
 }
 
-__global__ void shortcut_mul_kernel(int size, int minw, int minh, int minc, int sample, int batch, 
-                                int w1, int h1, int c1, dnnType *mul, 
+__global__ void shortcut_mul_kernel(int size, int minw, int minh, int minc, int sample, int batch,
+                                int w1, int h1, int c1, dnnType *mul,
                                 int w2, int h2, int c2, float s1, float s2, dnnType *out)
 {
     int id = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
@@ -40,7 +50,7 @@ __global__ void shortcut_mul_kernel(int size, int minw, int minh, int minc, int 
 }
 
 void shortcutForward(dnnType* srcData, dnnType* dstData, int n1, int c1, int h1, int w1, int s1,
-                                                         int n2, int c2, int h2, int w2, int s2, 
+                                                         int n2, int c2, int h2, int w2, int s2,
                                                          bool mul, cudaStream_t stream)
 {
     assert(n1 == n2);
@@ -60,10 +70,10 @@ void shortcutForward(dnnType* srcData, dnnType* dstData, int n1, int c1, int h1,
         int size = batch * minw * minh * minc;
         int blocks = (size+255)/256;
         int threads = 256;
-        
-        shortcut_kernel<<<blocks, threads, 0, stream>>>(size, minw, minh, minc, stride, sample, batch, 
-            w1, h1, c1, srcData, w2, h2, c2, s1, s2, dstData);  
-    } 
+
+        shortcut_kernel<<<blocks, threads, 0, stream>>>(size, minw, minh, minc, stride, sample, batch,
+            w1, h1, c1, srcData, w2, h2, c2, s1, s2, dstData);
+    }
     else{
         int minw = w1;
         int minh = h1;
@@ -74,7 +84,7 @@ void shortcutForward(dnnType* srcData, dnnType* dstData, int n1, int c1, int h1,
         int blocks = (size+255)/256;
         int threads = 256;
 
-        shortcut_mul_kernel<<<blocks, threads, 0, stream>>>(size, minw, minh, minc, sample, batch, 
-            w1, h1, c1, srcData, w2, h2, c2, s1, s2, dstData);  
+        shortcut_mul_kernel<<<blocks, threads, 0, stream>>>(size, minw, minh, minc, sample, batch,
+            w1, h1, c1, srcData, w2, h2, c2, s1, s2, dstData);
     }
 }

@@ -1,5 +1,6 @@
-#include "kernels.h"
 #include <math.h>
+
+#include "kernels.h"
 
 __global__ void scal_add_kernel(dnnType* dstData, int size, float alpha, float beta, int inc)
 {
@@ -11,6 +12,6 @@ void scalAdd(dnnType* dstData, int size, float alpha, float beta, int inc, cudaS
 {
     int blocks = (size+255)/256;
     int threads = 256;
-    
+
     scal_add_kernel<<<blocks, threads, 0, stream>>>(dstData, size, alpha, beta, inc);
 }

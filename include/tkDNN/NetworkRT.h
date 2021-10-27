@@ -2,28 +2,14 @@
 #define NETWORKRT_H
 
 #include <string.h> // memcpy
+#include <memory>
+
 #include "utils.h"
 #include "Network.h"
 #include "Layer.h"
 #include "NvInfer.h"
-#include <memory>
 
-namespace tk { namespace dnn {
-
-template<typename T> void writeBUF(char*& buffer, const T& val)
-{
-    *reinterpret_cast<T*>(buffer) = val;
-    buffer += sizeof(T);
-}
-
-template<typename T> T readBUF(const char*& buffer)
-{
-    T val = *reinterpret_cast<const T*>(buffer);
-    buffer += sizeof(T);
-    return val;
-}
-
-using namespace nvinfer1;
+// using namespace nvinfer1;
 #include "pluginsRT/ActivationLeakyRT.h"
 #include "pluginsRT/ActivationLogisticRT.h"
 #include "pluginsRT/ActivationReLUCeilingRT.h"
@@ -40,16 +26,7 @@ using namespace nvinfer1;
 #include "pluginsRT/ReshapeRT.h"
 #include "pluginsRT/MaxPoolingFixedSizeRT.h"
 
-class PluginFactory : IPluginFactory
-{
-public:
-    YoloRT *yolos[16];
-    int n_yolos;
-
-	virtual IPlugin* createPlugin(const char* layerName, const void* serialData, size_t serialLength);
-};
-
-
+namespace tk { namespace dnn {
 
 class NetworkRT {
 
@@ -57,11 +34,11 @@ public:
     nvinfer1::DataType dtRT;
     nvinfer1::IBuilder *builderRT;
     nvinfer1::IRuntime *runtimeRT;
-    nvinfer1::INetworkDefinition *networkRT; 
-#if NV_TENSORRT_MAJOR >= 6  
+    nvinfer1::INetworkDefinition *networkRT;
+#if NV_TENSORRT_MAJOR >= 6
     nvinfer1::IBuilderConfig *configRT;
 #endif
-    
+
     nvinfer1::ICudaEngine *engineRT;
     nvinfer1::IExecutionContext *contextRT;
 
@@ -73,8 +50,6 @@ public:
     dataDim_t input_dim, output_dim;
     dnnType *output;
     cudaStream_t stream;
-
-    PluginFactory *pluginFactory;
 
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();
@@ -89,7 +64,7 @@ public:
     int getBuffersN() {
         if(engineRT != nullptr)
             return engineRT->getNbBindings();
-        else 
+        else
             return 0;
     }
 
@@ -97,7 +72,7 @@ public:
         Do inference
     */
     dnnType* infer(dataDim_t &dim, dnnType* data);
-    void enqueue(int batchSize = 1);    
+    void enqueue(int batchSize = 1);
 
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Conv2d *l);

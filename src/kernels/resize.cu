@@ -1,7 +1,17 @@
-#include "kernels.h"
 #include <stdio.h>
 
-__global__ void resize_kernel(  int size,float *x, int i_w, int i_h, int i_c,  
+#include "kernels.h"
+#include "pluginsRT/ResizeLayerRT.h"
+
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection ResizeLayerRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> ResizeLayerRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(ResizeLayerRTCreator);
+}}
+
+__global__ void resize_kernel(  int size,float *x, int i_w, int i_h, int i_c,
                                 int o_w, int o_h, int o_c, int batch, float *out)
 {
     int id = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;

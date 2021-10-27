@@ -1,4 +1,13 @@
 #include "kernels.h"
+#include "pluginsRT/MaxPoolingFixedSizeRT.h"
+
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection MaxPoolFixedSizeRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> MaxPoolFixedSizeRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(MaxPoolFixedSizeRTCreator);
+}}
 
 __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w, int in_c, int stride_x, int stride_y, int size, int pad, float *input, float *output)
 {
@@ -39,14 +48,14 @@ __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w, int in_c
     output[out_index] = max;
 }
 
-void MaxPoolingForward(dnnType* srcData, dnnType* dstData, int n, int c, int h, int w, int stride_x, int stride_y, int size, int padding, cudaStream_t stream) 
+void MaxPoolingForward(dnnType* srcData, dnnType* dstData, int n, int c, int h, int w, int stride_x, int stride_y, int size, int padding, cudaStream_t stream)
 {
 
     int tot_size = n*c*h*w;
 
     int blocks = (tot_size+255)/256;
     int threads = 256;
-    
+
     forward_maxpool_layer_kernel<<<blocks, threads, 0, stream>>>(tot_size, h, w, c, stride_x, stride_y, size, padding, srcData, dstData);
 }
 

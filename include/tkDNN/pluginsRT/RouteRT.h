@@ -1,7 +1,20 @@
-#include<cassert>
-#include "../kernels.h"
+#ifndef ROUTE_RT_H
+#define ROUTE_RT_H
 
-class RouteRT : public IPlugin {
+#include <cassert>
+#include <vector>
+
+#include <NvInferRuntimeCommon.h>
+#include <NvInfer.h>
+
+#include "../kernels.h"
+#include "../buffer_func.h"
+
+#define PLUGIN_NAME "Route"
+#define PLUGIN_VERSION "1"
+namespace tk { namespace dnn {
+
+class RouteRT final : public nvinfer1::IPluginV2 {
 
 	/**
 		THIS IS NOT USED ANYMORE
@@ -13,25 +26,29 @@ public:
 		this->group_id = group_id;
 	}
 
-	~RouteRT(){
+	~RouteRT() = default;
 
-	}
-
-	int getNbOutputs() const override {
+	int getNbOutputs() const noexcept override {
 		return 1;
 	}
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
+	nvinfer1::Dims getOutputDimensions(int index, const nvinfer1::Dims* inputs, int nbInputDims) noexcept override {
 		int out_c = 0;
 		for(int i=0; i<nbInputDims; i++) out_c += inputs[i].d[0];
-		return DimsCHW{out_c/groups, inputs[0].d[1], inputs[0].d[2]};
+		return nvinfer1::Dims3{out_c/groups, inputs[0].d[1], inputs[0].d[2]};
 	}
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
+	void configureWithFormat(nvinfer1::Dims const * inputDims,
+					int32_t nbInputs,
+					nvinfer1::Dims const * outputDims,
+					int32_t nbOutputs,
+					nvinfer1::DataType type,
+					nvinfer1::PluginFormat format,
+					int32_t maxBatchSize) noexcept override {
 		in = nbInputs;
 		c = 0;
 		for(int i=0; i<nbInputs; i++) {
-			c_in[i] = inputDims[i].d[0]; 
+			c_in[i] = inputDims[i].d[0];
 			c += inputDims[i].d[0];
 		}
 		h = inputDims[0].d[1];
@@ -39,20 +56,18 @@ public:
 		c /= groups;
 	}
 
-	int initialize() override {
-
+	int initialize() noexcept override {
 		return 0;
 	}
 
-	virtual void terminate() override {
+	void terminate() noexcept override {
 	}
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
+	size_t getWorkspaceSize(int maxBatchSize) const noexcept override {
 		return 0;
 	}
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-		
+	int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept override {
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
 		for(int b=0; b<batchSize; b++) {
@@ -70,23 +85,53 @@ public:
 	}
 
 
-	virtual size_t getSerializationSize() override {
+	size_t getSerializationSize() const noexcept override {
 		return (6+MAX_INPUTS)*sizeof(int);
 	}
 
-	virtual void serialize(void* buffer) override {
+	void serialize(void* buffer) const noexcept override {
 		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, groups);
-		tk::dnn::writeBUF(buf, group_id);
-		tk::dnn::writeBUF(buf, in);
+		writeBUF(buf, groups);
+		writeBUF(buf, group_id);
+		writeBUF(buf, in);
 		for(int i=0; i<MAX_INPUTS; i++)
-			tk::dnn::writeBUF(buf, c_in[i]);
+			writeBUF(buf, c_in[i]);
 
-		tk::dnn::writeBUF(buf, c);
-		tk::dnn::writeBUF(buf, h);
-		tk::dnn::writeBUF(buf, w);
+		writeBUF(buf, c);
+		writeBUF(buf, h);
+		writeBUF(buf, w);
 		assert(buf == a + getSerializationSize());
 	}
+
+	// Extra IPluginV2 overrides
+	bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const noexcept override {
+			return true;
+	}
+
+	nvinfer1::IPluginV2 * clone() const noexcept override {
+			auto a = new RouteRT(*this);
+			return a;
+	}
+
+	const char* getPluginType() const noexcept override {
+			return PLUGIN_NAME;
+	}
+
+	const char* getPluginVersion() const noexcept override {
+			return PLUGIN_VERSION;
+	}
+
+	void destroy() noexcept override {}
+
+	void setPluginNamespace(const char* pluginNamespace) noexcept override {
+			mNamespace = pluginNamespace;
+	}
+
+	const char* getPluginNamespace() const noexcept override {
+			return mNamespace.c_str();
+	}
+
+	std::string mNamespace;
 
 	static const int MAX_INPUTS = 4;
 	int in;
@@ -94,3 +139,58 @@ public:
 	int c, h, w;
 	int groups, group_id;
 };
+
+class RouteRTCreator final : public nvinfer1::IPluginCreator {
+public:
+    RouteRTCreator() = default;
+
+    const char* getPluginName() const noexcept override {
+        return PLUGIN_NAME;
+    }
+
+    const char* getPluginVersion() const noexcept override {
+        return PLUGIN_VERSION;
+    }
+
+    const nvinfer1::PluginFieldCollection* getFieldNames() noexcept override {
+        return &mFC;
+    }
+
+    nvinfer1::IPluginV2* createPlugin(const char* name, const nvinfer1::PluginFieldCollection* fc) noexcept override {
+        std::cout << "Create plugin" << std::endl;
+        return nullptr;
+    }
+
+    nvinfer1::IPluginV2* deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept override {
+			const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
+			int groupsTemp = readBUF<int>(buf);
+			int group_idTemp = readBUF<int>(buf);
+			RouteRT* r = new RouteRT(groupsTemp, group_idTemp);
+			r->in = readBUF<int>(buf);
+			for(int i=0; i<RouteRT::MAX_INPUTS; i++)
+					r->c_in[i] = readBUF<int>(buf);
+			r->c = readBUF<int>(buf);
+			r->h = readBUF<int>(buf);
+			r->w = readBUF<int>(buf);
+			assert(buf == bufCheck + serialLength);
+			return r;
+		}
+
+    void setPluginNamespace(const char* pluginNamespace) noexcept override {
+			mNamespace = pluginNamespace;
+		}
+
+    const char* getPluginNamespace() const noexcept override {
+			return mNamespace.c_str();
+		}
+
+private:
+    static nvinfer1::PluginFieldCollection mFC;
+    static std::vector<nvinfer1::PluginField> mPluginAttributes;
+    std::string mNamespace;
+};
+}}
+#undef PLUGIN_NAME
+#undef PLUGIN_VERSION
+
+#endif // ROUTE_RT_H

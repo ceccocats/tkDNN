@@ -1,7 +1,19 @@
-#include<cassert>
-#include "../kernels.h"
+#ifndef ACTIVATION_LEAKY_RT_H
+#define ACTIVATION_LEAKY_RT_H
 
-class ActivationLeakyRT : public IPlugin {
+#if NV_TENSORRT_MAJOR < 6
+
+#include <cassert>
+#include <vector>
+
+#include <NvInfer.h>
+
+#include "../kernels.h"
+#include "../buffer_func.h"
+
+namespace tk { namespace dnn {
+
+class ActivationLeakyRT final : public IPlugin {
 
 public:
 	ActivationLeakyRT(float s) {
@@ -31,31 +43,36 @@ public:
 		return 0;
 	}
 
-	virtual void terminate() override {
+	void terminate() override {
 	}
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
+	size_t getWorkspaceSize(int maxBatchSize) const override {
 		return 0;
 	}
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
+	int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
 
-		activationLEAKYForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
+		activationLEAKYForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
 											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, slope, stream);
 		return 0;
 	}
 
 
-	virtual size_t getSerializationSize() override {
+	size_t getSerializationSize() override {
 		return 1*sizeof(int) + 1*sizeof(float);
 	}
 
-	virtual void serialize(void* buffer) override {
+	void serialize(void* buffer) override {
 		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, size);
+		writeBUF(buf, size);
 		assert(buf == a + getSerializationSize());
 	}
 
 	int size;
 	float slope;
 };
+}}
+
+#endif
+
+#endif // ACTIVATION_LEAKY_RT_H

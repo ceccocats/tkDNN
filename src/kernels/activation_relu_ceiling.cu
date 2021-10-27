@@ -1,11 +1,20 @@
 #include "kernels.h"
+#include "pluginsRT/ActivationReLUCeilingRT.h"
+
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection ActivationReLUCeilingCreator::mFC{};
+std::vector<nvinfer1::PluginField> ActivationReLUCeilingCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(ActivationReLUCeilingCreator);
+}}
 
 __global__
 void activation_relu_ceiling(dnnType *input, dnnType *output, int size, const float ceiling) {
 
     int i = blockDim.x*blockIdx.x + threadIdx.x;
 
-    if(i<size) {    
+    if(i<size) {
         if (input[i]>0)
         {
             if (input[i]>ceiling)
@@ -26,7 +35,7 @@ void activationReLUCeilingForward(dnnType* srcData, dnnType* dstData, int size, 
 {
     int blocks = (size+255)/256;
     int threads = 256;
-    
+
     activation_relu_ceiling<<<blocks, threads, 0, stream>>>(srcData, dstData, size, ceiling);
 }
 

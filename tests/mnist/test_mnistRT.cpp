@@ -13,9 +13,9 @@ const char *output_bin   = "mnist/output.bin";
 using namespace nvinfer1;
 
 // Logger for info/warning/errors
-class Logger : public ILogger			
+class Logger : public ILogger
 {
-	void log(Severity severity, const char* msg) override
+	void log(Severity severity, const char* msg) noexcept override
 	{
 		// suppress info-level messages
 		if (severity != Severity::kINFO)
@@ -39,20 +39,20 @@ int main() {
     tk::dnn::Activation l5(&net, CUDNN_ACTIVATION_RELU);
     tk::dnn::Dense      l6(&net, 10, d3_bin);
     tk::dnn::Softmax    l7(&net);
- 
+
     // Load input
     dnnType *data;
     dnnType *input_h;
     readBinaryFile(input_bin, dim.tot(), &input_h, &data);
 
     dim.print(); //print initial dimension
-    
+
     // Inference
     {
         TKDNN_TSTART
         data = net.infer(dim, data);
         TKDNN_TSTOP
-        dim.print();   
+        dim.print();
     }
 
     // Print real test
@@ -61,19 +61,19 @@ int main() {
     dnnType *out_h;
     readBinaryFile(output_bin, dim.tot(), &out_h, &out);
     std::cout<<"Diff: "<<checkResult(dim.tot(), out, data)<<"\n";
- 
+
 
     std::cout<<"\n==== TensorRT ====\n";
 	// create the builder
 	IBuilder* builder = nvinfer1::createInferBuilder(gLogger);
-	INetworkDefinition* network = builder->createNetwork();
+	INetworkDefinition* network = builder->createNetworkV2(0u);
 
     DataType dt = DataType::kFLOAT;
 	//  Create input of shape { 1, 1, 28, 28 } with name referenced by "data"
-	auto input = network->addInput("data", dt, DimsCHW{ 1, 28, 28});
+	auto input = network->addInput("data", dt, Dims3{ 1, 28, 28});
 	assert(input != nullptr);
 
-    tk::dnn::Conv2d *c0 = &l0; 
+    tk::dnn::Conv2d *c0 = &l0;
     Weights w { dt, c0->data_h, c0->inputs*c0->outputs*c0->kernelH*c0->kernelW};
     Weights b { dt, c0->bias_h, c0->outputs};
 	// Add a convolution layer with 20 outputs and a 5x5 filter.
@@ -86,7 +86,7 @@ int main() {
 	assert(pool1 != nullptr);
 	pool1->setStride(DimsHW{2, 2});
 
-    tk::dnn::Conv2d *c1 = &l2; 
+    tk::dnn::Conv2d *c1 = &l2;
     Weights w1 { dt, c1->data_h, c1->inputs*c1->outputs*c1->kernelH*c1->kernelW};
     Weights b1 { dt, c1->bias_h, c1->outputs};
 	// Add a second convolution layer with 50 outputs and a 5x5 filter.
@@ -99,7 +99,7 @@ int main() {
 	assert(pool2 != nullptr);
 	pool2->setStride(DimsHW{2, 2});
 
-    tk::dnn::Dense *d2 = &l4; 
+    tk::dnn::Dense *d2 = &l4;
     Weights w2 { dt, d2->data_h, d2->inputs*d2->outputs};
     Weights b2 { dt, d2->bias_h, d2->outputs};
 	// Add a fully connected layer with 500 outputs.
@@ -110,7 +110,7 @@ int main() {
 	auto relu1 = network->addActivation(*ip1->getOutput(0), ActivationType::kRELU);
 	assert(relu1 != nullptr);
 
-    tk::dnn::Dense *d3 = &l6; 
+    tk::dnn::Dense *d3 = &l6;
     Weights w3 { dt, d3->data_h, d3->inputs*d3->outputs};
     Weights b3 { dt, d3->bias_h, d3->outputs};
 	// Add a second fully connected layer with 20 outputs.
@@ -125,10 +125,21 @@ int main() {
 	network->markOutput(*prob->getOutput(0));
 
 	// Build the engine
-	builder->setMaxBatchSize(1);
+#if NV_TENSORRT_MAJOR >= 6
+  auto config = builder->createBuilderConfig();
+	config->setMaxWorkspaceSize(1 << 20);
+#else
 	builder->setMaxWorkspaceSize(1 << 20);
+#endif
 
-	auto engine = builder->buildCudaEngine(*network);
+	builder->setMaxBatchSize(1);
+
+#if NV_TENSORRT_MAJOR >= 6
+        auto engine = builder->buildEngineWithConfig(*network, *config);
+#else
+        auto engine = builder->buildCudaEngine(*network);
+#endif
+
 	// we don't need the network any more
 	network->destroy();
 
@@ -142,10 +153,10 @@ int main() {
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
-	int inputIndex = engine->getBindingIndex("data"); 
-    int outputIndex = engine->getBindingIndex("out");
+	int inputIndex = engine->getBindingIndex("data");
+  int outputIndex = engine->getBindingIndex("out");
 
-    float output[10];
+  float output[10];
 	// create GPU buffers and a stream
 	checkCuda(cudaMalloc(&buffers[inputIndex], 28*28*sizeof(float)));
 	checkCuda(cudaMalloc(&buffers[outputIndex], 10*sizeof(float)));

@@ -8,14 +8,14 @@
 BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, const std::string& fileimglist, const std::string& filelabellist) {
     mBatchSize = batchSize;
     mMaxBatches = maxBatches;
-    mDims = nvinfer1::DimsNCHW{ dim.n, dim.c, dim.h, dim.w };
+    mDims = nvinfer1::Dims4{ dim.n, dim.c, dim.h, dim.w };
     mHeight = dim.h;
     mWidth = dim.w;
-    mImageSize = mDims.c()*mDims.h()*mDims.w();
+    mImageSize = dim.c*dim.h*dim.w;
     mBatch.resize(mBatchSize*mImageSize, 0);
     mLabels.resize(mBatchSize, 0);
-    mFileBatch.resize(mDims.n()*mImageSize, 0);
-    mFileLabels.resize(mDims.n(), 0);
+    mFileBatch.resize(dim.n*mImageSize, 0);
+    mFileLabels.resize(dim.n, 0);
     mFileImgList = fileimglist;
     readInListFile(fileimglist, mListImg);
     mFileLabelList = filelabellist;
@@ -27,7 +27,7 @@ BatchStream::BatchStream(tk::dnn::dataDim_t dim, int batchSize, int maxBatches, 
 void BatchStream::reset(int firstBatch) {
     mBatchCount = 0;
     mFileCount = 0;
-    mFileBatchPos = mDims.n();
+    mFileBatchPos = mDims.d[0];
     skip(firstBatch);
 }
 
@@ -37,11 +37,11 @@ bool BatchStream::next() {
         return false;
 
     for (int csize = 1, batchPos = 0; batchPos < mBatchSize; batchPos += csize, mFileBatchPos += csize) {
-        assert(mFileBatchPos > 0 && mFileBatchPos <= mDims.n());
-        if (mFileBatchPos == mDims.n() && !update())
+        assert(mFileBatchPos > 0 && mFileBatchPos <= mDims.d[0]);
+        if (mFileBatchPos == mDims.d[0] && !update())
             return false;
 
-        csize = std::min(mBatchSize - batchPos, mDims.n() - mFileBatchPos);
+        csize = std::min(mBatchSize - batchPos, mDims.d[0] - mFileBatchPos);
         std::copy_n(getFileBatch() + mFileBatchPos * mImageSize, csize * mImageSize, getBatch() + batchPos * mImageSize);
         std::copy_n(getFileLabels() + mFileBatchPos, csize, getLabels() + batchPos);
     }
@@ -50,8 +50,8 @@ bool BatchStream::next() {
 }
 
 void BatchStream::skip(int skipCount) {
-    if (mBatchSize >= mDims.n() && mBatchSize%mDims.n() == 0 && mFileBatchPos == mDims.n()) {
-        mFileCount += skipCount * mBatchSize / mDims.n();
+    if (mBatchSize >= mDims.d[0] && mBatchSize%mDims.d[0] == 0 && mFileBatchPos == mDims.d[0]) {
+        mFileCount += skipCount * mBatchSize / mDims.d[0];
         return;
     }
 
@@ -67,7 +67,7 @@ void BatchStream::readInListFile(const std::string& dataFilePath, std::vector<st
     FILE* f = fopen(dataFilePath.c_str(), "r");
     if (!f)
         FatalError("failed to open " + dataFilePath);
-    
+
     char str[512];
     while (fgets(str, 512, f) != NULL) {
         for (int i = 0; str[i] != '\0'; ++i) {
@@ -132,7 +132,7 @@ void BatchStream::readCVimage(std::string inputFileName, std::vector<float>& res
 
 void BatchStream::readLabels(std::string inputFileName, std::vector<float>& ris) {
     std::ifstream is(inputFileName.c_str());
-    
+
     std::string line;
     while (std::getline(is, line))
     {
@@ -153,13 +153,13 @@ bool BatchStream::update() {
     readCVimage(imgFileName, mFileBatch);
     // std::transform(
     //     singleImg_rawData.begin(), singleImg_rawData.end(), mFileBatch.begin(), [](uint8_t val) { return static_cast<float>(val); });
-    
+
     //read label
     mFileLabels.clear();
     readLabels(labelFileName, mFileLabels);
     // std::transform(
     //     singleLabels_rawData.begin(), singleLabels_rawData.end(), mFileLabels.begin(), [](uint8_t val) { return static_cast<float>(val); });
-    
+
     mFileBatchPos = 0;
     return true;
 }

@@ -1,15 +1,26 @@
-#include<cassert>
+#ifndef YOLO_RT_H
+#define YOLO_RT_H
+
+#include <cassert>
+#include <vector>
+
+#include <NvInferRuntimeCommon.h>
+#include <NvInfer.h>
+
+#include "../yoloContainer.h"
 #include "../kernels.h"
+#include "../buffer_func.h"
+#include "../Layer.h"
 
 #define YOLORT_CLASSNAME_W 256
 
-class YoloRT : public IPlugin {
+#define PLUGIN_NAME "Yolo"
+#define PLUGIN_VERSION "1"
+namespace tk { namespace dnn {
 
-
-
+class YoloRT final : public nvinfer1::IPluginV2 {
 public:
-	YoloRT(int classes, int num, tk::dnn::Yolo *yolo = nullptr, int n_masks=3, float scale_xy=1, float nms_thresh=0.45, int nms_kind=0, int new_coords=0) {
-
+	YoloRT(int classes, int num, Yolo *yolo = nullptr, int n_masks=3, float scale_xy=1, float nms_thresh=0.45, int nms_kind=0, int new_coords=0) {
 		this->classes = classes;
 		this->num = num;
 		this->n_masks = n_masks;
@@ -27,38 +38,40 @@ public:
         }
 	}
 
-	~YoloRT(){
+	~YoloRT() = default;
 
-	}
-
-	int getNbOutputs() const override {
+	int getNbOutputs() const noexcept override {
 		return 1;
 	}
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
+	nvinfer1::Dims getOutputDimensions(int index, const nvinfer1::Dims* inputs, int nbInputDims) noexcept override {
 		return inputs[0];
 	}
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
+	void configureWithFormat(nvinfer1::Dims const * inputDims,
+					int32_t nbInputs,
+					nvinfer1::Dims const * outputDims,
+					int32_t nbOutputs,
+					nvinfer1::DataType type,
+					nvinfer1::PluginFormat format,
+					int32_t maxBatchSize) noexcept override {
 		c = inputDims[0].d[0];
 		h = inputDims[0].d[1];
 		w = inputDims[0].d[2];
 	}
 
-	int initialize() override {
-
+	int initialize() noexcept override {
 		return 0;
 	}
 
-	virtual void terminate() override {
+	void terminate() noexcept override {
 	}
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
+	size_t getWorkspaceSize(int maxBatchSize) const noexcept override {
 		return 0;
 	}
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-
+	int enqueue(int batchSize, const void*const * inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept override {
 		dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
 		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
 
@@ -86,30 +99,29 @@ public:
 		return 0;
 	}
 
-
-	virtual size_t getSerializationSize() override {
+	size_t getSerializationSize() const noexcept override {
 		return 8*sizeof(int) + 2*sizeof(float)+ n_masks*sizeof(dnnType) + num*n_masks*2*sizeof(dnnType) + YOLORT_CLASSNAME_W*classes*sizeof(char);
 	}
 
-	virtual void serialize(void* buffer) override {
+	void serialize(void* buffer) const noexcept override {
 		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, classes); 	//std::cout << "Classes :" << classes << std::endl;
-		tk::dnn::writeBUF(buf, num); 		//std::cout << "Num : " << num << std::endl;
-		tk::dnn::writeBUF(buf, n_masks); 	//std::cout << "N_Masks" << n_masks << std::endl;
-		tk::dnn::writeBUF(buf, scaleXY); 	//std::cout << "ScaleXY :" << scaleXY << std::endl;
-		tk::dnn::writeBUF(buf, nms_thresh); //std::cout << "nms_thresh :" << nms_thresh << std::endl;
-		tk::dnn::writeBUF(buf, nms_kind); 	//std::cout << "nms_kind : " << nms_kind << std::endl;
-		tk::dnn::writeBUF(buf, new_coords); //std::cout << "new_coords : " << new_coords << std::endl;
-		tk::dnn::writeBUF(buf, c); 			//std::cout << "C : " << c << std::endl;
-		tk::dnn::writeBUF(buf, h); 			//std::cout << "H : " << h << std::endl;
-		tk::dnn::writeBUF(buf, w); 			//std::cout << "C : " << c << std::endl;
+		writeBUF(buf, classes); 	//std::cout << "Classes :" << classes << std::endl;
+		writeBUF(buf, num); 		//std::cout << "Num : " << num << std::endl;
+		writeBUF(buf, n_masks); 	//std::cout << "N_Masks" << n_masks << std::endl;
+		writeBUF(buf, scaleXY); 	//std::cout << "ScaleXY :" << scaleXY << std::endl;
+		writeBUF(buf, nms_thresh); //std::cout << "nms_thresh :" << nms_thresh << std::endl;
+		writeBUF(buf, nms_kind); 	//std::cout << "nms_kind : " << nms_kind << std::endl;
+		writeBUF(buf, new_coords); //std::cout << "new_coords : " << new_coords << std::endl;
+		writeBUF(buf, c); 			//std::cout << "C : " << c << std::endl;
+		writeBUF(buf, h); 			//std::cout << "H : " << h << std::endl;
+		writeBUF(buf, w); 			//std::cout << "C : " << c << std::endl;
 		for (int i = 0; i < n_masks; i++)
 		{
-			tk::dnn::writeBUF(buf, mask[i]); //std::cout << "mask[i] : " << mask[i] << std::endl;
+			writeBUF(buf, mask[i]); //std::cout << "mask[i] : " << mask[i] << std::endl;
 		}
 		for (int i = 0; i < n_masks * 2 * num; i++)
 		{
-			tk::dnn::writeBUF(buf, bias[i]); //std::cout << "bias[i] : " << bias[i] << std::endl;
+			writeBUF(buf, bias[i]); //std::cout << "bias[i] : " << bias[i] << std::endl;
 		}
 
 		// save classes names
@@ -117,11 +129,41 @@ public:
 			char tmp[YOLORT_CLASSNAME_W];
 			strcpy(tmp, classesNames[i].c_str());
 			for(int j=0; j<YOLORT_CLASSNAME_W; j++) {
-				tk::dnn::writeBUF(buf, tmp[j]);
+				writeBUF(buf, tmp[j]);
 			}
 		}
 		assert(buf == a + getSerializationSize());
 	}
+
+	// Extra IPluginV2 overrides
+	bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const noexcept override {
+			return true;
+	}
+
+	nvinfer1::IPluginV2 * clone() const noexcept override {
+			auto a = new YoloRT(*this);
+			return a;
+	}
+
+	const char* getPluginType() const noexcept override {
+			return PLUGIN_NAME;
+	}
+
+	const char* getPluginVersion() const noexcept override {
+			return PLUGIN_VERSION;
+	}
+
+	void destroy() noexcept override {}
+
+	void setPluginNamespace(const char* pluginNamespace) noexcept override {
+			mNamespace = pluginNamespace;
+	}
+
+	const char* getPluginNamespace() const noexcept override {
+			return mNamespace.c_str();
+	}
+
+	std::string mNamespace;
 
 	int c, h, w;
     int classes, num, n_masks;
@@ -139,5 +181,46 @@ public:
 		int loc = location % (w*h);
 		return batch*c*h*w + n*w*h*(4+classes+1) + entry*w*h + loc;
 	}
-
 };
+
+class YoloRTCreator final : public nvinfer1::IPluginCreator {
+public:
+    YoloRTCreator() = default;
+
+    const char* getPluginName() const noexcept override {
+        return PLUGIN_NAME;
+    }
+
+    const char* getPluginVersion() const noexcept override {
+        return PLUGIN_VERSION;
+    }
+
+    const nvinfer1::PluginFieldCollection* getFieldNames() noexcept override {
+        return &mFC;
+    }
+
+    nvinfer1::IPluginV2* createPlugin(const char* name, const nvinfer1::PluginFieldCollection* fc) noexcept override {
+        std::cout << "Create plugin" << std::endl;
+        return nullptr;
+    }
+
+    nvinfer1::IPluginV2* deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept override;
+
+    void setPluginNamespace(const char* pluginNamespace) noexcept override {
+			mNamespace = pluginNamespace;
+		}
+
+    const char* getPluginNamespace() const noexcept override {
+			return mNamespace.c_str();
+		}
+
+private:
+    static nvinfer1::PluginFieldCollection mFC;
+    static std::vector<nvinfer1::PluginField> mPluginAttributes;
+    std::string mNamespace;
+};
+}}
+#undef PLUGIN_NAME
+#undef PLUGIN_VERSION
+
+#endif // YOLO_RT_H

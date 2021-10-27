@@ -1,6 +1,14 @@
-#include "kernels.h"
 #include <math.h>
+#include "kernels.h"
+#include "pluginsRT/ActivationSigmoidRT.h"
 
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection ActivationSigmoidRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> ActivationSigmoidRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(ActivationSigmoidRTCreator);
+}}
 
 __global__
 void activation_sigmoid(dnnType *input, dnnType *output, int size) {
@@ -18,6 +26,6 @@ void activationSIGMOIDForward(dnnType* srcData, dnnType* dstData, int size, cuda
 {
     int blocks = (size+255)/256;
     int threads = 256;
-    
+
     activation_sigmoid<<<blocks, threads, 0, stream>>>(srcData, dstData, size);
 }

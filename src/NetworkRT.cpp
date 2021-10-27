@@ -15,7 +15,7 @@ using namespace nvinfer1;
 
 // Logger for info/warning/errors
 class Logger : public ILogger {
-    void log(Severity severity, const char* msg) override {
+    void log(Severity severity, const char* msg) noexcept override {
 #ifdef DEBUG
         std::cout <<"TENSORRT LOG: "<< msg << std::endl;
 #endif
@@ -24,28 +24,28 @@ class Logger : public ILogger {
 
 namespace tk { namespace dnn {
 
-std::map<Layer*, nvinfer1::ITensor*>tensors; 
+std::map<Layer*, nvinfer1::ITensor*>tensors;
 
 NetworkRT::NetworkRT(Network *net, const char *name) {
 
-    float rt_ver = float(NV_TENSORRT_MAJOR) + 
-                   float(NV_TENSORRT_MINOR)/10 + 
+    float rt_ver = float(NV_TENSORRT_MAJOR) +
+                   float(NV_TENSORRT_MINOR)/10 +
                    float(NV_TENSORRT_PATCH)/100;
     std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
-  
+
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
 #if NV_TENSORRT_MAJOR >= 5
     std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
 #endif
-    networkRT = builderRT->createNetwork();
-#if NV_TENSORRT_MAJOR >= 6                
+    networkRT = builderRT->createNetworkV2(0u);
+#if NV_TENSORRT_MAJOR >= 6
         configRT = builderRT->createBuilderConfig();
 #endif
-    
+
     if(!fileExist(name)) {
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
         // Calibrator life time needs to last until after the engine is built.
         std::unique_ptr<IInt8EntropyCalibrator> calibrator;
 
@@ -53,22 +53,25 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         configRT->setMinTimingIterations(1);
         configRT->setMaxWorkspaceSize(1 << 30);
         configRT->setFlag(BuilderFlag::kDEBUG);
+#else
+        builderRT->setMaxWorkspaceSize(1 << 30);
 #endif
         //input and dataType
         dataDim_t dim = net->layers[0]->input_dim;
         dtRT = DataType::kFLOAT;
 
         builderRT->setMaxBatchSize(net->maxBatchSize);
-        builderRT->setMaxWorkspaceSize(1 << 30);
 
         if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
+#if NV_TENSORRT_MAJOR < 6
             builderRT->setHalf2Mode(true);
-#if NV_TENSORRT_MAJOR >= 6                
+#endif
+#if NV_TENSORRT_MAJOR >= 6
             configRT->setFlag(BuilderFlag::kFP16);
 #endif
         }
-#if NV_TENSORRT_MAJOR >= 5
+#if NV_TENSORRT_MAJOR >= 5 && NV_TENSORRT_MAJOR < 8
         if(net->dla && builderRT->getNbDLACores() > 0) {
             dtRT = DataType::kHALF;
             builderRT->setFp16Mode(true);
@@ -77,14 +80,23 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             builderRT->setDLACore(0);
         }
 #endif
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 8
+        if(net->dla && builderRT->getNbDLACores() > 0) {
+            dtRT = DataType::kHALF;
+            configRT->setFlag(BuilderFlag::kFP16);
+            configRT->setFlag(BuilderFlag::kGPU_FALLBACK);
+            configRT->setDefaultDeviceType(DeviceType::kDLA);
+            configRT->setDLACore(0);
+        }
+#endif
+#if NV_TENSORRT_MAJOR >= 6
         if(net->int8 && builderRT->platformHasFastInt8()){
             // dtRT = DataType::kINT8;
             // builderRT->setInt8Mode(true);
             configRT->setFlag(BuilderFlag::kINT8);
-            BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951) 
+            BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951)
                                             net->fileImgList, net->fileLabelList);
-            
+
             /* The calibTableFilePath contains the path+filename of the calibration table.
              * Each calibration table can be found in the corresponding network folder (../Test/*).
              * Each network is located in a folder with the same name as the network.
@@ -95,33 +107,33 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             if(!fileExist((const char *)calib_table_path.c_str()))
                 calib_table_name = "./" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
 
-            calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
-                                            calib_table_name, 
+            calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1,
+                                            calib_table_name,
                                             "data"));
             configRT->setInt8Calibrator(calibrator.get());
         }
 #endif
-        
+
         // add input layer
-        ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
-                        DimsCHW{ dim.c, dim.h, dim.w});
+        ITensor *input = networkRT->addInput("data", DataType::kFLOAT,
+                        Dims3{ dim.c, dim.h, dim.w});
         checkNULL(input);
 
         //add other layers
         for(int i=0; i<net->num_layers; i++) {
             Layer *l = net->layers[i];
             ILayer *Ilay = convert_layer(input, l);
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
             if(net->int8 && builderRT->platformHasFastInt8())
             {
                 Ilay->setPrecision(DataType::kINT8);
             }
 #endif
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
-            
+
             input = Ilay->getOutput(0);
             input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
-            
+
             if(l->final)
                 networkRT->markOutput(*input);
             tensors[l] = input;
@@ -136,9 +148,9 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
         printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
-#else 
+#else
         engineRT = builderRT->buildCudaEngine(*networkRT);
         //engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
 #endif
@@ -162,7 +174,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
-	buf_input_idx = engineRT->getBindingIndex("data"); 
+	buf_input_idx = engineRT->getBindingIndex("data");
     buf_output_idx = engineRT->getBindingIndex("out");
     std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
@@ -180,7 +192,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     output_dim.h = oDim.d[1];
     output_dim.w = oDim.d[2];
     output_dim.print();
-	
+
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
@@ -261,10 +273,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
     //std::cout<<"convert Dense\n";
     void *data_b, *bias_b;
     if(dtRT == DataType::kHALF) {
-        data_b     = l->data16_h;    
+        data_b     = l->data16_h;
         bias_b     = l->bias16_h;
     } else {
-        data_b     = l->data_h;    
+        data_b     = l->data_h;
         bias_b     = l->bias_h;
     }
 
@@ -284,7 +296,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 
     void *data_b, *bias_b, *bias2_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {
-        data_b     = l->data16_h;    
+        data_b     = l->data16_h;
         bias_b     = l->bias16_h;
         bias2_b    = l->bias216_h;
         power_b    = l->power16_h;
@@ -292,7 +304,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         variance_b = l->variance16_h;
         scales_b   = l->scales16_h;
     } else {
-        data_b     = l->data_h;    
+        data_b     = l->data_h;
         bias_b     = l->bias_h;
         bias2_b    = l->bias2_h;
         power_b    = l->power_h;
@@ -308,14 +320,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         b = { dtRT, bias_b, l->outputs};
     else{
         if (l->additional_bias)
-            b = { dtRT, bias2_b, l->outputs}; 
+            b = { dtRT, bias2_b, l->outputs};
         else
             b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
     }
 
     ILayer *lRT = nullptr;
     if(!l->deConv) {
-        IConvolutionLayer *lRTconv = networkRT->addConvolution(*input, 
+        IConvolutionLayer *lRTconv = networkRT->addConvolution(*input,
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
@@ -323,14 +335,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
     } else {
-        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input, 
+        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input,
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
         lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
-        
+
         Dims d = lRTconv->getOutput(0)->getDimensions();
         //std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
     }
@@ -341,14 +353,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         Weights shift{dtRT, mean_b, l->outputs};
         Weights scale{dtRT, variance_b, l->outputs};
         // std::cout<<lRT->getNbOutputs()<<std::endl;
-        IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
+        IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
                     shift, scale, power);
-        
+
         checkNULL(lRT2);
 
         Weights shift2{dtRT, bias_b, l->outputs};
         Weights scale2{dtRT, scales_b, l->outputs};
-        IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
+        IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL,
                     shift2, scale2, power);
         checkNULL(lRT3);
 
@@ -368,8 +380,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE)
     {
-        IPlugin *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);        
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        auto *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -381,7 +393,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
         lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT->setStride(DimsHW{l->strideH, l->strideW});
         return lRT;
-    }  
+    }
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
@@ -389,14 +401,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
 
     if(l->act_mode == ACTIVATION_LEAKY) {
         //std::cout<<"New plugin LEAKY\n";
-        
-#if NV_TENSORRT_MAJOR < 6                
+
+#if NV_TENSORRT_MAJOR < 6
         // plugin version
-        IPlugin *plugin = new ActivationLeakyRT(l->slope);
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        auto *plugin = new ActivationLeakyRT(l->slope);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-#else 
+#else
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
         lRT->setAlpha(l->slope);
         checkNULL(lRT);
@@ -413,20 +425,20 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         return lRT;
     }
     else if(l->act_mode == CUDNN_ACTIVATION_CLIPPED_RELU) {
-        IPlugin *plugin = new ActivationReLUCeiling(l->ceiling);
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        auto *plugin = new ActivationReLUCeiling(l->ceiling);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-    } 
+    }
     else if(l->act_mode == ACTIVATION_MISH) {
-        IPlugin *plugin = new ActivationMishRT();
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        auto *plugin = new ActivationMishRT();
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
     else if(l->act_mode == ACTIVATION_LOGISTIC) {
-        IPlugin *plugin = new ActivationLogisticRT();
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+        auto *plugin = new ActivationLogisticRT();
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -447,7 +459,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     // std::cout<<"convert route\n";
-    
+
 
 
     ITensor **tens = new ITensor*[l->layers_n];
@@ -460,8 +472,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     }
 
     if(l->groups > 1){
-        IPlugin *plugin = new RouteRT(l->groups, l->group_id);
-        IPluginLayer *lRT = networkRT->addPlugin(tens, l->layers_n, *plugin);
+        auto *plugin = new RouteRT(l->groups, l->group_id);
+        auto *lRT = networkRT->addPluginV2(tens, l->layers_n, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -472,8 +484,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
 
-    IPlugin *plugin = new FlattenConcatRT();
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new FlattenConcatRT();
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -481,8 +493,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Reshape *l) {
     // std::cout<<"convert Reshape\n";
 
-    IPlugin *plugin = new ReshapeRT(l->output_dim);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new ReshapeRT(l->output_dim);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -494,7 +506,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Resize *l) {
     checkNULL(lRT);
     Dims d{};
     lRT->setResizeMode(ResizeMode(l->mode));
-    lRT->setOutputDimensions(DimsCHW{l->output_dim.c, l->output_dim.h, l->output_dim.w});
+    lRT->setOutputDimensions(Dims3{l->output_dim.c, l->output_dim.h, l->output_dim.w});
     return lRT;
 }
 
@@ -502,8 +514,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
     //std::cout<<"New plugin REORG\n";
-    IPlugin *plugin = new ReorgRT(l->stride);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new ReorgRT(l->stride);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -512,8 +524,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Region *l) {
     //std::cout<<"convert Region\n";
 
     //std::cout<<"New plugin REGION\n";
-    IPlugin *plugin = new RegionRT(l->classes, l->coords, l->num);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new RegionRT(l->classes, l->coords, l->num);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -522,10 +534,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"convert Shortcut\n";
 
     //std::cout<<"New plugin Shortcut\n";
-    
+
     ITensor *back_tens = tensors[l->backLayer];
 
-    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul) 
+    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul)
     {
         IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
         checkNULL(lRT);
@@ -534,11 +546,11 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     else
     {
         // plugin version
-        IPlugin *plugin = new ShortcutRT(l->backLayer->output_dim, l->mul);
+        auto *plugin = new ShortcutRT(l->backLayer->output_dim, l->mul);
         ITensor **inputs = new ITensor*[2];
         inputs[0] = input;
-        inputs[1] = back_tens; 
-        IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
+        inputs[1] = back_tens;
+        auto *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -548,8 +560,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     //std::cout<<"convert Yolo\n";
 
     //std::cout<<"New plugin YOLO\n";
-    IPlugin *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY, l->nms_thresh, l->nsm_kind, l->new_coords);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY, l->nms_thresh, l->nsm_kind, l->new_coords);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -558,8 +570,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
     //std::cout<<"convert Upsample\n";
 
     //std::cout<<"New plugin UPSAMPLE\n";
-    IPlugin *plugin = new UpsampleRT(l->stride);
-    IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    auto *plugin = new UpsampleRT(l->stride);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -574,10 +586,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     inputs[1] = preconv->getOutput(0);
 
     //std::cout<<"New plugin DEFORMABLE\n";
-    IPlugin *plugin = new DeformableConvRT(l->chunk_dim, l->kernelH, l->kernelW, l->strideH, l->strideW, l->paddingH, l->paddingW, 
-                                            l->deformableGroup, l->input_dim.n, l->input_dim.c, l->input_dim.h, l->input_dim.w, 
+    auto *plugin = new DeformableConvRT(l->chunk_dim, l->kernelH, l->kernelW, l->strideH, l->strideW, l->paddingH, l->paddingW,
+                                            l->deformableGroup, l->input_dim.n, l->input_dim.c, l->input_dim.h, l->input_dim.w,
                                             l->output_dim.n, l->output_dim.c, l->output_dim.h, l->output_dim.w, l);
-    IPluginLayer *lRT = networkRT->addPlugin(inputs, 2, *plugin);
+    auto *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
     checkNULL(lRT);
     lRT->setName( ("Deformable" + std::to_string(l->id)).c_str() );
     delete[](inputs);
@@ -601,14 +613,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     Weights shift{dtRT, mean_b, l->outputs};
     Weights scale{dtRT, variance_b, l->outputs};
     //std::cout<<lRT->getNbOutputs()<<std::endl;
-    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
+    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
                 shift, scale, power);
-    
+
     checkNULL(lRT2);
 
     Weights shift2{dtRT, bias_b, l->outputs};
     Weights scale2{dtRT, scales_b, l->outputs};
-    IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
+    IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL,
                 shift2, scale2, power);
     checkNULL(lRT3);
 
@@ -646,53 +658,52 @@ bool NetworkRT::deserialize(const char *filename) {
         file.close();
     }
 
-    pluginFactory = new PluginFactory();
     runtimeRT = createInferRuntime(loggerRT);
-    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size, (IPluginFactory *) pluginFactory);
+    engineRT = runtimeRT->deserializeCudaEngine(gieModelStream, size);
     //if (gieModelStream) delete [] gieModelStream;
 
     return true;
 }
 
+// auto* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
+//     const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
 
+//     std::string name(layerName);
+//     //std::cout<<name<<std::endl;
 
-IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
-    const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
-
-    std::string name(layerName);
-    //std::cout<<name<<std::endl;
-
-    if(name.find("ActivationLeaky") == 0) {
-        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationMish") == 0) {
+// #if NV_TENSORRT_MAJOR < 6
+//     if(name.find("ActivationLeaky") == 0) {
+//         ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
+//         a->size = readBUF<int>(buf);
+//         assert(buf == bufCheck + serialLength);
+//         return a;
+//     }
+// #endif
+    /*if(name.find("ActivationMish") == 0) {
         ActivationMishRT *a = new ActivationMishRT();
         a->size = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return a;
-    }
-    if(name.find("ActivationLogistic") == 0) {
+    }*/
+    /*if(name.find("ActivationLogistic") == 0) {
         ActivationLogisticRT *a = new ActivationLogisticRT();
         a->size = readBUF<int>(buf);
         return a;
-    }
-    if(name.find("ActivationLogistic") == 0) {
+    }*/
+    /*if(name.find("ActivationLogistic") == 0) {
         ActivationLogisticRT *a = new ActivationLogisticRT();
         a->size = readBUF<int>(buf);
         return a;
-    }
-    if(name.find("ActivationCReLU") == 0) {
+    }*/
+    /*if(name.find("ActivationCReLU") == 0) {
         float activationReluTemp = readBUF<float>(buf);
         ActivationReLUCeiling* a = new ActivationReLUCeiling(activationReluTemp);
         a->size = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return a;
-    }
+    }*/
 
-    if(name.find("Region") == 0) {
+    /*if(name.find("Region") == 0) {
         int classesTemp = readBUF<int>(buf);
         int coordsTemp = readBUF<int>(buf);
         int numTemp = readBUF<int>(buf);
@@ -703,9 +714,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Reorg") == 0) {
+    /*if(name.find("Reorg") == 0) {
         int strideTemp = readBUF<int>(buf);
         ReorgRT *r = new ReorgRT(strideTemp);
         r->c = readBUF<int>(buf);
@@ -713,9 +724,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Shortcut") == 0) {
+    /*if(name.find("Shortcut") == 0) {
         tk::dnn::dataDim_t bdim;
         bdim.c = readBUF<int>(buf);
         bdim.h = readBUF<int>(buf);
@@ -728,9 +739,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         return r;
         assert(buf == bufCheck + serialLength);
-    } 
+    }*/
 
-    if(name.find("Pooling") == 0) {
+    /*if(name.find("Pooling") == 0) {
         int cTemp = readBUF<int>(buf);
         int hTemp = readBUF<int>(buf);
         int wTemp = readBUF<int>(buf);
@@ -743,9 +754,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         MaxPoolFixedSizeRT* r = new MaxPoolFixedSizeRT(cTemp, hTemp, wTemp, nTemp, strideHTemp, strideWTemp, winSizeTemp, paddingTemp);
         assert(buf == bufCheck + serialLength);
         return r;
-    }
+    }*/
 
-    if(name.find("Resize") == 0) {
+    /*if(name.find("Resize") == 0) {
         int o_cTemp = readBUF<int>(buf);
         int o_hTemp = readBUF<int>(buf);
         int o_wTemp = readBUF<int>(buf);
@@ -756,10 +767,10 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->i_w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Flatten") == 0) {
-        FlattenConcatRT *r = new FlattenConcatRT(); 
+    /*if(name.find("Flatten") == 0) {
+        FlattenConcatRT *r = new FlattenConcatRT();
         r->c = readBUF<int>(buf);
         r->h = readBUF<int>(buf);
         r->w = readBUF<int>(buf);
@@ -767,22 +778,22 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->cols = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Reshape") == 0) {
+    /*if(name.find("Reshape") == 0) {
 
         dataDim_t new_dim;
         new_dim.n = readBUF<int>(buf);
         new_dim.c = readBUF<int>(buf);
         new_dim.h = readBUF<int>(buf);
         new_dim.w = readBUF<int>(buf);
-        ReshapeRT *r = new ReshapeRT(new_dim); 
+        ReshapeRT *r = new ReshapeRT(new_dim);
         assert(buf == bufCheck + serialLength);
-        
-        return r;
-    } 
 
-    if(name.find("Yolo") == 0) {
+        return r;
+    }*/
+
+    /*if(name.find("Yolo") == 0) {
 
         int classes_temp = readBUF<int>(buf);
         int num_temp = readBUF<int>(buf);
@@ -792,7 +803,7 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         int nms_kind_temp = readBUF<int>(buf);
         int new_coords_temp = readBUF<int>(buf);
 
-       YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);  
+       YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);
 
 
 
@@ -816,8 +827,8 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
 
         yolos[n_yolos++] = r;
         return r;
-    } 
-    if(name.find("Upsample") == 0) {
+    }*/
+    /*if(name.find("Upsample") == 0) {
         int strideTemp = readBUF<int>(buf);
         UpsampleRT* r = new UpsampleRT(strideTemp);
         r->c = readBUF<int>(buf);
@@ -825,9 +836,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Route") == 0) {
+    /*if(name.find("Route") == 0) {
         int groupsTemp = readBUF<int>(buf);
         int group_idTemp = readBUF<int>(buf);
         RouteRT* r = new RouteRT(groupsTemp, group_idTemp);
@@ -839,9 +850,9 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         r->w = readBUF<int>(buf);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    if(name.find("Deformable") == 0) {
+    /*if(name.find("Deformable") == 0) {
         int chuck_dimTemp = readBUF<int>(buf);
         int khTemp = readBUF<int>(buf);
         int kwTemp = readBUF<int>(buf);
@@ -892,10 +903,10 @@ IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialDa
         free(aus);
         assert(buf == bufCheck + serialLength);
         return r;
-    } 
+    }*/
 
-    FatalError("Cant deserialize Plugin");
-    return NULL;
-}
+//     FatalError("Cant deserialize Plugin");
+//     return NULL;
+// }
 
 }}

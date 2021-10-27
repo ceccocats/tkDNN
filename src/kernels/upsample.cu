@@ -1,4 +1,13 @@
 #include "kernels.h"
+#include "pluginsRT/UpsampleRT.h"
+
+// Static class fields initialization
+namespace tk { namespace dnn {
+nvinfer1::PluginFieldCollection UpsampleRTCreator::mFC{};
+std::vector<nvinfer1::PluginField> UpsampleRTCreator::mPluginAttributes;
+
+REGISTER_TENSORRT_PLUGIN(UpsampleRTCreator);
+}}
 
 __global__ void upsample_kernel(size_t N, dnnType *x, int w, int h, int c, int batch, int stride, int forward, float scale, dnnType *out)
 {
@@ -24,8 +33,8 @@ __global__ void upsample_kernel(size_t N, dnnType *x, int w, int h, int c, int b
     else atomicAdd(x+in_index, scale * out[out_index]);
 }
 
-void upsampleForward(dnnType* srcData, dnnType* dstData, 
-                     int n, int c, int h, int w, int s, int forward, float scale,                                   
+void upsampleForward(dnnType* srcData, dnnType* dstData,
+                     int n, int c, int h, int w, int s, int forward, float scale,
                      cudaStream_t stream) {
 
     int size = w*h*c*n*s*s;
