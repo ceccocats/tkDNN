@@ -40,8 +40,6 @@ Dims MaxPoolFixedSizeRT::getOutputDimensions(int index, const Dims *inputs, int 
     return Dims3{this->c, this->h, this->w};
 }
 
-void MaxPoolFixedSizeRT::configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs,DataType type, PluginFormat format, int maxBatchSize) NOEXCEPT {}
-
 int MaxPoolFixedSizeRT::initialize() NOEXCEPT {
     return 0;
 }
@@ -62,7 +60,7 @@ int MaxPoolFixedSizeRT::enqueue(int batchSize, const void *const *inputs, void *
     MaxPoolingForward(srcData, dstData, batchSize, this->c, this->h, this->w, this->stride_H, this->stride_W, this->winSize, this->padding, stream);
     return 0;
 }
-#elif NV_TENSORRT_MAJOR == 7
+#elif NV_TENSORRT_MAJOR <= 7
 int32_t MaxPoolFixedSizeRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
                                     cudaStream_t stream) {
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
@@ -115,10 +113,41 @@ const char *MaxPoolFixedSizeRT::getPluginVersion() const NOEXCEPT {
     return "1";
 }
 
-IPluginV2 *MaxPoolFixedSizeRT::clone() const NOEXCEPT {
+IPluginV2Ext *MaxPoolFixedSizeRT::clone() const NOEXCEPT {
     auto *p = new MaxPoolFixedSizeRT(c,h,w,n,stride_H,stride_W,winSize,padding);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
+}
+
+DataType
+MaxPoolFixedSizeRT::getOutputDataType(int index, const nvinfer1::DataType *inputTypes, int nbInputs) const NOEXCEPT {
+    return DataType::kFLOAT;
+}
+
+void MaxPoolFixedSizeRT::attachToContext(cudnnContext *cudnnContext, cublasContext *cublasContext,
+                                         IGpuAllocator *gpuAllocator) NOEXCEPT {
+
+}
+
+bool MaxPoolFixedSizeRT::isOutputBroadcastAcrossBatch(int outputIndex, const bool *inputIsBroadcasted,
+                                                      int nbInputs) const NOEXCEPT {
+    return false;
+}
+
+bool MaxPoolFixedSizeRT::canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT {
+    return false;
+}
+
+void
+MaxPoolFixedSizeRT::configurePlugin(const Dims *inputDims, int32_t nbInputs, const Dims *outputDims, int32_t nbOutputs,
+                                    const DataType *inputTypes, const DataType *outputTypes,
+                                    const bool *inputIsBroadcast, const bool *outputIsBroadcast,
+                                    PluginFormat floatFormat, int32_t maxBatchSize) NOEXCEPT {
+
+}
+
+void MaxPoolFixedSizeRT::detachFromContext() NOEXCEPT {
+    IPluginV2Ext::detachFromContext();
 }
 
 MaxPoolFixedSizeRTPluginCreator::MaxPoolFixedSizeRTPluginCreator() {
@@ -135,15 +164,14 @@ const char *MaxPoolFixedSizeRTPluginCreator::getPluginNamespace() const NOEXCEPT
     return mPluginNamespace.c_str();
 }
 
-IPluginV2 *MaxPoolFixedSizeRTPluginCreator::deserializePlugin(const char *name, const void *serialData,size_t serialLength) NOEXCEPT {
+IPluginV2Ext *MaxPoolFixedSizeRTPluginCreator::deserializePlugin(const char *name, const void *serialData,size_t serialLength) NOEXCEPT {
     auto *pluginObj = new MaxPoolFixedSizeRT(serialData,serialLength);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }
 
-IPluginV2 *MaxPoolFixedSizeRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
+IPluginV2Ext *MaxPoolFixedSizeRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
     const PluginField *fields = fc->fields;
-    //todo assert
     int c = *(static_cast<const int *>(fields[0].data));
     int h = *(static_cast<const int *>(fields[1].data));
     int w = *(static_cast<const int *>(fields[2].data));

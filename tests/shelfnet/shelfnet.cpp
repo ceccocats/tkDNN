@@ -290,6 +290,6 @@ int main()
     
     cv::Mat viz = vizLayer2Mat(&net, net.num_layers-1);
     cv::imwrite("test.png", viz);
-
+    netRT.destroy();
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

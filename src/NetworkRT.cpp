@@ -18,9 +18,9 @@ using namespace nvinfer1;
 // Logger for info/warning/errors
 class Logger : public ILogger {
     void log(Severity severity, const char* msg) NOEXCEPT override {
-//#ifdef DEBUG
+#ifdef DEBUG
         std::cout <<"TENSORRT LOG: "<< msg << std::endl;
-//#endif
+#endif
     }
 } loggerRT;
 
@@ -472,18 +472,36 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Flatten *l) {
+    auto creator = getPluginRegistry()->getPluginCreator("FlattenConcatRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("c",&l->c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("rows",&l->rows,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("cols",&l->cols,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
 
-    IPluginV2IOExt *plugin = new FlattenConcatRT(l->c,l->h,l->w,l->rows,l->cols);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Reshape *l) {
     // std::cout<<"convert Reshape\n";
-
-    IPluginV2 *plugin = new ReshapeRT(l->output_dim);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    auto creator = getPluginRegistry()->getPluginCreator("ReshapeRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("n",&l->n,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->w,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -503,8 +521,17 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Reorg *l) {
     //std::cout<<"convert Reorg\n";
 
     //std::cout<<"New plugin REORG\n";
-    IPluginV2 *plugin = new ReorgRT(l->stride);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    auto creator = getPluginRegistry()->getPluginCreator("ReorgRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("stride",&l->stride,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->input_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->input_dim.w,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -513,8 +540,19 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Region *l) {
     //std::cout<<"convert Region\n";
 
     //std::cout<<"New plugin REGION\n";
-    IPluginV2 *plugin = new RegionRT(l->classes, l->coords, l->num);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    auto creator = getPluginRegistry()->getPluginCreator("RegionRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("classes",&l->classes,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("coords",&l->coords,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("nums",&l->num,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->input_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->input_dim.w,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -535,22 +573,52 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     else
     {
         // plugin version
-        IPluginV2 *plugin = new ShortcutRT(l->backLayer->output_dim, l->mul);
-        ITensor **inputs = new ITensor*[2];
+        auto creator = getPluginRegistry()->getPluginCreator("ShortcutRT_tkDNN","1");
+        std::vector<PluginField> mPluginAttributes;
+        PluginFieldCollection mFC{};
+        mPluginAttributes.emplace_back(PluginField("bc",&l->backLayer->output_dim.c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("bh",&l->backLayer->output_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("bw",&l->backLayer->output_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("mul",&l->mul,PluginFieldType::kUNKNOWN,1));
+        mPluginAttributes.emplace_back(PluginField("c",&l->c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("h",&l->h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("w",&l->w,PluginFieldType::kINT32,1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+        auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+        auto **inputs = new ITensor*[2];
         inputs[0] = input;
         inputs[1] = back_tens; 
-        IPluginV2Layer *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
+        auto *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
         checkNULL(lRT);
         return lRT;
     }
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
-    //std::cout<<"convert Yolo\n";
 
-    //std::cout<<"New plugin YOLO\n";
-    IPluginV2 *plugin = new YoloRT(l->classes, l->num, l, l->n_masks, l->scaleXY, l->nms_thresh, l->nsm_kind, l->new_coords);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    std::vector<dnnType> mask_h(l->mask_h,l->mask_h+sizeof(dnnType)*l->n_masks);
+    std::vector<dnnType> bias_h(l->bias_h,l->bias_h+sizeof(dnnType)*2*l->n_masks*l->num);
+    auto creator = getPluginRegistry()->getPluginCreator("YoloRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("classes",&l->classes,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("num",&l->num,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->input_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->input_dim.w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("classNames",&l->classesNames[0],PluginFieldType::kUNKNOWN,l->classesNames.size()));
+    mPluginAttributes.emplace_back(PluginField("mask_v",&mask_h[0],PluginFieldType::kFLOAT32,mask_h.size()));
+    mPluginAttributes.emplace_back(PluginField("bias_v",&bias_h[0],PluginFieldType::kFLOAT32,bias_h.size()));
+    mPluginAttributes.emplace_back(PluginField("n_masks",&l->n_masks,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("scale_xy",&l->scaleXY,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("nms_thresh",&l->nms_thresh,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("nms_kins",&l->nsm_kind,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("new_coords",&l->new_coords,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -558,9 +626,17 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
 ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
     //std::cout<<"convert Upsample\n";
 
-    std::cout<<"New plugin UPSAMPLE\n";
-    IPluginV2 *plugin = new UpsampleRT(l->stride);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    auto creator = getPluginRegistry()->getPluginCreator("UpSample_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("stride",&l->stride,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h",&l->h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w",&l->w,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
 }
@@ -575,10 +651,53 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     inputs[1] = preconv->getOutput(0);
 
     //std::cout<<"New plugin DEFORMABLE\n";
-    IPluginV2 *plugin = new DeformableConvRT(l->chunk_dim, l->kernelH, l->kernelW, l->strideH, l->strideW, l->paddingH, l->paddingW,
-                                            l->deformableGroup, l->input_dim.n, l->input_dim.c, l->input_dim.h, l->input_dim.w, 
-                                            l->output_dim.n, l->output_dim.c, l->output_dim.h, l->output_dim.w, l);
-    IPluginV2Layer *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
+    int height_ones = (l->input_dim.h + 2 * l->paddingH - (1 * (l->kernelH - 1) + 1)) / l->strideH + 1;
+    int width_ones = (l->input_dim.w + 2 * l->paddingW - (1 * (l->kernelW - 1) + 1)) / l->strideW + 1;
+    int dim_ones = l->input_dim.c * l->kernelH * l->kernelW * 1 * height_ones * width_ones;
+    std::vector<dnnType> offsetV(2*l->chunk_dim);
+    std::vector<dnnType> maskV(l->chunk_dim);
+    std::vector<dnnType> dataV(l->input_dim.c*l->output_dim.c*l->kernelW*l->kernelH*1);
+    std::vector<dnnType> bias2DV(l->output_dim.c);
+    std::vector<dnnType> onesD1V(height_ones*width_ones);
+    std::vector<dnnType> onesD2V(dim_ones);
+    checkCuda(cudaMemcpy(offsetV.data(),l->offset,offsetV.size()*sizeof(dnnType),cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(maskV.data(),l->mask,sizeof(dnnType)*maskV.size(),cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(dataV.data(),l->data_d,sizeof(dnnType)*dataV.size(),cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(bias2DV.data(),l->bias2_d,sizeof(dnnType)*bias2DV.size(),cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(onesD1V.data(),l->ones_d1,sizeof(dnnType)*onesD1V.size(),cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(onesD2V.data(),l->ones_d2,sizeof(dnnType)*onesD2V.size(),cudaMemcpyDeviceToHost));
+    auto creator = getPluginRegistry()->getPluginCreator("DeformableConvRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("chunk_dum",&l->chunk_dim,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("kh",&l->kernelH,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("kw",&l->kernelW,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("sh",&l->strideH,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("sw",&l->strideW,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("ph",&l->paddingH,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("pw",&l->paddingW,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("deformable_group",&l->deformableGroup,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("i_n",&l->input_dim.n,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("i_c",&l->input_dim.c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("i_h",&l->input_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("i_w",&l->input_dim.w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("o_n",&l->output_dim.n,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("o_c",&l->output_dim.c,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("o_h",&l->output_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("o_w",&l->output_dim.w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("mask_v",&maskV[0],PluginFieldType::kFLOAT32,maskV.size()));
+    mPluginAttributes.emplace_back(PluginField("offset_v",&offsetV[0],PluginFieldType::kFLOAT32,offsetV.size()));
+    mPluginAttributes.emplace_back(PluginField("ones_d2_v",&onesD2V[0],PluginFieldType::kFLOAT32,onesD2V.size()));
+    mPluginAttributes.emplace_back(PluginField("ones_d1_v",&onesD1V[0],PluginFieldType::kFLOAT32,onesD1V.size()));
+    mPluginAttributes.emplace_back(PluginField("data_d_v",&dataV[0],PluginFieldType::kFLOAT32,dataV.size()));
+    mPluginAttributes.emplace_back(PluginField("bias2_d_v",&bias2DV[0],PluginFieldType::kFLOAT32,bias2DV.size()));
+    mPluginAttributes.emplace_back(PluginField("height_ones",&height_ones,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("width_ones",&width_ones,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("dim_ones",&dim_ones,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    auto *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
     checkNULL(lRT);
     lRT->setName( ("Deformable" + std::to_string(l->id)).c_str() );
     delete[](inputs);
@@ -658,254 +777,7 @@ bool NetworkRT::deserialize(const char *filename) {
 void NetworkRT::destroy() {
     contextRT->destroy();
     engineRT->destroy();
-    configRT->destroy();
     builderRT->destroy();
 }
 
-
-
-
-/*
-IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
-    const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
-
-    std::string name(layerName);
-    //std::cout<<name<<std::endl;
-
-    if(name.find("ActivationLeaky") == 0) {
-        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationMish") == 0) {
-        ActivationMishRT *a = new ActivationMishRT();
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationLogistic") == 0) {
-        ActivationLogisticRT *a = new ActivationLogisticRT();
-        a->size = readBUF<int>(buf);
-        return a;
-    }
-    if(name.find("ActivationLogistic") == 0) {
-        ActivationLogisticRT *a = new ActivationLogisticRT();
-        a->size = readBUF<int>(buf);
-        return a;
-    }
-    if(name.find("ActivationCReLU") == 0) {
-        float activationReluTemp = readBUF<float>(buf);
-        ActivationReLUCeiling* a = new ActivationReLUCeiling(activationReluTemp);
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-
-    if(name.find("Region") == 0) {
-        int classesTemp = readBUF<int>(buf);
-        int coordsTemp = readBUF<int>(buf);
-        int numTemp = readBUF<int>(buf);
-        RegionRT* r = new RegionRT(classesTemp, coordsTemp, numTemp);
-
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Reorg") == 0) {
-        int strideTemp = readBUF<int>(buf);
-        ReorgRT *r = new ReorgRT(strideTemp);
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Shortcut") == 0) {
-        tk::dnn::dataDim_t bdim;
-        bdim.c = readBUF<int>(buf);
-        bdim.h = readBUF<int>(buf);
-        bdim.w = readBUF<int>(buf);
-        bdim.l = 1;
-
-        ShortcutRT *r = new ShortcutRT(bdim, readBUF<bool>(buf));
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        return r;
-        assert(buf == bufCheck + serialLength);
-    }
-
-    if(name.find("Pooling") == 0) {
-        int cTemp = readBUF<int>(buf);
-        int hTemp = readBUF<int>(buf);
-        int wTemp = readBUF<int>(buf);
-        int nTemp = readBUF<int>(buf);
-        int strideHTemp = readBUF<int>(buf);
-        int strideWTemp = readBUF<int>(buf);
-        int winSizeTemp = readBUF<int>(buf);
-        int paddingTemp = readBUF<int>(buf);
-
-        MaxPoolFixedSizeRT* r = new MaxPoolFixedSizeRT(cTemp, hTemp, wTemp, nTemp, strideHTemp, strideWTemp, winSizeTemp, paddingTemp);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Resize") == 0) {
-        int o_cTemp = readBUF<int>(buf);
-        int o_hTemp = readBUF<int>(buf);
-        int o_wTemp = readBUF<int>(buf);
-        ResizeLayerRT* r = new ResizeLayerRT(o_cTemp, o_hTemp, o_wTemp);
-
-        r->i_c = readBUF<int>(buf);
-        r->i_h = readBUF<int>(buf);
-        r->i_w = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Flatten") == 0) {
-        FlattenConcatRT *r = new FlattenConcatRT();
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        r->rows = readBUF<int>(buf);
-        r->cols = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Reshape") == 0) {
-
-        dataDim_t new_dim;
-        new_dim.n = readBUF<int>(buf);
-        new_dim.c = readBUF<int>(buf);
-        new_dim.h = readBUF<int>(buf);
-        new_dim.w = readBUF<int>(buf);
-        ReshapeRT *r = new ReshapeRT(new_dim);
-        assert(buf == bufCheck + serialLength);
-
-        return r;
-    }
-
-    if(name.find("Yolo") == 0) {
-
-        int classes_temp = readBUF<int>(buf);
-        int num_temp = readBUF<int>(buf);
-        int n_masks_temp = readBUF<int>(buf);
-        float scale_xy_temp = readBUF<float>(buf);
-        float nms_thresh_temp = readBUF<float>(buf);
-        int nms_kind_temp = readBUF<int>(buf);
-        int new_coords_temp = readBUF<int>(buf);
-
-       YoloRT *r = new YoloRT(classes_temp,num_temp,nullptr,n_masks_temp,scale_xy_temp,nms_thresh_temp,nms_kind_temp,new_coords_temp);
-
-
-
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        for(int i=0; i<r->n_masks; i++)
-            r->mask[i] = readBUF<dnnType>(buf);
-        for(int i=0; i<r->n_masks*2*r->num; i++)
-            r->bias[i] = readBUF<dnnType>(buf);
-
-		// save classes names
-        r->classesNames.resize(r->classes);
-		for(int i=0; i<r->classes; i++) {
-            char tmp[YOLORT_CLASSNAME_W];
-			for(int j=0; j<YOLORT_CLASSNAME_W; j++)
-				tmp[j] = readBUF<char>(buf);
-            r->classesNames[i] = std::string(tmp);
-		}
-        assert(buf == bufCheck + serialLength);
-
-        yolos[n_yolos++] = r;
-        return r;
-    }
-    if(name.find("Upsample") == 0) {
-        int strideTemp = readBUF<int>(buf);
-        UpsampleRT* r = new UpsampleRT(strideTemp);
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Route") == 0) {
-        int groupsTemp = readBUF<int>(buf);
-        int group_idTemp = readBUF<int>(buf);
-        RouteRT* r = new RouteRT(groupsTemp, group_idTemp);
-        r->in = readBUF<int>(buf);
-        for(int i=0; i<RouteRT::MAX_INPUTS; i++)
-            r->c_in[i] = readBUF<int>(buf);
-        r->c = readBUF<int>(buf);
-        r->h = readBUF<int>(buf);
-        r->w = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    if(name.find("Deformable") == 0) {
-        int chuck_dimTemp = readBUF<int>(buf);
-        int khTemp = readBUF<int>(buf);
-        int kwTemp = readBUF<int>(buf);
-        int shTemp = readBUF<int>(buf);
-        int swTemp = readBUF<int>(buf);
-        int phTemp = readBUF<int>(buf);
-        int pwTemp = readBUF<int>(buf);
-        int deformableGroupTemp = readBUF<int>(buf);
-        int i_nTemp = readBUF<int>(buf);
-        int i_cTemp = readBUF<int>(buf);
-        int i_hTemp = readBUF<int>(buf);
-        int i_wTemp = readBUF<int>(buf);
-        int o_nTemp = readBUF<int>(buf);
-        int o_cTemp = readBUF<int>(buf);
-        int o_hTemp = readBUF<int>(buf);
-        int o_wTemp = readBUF<int>(buf);
-
-        DeformableConvRT* r = new DeformableConvRT(chuck_dimTemp, khTemp, kwTemp, shTemp, swTemp, phTemp, pwTemp, deformableGroupTemp, i_nTemp, i_cTemp, i_hTemp, i_wTemp, o_nTemp, o_cTemp, o_hTemp, o_wTemp, nullptr);
-        dnnType *aus = new dnnType[r->chunk_dim*2];
-        for(int i=0; i<r->chunk_dim*2; i++)
-    		aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->offset, aus, sizeof(dnnType)*2*r->chunk_dim, cudaMemcpyHostToDevice) );
-        free(aus);
-		aus = new dnnType[r->chunk_dim];
-		for(int i=0; i<r->chunk_dim; i++)
-            aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->mask, aus, sizeof(dnnType)*r->chunk_dim, cudaMemcpyHostToDevice) );
-        free(aus);
-		aus = new dnnType[(r->i_c * r->o_c * r->kh * r->kw * 1 )];
-		for(int i=0; i<(r->i_c * r->o_c * r->kh * r->kw * 1 ); i++)
-    		aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->data_d, aus, sizeof(dnnType)*(r->i_c * r->o_c * r->kh * r->kw * 1 ), cudaMemcpyHostToDevice) );
-        free(aus);
-		aus = new dnnType[r->o_c];
-		for(int i=0; i < r->o_c; i++)
-    		aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->bias2_d, aus, sizeof(dnnType)*r->o_c, cudaMemcpyHostToDevice) );
-        free(aus);
-		aus = new dnnType[r->height_ones * r->width_ones];
-		for(int i=0; i<r->height_ones * r->width_ones; i++)
-    		aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->ones_d1, aus, sizeof(dnnType)*r->height_ones * r->width_ones, cudaMemcpyHostToDevice) );
-        free(aus);
-		aus = new dnnType[r->dim_ones];
-		for(int i=0; i<r->dim_ones; i++)
-    		aus[i] = readBUF<dnnType>(buf);
-		checkCuda( cudaMemcpy(r->ones_d2, aus, sizeof(dnnType)*r->dim_ones, cudaMemcpyHostToDevice) );
-        free(aus);
-        assert(buf == bufCheck + serialLength);
-        return r;
-    }
-
-    FatalError("Cant deserialize Plugin");
-    return NULL;
-}
-*/
 }}

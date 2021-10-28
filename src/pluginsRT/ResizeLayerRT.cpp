@@ -5,10 +5,13 @@ std::vector<PluginField> ResizeLayerRTPluginCreator::mPluginAttributes;
 PluginFieldCollection ResizeLayerRTPluginCreator::mFC{};
 
 
-ResizeLayerRT::ResizeLayerRT(int c, int h, int w) {
-    o_c = c;
-    o_h = h;
-    o_w = w;
+ResizeLayerRT::ResizeLayerRT(int oc, int oh, int ow,int ic,int ih,int iw) {
+   this->o_c = oc;
+   this->o_h = oh;
+   this->o_w = ow;
+   this->i_c = ic;
+   this->i_h = ih;
+   this->i_w = iw;
 }
 
 ResizeLayerRT::ResizeLayerRT(const void *data, size_t length) {
@@ -32,13 +35,6 @@ Dims ResizeLayerRT::getOutputDimensions(int index, const Dims *inputs, int nbInp
     return Dims3{o_c, o_h, o_w};
 }
 
-void ResizeLayerRT::configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs,
-                                        DataType type, PluginFormat format, int maxBatchSize) NOEXCEPT {
-    i_c = inputDims[0].d[0];
-    i_h = inputDims[0].d[1];
-    i_w = inputDims[0].d[2];
-}
-
 int ResizeLayerRT::initialize() NOEXCEPT {
     return 0;
 }
@@ -55,7 +51,7 @@ int ResizeLayerRT::enqueue(int batchSize, const void *const *inputs, void *const
                   batchSize, i_c, i_h, i_w, o_c, o_h, o_w, stream);
     return 0;
 }
-#elif NV_TENSORRT_MAJOR == 7
+#elif NV_TENSORRT_MAJOR <= 7
 int32_t ResizeLayerRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
                                cudaStream_t stream) {
     resizeForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]),
@@ -105,10 +101,40 @@ void ResizeLayerRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
     mPluginNamespace = pluginNamespace;
 }
 
-IPluginV2 *ResizeLayerRT::clone() const NOEXCEPT {
-    auto *p = new ResizeLayerRT(o_c,o_h,o_w);
+IPluginV2Ext *ResizeLayerRT::clone() const NOEXCEPT {
+    auto *p = new ResizeLayerRT(o_c,o_h,o_w,i_c,i_h,i_w);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
+}
+
+DataType
+ResizeLayerRT::getOutputDataType(int index, const nvinfer1::DataType *inputTypes, int nbInputs) const NOEXCEPT {
+    return DataType::kFLOAT;
+}
+
+void ResizeLayerRT::attachToContext(cudnnContext *cudnnContext, cublasContext *cublasContext,
+                                    IGpuAllocator *gpuAllocator) NOEXCEPT {
+
+}
+
+bool ResizeLayerRT::isOutputBroadcastAcrossBatch(int outputIndex, const bool *inputIsBroadcasted,
+                                                 int nbInputs) const NOEXCEPT {
+    return false;
+}
+
+bool ResizeLayerRT::canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT {
+    return false;
+}
+
+void ResizeLayerRT::configurePlugin(const Dims *inputDims, int32_t nbInputs, const Dims *outputDims, int32_t nbOutputs,
+                                    const DataType *inputTypes, const DataType *outputTypes,
+                                    const bool *inputIsBroadcast, const bool *outputIsBroadcast,
+                                    PluginFormat floatFormat, int32_t maxBatchSize) NOEXCEPT {
+
+}
+
+void ResizeLayerRT::detachFromContext() NOEXCEPT {
+
 }
 
 ResizeLayerRTPluginCreator::ResizeLayerRTPluginCreator() {
@@ -125,22 +151,25 @@ const char *ResizeLayerRTPluginCreator::getPluginNamespace() const NOEXCEPT {
     return mPluginNamespace.c_str();
 }
 
-IPluginV2 *ResizeLayerRTPluginCreator::deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT {
+IPluginV2Ext *ResizeLayerRTPluginCreator::deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT {
     auto *pluginObj = new ResizeLayerRT(serialData,serialLength);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }
 
-IPluginV2 *ResizeLayerRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
+IPluginV2Ext *ResizeLayerRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
     const PluginField *fields = fc->fields;
-    assert(fc->nbFields == 3);
-    assert(fields[0].type == PluginFieldType::kINT32);
-    assert(fields[1].type == PluginFieldType::kINT32);
-    assert(fields[2].type == PluginFieldType::kINT32);
+    assert(fc->nbFields == 6);
+    for(int i=0;i<6;i++){
+        assert(fields[i].type == PluginFieldType::kINT32);
+    }
     int oc = *(static_cast<const int *>(fields[0].data));
     int oh = *(static_cast<const int *>(fields[1].data));
     int ow = *(static_cast<const int *>(fields[2].data));
-    auto *pluginObj = new ResizeLayerRT(oc,oh,ow);
+    int ic = *(static_cast<const int *>(fields[3].data));
+    int ih = *(static_cast<const int *>(fields[4].data));
+    int iw = *(static_cast<const int *>(fields[5].data));
+    auto *pluginObj = new ResizeLayerRT(oc,oh,ow,ic,ih,iw);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }

@@ -4,12 +4,10 @@ using namespace  nvinfer1;
 std::vector<PluginField> FlattenConcatRTPluginCreator::mPluginAttributes;
 PluginFieldCollection FlattenConcatRTPluginCreator::mFC{};
 
+static const char* FLATTENCONCATRT_PLUGIN_VERSION{"1"};
+static const char* FLATTENCONCATRT_PLUGIN_NAME{"FlattenConcatRT_tkDNN"};
+
 FlattenConcatRT::FlattenConcatRT(int c, int h, int w, int rows, int cols) {
-    stat = cublasCreate(&handle);
-    if (stat != CUBLAS_STATUS_SUCCESS) {
-        printf ("CUBLAS initialization failed\n");
-        return;
-    }
     this->c = c;
     this->h = h;
     this->w = w;
@@ -42,7 +40,7 @@ int FlattenConcatRT::initialize() NOEXCEPT {
 }
 
 void FlattenConcatRT::terminate() NOEXCEPT {
-    checkERROR(cublasDestroy(handle));
+
 }
 
 size_t FlattenConcatRT::getWorkspaceSize(int maxBatchSize) const NOEXCEPT {
@@ -105,11 +103,11 @@ void FlattenConcatRT::destroy() NOEXCEPT {
 
 
 const char *FlattenConcatRT::getPluginType() const NOEXCEPT {
-    return "FlattenConcatRT_tkDNN";
+    return FLATTENCONCATRT_PLUGIN_NAME;
 }
 
 const char *FlattenConcatRT::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return FLATTENCONCATRT_PLUGIN_VERSION;
 }
 
 const char *FlattenConcatRT::getPluginNamespace() const NOEXCEPT {
@@ -120,7 +118,7 @@ void FlattenConcatRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
     mPluginNamespace = pluginNamespace;
 }
 
-IPluginV2IOExt *FlattenConcatRT::clone() const NOEXCEPT {
+IPluginV2Ext *FlattenConcatRT::clone() const NOEXCEPT {
     auto* p = new FlattenConcatRT(c, h, w, rows, cols);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
@@ -131,12 +129,10 @@ DataType FlattenConcatRT::getOutputDataType(int index, const nvinfer1::DataType*
     return DataType::kFLOAT;
 }
 
-void FlattenConcatRT::configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) NOEXCEPT
-{
-}
 
 void FlattenConcatRT::attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) NOEXCEPT
 {
+    handle = cublasContext;
 }
 
 bool FlattenConcatRT::isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const NOEXCEPT
@@ -149,17 +145,29 @@ bool FlattenConcatRT::canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEP
     return false;
 }
 
-bool FlattenConcatRT::supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int nbInputs, int nbOutputs) const NOEXCEPT
-{
-    return true;
-}
-
 void FlattenConcatRT::detachFromContext() NOEXCEPT
 {
 }
 
+void
+FlattenConcatRT::configurePlugin(const Dims *inputDims, int32_t nbInputs, const Dims *outputDims, int32_t nbOutputs,
+                                 const DataType *inputTypes, const DataType *outputTypes, const bool *inputIsBroadcast,
+                                 const bool *outputIsBroadcast, PluginFormat floatFormat,
+                                 int32_t maxBatchSize) NOEXCEPT {
+
+}
+
+bool FlattenConcatRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
+    return true;
+}
+
 FlattenConcatRTPluginCreator::FlattenConcatRTPluginCreator() {
     mPluginAttributes.clear();
+    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("rows", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("cols", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }
@@ -172,14 +180,14 @@ const char *FlattenConcatRTPluginCreator::getPluginNamespace() const NOEXCEPT {
     return mPluginNamespace.c_str();
 }
 
-IPluginV2IOExt *FlattenConcatRTPluginCreator::deserializePlugin(const char *name, const void *serialData,
+IPluginV2Ext *FlattenConcatRTPluginCreator::deserializePlugin(const char *name, const void *serialData,
                                                            size_t serialLength) NOEXCEPT {
     auto *pluginObj = new FlattenConcatRT(serialData,serialLength);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }
 
-IPluginV2IOExt *FlattenConcatRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
+IPluginV2Ext *FlattenConcatRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
     const PluginField* fields = fc->fields;
     int c = *(static_cast<const int*>(fields[0].data));
     int h = *(static_cast<const int*>(fields[1].data));
@@ -192,11 +200,11 @@ IPluginV2IOExt *FlattenConcatRTPluginCreator::createPlugin(const char *name, con
 }
 
 const char *FlattenConcatRTPluginCreator::getPluginName() const NOEXCEPT {
-    return "FlattenConcatRT_tkDNN";
+    return FLATTENCONCATRT_PLUGIN_NAME;
 }
 
 const char *FlattenConcatRTPluginCreator::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return FLATTENCONCATRT_PLUGIN_VERSION;
 }
 
 const PluginFieldCollection *FlattenConcatRTPluginCreator::getFieldNames() NOEXCEPT {

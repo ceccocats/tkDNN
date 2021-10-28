@@ -10,10 +10,10 @@
 
 namespace nvinfer1 {
 
-    class ShortcutRT : public IPluginV2 {
+    class ShortcutRT : public IPluginV2Ext {
 
     public:
-        ShortcutRT(tk::dnn::dataDim_t bdim, bool mul);
+        ShortcutRT(int bc,int bh,int bw,int c,int h,int w ,bool mul);
 
         ~ShortcutRT();
 
@@ -23,8 +23,19 @@ namespace nvinfer1 {
 
         Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override;
 
-        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
-                            PluginFormat format, int maxBatchSize) NOEXCEPT override;
+        void configurePlugin (Dims const *inputDims, int32_t nbInputs, Dims const *outputDims, int32_t nbOutputs,
+                              DataType const *inputTypes, DataType const *outputTypes, bool const *inputIsBroadcast,
+                              bool const *outputIsBroadcast, PluginFormat floatFormat, int32_t maxBatchSize) NOEXCEPT override;
+
+        bool isOutputBroadcastAcrossBatch (int32_t outputIndex, bool const *inputIsBroadcasted, int32_t nbInputs) const NOEXCEPT override;
+
+        bool canBroadcastInputAcrossBatch (int32_t inputIndex) const NOEXCEPT override;
+
+        void attachToContext (cudnnContext *, cublasContext *, IGpuAllocator *) NOEXCEPT override;
+
+        void detachFromContext () NOEXCEPT override;
+
+        DataType getOutputDataType(int32_t index, nvinfer1::DataType const *inputTypes, int32_t nbInputs) const NOEXCEPT override;
 
         int initialize() NOEXCEPT override;
 
@@ -56,10 +67,10 @@ namespace nvinfer1 {
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 
-        IPluginV2 *clone() const NOEXCEPT override;
+        IPluginV2Ext *clone() const NOEXCEPT override;
 
         int c, h, w;
-        int bc, bh, bw;
+        int bc, bh, bw,bl;
         bool mul;
         tk::dnn::dataDim_t bDim;
     private:
@@ -75,9 +86,9 @@ namespace nvinfer1 {
 
         const char *getPluginNamespace() const NOEXCEPT override;
 
-        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override;
+        IPluginV2Ext *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override;
 
-        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override;
+        IPluginV2Ext *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override;
 
         const char *getPluginName() const NOEXCEPT override;
 

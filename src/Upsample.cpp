@@ -14,6 +14,9 @@ Upsample::Upsample(Network *net, int stride) : Layer(net) {
     output_dim.h = input_dim.h*stride;
     output_dim.w = input_dim.w*stride;
     output_dim.l = input_dim.l;
+    this->c = input_dim.c;
+    this->h = input_dim.h;
+    this->w = input_dim.w;
     
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 }

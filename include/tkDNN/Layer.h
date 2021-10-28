@@ -438,6 +438,7 @@ public:
     virtual layerType_t getLayerType() { return LAYER_RESHAPE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    int n,c,h,w;
 
 };
 
@@ -584,6 +585,8 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
+    int c,h,w;
+
 public:
     Layer *backLayer;
     bool mul = false;
@@ -604,6 +607,7 @@ public:
 
     int stride;
     bool reverse;
+    int c,h,w;
 };
 
 struct box {
@@ -687,6 +691,7 @@ public:
     virtual layerType_t getLayerType() { return LAYER_REGION; };
 
     int classes, coords, num;
+    int c,h,w;
     
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };

@@ -17,8 +17,8 @@ Flatten::Flatten(Network *net) : Layer(net) {
 
     this->h = 1;
     this->w = 1;
-    this->rows = input_dim.w;
-    this->cols = input_dim.h * input_dim.c;
+    this->rows = input_dim.c;
+    this->cols = input_dim.h * input_dim.w;
     this->c = input_dim.w * input_dim.h * input_dim.c;
 }
 

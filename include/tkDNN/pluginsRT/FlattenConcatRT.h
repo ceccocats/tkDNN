@@ -3,7 +3,7 @@
 #include <vector>
 #include <utils.h>
 namespace nvinfer1 {
-    class FlattenConcatRT : public IPluginV2IOExt {
+    class FlattenConcatRT : public IPluginV2Ext {
 
     public:
         FlattenConcatRT(int c,int h,int w,int rows,int cols) ;
@@ -24,7 +24,7 @@ namespace nvinfer1 {
 
 #if NV_TENSORRT_MAJOR > 7
         int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace, cudaStream_t stream) NOEXCEPT override ;
-#elif NV_TENSORRT_MAJOR == 7
+#elif NV_TENSORRT_MAJOR <= 7
         int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) override;
 #endif
 
@@ -42,11 +42,9 @@ namespace nvinfer1 {
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-        IPluginV2IOExt *clone() const NOEXCEPT override ;
+        IPluginV2Ext *clone() const NOEXCEPT override ;
 
         DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const NOEXCEPT override;
-
-        void configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) NOEXCEPT override;
 
         void attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) NOEXCEPT override;
 
@@ -54,14 +52,18 @@ namespace nvinfer1 {
 
         bool canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT override;
 
-        bool supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int nbInputs, int nbOutputs) const NOEXCEPT override;
+        void configurePlugin (Dims const *inputDims, int32_t nbInputs, Dims const *outputDims,
+                            int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
+                            bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
+                            int32_t maxBatchSize) NOEXCEPT override;
 
         void detachFromContext() NOEXCEPT override;
 
+        bool supportsFormat (DataType type, PluginFormat format) const NOEXCEPT override;
+
         int c, h, w;
         int rows, cols;
-        cublasStatus_t stat;
-        cublasHandle_t handle;
+        cublasHandle_t handle{nullptr};
     private:
         std::string mPluginNamespace;
     };
@@ -74,9 +76,9 @@ namespace nvinfer1 {
 
         const char *getPluginNamespace() const NOEXCEPT override ;
 
-        IPluginV2IOExt *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+        IPluginV2Ext *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
 
-        IPluginV2IOExt *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+        IPluginV2Ext *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
 
         const char *getPluginName() const NOEXCEPT override ;
 

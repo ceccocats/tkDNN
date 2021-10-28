@@ -1,12 +1,21 @@
 #include <tkDNN/pluginsRT/YoloRT.h>
+
+#include <utility>
 using namespace nvinfer1;
 
 std::vector<PluginField> YoloRTPluginCreator::mPluginAttributes;
 PluginFieldCollection YoloRTPluginCreator::mFC{};
 
-YoloRT::YoloRT(int classes, int num, tk::dnn::Yolo *Yolo, int n_masks, float scale_xy, float nms_thresh, int nms_kind,
+static const char* YOLORT_PLUGIN_VERSION{"1"};
+static const char* YOLORT_PLUGIN_NAME{"YoloRT_tkDNN"};
+
+YoloRT::YoloRT(int classes, int num, int c,int h,int w,std::vector<std::string> classNames,
+               std::vector<float> masks_v,std::vector<float> bias_v,int n_masks, float scale_xy,
+               float nms_thresh, int nms_kind,
                int new_coords) {
-    this->yolo = Yolo;
+    this->c = c;
+    this->h = h;
+    this->w = w;
     this->classes = classes;
     this->num = num;
     this->n_masks = n_masks;
@@ -14,14 +23,10 @@ YoloRT::YoloRT(int classes, int num, tk::dnn::Yolo *Yolo, int n_masks, float sca
     this->nms_thresh = nms_thresh;
     this->nms_kind = nms_kind;
     this->new_coords = new_coords;
+    this->classesNames = std::move(classNames);
+    this->mask = std::move(masks_v);
+    this->bias = std::move(bias_v);
 
-    mask = new dnnType[n_masks];
-    bias = new dnnType[num * n_masks * 2];
-    if (yolo != nullptr) {
-        memcpy(mask, yolo->mask_h, sizeof(dnnType) * n_masks);
-        memcpy(bias, yolo->bias_h, sizeof(dnnType) * num * n_masks * 2);
-        classesNames = yolo->classesNames;
-    }
 }
 
 YoloRT::YoloRT(const void *data, size_t length) {
@@ -38,16 +43,14 @@ YoloRT::YoloRT(const void *data, size_t length) {
     c = readBUF<int>(buf);
     h = readBUF<int>(buf);
     w = readBUF<int>(buf);
+    mask.resize(n_masks);
     for(int i=0;i<n_masks;i++){
-        maskTemp.push_back(readBUF<dnnType>(buf));
-        std::cout<<maskTemp[i]<<std::endl;
+        mask[i] = readBUF<dnnType>(buf);
     }
+    bias.resize(n_masks*2*num);
     for(int i=0;i<n_masks*2*num;i++){
-        biasTemp.push_back(readBUF<dnnType>(buf));
-        std::cout<<biasTemp[i]<<std::endl;
+        bias[i] = readBUF<dnnType>(buf);
     }
-    mask = maskTemp.data();
-    bias = biasTemp.data();
     classesNames.resize(classes);
     for(int i=0;i<classes;i++){
         char tmp[YOLORT_CLASSNAME_W];
@@ -68,12 +71,7 @@ Dims YoloRT::getOutputDimensions(int index, const Dims *inputs, int nbInputDims)
     return inputs[0];
 }
 
-void YoloRT::configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,
-                            PluginFormat format, int maxBatchSize) NOEXCEPT {
-    c = inputDims[0].d[0];
-    h = inputDims[0].d[1];
-    w = inputDims[0].d[2];
-}
+
 
 int YoloRT::initialize() NOEXCEPT {
     return 0;
@@ -190,11 +188,11 @@ void YoloRT::serialize(void *buffer) const NOEXCEPT {
 }
 
 const char *YoloRT::getPluginType() const NOEXCEPT {
-    return "YoloRT_tkDNN";
+    return YOLORT_PLUGIN_NAME;
 }
 
 const char *YoloRT::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return YOLORT_PLUGIN_VERSION;
 }
 
 void YoloRT::destroy() NOEXCEPT {
@@ -209,14 +207,54 @@ void YoloRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
     mPluginNamespace = pluginNamespace;
 }
 
-IPluginV2 *YoloRT::clone() const NOEXCEPT {
-    auto *p = new YoloRT(classes, num,yolo, n_masks, scaleXY, nms_thresh, nms_kind, new_coords);
+IPluginV2Ext *YoloRT::clone() const NOEXCEPT {
+    auto *p = new YoloRT(classes, num,c,h,w,classesNames,mask,bias, n_masks, scaleXY, nms_thresh, nms_kind, new_coords);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
 }
 
+DataType YoloRT::getOutputDataType(int index, const nvinfer1::DataType *inputTypes, int nbInputs) const NOEXCEPT {
+    return DataType::kFLOAT;
+}
+
+void YoloRT::attachToContext(cudnnContext *cudnnContext, cublasContext *cublasContext,
+                             IGpuAllocator *gpuAllocator) NOEXCEPT {
+
+}
+
+void YoloRT::configurePlugin(const Dims *inputDims, int32_t nbInputs, const Dims *outputDims, int32_t nbOutputs,
+                             const DataType *inputTypes, const DataType *outputTypes, const bool *inputIsBroadcast,
+                             const bool *outputIsBroadcast, PluginFormat floatFormat, int32_t maxBatchSize) NOEXCEPT {
+
+}
+
+bool YoloRT::isOutputBroadcastAcrossBatch(int outputIndex, const bool *inputIsBroadcasted, int nbInputs) const NOEXCEPT {
+    return false;
+}
+
+bool YoloRT::canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT {
+    return false;
+}
+
+void YoloRT::detachFromContext() NOEXCEPT {
+
+}
+
 YoloRTPluginCreator::YoloRTPluginCreator() {
     mPluginAttributes.clear();
+    mPluginAttributes.emplace_back(PluginField("classes", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("num", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("classNames", nullptr,PluginFieldType::kUNKNOWN,1));
+    mPluginAttributes.emplace_back(PluginField("mask_v", nullptr,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("bias_v", nullptr,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("n_masks", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("scaleXy", nullptr,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("nms_thresh", nullptr,PluginFieldType::kFLOAT32,1));
+    mPluginAttributes.emplace_back(PluginField("nms_kind", nullptr,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("new_coords", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }
@@ -229,34 +267,37 @@ const char *YoloRTPluginCreator::getPluginNamespace() const NOEXCEPT {
     return mPluginNamespace.c_str();
 }
 
-IPluginV2 *YoloRTPluginCreator::deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT {
+IPluginV2Ext *YoloRTPluginCreator::deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT {
     auto *pluginObj = new YoloRT(serialData,serialLength);
     pluginObj->setPluginNamespace(mPluginNamespace.c_str());
     return pluginObj;
 }
 
-IPluginV2 *YoloRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
+IPluginV2Ext *YoloRTPluginCreator::createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT {
     const PluginField *fields = fc->fields;
-    //todo assert
     int classes = *(static_cast<const int *>(fields[0].data));
     int num = *(static_cast<const int *>(fields[1].data));
-    Yolo *yoloTemp = const_cast<Yolo *>(static_cast<const Yolo *>(fields[2].data));
-    int numMasks = *(static_cast<const int*>(fields[3].data));
-    float scaleXY = *(static_cast<const float *>(fields[4].data));
-    float nmsThresh = *(static_cast<const float *>(fields[5].data));
-    int nmsKind = *(static_cast<const int *>(fields[6].data));
-    int newCoords = *(static_cast<const int *>(fields[7].data));
-    YoloRT *pluginObj = new YoloRT(classes,num,yoloTemp,numMasks,scaleXY,nmsThresh,nmsKind,newCoords);
-    pluginObj->setPluginNamespace(mPluginNamespace.c_str());
+    int c = *(static_cast<const int *>(fields[2].data));
+    int h = *(static_cast<const int *>(fields[3].data));
+    int w = *(static_cast<const int *>(fields[4].data));
+    std::vector<std::string> classNames(static_cast<const std::string *>(fields[5].data),static_cast<const std::string *>(fields[5].data) + fields[5].length);
+    std::vector<dnnType> mask_v(static_cast<const dnnType*>(fields[6].data),static_cast<const dnnType*>(fields[6].data) + fields[6].length);
+    std::vector<dnnType> bias_v(static_cast<const dnnType*>(fields[7].data),static_cast<const dnnType*>(fields[7].data) + fields[7].length);
+    int n_masks = *(static_cast<const int *>(fields[8].data));
+    dnnType scaleXY = *(static_cast<const float*>(fields[9].data));
+    dnnType nmsThresh = *(static_cast<const float*>(fields[10].data));
+    int nms_kind = *(static_cast<const int*>(fields[11].data));
+    int new_coords = *(static_cast<const int*>(fields[12].data));
+    auto *pluginObj = new YoloRT(classes,num,c,h,w,classNames,mask_v,bias_v,n_masks,scaleXY,nmsThresh,nms_kind,new_coords);
     return pluginObj;
 }
 
 const char *YoloRTPluginCreator::getPluginName() const NOEXCEPT {
-    return "YoloRT_tkDNN";
+    return YOLORT_PLUGIN_NAME;
 }
 
 const char *YoloRTPluginCreator::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return YOLORT_PLUGIN_VERSION;
 }
 
 const PluginFieldCollection *YoloRTPluginCreator::getFieldNames() NOEXCEPT {
