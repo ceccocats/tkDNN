@@ -53,11 +53,10 @@ int ReshapeRT::enqueue(int batchSize, const void *const *inputs, void *const *ou
 }
 #elif NV_TENSORRT_MAJOR <= 7
 int32_t ReshapeRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
-    std::cout << new_dim.c << ":" << new_dim.h << std::endl;
     dnnType *srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
     dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
     std::cout << "C : " << c << "H : " << h << "w :" << w << std::endl;
-    checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*new_dim.c*new_dim.h*new_dim.w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
+    checkCuda( cudaMemcpyAsync(dstData, srcData, batchSize*c*h*w*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream));
     return 0;
 }
 #endif
