@@ -151,13 +151,6 @@ DataType ShortcutRT::getOutputDataType(int32_t index, const nvinfer1::DataType *
 
 ShortcutRTPluginCreator::ShortcutRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("bc", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("bh", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("bw", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("mul", nullptr,PluginFieldType::kUNKNOWN,1));
-    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

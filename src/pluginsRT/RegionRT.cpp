@@ -170,12 +170,6 @@ void RegionRT::detachFromContext() NOEXCEPT {
 
 RegionRTPluginCreator::RegionRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("classes", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("coords", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("num", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

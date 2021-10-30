@@ -242,19 +242,6 @@ void YoloRT::detachFromContext() NOEXCEPT {
 
 YoloRTPluginCreator::YoloRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("classes", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("num", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("classNames", nullptr,PluginFieldType::kUNKNOWN,1));
-    mPluginAttributes.emplace_back(PluginField("mask_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("bias_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("n_masks", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("scaleXy", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("nms_thresh", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("nms_kind", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("new_coords", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

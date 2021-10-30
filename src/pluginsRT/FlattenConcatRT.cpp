@@ -163,11 +163,6 @@ bool FlattenConcatRT::supportsFormat(DataType type, PluginFormat format) const N
 
 FlattenConcatRTPluginCreator::FlattenConcatRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("rows", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("cols", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

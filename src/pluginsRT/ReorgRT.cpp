@@ -133,10 +133,6 @@ void ReorgRT::detachFromContext() NOEXCEPT {
 
 ReorgRTPluginCreator::ReorgRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("stride", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("w", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }

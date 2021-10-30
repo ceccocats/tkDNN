@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     #ifdef __linux__ 
         std::string input = "../demo/yolo_test.mp4";
     #elif _WIN32
-        std::string input = "..\\..\\..\\demo\\yolo_test.mp4";
+        std::string input = "..\\demo\\yolo_test.mp4";
     #endif
 
     char ntype = 'y';

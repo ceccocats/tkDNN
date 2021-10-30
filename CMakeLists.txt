@@ -8,7 +8,7 @@ if (CUDA_FOUND)
     #Get CUDA compute capability
     set(OUTPUTFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda_script) # No suffix required
     set(CUDAFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/getCudaArch.cu)
-    execute_process(COMMAND nvcc -lcuda ${CUDAFILE} -o ${OUTPUTFILE})
+    execute_process(COMMAND ${CUDA_NVCC_EXECUTABLE} -lcuda ${CUDAFILE} -o ${OUTPUTFILE})
     execute_process(COMMAND ${OUTPUTFILE}
             RESULT_VARIABLE CUDA_RETURN_CODE
             OUTPUT_VARIABLE ARCH)

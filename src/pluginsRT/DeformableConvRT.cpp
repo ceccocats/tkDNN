@@ -291,31 +291,6 @@ bool DeformableConvRT::supportsFormat(DataType type, PluginFormat format) const 
 
 DeformableConvRTPluginCreator::DeformableConvRTPluginCreator() {
     mPluginAttributes.clear();
-    mPluginAttributes.emplace_back(PluginField("chunk_dim", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("kh", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("kw", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("sh", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("sw", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("ph", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("pw", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("deformable_group", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_n", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("i_w", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_n", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_c", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_h", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("o_w", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("mask_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("offset_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("ones_d2_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("ones_d1_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("data_d_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("bias2_d_v", nullptr,PluginFieldType::kFLOAT32,1));
-    mPluginAttributes.emplace_back(PluginField("height_ones", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("width_ones", nullptr,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("dim_ones", nullptr,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
 }
