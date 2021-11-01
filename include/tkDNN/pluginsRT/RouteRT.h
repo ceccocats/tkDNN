@@ -105,7 +105,7 @@ public:
 
 	// Extra IPluginV2 overrides
 	bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const noexcept override {
-			return true;
+			return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kLINEAR);
 	}
 
 	nvinfer1::IPluginV2 * clone() const noexcept override {
