@@ -419,28 +419,35 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kRELU);
         checkNULL(lRT);
         return lRT;
-    } else if(l->act_mode == CUDNN_ACTIVATION_SIGMOID) {
+    } else if(l->act_mode == CUDNN_ACTIVATION_SIGMOID || l->act_mode == ACTIVATION_LOGISTIC) {
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kSIGMOID);
         checkNULL(lRT);
         return lRT;
     }
     else if(l->act_mode == CUDNN_ACTIVATION_CLIPPED_RELU) {
-        auto *plugin = new ActivationReLUCeiling(l->ceiling);
-        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kCLIP);
+        lRT->setAlpha(0);
+        lRT->setBeta(l->ceiling);
+
         checkNULL(lRT);
         return lRT;
     }
     else if(l->act_mode == ACTIVATION_MISH) {
-        auto *plugin = new ActivationMishRT();
-        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
-        checkNULL(lRT);
-        return lRT;
-    }
-    else if(l->act_mode == ACTIVATION_LOGISTIC) {
-        auto *plugin = new ActivationLogisticRT();
-        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
-        checkNULL(lRT);
-        return lRT;
+        // Uncomment this to see if you have better performance
+        // For older TensorRT or for FP32 this might be better
+        //auto *plugin = new ActivationMishRT();
+        //auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+
+        // Assemble MISH using 3 layers that are going to be merged by TensorRT
+        IActivationLayer *lRT1 = networkRT->addActivation(*input, ActivationType::kSOFTPLUS);
+        lRT1->setAlpha(1);
+        lRT1->setBeta(1);
+
+        IActivationLayer *lRT2 = networkRT->addActivation(*lRT1->getOutput(0), ActivationType::kTANH);
+        IElementWiseLayer *lRT3 = networkRT->addElementWise(*input, *lRT2->getOutput(0), ElementWiseOperation::kPROD);
+
+        checkNULL(lRT3);
+        return lRT3;
     }
     else {
         FatalError("this Activation mode is not yet implemented");
