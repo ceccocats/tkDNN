@@ -35,6 +35,16 @@ float mish_yashas(float x) {
     return x - 2 * __fdividef(x, n + 2);
 }
 
+__device__ float mish_yashas2(float x)
+{
+    float e = __expf(x);
+    float n = e * e + 2 * e;
+    if (x <= -0.6f)
+        return x * __fdividef(n, n + 2);
+
+    return x - 2 * __fdividef(x, n + 2);
+}
+
 // https://github.com/digantamisra98/Mish
 // https://github.com/AlexeyAB/darknet/blob/master/src/activation_kernels.cu
 __global__
@@ -42,7 +52,7 @@ void activation_mish(dnnType *input, dnnType *output, int size) {
     int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
     if (i < size)
         // output[i] = input[i] * tanh_activate_kernel( softplus_kernel(input[i], MISH_THRESHOLD));
-        output[i] = mish_yashas(input[i]);
+        output[i] = mish_yashas2(input[i]);
 }
 
 /**
