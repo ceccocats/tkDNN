@@ -72,8 +72,8 @@ add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
 
 #static
-#add_library(tkDNN_static STATIC ${tkdnn_SRC})
-#target_link_libraries(tkDNN_static ${tkdnn_LIBS})
+add_library(tkDNN_static STATIC ${tkdnn_SRC})
+target_link_libraries(tkDNN_static ${tkdnn_LIBS})
 
 # SMALL NETS
 add_executable(test_simple tests/simple/test_simple.cpp)
