@@ -18,7 +18,7 @@ if(DEBUG)
 endif()
 
 if(TKDNN_PATH)
-    message("SET TKDNN_PATH:"${TKDNN_PATH})
+    message("SET TKDNN_PATH:${TKDNN_PATH}")
     add_definitions(-DTKDNN_PATH="${TKDNN_PATH}")
 else()
     add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -51,11 +51,11 @@ find_package(Eigen3 REQUIRED)
 message("Eigen DIR: " ${EIGEN3_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4.5 REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
-# if(OpenCV_CUDA_VERSION)
-#     add_compile_definitions(OPENCV_CUDACONTRIB)
-# endif()
+if(OpenCV_CUDA_VERSION)
+    add_compile_definitions(OPENCV_CUDACONTRIB)
+endif()
 
 # gives problems in cross-compiling, probably malformed cmake config
 find_package(yaml-cpp REQUIRED)
@@ -71,7 +71,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${O
 add_library(tkDNN SHARED ${tkdnn_SRC})
 target_link_libraries(tkDNN ${tkdnn_LIBS})
 
-#static 
+#static
 #add_library(tkDNN_static STATIC ${tkdnn_SRC})
 #target_link_libraries(tkDNN_static ${tkdnn_LIBS})
 
@@ -163,7 +163,7 @@ target_link_libraries(seg_demo tkDNN)
 # Install
 #-------------------------------------------------------------------------------
 #if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-#    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" 
+#    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install"
 #         CACHE PATH "default install path" FORCE)
 #endif()
 message("install dir:" ${CMAKE_INSTALL_PREFIX})
