@@ -46,11 +46,16 @@ void maxElem_kernel(float *src_begin, float *dst_begin, const int n_classes, con
     if (i > size)
         return;
 
-    thrust::device_ptr<float> dPbeg ( &src_begin[i*n_classes] ) ;
-    thrust::device_ptr<float> dPend = dPbeg + n_classes;
-    thrust::device_ptr<float> result = thrust::max_element(thrust::device,dPbeg, dPend);
+    float max = 0;
+    int max_idx = 0;
+    for( int j = i*n_classes; j < i*n_classes + n_classes; ++j ){
+        if( src_begin[j] > max ){
+            max = src_begin[j];
+            max_idx = j;
+        }
+    }
 
-    dst_begin[i] = result - dPbeg;
+    dst_begin[i] = max_idx - i*n_classes;
 }
 
 void maxElem(dnnType *src_begin, dnnType *dst_begin, const int c, const int h, const int w){
