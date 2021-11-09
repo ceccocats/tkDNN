@@ -45,16 +45,16 @@ int main(int argc, char *argv[]) {
 
     char ntype = 'y';
     if(argc > 2)
-        ntype = argv[2][0];
-    int n_classes = 80;
+        input = argv[2];
     if(argc > 3)
-        n_classes = atoi(argv[3]);
+        ntype = argv[3][0];
+    int n_classes = 80;
     if(argc > 4)
-        cfgPath = argv[4];
+        n_classes = atoi(argv[4]);
     if(argc > 5)
-        namePath = argv[5];
+        cfgPath = argv[5];
     if(argc > 6)
-        input = argv[6];
+        namePath = argv[6];
     int n_batch = 1;
     if(argc > 7)
         n_batch = atoi(argv[7]);

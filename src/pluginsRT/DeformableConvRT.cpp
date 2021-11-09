@@ -65,7 +65,6 @@ DeformableConvRT::~DeformableConvRT() {
     checkCuda( cudaFree(offset) );
     checkCuda( cudaFree(mask) );
     checkCuda( cudaFree(ones_d2) );
-    cublasDestroy(handle);
 }
 
 DeformableConvRT::DeformableConvRT(const void *data, size_t length) {
@@ -229,7 +228,9 @@ void DeformableConvRT::serialize(void *buffer) const NOEXCEPT {
     assert(buf == a + getSerializationSize());
 }
 
-void DeformableConvRT::destroy() NOEXCEPT { delete this; }
+void DeformableConvRT::destroy() NOEXCEPT {
+    delete this;
+}
 
 
 const char *DeformableConvRT::getPluginNamespace() const NOEXCEPT {

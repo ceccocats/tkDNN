@@ -3,10 +3,12 @@ project(tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 14)
 
+option(ENABLE_OPENCV_CUDA_CONTRIB "Enable OpenCV CUDA Contrib" OFF )
+
 find_package(CUDA 9.0 REQUIRED)
 if (CUDA_FOUND)
-    #Get CUDA compute capability
     set(OUTPUTFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda_script) # No suffix required
+    execute_process(COMMAND "rm ${OUTPUTFILE}")
     set(CUDAFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/getCudaArch.cu)
     execute_process(COMMAND ${CUDA_NVCC_EXECUTABLE} -lcuda ${CUDAFILE} -o ${OUTPUTFILE})
     execute_process(COMMAND ${OUTPUTFILE}
@@ -25,10 +27,7 @@ if (CUDA_FOUND)
         message(STATUS "CUDA Path: ${CUDA_TOOLKIT_ROOT_DIR}")
         message(STATUS "CUDA Libararies: ${CUDA_LIBRARIES}")
         message(STATUS "CUDA Performance Primitives: ${CUDA_npp_LIBRARY}")
-
         set(CUDA_NVCC_FLAGS "${ARCH}")
-        add_definitions(-DGPU) #You may not require this
-
     else()
         message(WARNING ${ARCH})
     endif()
@@ -51,7 +50,7 @@ endif()
 
 if(WIN32)
     if(CMAKE_BUILD_TYPE MATCHES Release)
-        set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc /Md")
+        set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc /MD")
         set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32)
     endif()
 
@@ -70,7 +69,7 @@ if(DEBUG)
 endif()
 
 if(TKDNN_PATH)
-    message("SET TKDNN_PATH:"${TKDNN_PATH})
+    message("SET TKDNN_PATH:" ${TKDNN_PATH})
     add_definitions(-DTKDNN_PATH="${TKDNN_PATH}")
 else()
     add_definitions(-DTKDNN_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -105,6 +104,13 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV")
+if(ENABLE_OPENCV_CUDA_CONTRIB)
+    if (OpenCV_FOUND)
+        find_package(OpenCV COMPONENTS cudawarping cudaarithm)
+        add_compile_definitions(OPENCV_CUDACONTRIB)
+        message("OpenCV Cuda Contrib modules found")
+    endif()
+endif()
 # if(OpenCV_CUDA_VERSION)
 #     add_compile_definitions(OPENCV_CUDACONTRIB)
 # endif()

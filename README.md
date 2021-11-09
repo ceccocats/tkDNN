@@ -104,14 +104,15 @@ bash scripts/install_OpenCV4.sh
 When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
 ## How to compile this repo
-Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above). 
+Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above).
+On both linux and windows ,the ```CMAKE_BUILD_TYPE``` variable needs to be defined as either ```Release``` or ```Debug```.
 ```
 git clone https://github.com/ceccocats/tkDNN
 cd tkDNN
 mkdir build
 cd build
-cmake .. 
-make
+cmake -DCMAKE_BUILD_TYPE=Release -G"Ninja" .. 
+ninja
 ```
 
 ## Workflow
@@ -136,7 +137,7 @@ For specific details on how to run:
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
-## tkDNN on Windows 10 (experimental)
+## tkDNN on Windows 10/11 (experimental)
 
 For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows.md).
 
