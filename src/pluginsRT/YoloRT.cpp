@@ -31,7 +31,6 @@ YoloRT::YoloRT(int classes, int num, int c,int h,int w,std::vector<std::string> 
 
 YoloRT::YoloRT(const void *data, size_t length) {
     std::vector<float> maskTemp,biasTemp;
-    std::cout<<"LENGTH : "<<length<<std::endl;
     const char* buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
     classes = readBUF<int>(buf);
     num = readBUF<int>(buf);
@@ -160,7 +159,6 @@ void YoloRT::serialize(void *buffer) const NOEXCEPT {
     char *buf = reinterpret_cast<char *>(buffer), *a = buf;
     writeBUF(buf, classes);    //std::cout << "Classes :" << classes << std::endl;
     writeBUF(buf, num);        //std::cout << "Num : " << num << std::endl;
-    std::cout<<num<<std::endl;
     writeBUF(buf, n_masks);    //std::cout << "N_Masks" << n_masks << std::endl;
     writeBUF(buf, scaleXY);    //std::cout << "ScaleXY :" << scaleXY << std::endl;
     writeBUF(buf, nms_thresh); //std::cout << "nms_thresh :" << nms_thresh << std::endl;
