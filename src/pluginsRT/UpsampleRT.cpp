@@ -81,7 +81,7 @@ void UpsampleRT::serialize(void *buffer) const NOEXCEPT {
 }
 
 bool UpsampleRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *UpsampleRT::getPluginType() const NOEXCEPT {

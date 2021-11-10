@@ -93,8 +93,7 @@ delete this;
 }
 
 bool MaxPoolFixedSizeRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
-    //todo assert
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *MaxPoolFixedSizeRT::getPluginNamespace() const NOEXCEPT {

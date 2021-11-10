@@ -76,8 +76,7 @@ void ReshapeRT::serialize(void *buffer) const NOEXCEPT {
 }
 
 bool ReshapeRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
-    //todo assert
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *ReshapeRT::getPluginType() const NOEXCEPT {

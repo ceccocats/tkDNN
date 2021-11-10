@@ -287,7 +287,7 @@ void DeformableConvRT::detachFromContext() NOEXCEPT {
 }
 
 bool DeformableConvRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+        return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 DeformableConvRTPluginCreator::DeformableConvRTPluginCreator() {

@@ -73,7 +73,7 @@ const char *ActivationMishRT::getPluginVersion() const NOEXCEPT  {
 }
 
 bool ActivationMishRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+        return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *ActivationMishRT::getPluginNamespace() const NOEXCEPT  {

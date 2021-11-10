@@ -131,8 +131,7 @@ void RouteRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
 }
 
 bool RouteRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
-    //todo assert
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 IPluginV2 *RouteRT::clone() const NOEXCEPT {

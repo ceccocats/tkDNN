@@ -131,7 +131,7 @@ void RegionRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
 }
 
 bool RegionRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 IPluginV2Ext *RegionRT::clone() const NOEXCEPT {

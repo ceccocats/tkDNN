@@ -158,7 +158,7 @@ FlattenConcatRT::configurePlugin(const Dims *inputDims, int32_t nbInputs, const 
 }
 
 bool FlattenConcatRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 FlattenConcatRTPluginCreator::FlattenConcatRTPluginCreator() {

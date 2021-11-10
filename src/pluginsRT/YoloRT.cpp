@@ -152,7 +152,7 @@ size_t YoloRT::getSerializationSize() const NOEXCEPT {
 }
 
 bool YoloRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 void YoloRT::serialize(void *buffer) const NOEXCEPT {

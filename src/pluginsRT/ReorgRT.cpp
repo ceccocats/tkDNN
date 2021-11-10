@@ -75,7 +75,7 @@ void ReorgRT::serialize(void *buffer) const NOEXCEPT {
 }
 
 bool ReorgRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *ReorgRT::getPluginType() const NOEXCEPT {

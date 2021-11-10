@@ -77,8 +77,7 @@ void ResizeLayerRT::serialize(void *buffer) const NOEXCEPT {
 }
 
 bool ResizeLayerRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
-    return true;
-    //todo assert
+    return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
 
 const char *ResizeLayerRT::getPluginType() const NOEXCEPT {
