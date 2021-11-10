@@ -4,6 +4,9 @@ using namespace nvinfer1;
 std::vector<PluginField> MaxPoolFixedSizeRTPluginCreator::mPluginAttributes;
 PluginFieldCollection MaxPoolFixedSizeRTPluginCreator::mFC{};
 
+static const char* MAXPOOLFIXEDSIZERT_PLUGIN_VERSION{"1"};
+static const char* MAXPOOLFIXEDSIZERT_PLUGIN_NAME{"MaxPoolingFixedSizeRT_tkDNN"};
+
 MaxPoolFixedSizeRT::MaxPoolFixedSizeRT(int c, int h, int w, int n, int strideH, int strideW, int winSize, int padding){
     this->c = c;
     this->h = h;
@@ -105,11 +108,11 @@ void MaxPoolFixedSizeRT::setPluginNamespace(const char *pluginNamespace) NOEXCEP
 }
 
 const char *MaxPoolFixedSizeRT::getPluginType() const NOEXCEPT {
-    return "MaxPoolingFixedSizeRT_tkDNN";
+    return MAXPOOLFIXEDSIZERT_PLUGIN_NAME;
 }
 
 const char *MaxPoolFixedSizeRT::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return MAXPOOLFIXEDSIZERT_PLUGIN_VERSION;
 }
 
 IPluginV2Ext *MaxPoolFixedSizeRT::clone() const NOEXCEPT {
@@ -185,11 +188,11 @@ IPluginV2Ext *MaxPoolFixedSizeRTPluginCreator::createPlugin(const char *name, co
 }
 
 const char *MaxPoolFixedSizeRTPluginCreator::getPluginName() const NOEXCEPT {
-    return "MaxPoolingFixedSizeRT_tkDNN";
+    return MAXPOOLFIXEDSIZERT_PLUGIN_NAME;
 }
 
 const char *MaxPoolFixedSizeRTPluginCreator::getPluginVersion() const NOEXCEPT {
-    return "1";
+    return MAXPOOLFIXEDSIZERT_PLUGIN_VERSION;
 }
 
 const PluginFieldCollection *MaxPoolFixedSizeRTPluginCreator::getFieldNames() NOEXCEPT {

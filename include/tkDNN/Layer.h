@@ -500,6 +500,7 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
+    int padding;
     bool size;
     tkdnnPoolingMode_t pool_mode;
 

@@ -369,8 +369,21 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 
     if(l->pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE)
     {
-        IPluginV2 *plugin = new MaxPoolFixedSizeRT(l->output_dim.c, l->output_dim.h, l->output_dim.w, l->output_dim.n, l->strideH, l->strideW, l->winH, l->winH-1);
-        IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        auto creator = getPluginRegistry()->getPluginCreator("MaxPoolingFixedSizeRT_tkDNN","1");
+        std::vector<PluginField> mPluginAttributes;
+        PluginFieldCollection mFC{};
+        mPluginAttributes.emplace_back(PluginField("c",&l->output_dim.c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("h",&l->output_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("w",&l->output_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("n",&l->output_dim.n,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("strideH",&l->strideH,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("strideW",&l->strideW,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("winSize",&l->winH,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("padding",&l->padding,PluginFieldType::kINT32,1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+        auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
