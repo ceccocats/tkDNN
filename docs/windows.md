@@ -13,7 +13,7 @@
 ### Dependencies-Windows 
 This branch should work on every NVIDIA GPU supported in windows with the following dependencies:
 
-* WINDOWS 10 1803 or HIGHER 
+* WINDOWS 10 1803/WINDOWS 11 or HIGHER 
 * CUDA 11.2 
 * CUDNN 8.1.1
 * TENSORRT 7.2.3 

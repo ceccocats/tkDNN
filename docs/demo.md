@@ -32,7 +32,7 @@ make
 
 Once you have successfully created your rt file, run the demo(yolo) :
 ```
-./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y 80 ../tests/darknet/cfg/yolo4.cfg ../tests/darknet/names/cococ.names 
+./demo yolo4_fp32.rt ../demo/yolo_test.mp4 y 80 ../tests/darknet/cfg/yolo4.cfg ../tests/darknet/names/coco.names 
 ```
 
 To run demo for mobilenet and centernet for the created rt file :
@@ -67,9 +67,9 @@ N.B. By default it is used FP32 inference
 To run the demo with FP16 inference follow these steps (example with yolov3):
 ```
 export TKDNN_MODE=FP16  # set the half floating point optimization
-rm yolo3_fp16.rt        # be sure to delete(or move) old tensorRT files
-./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_fp16.rt ../demo/yolo_test.mp4 y
+rm yolo4_fp16.rt        # be sure to delete(or move) old tensorRT files
+./test_yolo4            # run the yolo test (is slow)
+./demo yolo4_fp16.rt ../demo/yolo_test.mp4 y 80 ../tests/darknet/cfg/yolo4.cfg ../tests/darknet/names/coco.names 
 ```
 N.B. Using FP16 inference will lead to some errors in the results (first or second decimal). 
 
@@ -92,9 +92,9 @@ Then a complete example using yolo3 and COCO dataset would be:
 export TKDNN_MODE=INT8
 export TKDNN_CALIB_LABEL_PATH=../demo/COCO_val2017/all_labels.txt
 export TKDNN_CALIB_IMG_PATH=../demo/COCO_val2017/all_images.txt
-rm yolo3_int8.rt        # be sure to delete(or move) old tensorRT files
-./test_yolo3            # run the yolo test (is slow)
-./demo yolo3_int8.rt ../demo/yolo_test.mp4 y
+rm yolo4_int8.rt        # be sure to delete(or move) old tensorRT files
+./test_yolo4            # run the yolo test (is slow)
+./demo yolo4_int8.rt ../demo/yolo_test.mp4 y 80 ../tests/darknet/cfg/yolo4.cfg ../tests/darknet/names/coco.names 
 ```
 N.B. 
 

@@ -17,10 +17,9 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 }
 ```
 
-### What's new (20 July 2021)
-- [x] Support to sematic segmentation [README](docs/README_seg.md)
-- [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
-- [ ] Support to TensorRT8 (WIP)
+### What's new (November 2021)
+- [x] Support to sematic segmentation on cuda 11+ [README](docs/README_seg.md)
+- [x] Support to TensorRT8 
 
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
@@ -75,17 +74,17 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
   - [Workflow](#workflow)
   - [Exporting weights](#exporting-weights)
   - [Run the demos](#run-the-demos)
-  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows-10-experimental)
+  - [tkDNN on Windows 10 or Windows 11](#tkdnn-on-windows-10-or-windows-11)
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
   
 
 ## Dependencies
 This branch works on every NVIDIA GPU that supports the following (latest tested) dependencies:
-* CUDA 11.0 (or >= 10) [the segmentation only works with CUDA 10 for now]
-* cuDNN 8.0.4 (or >= 7.3)
-* TensorRT 7.2.0 (or >=5)
-* OpenCV 4.5.2 (or >=4)
+* CUDA 11.3 (or >= 10.2) [the segmentation only works with CUDA 10 for now]
+* cuDNN 8.2.1 (or >= 8.0.4)
+* TensorRT 8.0.3 (or >=7.2)
+* OpenCV 4.5.4 (or >=4)
 * cmake 3.21 (or >= 3.15)
 * yaml-cpp 0.5.2
 * eigen3 3.3.4
@@ -101,7 +100,8 @@ To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh`
 ```
 bash scripts/install_OpenCV4.sh
 ```
-When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
+If you have OpenCV compiled with cuda and contrib and want to use it with tkDNN pass  ```ENABLE_OPENCV_CUDA_CONTRIB=ON``` flag when compiling tkDBB
+. If the flag is not passed,the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
 ## How to compile this repo
 Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above).
@@ -137,9 +137,9 @@ For specific details on how to run:
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
-## tkDNN on Windows 10/11 (experimental)
+## tkDNN on Windows 10 or Windows 11
 
-For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows.md).
+For specific details on how to run tkDNN on Windows 10/11 see [HERE](./docs/windows.md).
 
 ## Existing tests and supported networks
 

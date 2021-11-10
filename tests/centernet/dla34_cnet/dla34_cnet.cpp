@@ -492,7 +492,7 @@ int main()
 //    }
 
     //convert network to tensorRT
-    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("dla34_cnet"));
+    tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(&net, net.getNetworkRTName("dla34_cnet"));
 
     tk::dnn::dataDim_t dim1 = dim; //input dim
     printCenteredTitle(" CUDNN inference ", '=', 30);
@@ -509,7 +509,7 @@ int main()
     {
         dim2.print();
         TKDNN_TSTART
-        netRT.infer(dim2, data);
+        netRT->infer(dim2, data);
         TKDNN_TSTOP
         dim2.print();
     }
@@ -528,7 +528,7 @@ int main()
 
         dnnType *cudnn_out, *rt_out;
         cudnn_out = outs[i]->dstData;
-        rt_out = (dnnType *)netRT.buffersRT[i+out_count];
+        rt_out = (dnnType *)netRT->buffersRT[i+out_count];
         // there is the maxpool. It isn't an output but it is necessary for the process section
         if(i==0)
             out_count ++;
@@ -540,6 +540,6 @@ int main()
         std::cout<<"CUDNN vs TRT    "; 
         ret_cudnn_tensorrt |= checkResult(odim, cudnn_out, rt_out) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     }
-    netRT.destroy();
+    netRT->destroy();
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }
