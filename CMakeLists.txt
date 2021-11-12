@@ -6,35 +6,8 @@ set(CMAKE_CXX_STANDARD 14)
 option(ENABLE_OPENCV_CUDA_CONTRIB "Enable OpenCV CUDA Contrib" OFF )
 
 find_package(CUDA 9.0 REQUIRED)
-if (CUDA_FOUND)
-    set(OUTPUTFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda_script) # No suffix required
-    execute_process(COMMAND "rm ${OUTPUTFILE}")
-    set(CUDAFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/getCudaArch.cu)
-    execute_process(COMMAND ${CUDA_NVCC_EXECUTABLE} -lcuda ${CUDAFILE} -o ${OUTPUTFILE})
-    execute_process(COMMAND ${OUTPUTFILE}
-            RESULT_VARIABLE CUDA_RETURN_CODE
-            OUTPUT_VARIABLE ARCH)
-
-    if(${CUDA_RETURN_CODE} EQUAL 0)
-        set(CUDA_SUCCESS "TRUE")
-    else()
-        set(CUDA_SUCCESS "FALSE")
-    endif()
-
-    if (${CUDA_SUCCESS})
-        message(STATUS "CUDA Architecture: ${ARCH}")
-        message(STATUS "CUDA Version: ${CUDA_VERSION_STRING}")
-        message(STATUS "CUDA Path: ${CUDA_TOOLKIT_ROOT_DIR}")
-        message(STATUS "CUDA Libararies: ${CUDA_LIBRARIES}")
-        message(STATUS "CUDA Performance Primitives: ${CUDA_npp_LIBRARY}")
-        set(CUDA_NVCC_FLAGS "${ARCH}")
-    else()
-        message(WARNING ${ARCH})
-    endif()
-endif()
 
 SET(CUDA_SEPARABLE_COMPILATION ON)
-
 
 if(UNIX)
     if(CMAKE_BUILD_TYPE MATCHES Release)

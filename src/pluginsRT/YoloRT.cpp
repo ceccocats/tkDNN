@@ -9,8 +9,7 @@ PluginFieldCollection YoloRTPluginCreator::mFC{};
 static const char* YOLORT_PLUGIN_VERSION{"1"};
 static const char* YOLORT_PLUGIN_NAME{"YoloRT_tkDNN"};
 
-YoloRT::YoloRT(int classes, int num, int c,int h,int w,std::vector<std::string> classNames,
-               std::vector<float> masks_v,std::vector<float> bias_v,int n_masks, float scale_xy,
+YoloRT::YoloRT(int classes, int num, int c,int h,int w,int n_masks, float scale_xy,
                float nms_thresh, int nms_kind,
                int new_coords) {
     this->c = c;
@@ -23,14 +22,9 @@ YoloRT::YoloRT(int classes, int num, int c,int h,int w,std::vector<std::string> 
     this->nms_thresh = nms_thresh;
     this->nms_kind = nms_kind;
     this->new_coords = new_coords;
-    this->classesNames = std::move(classNames);
-    this->mask = std::move(masks_v);
-    this->bias = std::move(bias_v);
-
 }
 
 YoloRT::YoloRT(const void *data, size_t length) {
-    std::vector<float> maskTemp,biasTemp;
     const char* buf = reinterpret_cast<const char*>(data),*bufCheck = buf;
     classes = readBUF<int>(buf);
     num = readBUF<int>(buf);
@@ -42,21 +36,6 @@ YoloRT::YoloRT(const void *data, size_t length) {
     c = readBUF<int>(buf);
     h = readBUF<int>(buf);
     w = readBUF<int>(buf);
-    mask.resize(n_masks);
-    for(int i=0;i<n_masks;i++){
-        mask[i] = readBUF<dnnType>(buf);
-    }
-    bias.resize(n_masks*2*num);
-    for(int i=0;i<n_masks*2*num;i++){
-        bias[i] = readBUF<dnnType>(buf);
-    }
-    classesNames.resize(classes);
-    for(int i=0;i<classes;i++){
-        char tmp[YOLORT_CLASSNAME_W];
-        for(int j=0;j<YOLORT_CLASSNAME_W;j++)
-            tmp[j] = readBUF<char>(buf);
-        classesNames[1] = std::string(tmp);
-    }
     assert(buf == bufCheck + length);
 }
 
@@ -147,8 +126,7 @@ int32_t YoloRT::enqueue(int32_t batchSize, const void *const *inputs, void **out
 
 
 size_t YoloRT::getSerializationSize() const NOEXCEPT {
-    return 8 * sizeof(int) + 2 * sizeof(float) + n_masks * sizeof(dnnType) + num * n_masks * 2 * sizeof(dnnType) +
-           YOLORT_CLASSNAME_W * classes * sizeof(char);
+    return 8 * sizeof(int) + 2 * sizeof(float) ;
 }
 
 bool YoloRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
@@ -167,21 +145,7 @@ void YoloRT::serialize(void *buffer) const NOEXCEPT {
     writeBUF(buf, c);            //std::cout << "C : " << c << std::endl;
     writeBUF(buf, h);            //std::cout << "H : " << h << std::endl;
     writeBUF(buf, w);            //std::cout << "C : " << c << std::endl;
-    for (int i = 0; i < n_masks; i++) {
-        writeBUF(buf, mask[i]); //std::cout << "mask[i] : " << mask[i] << std::endl;
-    }
-    for (int i = 0; i < n_masks * 2 * num; i++) {
-        writeBUF(buf, bias[i]); //std::cout << "bias[i] : " << bias[i] << std::endl;
-    }
 
-    // save classes names
-    for (int i = 0; i < classes; i++) {
-        char tmp[YOLORT_CLASSNAME_W];
-        strcpy(tmp, classesNames[i].c_str());
-        for (int j = 0; j < YOLORT_CLASSNAME_W; j++) {
-            writeBUF(buf, tmp[j]);
-        }
-    }
     assert(buf == a + getSerializationSize());
 }
 
@@ -206,7 +170,7 @@ void YoloRT::setPluginNamespace(const char *pluginNamespace) NOEXCEPT {
 }
 
 IPluginV2Ext *YoloRT::clone() const NOEXCEPT {
-    auto *p = new YoloRT(classes, num,c,h,w,classesNames,mask,bias, n_masks, scaleXY, nms_thresh, nms_kind, new_coords);
+    auto *p = new YoloRT(classes, num,c,h,w,n_masks, scaleXY, nms_thresh, nms_kind, new_coords);
     p->setPluginNamespace(mPluginNamespace.c_str());
     return p;
 }
@@ -265,15 +229,12 @@ IPluginV2Ext *YoloRTPluginCreator::createPlugin(const char *name, const PluginFi
     int c = *(static_cast<const int *>(fields[2].data));
     int h = *(static_cast<const int *>(fields[3].data));
     int w = *(static_cast<const int *>(fields[4].data));
-    std::vector<std::string> classNames(static_cast<const std::string *>(fields[5].data),static_cast<const std::string *>(fields[5].data) + fields[5].length);
-    std::vector<dnnType> mask_v(static_cast<const dnnType*>(fields[6].data),static_cast<const dnnType*>(fields[6].data) + fields[6].length);
-    std::vector<dnnType> bias_v(static_cast<const dnnType*>(fields[7].data),static_cast<const dnnType*>(fields[7].data) + fields[7].length);
-    int n_masks = *(static_cast<const int *>(fields[8].data));
-    dnnType scaleXY = *(static_cast<const float*>(fields[9].data));
-    dnnType nmsThresh = *(static_cast<const float*>(fields[10].data));
-    int nms_kind = *(static_cast<const int*>(fields[11].data));
-    int new_coords = *(static_cast<const int*>(fields[12].data));
-    auto *pluginObj = new YoloRT(classes,num,c,h,w,classNames,mask_v,bias_v,n_masks,scaleXY,nmsThresh,nms_kind,new_coords);
+    int n_masks = *(static_cast<const int *>(fields[5].data));
+    dnnType scaleXY = *(static_cast<const float*>(fields[6].data));
+    dnnType nmsThresh = *(static_cast<const float*>(fields[7].data));
+    int nms_kind = *(static_cast<const int*>(fields[8].data));
+    int new_coords = *(static_cast<const int*>(fields[9].data));
+    auto *pluginObj = new YoloRT(classes,num,c,h,w,n_masks,scaleXY,nmsThresh,nms_kind,new_coords);
     return pluginObj;
 }
 

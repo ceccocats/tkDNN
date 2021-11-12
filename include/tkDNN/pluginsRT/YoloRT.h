@@ -13,8 +13,7 @@ namespace nvinfer1 {
     class YoloRT : public IPluginV2Ext {
 
     public:
-        YoloRT(int classes, int num,int c,int h,int w,std::vector<std::string> classNames,
-               std::vector<float> masks_v,std::vector<float> bias_v, int n_masks = 3, float scale_xy = 1,
+        YoloRT(int classes, int num,int c,int h,int w, int n_masks = 3, float scale_xy = 1,
                float nms_thresh = 0.45, int nms_kind = 0, int new_coords = 0);
 
         YoloRT(const void *data, size_t length);
@@ -84,8 +83,6 @@ namespace nvinfer1 {
         int NUM = 0;
         std::vector<std::string> classesNames;
 
-        std::vector<dnnType> mask;
-        std::vector<dnnType> bias;
 
         int entry_index(int batch, int location, int entry) {
             int n = location / (w * h);
