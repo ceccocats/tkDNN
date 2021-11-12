@@ -55,13 +55,13 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         configRT->setMinTimingIterations(1);
         configRT->setMaxWorkspaceSize(1 << 30);
         configRT->setFlag(BuilderFlag::kDEBUG);
+
 #endif
         //input and dataType
         dataDim_t dim = net->layers[0]->input_dim;
         dtRT = DataType::kFLOAT;
 
         builderRT->setMaxBatchSize(net->maxBatchSize);
-        configRT->setMaxWorkspaceSize(1 << 30);
 
         if(net->fp16 && builderRT->platformHasFastFp16()) {
             dtRT = DataType::kHALF;
