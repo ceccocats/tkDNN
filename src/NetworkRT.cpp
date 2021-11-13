@@ -430,9 +430,13 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         return lRT;
     }
     else if(l->act_mode == CUDNN_ACTIVATION_CLIPPED_RELU) {
-        IPluginV2 *plugin = new ActivationReLUCeiling(l->ceiling);
-        IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kCLIP);
+        //IPluginV2 *plugin = new ActivationReLUCeiling(l->ceiling);
+        lRT->setAlpha(0);
+        lRT->setBeta(l->ceiling);
         checkNULL(lRT);
+        //IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        //checkNULL(lRT);
         return lRT;
     } 
     else if(l->act_mode == ACTIVATION_MISH) {
