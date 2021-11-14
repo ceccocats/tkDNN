@@ -183,7 +183,11 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     output_dim.h = oDim.d[1];
     output_dim.w = oDim.d[2];
     output_dim.print();
-	
+    if(builderActive){
+        std::cout<<"NUMBER OF LAYERS IN NETWORK : "<<networkRT->getNbLayers()<<std::endl;
+    }
+    std::cout<<"NUMBER OF LAYERS IN ENGINE : "<<engineRT->getNbLayers()<<std::endl;
+
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
