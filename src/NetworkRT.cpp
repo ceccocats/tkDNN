@@ -137,12 +137,16 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
         printCudaMemUsage();
         std::cout<<"Building tensorRT cuda engine...\n";
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6 && NV_TENSORRT_MAJOR <=7
         engineRT = builderRT->buildEngineWithConfig(*networkRT, *configRT);
-#else 
+#elif NV_TENSORRT_MAJOR < 6
         engineRT = builderRT->buildCudaEngine(*networkRT);
         //engineRT = std::shared_ptr<nvinfer1::ICudaEngine>(builderRT->buildCudaEngine(*networkRT));
+#elif NV_TENSORRT_MAJOR >=8
+        IHostMemory *serializedEngineRT = builderRT->buildSerializedNetwork(*networkRT,*configRT);
+
 #endif
+#if NV_TENSORRT_MAJOR > 5 && NV_TENSORRT_MAJOR < 8
         if(engineRT == nullptr)
             FatalError("cloud not build cuda engine")
         // we don't need the network any more
@@ -150,6 +154,19 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         std::cout<<"serialize net\n";
         builderActive = true;
         serialize(name);
+#else
+        if(serializedEngineRT == nullptr){
+            FatalError("could not build cuda engine");
+        }
+        std::cout<<"saving serialized network to file"<<std::endl;
+        builderActive = true;
+        serialize(name,serializedEngineRT);
+        delete serializedEngineRT;
+#if NV_TENSORRT_MAJOR >= 8
+        deserialize(name);
+#endif
+
+#endif
     } else {
         builderActive = false;
         deserialize(name);
@@ -321,6 +338,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     }
 
     ILayer *lRT = nullptr;
+#if NV_TENSORRT_MAJOR < 8
     if(!l->deConv) {
         IConvolutionLayer *lRTconv = networkRT->addConvolution(*input, 
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
@@ -341,6 +359,28 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         Dims d = lRTconv->getOutput(0)->getDimensions();
         //std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
     }
+#else
+    if(!l->deConv) {
+        IConvolutionLayer *lRTconv = networkRT->addConvolutionNd(*input,
+                                                               l->outputs, Dims2{l->kernelH, l->kernelW}, w, b);
+        checkNULL(lRTconv);
+        lRTconv->setStrideNd(Dims2{l->strideH, l->strideW});
+        lRTconv->setPaddingNd(Dims2{l->paddingH, l->paddingW});
+        lRTconv->setNbGroups(l->groups);
+        lRT = (ILayer*) lRTconv;
+    } else {
+        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolutionNd(*input,
+                                                                   l->outputs, Dims2{l->kernelH, l->kernelW}, w, b);
+        checkNULL(lRTconv);
+        lRTconv->setStrideNd(Dims2{l->strideH, l->strideW});
+        lRTconv->setPaddingNd(Dims2{l->paddingH, l->paddingW});
+        lRTconv->setNbGroups(l->groups);
+        lRT = (ILayer*) lRTconv;
+
+        Dims d = lRTconv->getOutput(0)->getDimensions();
+        //std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
+    }
+#endif
 
     checkNULL(lRT);
     if(l->batchnorm) {
@@ -396,12 +436,20 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     }
     else
     {
+#if NV_TENSORRT_MAJOR < 8
         IPoolingLayer *lRT = networkRT->addPooling(*input, ptype, DimsHW{l->winH, l->winW});
         checkNULL(lRT);
 
         lRT->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRT->setStride(DimsHW{l->strideH, l->strideW});
         return lRT;
+#else
+        IPoolingLayer *lRT = networkRT->addPoolingNd(*input,ptype,Dims2{l->winH,l->winW});
+        checkNULL(lRT);
+        lRT->setPaddingNd(Dims2{l->paddingH,l->paddingW});
+        lRT->setStrideNd(Dims2{l->strideH,l->strideW});
+        return lRT;
+#endif
     }  
 }
 
@@ -753,6 +801,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     return lRT3;
 }
 
+#if NV_TENSORRT_MAJOR > 5 && NV_TENSORRT_MAJOR < 8
 bool NetworkRT::serialize(const char *filename) {
 
     std::ofstream p(filename, std::ios::binary);
@@ -769,6 +818,21 @@ bool NetworkRT::serialize(const char *filename) {
     ptr->destroy();
     return true;
 }
+#else
+bool NetworkRT::serialize(const char *filename,nvinfer1::IHostMemory *ptr){
+    std::ofstream p(filename, std::ios::binary);
+    if (!p) {
+        FatalError("could not open plan output file");
+        return false;
+    }
+
+    if(ptr == nullptr)
+    FatalError("Cant serialize network");
+
+    p.write(reinterpret_cast<const char*>(ptr->data()), ptr->size());
+    return true;
+}
+#endif
 
 bool NetworkRT::deserialize(const char *filename) {
 
@@ -793,10 +857,10 @@ bool NetworkRT::deserialize(const char *filename) {
 }
 
 void NetworkRT::destroy() {
-    contextRT->destroy();
+    delete contextRT;
     if(builderActive) {
-        engineRT->destroy();
-        builderRT->destroy();
+        delete engineRT;
+        delete builderRT;
     }
 }
 
