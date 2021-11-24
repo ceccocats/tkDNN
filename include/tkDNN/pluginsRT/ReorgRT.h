@@ -1,64 +1,98 @@
 #include<cassert>
 #include "../kernels.h"
+#include <NvInfer.h>
+#include <vector>
 
-class ReorgRT : public IPlugin {
+namespace nvinfer1 {
+    class ReorgRT : public IPluginV2Ext {
 
-public:
-	ReorgRT(int stride) {
-		this->stride = stride;
-	}
+    public:
+        ReorgRT(int stride,int c,int h,int w);
 
-	~ReorgRT(){
+        ~ReorgRT();
 
-	}
+        ReorgRT(const void *data, size_t length);
 
-	int getNbOutputs() const override {
-		return 1;
-	}
+        int getNbOutputs() const NOEXCEPT override;
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
-		return DimsCHW{inputs[0].d[0]*stride*stride, inputs[0].d[1]/stride, inputs[0].d[2]/stride};
-	}
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override;
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		c = inputDims[0].d[0];
-		h = inputDims[0].d[1];
-		w = inputDims[0].d[2];
-	}
+        int initialize() NOEXCEPT override;
 
-	int initialize() override {
+        void terminate() NOEXCEPT override;
 
-		return 0;
-	}
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override;
 
-	virtual void terminate() override {
-	}
-
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
-		return 0;
-	}
-
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-
-		reorgForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-					  reinterpret_cast<dnnType*>(outputs[0]), 
-					  batchSize, c, h, w, stride, stream);
-		return 0;
-	}
+#if NV_TENSORRT_MAJOR > 7
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,
+                    cudaStream_t stream) NOEXCEPT override;
+#elif NV_TENSORRT_MAJOR == 7
+        int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) override;
+#endif
 
 
-	virtual size_t getSerializationSize() override {
-		return 4*sizeof(int);
-	}
+        size_t getSerializationSize() const NOEXCEPT override;
 
-	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, stride);
-		tk::dnn::writeBUF(buf, c);
-		tk::dnn::writeBUF(buf, h);
-		tk::dnn::writeBUF(buf, w);
-		assert(buf == a + getSerializationSize());
-	}
+        void serialize(void *buffer) const NOEXCEPT override;
 
-	int c, h, w, stride;
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override;
+
+        const char *getPluginType() const NOEXCEPT override;
+
+        const char *getPluginVersion() const NOEXCEPT override;
+
+        void destroy() NOEXCEPT override;
+
+        const char *getPluginNamespace() const NOEXCEPT override;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
+
+        IPluginV2Ext *clone() const NOEXCEPT override;
+
+        DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const NOEXCEPT override;
+
+        void attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) NOEXCEPT override;
+
+        bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const NOEXCEPT override;
+
+        bool canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT override;
+
+        void configurePlugin (Dims const *inputDims, int32_t nbInputs, Dims const *outputDims,
+                              int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
+                              bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
+                              int32_t maxBatchSize) NOEXCEPT override;
+
+        void detachFromContext() NOEXCEPT override;
+
+        int c, h, w, stride;
+    private:
+        std::string mPluginNamespace;
+    };
+
+    class ReorgRTPluginCreator : public IPluginCreator {
+    public:
+        ReorgRTPluginCreator();
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
+
+        const char *getPluginNamespace() const NOEXCEPT override;
+
+        IPluginV2Ext *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override;
+
+        IPluginV2Ext *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override;
+
+        const char *getPluginName() const NOEXCEPT override;
+
+        const char *getPluginVersion() const NOEXCEPT override;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override;
+
+    private:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+    REGISTER_TENSORRT_PLUGIN(ReorgRTPluginCreator);
 };
+

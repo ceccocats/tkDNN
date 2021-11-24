@@ -18,6 +18,8 @@ struct Frame
     std::string iFilename;
     std::vector<BoundingBox> gt;
     std::vector<BoundingBox> det;
+    int width;
+    int height;
 
     void print() const;
 };

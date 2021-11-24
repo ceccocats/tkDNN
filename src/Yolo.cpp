@@ -88,7 +88,6 @@ dnnType* Yolo::infer(dataDim_t &dim, dnnType* srcData) {
     for (int b = 0; b < dim.n; ++b){
         for(int n = 0; n < n_masks; ++n){
             int index = entry_index(b, n*dim.w*dim.h, 0, classes, input_dim, output_dim);
-            std::cout<<"new_coords"<<new_coords<<std::endl;
             if (new_coords == 1){
                 if (this->scaleXY != 1) scalAdd(dstData + index, 2 * dim.w*dim.h, this->scaleXY, -0.5*(this->scaleXY - 1), 1);
             }
@@ -134,7 +133,7 @@ void correct_yolo_boxes(Yolo::detection *dets, int n, int w, int h, int netw, in
     }
 }
 
-int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords) {
+int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int newCoords) {
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
@@ -158,7 +157,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
             if(objectness <= thresh) continue;
             int box_index  = entry_index(0, n*lw*lh + i, 0, classes, input_dim, output_dim);
             
-            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh, new_coords);
+            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh, newCoords);
             dets[count].objectness = objectness;
             dets[count].classes = classes;
             for(j = 0; j < classes; ++j){

@@ -23,7 +23,7 @@ bool fileExist(const char *fname) {
 void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url){
     if(!fileExist(input_bin.c_str())){
         std::string mkdir_cmd = "mkdir " + test_folder; 
-        std::string wget_cmd = "curl " + weights_url + " --output " + test_folder + "/weights.zip";
+        std::string wget_cmd = "curl -tlsv1 -C - " + weights_url + " --output " + test_folder + "/weights.zip --user user:pass -O --retry 999 --retry-max-time 0";
 #ifdef __linux__
         std::string unzip_cmd = "unzip " + test_folder + "/weights.zip -d" + test_folder;
         std::string rm_cmd = "rm " + test_folder + "/weights.zip";
@@ -92,7 +92,7 @@ void printDeviceVector(int size, dnnType* vec_d, bool device){
         delete [] vec;
 }
 
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit) {
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int limit, bool verbose) {
 
     dnnType *data_h, *correct_h;
     const float eps = 0.02f;
@@ -111,6 +111,7 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int 
     }
     int diffs = 0;
     for(int i=0; i<size; i++) {
+        // data_h[i] = data_h[i]*1e-2;
         if(data_h[i] != data_h[i] || correct_h[i] != correct_h[i] || //nan control
            fabs(data_h[i] - correct_h[i]) > eps) {
             diffs += 1;
@@ -126,13 +127,15 @@ int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device, int 
         delete [] correct_h;
     }
 
-    std::cout<<" | ";
-    if(diffs == 0)
-        std::cout<<COL_GREENB<<"OK";
-    else
-        std::cout<<COL_REDB<<"Wrongs: "<<diffs;
+    if(verbose){
+        std::cout<<" | ";
+        if(diffs == 0)
+            std::cout<<COL_GREENB<<"OK";
+        else
+            std::cout<<COL_REDB<<"Wrongs: "<<diffs;
 
-    std::cout<<COL_END<<" ~"<<eps<<"\n";
+        std::cout<<COL_END<<" ~"<<eps<<"\n";
+    }
     return diffs;
 }
 

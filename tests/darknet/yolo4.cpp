@@ -15,9 +15,9 @@ int main() {
         bin_path + "/debug/layer161_out.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4.cfg";
-    std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/coco.names";
-    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download");
+    std::string cfg_path  = "../tests/darknet/cfg/yolo4.cfg";
+    std::string name_path = "../tests/darknet/names/coco.names";
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/982LxTQcNQfFQc4/download");
 
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
@@ -29,6 +29,7 @@ int main() {
     int ret = testInference(input_bins, output_bins, net, netRT);
     net->releaseLayers();
     delete net;
+    netRT->destroy();
     delete netRT;
     return ret;
 }

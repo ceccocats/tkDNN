@@ -1,5 +1,11 @@
 #include "kernelsThrust.h"
 
+void transformDep(float *src_begin, float *src_end, float *dst_begin, float *dst_end) {
+    int e = exp(-6);
+    thrust::transform(thrust::device, dst_begin, dst_end, thrust::make_constant_iterator(e), dst_begin, thrust::plus<float>());
+    thrust::transform(thrust::device, src_begin, src_end, dst_begin, dst_begin, thrust::divides<float>());
+    thrust::transform(thrust::device, dst_begin, dst_end, thrust::make_constant_iterator(-1.0), dst_begin, thrust::plus<float>());
+}
 
 void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op){
     thrust::transform(thrust::device, src_begin, src_end, src2_begin, src_out, op);
@@ -34,6 +40,30 @@ void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int
     sortAndTopK_kernel<<<blocks, threads, 0>>>(src_begin, idsrc, topk_scores, topk_inds, topk_ys, topk_xs, size, K);   
 }
 
+__global__ 
+void maxElem_kernel(float *src_begin, float *dst_begin, const int n_classes, const int size){
+    int i = blockDim.x*blockIdx.x + threadIdx.x;
+    if (i > size)
+        return;
+
+    float max = 0;
+    int max_idx = 0;
+    for( int j = i*n_classes; j < i*n_classes + n_classes; ++j ){
+        if( src_begin[j] > max ){
+            max = src_begin[j];
+            max_idx = j;
+        }
+    }
+
+    dst_begin[i] = max_idx - i*n_classes;
+}
+
+void maxElem(dnnType *src_begin, dnnType *dst_begin, const int c, const int h, const int w){
+    int blocks = (h*w)/32+1;
+    int threads = 32;
+    maxElem_kernel<<<blocks, threads, 0>>>(src_begin, dst_begin, c, h*w);   
+}
+
 void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, const int wh, int *clses, int *xs, int *ys){    
     thrust::transform(thrust::device, ids_begin, ids_end, thrust::make_constant_iterator(wh), clses, thrust::divides<int>());
     thrust::transform(thrust::device, ids_begin, ids_end, thrust::make_constant_iterator(wh), ids_begin, thrust::modulus<int>());
@@ -49,6 +79,14 @@ void topKxyAddOffset(int * ids_begin, const int K, const int size,
     thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(size), ids_out, thrust::plus<int>());
     thrust::gather(thrust::device, ids_out, ids_out+K, src_begin, src_out);
     thrust::transform(thrust::device, intys_begin, intys_begin + K, src_out, ys_begin, thrust::plus<float>());
+}
+
+void getRecordsFromTopKId(int * ids_begin, const int K, const int ch, const int size, dnnType *src_begin, float *src_out, int *ids_out) {
+    for(int i=0; i<ch; i++) {
+        // thrust::gather(thrust::device, ids_begin, ids_begin + K, src_begin, src_out);
+        thrust::transform(thrust::device, ids_begin, ids_begin + K, thrust::make_constant_iterator(i*size), ids_out, thrust::plus<int>());
+        thrust::gather(thrust::device, ids_out, ids_out + K, src_begin, src_out+i*K);
+    }
 }
 
 void bboxes(int * ids_begin, const int K, const int size, float *xs_begin, float *ys_begin, 

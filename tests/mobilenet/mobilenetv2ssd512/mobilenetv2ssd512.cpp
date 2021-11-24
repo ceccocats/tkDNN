@@ -469,6 +469,19 @@ int main()
     //print network model
     net.print();
 
+//     for(int i=0; i<net.num_layers; i++) {
+//         if(net.layers[i]->getLayerType() == tk::dnn::LAYER_CONV2D) {
+//             tk::dnn::Conv2d *c = (tk::dnn::Conv2d*) net.layers[i];
+//             c->releaseDevice();
+//             c->releaseHost(true, false);
+//         }
+//         if(net.layers[i]->dstData != nullptr) {
+//             cudaFree(net.layers[i]->dstData);
+//             net.layers[i]->dstData = nullptr;
+//         }
+//    }
+
+
     // convert network to tensorRT
     tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("mobilenetv2ssd512"));
 
@@ -540,6 +553,6 @@ int main()
     std::cout << "CUDNN vs TRT    " << std::endl;
     ret_cudnn_tensorrt |= checkResult(conf->output_dim.tot(), conf->dstData, rt_out3) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     ret_cudnn_tensorrt |= checkResult(loc->output_dim.tot(), loc->dstData, rt_out4) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
-
+    netRT.destroy();
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

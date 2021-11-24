@@ -1,63 +1,81 @@
 #include<cassert>
 #include "../kernels.h"
+#include <NvInfer.h>
+#include <vector>
+#include <utils.h>
 
-class ActivationReLUCeiling : public IPlugin {
+namespace nvinfer1 {
+    class ActivationReLUCeiling : public IPluginV2 {
 
-public:
-	ActivationReLUCeiling(const float ceiling) {
-		this->ceiling = ceiling;
-	}
+    public:
+        explicit ActivationReLUCeiling(const float ceiling) ;
 
-	~ActivationReLUCeiling(){
+        ~ActivationReLUCeiling() ;
 
-	}
+        ActivationReLUCeiling(const void *data, size_t length) ;
 
-	int getNbOutputs() const override {
-		return 1;
-	}
+        int getNbOutputs() const NOEXCEPT override ;
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
-		return inputs[0];
-	}
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		size = 1;
-		for(int i=0; i<outputDims[0].nbDims; i++)
-			size *= outputDims[0].d[i];
-	}
+        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
-	int initialize() override {
+        int initialize() NOEXCEPT override ;
 
-		return 0;
-	}
+        void terminate() NOEXCEPT override ;
 
-	virtual void terminate() override {
-	}
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
+#if NV_TENSORRT_MAJOR > 7
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,cudaStream_t stream) NOEXCEPT override ;
+#elif NV_TENSORRT_MAJOR == 7
+        int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) override;
+#endif
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
-		return 0;
-	}
+        size_t getSerializationSize() const NOEXCEPT override ;
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
+        void serialize(void *buffer) const NOEXCEPT override ;
 
-		activationReLUCeilingForward((dnnType*)reinterpret_cast<const dnnType*>(inputs[0]), 
-											reinterpret_cast<dnnType*>(outputs[0]), batchSize*size, ceiling, stream);
-		return 0;
-	}
+        IPluginV2 *clone() const NOEXCEPT override ;
 
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
 
-	virtual size_t getSerializationSize() override {
-		return 1*sizeof(int) +  1*sizeof(float);
-	}
+        void destroy() NOEXCEPT override ;
 
-	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, ceiling);
-		tk::dnn::writeBUF(buf, size);
-		assert(buf = a + getSerializationSize());
-		
-	}
+        const char *getPluginType() const NOEXCEPT override ;
 
-	int size;
-	float ceiling;
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+        int size;
+        float ceiling;
+    private:
+        std::string mPluginNamespace;
+    };
+
+    class ActivationReLUCeilingPluginCreator : public IPluginCreator {
+    public:
+        ActivationReLUCeilingPluginCreator() ;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override ;
+
+    public:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+    REGISTER_TENSORRT_PLUGIN(ActivationReLUCeilingPluginCreator);
 };

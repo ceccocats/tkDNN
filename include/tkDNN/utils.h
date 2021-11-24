@@ -6,11 +6,15 @@
 #include <fstream>
 #include <iomanip>
 #include <stdlib.h>
+#include <yaml-cpp/yaml.h>
+
 
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 #include <cublas_v2.h>
 #include <cudnn.h>
+#include <NvInferVersion.h>
+
 
 #ifdef __linux__
 #include <unistd.h>
@@ -20,7 +24,29 @@
 #include <chrono>
 
 
+
+
+#if NV_TENSORRT_MAJOR > 7
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
+
+
 #define dnnType float
+
+template<typename T> void writeBUF(char*& buffer, const T& val)
+{
+    *reinterpret_cast<T*>(buffer) = val;
+    buffer += sizeof(T);
+}
+
+template<typename T> T readBUF(const char*& buffer)
+{
+    T val = *reinterpret_cast<const T*>(buffer);
+    buffer += sizeof(T);
+    return val;
+}
 
 
 // Colored output
@@ -118,7 +144,7 @@ void printCenteredTitle(const char *title, char fill, int dim = 30);
 bool fileExist(const char *fname);
 void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url);
 void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10);
+int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10, bool verbose=true);
 void printDeviceVector(int size, dnnType* vec_d, bool device = true);
 float getColor(const int c, const int x, const int max);
 void resize(int size, dnnType **data);
@@ -135,4 +161,20 @@ static inline bool isCudaPointer(void *data) {
   cudaPointerAttributes attr;
   return cudaPointerGetAttributes(&attr, data) == 0;
 }
+
+inline YAML::Node YAMLloadConf(const std::string& conf_file) {
+    std::cerr<<"Loading YAML: "<<conf_file<<"\n";
+    return YAML::LoadFile(conf_file);
+}
+
+template<typename T>
+inline T YAMLgetConf(YAML::Node conf, std::string key, T defaultVal) {
+    T val = defaultVal;
+    if(conf && conf[key]) {
+        val = conf[key].as<T>();
+    }
+    return val;
+}
+
+
 #endif //UTILS_H

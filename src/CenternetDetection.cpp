@@ -3,7 +3,7 @@
 
 namespace tk { namespace dnn {
 
-bool CenternetDetection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh){
+bool CenternetDetection::init(const std::string& tensor_path, const std::string& cfg_path,const std::string& name_path,const int n_classes, const int n_batches, const float conf_thresh){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str() );
     classes = n_classes;
@@ -118,6 +118,7 @@ bool CenternetDetection::init(const std::string& tensor_path, const int n_classe
     
     dst2.at<float>(2,0)=dst2.at<float>(1,0) + (-dst2.at<float>(0,1)+dst2.at<float>(1,1) );
     dst2.at<float>(2,1)=dst2.at<float>(1,1) + (dst2.at<float>(0,0)-dst2.at<float>(1,0) );
+    return true;
     
 }
 
@@ -347,21 +348,21 @@ void CenternetDetection::postprocess(const int bi, const bool mAP){
         new_pt1.at<float>(0,0)=static_cast<float>(trans2.at<double>(0,0))*bbx0[i] +
                                 static_cast<float>(trans2.at<double>(0,1))*bby0[i] +
                                 static_cast<float>(trans2.at<double>(0,2))*1.0;
-        new_pt1.at<float>(0,1)=static_cast<float>(trans2.at<double>(1,0))*bbx0[i] +
+        new_pt1.at<float>(1,0)=static_cast<float>(trans2.at<double>(1,0))*bbx0[i] +
                                 static_cast<float>(trans2.at<double>(1,1))*bby0[i] +
                                 static_cast<float>(trans2.at<double>(1,2))*1.0;
 
         new_pt2.at<float>(0,0)=static_cast<float>(trans2.at<double>(0,0))*bbx1[i] +
                                 static_cast<float>(trans2.at<double>(0,1))*bby1[i] +
                                 static_cast<float>(trans2.at<double>(0,2))*1.0;
-        new_pt2.at<float>(0,1)=static_cast<float>(trans2.at<double>(1,0))*bbx1[i] +
+        new_pt2.at<float>(1,0)=static_cast<float>(trans2.at<double>(1,0))*bbx1[i] +
                                 static_cast<float>(trans2.at<double>(1,1))*bby1[i] +
                                 static_cast<float>(trans2.at<double>(1,2))*1.0;
 
         target_coords[i*4] = new_pt1.at<float>(0,0);
-        target_coords[i*4+1] = new_pt1.at<float>(0,1);
+        target_coords[i*4+1] = new_pt1.at<float>(1,0);
         target_coords[i*4+2] = new_pt2.at<float>(0,0);
-        target_coords[i*4+3] = new_pt2.at<float>(0,1);
+        target_coords[i*4+3] = new_pt2.at<float>(1,0);
     }
        
     detected.clear();

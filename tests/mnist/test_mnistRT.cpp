@@ -15,7 +15,7 @@ using namespace nvinfer1;
 // Logger for info/warning/errors
 class Logger : public ILogger			
 {
-	void log(Severity severity, const char* msg) override
+	void log(Severity severity, const char* msg) NOEXCEPT override
 	{
 		// suppress info-level messages
 		if (severity != Severity::kINFO)
@@ -66,11 +66,11 @@ int main() {
     std::cout<<"\n==== TensorRT ====\n";
 	// create the builder
 	IBuilder* builder = nvinfer1::createInferBuilder(gLogger);
-	INetworkDefinition* network = builder->createNetwork();
-
+	IBuilderConfig* config = builder->createBuilderConfig();
+	INetworkDefinition* network = builder->createNetworkV2(0U);
     DataType dt = DataType::kFLOAT;
 	//  Create input of shape { 1, 1, 28, 28 } with name referenced by "data"
-	auto input = network->addInput("data", dt, DimsCHW{ 1, 28, 28});
+	auto input = network->addInput("data", dt, Dims3{ 1, 28, 28});
 	assert(input != nullptr);
 
     tk::dnn::Conv2d *c0 = &l0; 
@@ -126,9 +126,9 @@ int main() {
 
 	// Build the engine
 	builder->setMaxBatchSize(1);
-	builder->setMaxWorkspaceSize(1 << 20);
+	config->setMaxWorkspaceSize(1 << 20);
 
-	auto engine = builder->buildCudaEngine(*network);
+	auto engine = builder->buildEngineWithConfig(*network,*config);
 	// we don't need the network any more
 	network->destroy();
 

@@ -22,6 +22,7 @@ enum layerType_t {
     LAYER_ACTIVATION_LOGISTIC,
     LAYER_FLATTEN,
     LAYER_RESHAPE,
+    LAYER_RESIZE,
     LAYER_MULADD,
     LAYER_POOLING,
     LAYER_SOFTMAX,
@@ -55,6 +56,10 @@ public:
 
     int id = 0;
     bool final;        //if the layer is the final one
+    unsigned int n_params = 0;
+    unsigned int feature_map_size = 0;
+    long unsigned MACC = 0;
+
 
     std::string getLayerName() {
         layerType_t type = getLayerType();
@@ -72,6 +77,7 @@ public:
             case LAYER_ACTIVATION_LOGISTIC: return "ActivationLogistic";
             case LAYER_FLATTEN:             return "Flatten";
             case LAYER_RESHAPE:             return "Reshape";
+            case LAYER_RESIZE:              return "Resize";
             case LAYER_MULADD:              return "MulAdd";
             case LAYER_POOLING:             return "Pooling";
             case LAYER_SOFTMAX:             return "Softmax";
@@ -226,8 +232,9 @@ class Activation : public Layer {
 public:
     int act_mode;
     float ceiling;
+    float slope;
 
-    Activation(Network *net, int act_mode, const float ceiling=0.0); 
+    Activation(Network *net, int act_mode, const float ceiling=0.0, const float slope=0.1); 
     virtual ~Activation();
     virtual layerType_t getLayerType() { 
         if(act_mode == CUDNN_ACTIVATION_CLIPPED_RELU)
@@ -416,6 +423,8 @@ public:
     virtual layerType_t getLayerType() { return LAYER_FLATTEN; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    int c, h, w, rows, cols;
 };
 
 /**
@@ -429,9 +438,27 @@ public:
     virtual layerType_t getLayerType() { return LAYER_RESHAPE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    int n,c,h,w;
 
 };
 
+enum ResizeMode_t { NEAREST= 0, 
+                    LINEAR= 1};
+
+/**
+    Resize layer
+*/
+class Resize : public Layer {
+
+public:
+    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false, ResizeMode_t mode=NEAREST);
+    virtual ~Resize();
+    virtual layerType_t getLayerType() { return LAYER_RESIZE; };
+
+    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+
+    ResizeMode_t mode;
+};
 
 /**
     MulAdd layer
@@ -473,6 +500,7 @@ public:
     int winH, winW;
     int strideH, strideW;
     int paddingH, paddingW;
+    int padding;
     bool size;
     tkdnnPoolingMode_t pool_mode;
 
@@ -552,14 +580,17 @@ public:
 class Shortcut : public Layer {
 
 public:
-    Shortcut(Network *net, Layer *backLayer); 
+    Shortcut(Network *net, Layer *backLayer, bool mul=false); 
     virtual ~Shortcut();
     virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
+    int c,h,w;
+
 public:
     Layer *backLayer;
+    bool mul = false;
 };
 
 /**
@@ -577,6 +608,7 @@ public:
 
     int stride;
     bool reverse;
+    int c,h,w;
 };
 
 struct box {
@@ -594,6 +626,16 @@ struct sortable_bbox {
     int index;
     int cl;
     float **probs;
+};
+struct box3D {
+    int cl;
+    std::vector<float> corners;
+    float prob;
+
+    void print() 
+    {
+        std::cout<<"\tcl: "<<cl<<"\tprob: "<<prob<<"\tshape corners: "<<corners.size()<<std::endl;
+    }
 };
 
 /**
@@ -650,6 +692,7 @@ public:
     virtual layerType_t getLayerType() { return LAYER_REGION; };
 
     int classes, coords, num;
+    int c,h,w;
     
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
