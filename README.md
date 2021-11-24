@@ -17,10 +17,15 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 }
 ```
 
-### What's new (20 July 2021)
+### What's new
+#### 20 July 2021
 - [x] Support to sematic segmentation [README](docs/README_seg.md)
 - [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
-- [ ] Support to TensorRT8 (WIP)
+#### 24 November 2021
+- [x] Support to sematic segmentation on cuda 11
+- [x] Support to TensorRT8 (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg)). 
+
+TensorRT8 (and therefore Jetpack 4.6) is currently supported only on the branch tensorrt8 due to [performance issue with TensorRT8](https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-8.html)). We will merge it to the master as soon as those issues are fixed (probably in future minor releases).
 
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
