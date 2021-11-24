@@ -42,5 +42,47 @@ namespace nvinfer1 {
 
         const char *getPluginType() const NOEXCEPT override;
 
+        const char *getPluginVersion() const NOEXCEPT override;
+
+        void destroy() NOEXCEPT override;
+
+        const char *getPluginNamespace() const NOEXCEPT override;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
+
+        IPluginV2 *clone() const NOEXCEPT override;
+
+        int size;
+        float slope;
+
+    private:
+        std::string mPluginNamespace;
+    };
+
+    class ActivationLeakyRTPluginCreator : public IPluginCreator {
+    public:
+        ActivationLeakyRTPluginCreator();
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
+
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override;
+
+    private:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+
     REGISTER_TENSORRT_PLUGIN(ActivationLeakyRTPluginCreator);
 };
