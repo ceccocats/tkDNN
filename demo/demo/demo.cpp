@@ -62,12 +62,14 @@ int main(int argc, char *argv[]) {
     bool show           = YAMLgetConf<bool>(conf, "show", true);
     bool save           = YAMLgetConf<bool>(conf, "save", false);
 
-
-
-
-
-
-
+    std::cout   <<"Net settings - net: "<< net
+                <<", ntype: "<< ntype
+                <<", n_classes: "<< n_classes
+                <<", n_batch: "<< n_batch
+                <<", conf_thresh: "<< conf_thresh<<"\n"; 
+    std::cout   <<"Demo settings - input: "<< input
+                <<", show: "<< show
+                <<", save: "<< save<<"\n\n"; 
 
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
