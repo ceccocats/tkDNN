@@ -140,6 +140,9 @@ target_link_libraries(test_shelfnet_berkeley tkDNN)
 add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
 target_link_libraries(test_shelfnet_mapillary tkDNN)
 
+add_executable(test_shelfnet_coco tests/shelfnet/shelfnet_coco.cpp)
+target_link_libraries(test_shelfnet_coco tkDNN)
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)

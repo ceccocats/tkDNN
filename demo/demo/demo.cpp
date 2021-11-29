@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         std::string config_file = "..\\..\\..\\demo\\demoConfig.yaml";
     #endif
     if(argc > 1)
-        config_file = config_file[1]; 
+        config_file = argv[1]; 
     
     YAML::Node conf =  YAMLloadConf(config_file);
     if(!conf)
