@@ -26,15 +26,15 @@ class Logger : public ILogger {
 
 namespace tk { namespace dnn {
 
-std::map<Layer*, nvinfer1::ITensor*>tensors; 
+std::map<Layer*, nvinfer1::ITensor*>tensors;
 
 NetworkRT::NetworkRT(Network *net, const char *name) {
 
-    float rt_ver = float(NV_TENSORRT_MAJOR) + 
-                   float(NV_TENSORRT_MINOR)/10 + 
+    float rt_ver = float(NV_TENSORRT_MAJOR) +
+                   float(NV_TENSORRT_MINOR)/10 +
                    float(NV_TENSORRT_PATCH)/100;
     std::cout<<"New NetworkRT (TensorRT v"<<rt_ver<<")\n";
-  
+
     builderRT = createInferBuilder(loggerRT);
     std::cout<<"Float16 support: "<<builderRT->platformHasFastFp16()<<"\n";
     std::cout<<"Int8 support: "<<builderRT->platformHasFastInt8()<<"\n";
@@ -42,12 +42,12 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
     std::cout<<"DLAs: "<<builderRT->getNbDLACores()<<"\n";
 #endif
     networkRT = builderRT->createNetworkV2(0U);
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
         configRT = builderRT->createBuilderConfig();
 #endif
-    
+
     if(!fileExist(name)) {
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
         // Calibrator life time needs to last until after the engine is built.
         std::unique_ptr<IInt8EntropyCalibrator> calibrator;
 
@@ -78,14 +78,14 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             configRT->setDLACore(0);
         }
 #endif
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
         if(net->int8 && builderRT->platformHasFastInt8()){
             // dtRT = DataType::kINT8;
             // builderRT->setInt8Mode(true);
             configRT->setFlag(BuilderFlag::kINT8);
-            BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951) 
+            BatchStream calibrationStream(dim, 1, 100,      //TODO: check if 100 images are sufficient to the calibration (or 4951)
                                             net->fileImgList, net->fileLabelList);
-            
+
             /* The calibTableFilePath contains the path+filename of the calibration table.
              * Each calibration table can be found in the corresponding network folder (../Test/*).
              * Each network is located in a folder with the same name as the network.
@@ -96,15 +96,15 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             if(!fileExist((const char *)calib_table_path.c_str()))
                 calib_table_name = "./" + net->networkNameRT.substr(0, net->networkNameRT.find('.')) + "-calibration.table";
 
-            calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
-                                            calib_table_name, 
+            calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1,
+                                            calib_table_name,
                                             "data"));
             configRT->setInt8Calibrator(calibrator.get());
         }
 #endif
-        
+
         // add input layer
-        ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
+        ITensor *input = networkRT->addInput("data", DataType::kFLOAT,
                         Dims3{ dim.c, dim.h, dim.w});
         checkNULL(input);
 
@@ -112,17 +112,17 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
         for(int i=0; i<net->num_layers; i++) {
             Layer *l = net->layers[i];
             ILayer *Ilay = convert_layer(input, l);
-#if NV_TENSORRT_MAJOR >= 6                
+#if NV_TENSORRT_MAJOR >= 6
             if(net->int8 && builderRT->platformHasFastInt8())
             {
                 Ilay->setPrecision(DataType::kINT8);
             }
 #endif
             Ilay->setName( (l->getLayerName() + std::to_string(i)).c_str() );
-            
+
             input = Ilay->getOutput(0);
             input->setName( (l->getLayerName() + std::to_string(i) + "_out").c_str() );
-            
+
             if(l->final)
                 networkRT->markOutput(*input);
             tensors[l] = input;
@@ -182,7 +182,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
-	buf_input_idx = engineRT->getBindingIndex("data"); 
+	buf_input_idx = engineRT->getBindingIndex("data");
     buf_output_idx = engineRT->getBindingIndex("out");
     std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
@@ -285,10 +285,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Dense *l) {
     //std::cout<<"convert Dense\n";
     void *data_b, *bias_b;
     if(dtRT == DataType::kHALF) {
-        data_b     = l->data16_h;    
+        data_b     = l->data16_h;
         bias_b     = l->bias16_h;
     } else {
-        data_b     = l->data_h;    
+        data_b     = l->data_h;
         bias_b     = l->bias_h;
     }
 
@@ -308,7 +308,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
 
     void *data_b, *bias_b, *bias2_b, *power_b, *mean_b, *variance_b, *scales_b;
     if(dtRT == DataType::kHALF) {
-        data_b     = l->data16_h;    
+        data_b     = l->data16_h;
         bias_b     = l->bias16_h;
         bias2_b    = l->bias216_h;
         power_b    = l->power16_h;
@@ -316,7 +316,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         variance_b = l->variance16_h;
         scales_b   = l->scales16_h;
     } else {
-        data_b     = l->data_h;    
+        data_b     = l->data_h;
         bias_b     = l->bias_h;
         bias2_b    = l->bias2_h;
         power_b    = l->power_h;
@@ -332,7 +332,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         b = { dtRT, bias_b, l->outputs};
     else{
         if (l->additional_bias)
-            b = { dtRT, bias2_b, l->outputs}; 
+            b = { dtRT, bias2_b, l->outputs};
         else
             b = { dtRT, nullptr, 0}; //on batchnorm bias are added later
     }
@@ -340,7 +340,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     ILayer *lRT = nullptr;
 #if NV_TENSORRT_MAJOR < 8
     if(!l->deConv) {
-        IConvolutionLayer *lRTconv = networkRT->addConvolution(*input, 
+        IConvolutionLayer *lRTconv = networkRT->addConvolution(*input,
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
@@ -348,14 +348,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
     } else {
-        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input, 
+        IDeconvolutionLayer *lRTconv = networkRT->addDeconvolution(*input,
             l->outputs, DimsHW{l->kernelH, l->kernelW}, w, b);
         checkNULL(lRTconv);
         lRTconv->setStride(DimsHW{l->strideH, l->strideW});
         lRTconv->setPadding(DimsHW{l->paddingH, l->paddingW});
         lRTconv->setNbGroups(l->groups);
         lRT = (ILayer*) lRTconv;
-        
+
         Dims d = lRTconv->getOutput(0)->getDimensions();
         //std::cout<<"DECONV: "<<d.d[0]<<" "<<d.d[1]<<" "<<d.d[2]<<" "<<d.d[3]<<"\n";
     }
@@ -388,14 +388,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
         Weights shift{dtRT, mean_b, l->outputs};
         Weights scale{dtRT, variance_b, l->outputs};
         // std::cout<<lRT->getNbOutputs()<<std::endl;
-        IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
+        IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
                     shift, scale, power);
-        
+
         checkNULL(lRT2);
 
         Weights shift2{dtRT, bias_b, l->outputs};
         Weights scale2{dtRT, scales_b, l->outputs};
-        IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
+        IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL,
                     shift2, scale2, power);
         checkNULL(lRT3);
 
@@ -450,7 +450,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
         lRT->setStrideNd(Dims2{l->strideH,l->strideW});
         return lRT;
 #endif
-    }  
+    }
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
@@ -458,14 +458,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
 
     if(l->act_mode == ACTIVATION_LEAKY) {
         //std::cout<<"New plugin LEAKY\n";
-        
-#if NV_TENSORRT_MAJOR < 6                
+
+#if NV_TENSORRT_MAJOR < 6
         // plugin version
         IPlugin *plugin = new ActivationLeakyRT(l->slope);
         IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
-#else 
+#else
         IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kLEAKY_RELU);
         lRT->setAlpha(l->slope);
         checkNULL(lRT);
@@ -490,7 +490,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         //IPluginV2Layer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         //checkNULL(lRT);
         return lRT;
-    } 
+    }
     else if(l->act_mode == ACTIVATION_MISH) {
         IActivationLayer *lRT1 = networkRT->addActivation(*input, ActivationType::kSOFTPLUS);
         lRT1->setAlpha(1);
@@ -501,6 +501,11 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
     }
     else if(l->act_mode == ACTIVATION_LOGISTIC) {
         IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kSIGMOID);
+        checkNULL(lRT);
+        return lRT;
+    }
+    else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU){
+        IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kELU);
         checkNULL(lRT);
         return lRT;
     }
@@ -521,7 +526,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Softmax *l) {
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Route *l) {
     // std::cout<<"convert route\n";
-    
+
 
 
     ITensor **tens = new ITensor*[l->layers_n];
@@ -633,10 +638,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
     //std::cout<<"convert Shortcut\n";
 
     //std::cout<<"New plugin Shortcut\n";
-    
+
     ITensor *back_tens = tensors[l->backLayer];
 
-    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul) 
+    if(l->backLayer->output_dim.c == l->output_dim.c && !l->mul)
     {
         IElementWiseLayer *lRT = networkRT->addElementWise(*input, *back_tens, ElementWiseOperation::kSUM);
         checkNULL(lRT);
@@ -660,7 +665,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Shortcut *l) {
         auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
         auto **inputs = new ITensor*[2];
         inputs[0] = input;
-        inputs[1] = back_tens; 
+        inputs[1] = back_tens;
         auto *lRT = networkRT->addPluginV2(inputs, 2, *plugin);
         checkNULL(lRT);
         return lRT;
@@ -690,8 +695,9 @@ IPluginV2Layer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     return lRT;
 }
 
-IPluginV2Layer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
-    //std::cout<<"convert Upsample\n";
+IResizeLayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
+
+#if NV_TENSORRT_MAJOR < 8
     auto creator = getPluginRegistry()->getPluginCreator("UpSample_tkDNN","1");
     std::vector<PluginField> mPluginAttributes;
     PluginFieldCollection mFC{};
@@ -705,6 +711,13 @@ IPluginV2Layer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
     auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
+#else
+    auto *lRT = networkRT->addResize(*input);
+    lRT->setResizeMode(ResizeMode::kNEAREST);
+    lRT->setOutputDimensions(Dims3{l->output_dim.c, l->output_dim.h, l->output_dim.w});
+    checkNULL(lRT);
+    return lRT;
+#endif
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
@@ -787,14 +800,14 @@ ILayer* NetworkRT::convert_layer(ITensor *input, DeformConv2d *l) {
     Weights shift{dtRT, mean_b, l->outputs};
     Weights scale{dtRT, variance_b, l->outputs};
     //std::cout<<lRT->getNbOutputs()<<std::endl;
-    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL, 
+    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
                 shift, scale, power);
-    
+
     checkNULL(lRT2);
 
     Weights shift2{dtRT, bias_b, l->outputs};
     Weights scale2{dtRT, scales_b, l->outputs};
-    IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL, 
+    IScaleLayer *lRT3 = networkRT->addScale(*lRT2->getOutput(0), ScaleMode::kCHANNEL,
                 shift2, scale2, power);
     checkNULL(lRT3);
 
