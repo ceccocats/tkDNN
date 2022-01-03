@@ -275,6 +275,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Upsample*) l);
     if(type == LAYER_DEFORMCONV2D)
         return convert_layer(input, (DeformConv2d*) l);
+    if(type == LAYER_PADDING)
+        return convert_layer(input, (Padding*) l);
 
     std::cout<<l->getLayerName()<<"\n";
     FatalError("Layer not implemented in tensorRT");
@@ -451,6 +453,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
         return lRT;
 #endif
     }
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
+    auto *lRT = networkRT->addSlice(*input,Dims3{0,0,0},Dims3{l->output_dim.c,l->output_dim.h,l->output_dim.w},Dims3{0,0,0});
+    if(l->padding_mode == PADDING_MODE_REFLECTION){
+        lRT->setMode(SliceMode::kREFLECT);
+    }
+    checkNULL(lRT);
+    return lRT;
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {

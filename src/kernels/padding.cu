@@ -44,11 +44,11 @@ int32_t ceilDiv(int32_t a,int32_t b){
 }
 
 
-void reflection_pad2d_out_forward(int32_t padding[4],float *srcData,float *dstData,int32_t input_h,int32_t input_w,int32_t plane_dim,int32_t n_batch,cudaStream_t cudaStream){
-    int32_t pad_l = padding[0];
-    int32_t pad_r = padding[1];
-    int32_t pad_t = padding[2];
-    int32_t pad_b = padding[3];
+void reflection_pad2d_out_forward(int32_t pad_h,int32_t pad_w,float *srcData,float *dstData,int32_t input_h,int32_t input_w,int32_t plane_dim,int32_t n_batch,cudaStream_t cudaStream){
+    int32_t pad_l = pad_w;
+    int32_t pad_r = pad_w;
+    int32_t pad_t = pad_h;
+    int32_t pad_b = pad_w;
     int32_t output_h = input_h + pad_t + pad_b;
     int32_t output_w = input_w + pad_l + pad_r;
     int32_t size_y = plane_dim;

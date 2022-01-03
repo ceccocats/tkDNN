@@ -31,7 +31,8 @@ enum layerType_t {
     LAYER_SHORTCUT,
     LAYER_UPSAMPLE,
     LAYER_REGION,
-    LAYER_YOLO
+    LAYER_YOLO,
+    LAYER_PADDING
 };
 
 #define TKDNN_BN_MIN_EPSILON 1e-5
@@ -87,6 +88,7 @@ public:
             case LAYER_UPSAMPLE:            return "Upsample";
             case LAYER_REGION:              return "Region";
             case LAYER_YOLO:                return "Yolo";
+            case LAYER_PADDING:             return "Padding";
             default:                        return "unknown";
         }
     }
@@ -521,8 +523,31 @@ protected:
 };
 
 /**
+ * Padding Layers
+ * tkDNN supports reflection,constant and zero padding
+ */
+
+typedef enum {
+    PADDING_MODE_CONSTANT = 0,
+    PADDING_MODE_ZERO = 1,
+    PADDING_MODE_REFLECTION = 2
+} tkdnnPaddingMode_t;
+
+class Padding : public Layer {
+public:
+    Padding(Network *net,int32_t pad_h,int32_t pad_w,tkdnnPaddingMode_t padding_mode);
+    virtual ~Padding();
+    virtual layerType_t getLayerType(){return LAYER_PADDING ;};
+    virtual dnnType* infer(dataDim_t& dim,dnnType* srcData);
+    int32_t paddingH,paddingW;
+    tkdnnPaddingMode_t padding_mode;
+
+};
+
+/**
     Softmax layer
 */
+
 class Softmax : public Layer {
 
 public:
