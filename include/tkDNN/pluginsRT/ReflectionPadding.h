@@ -1,21 +1,22 @@
-#ifndef _FLATTENCONCATRT_PLUGIN_H
-#define _FLATTENCONCATRT_PLUGIN_H
+#ifndef _REFLECTIONPADDINGRT_PLUGIN_H
+#define _REFLECTIONPADDINGRT_PLUGIN_H
 
 #include<cassert>
 #include <NvInfer.h>
 #include <vector>
 #include <utils.h>
-namespace nvinfer1 {
-    class FlattenConcatRT : public IPluginV2Ext {
+#include <kernels.h>
 
+namespace nvinfer1{
+    class ReflectionPaddingRT : public IPluginV2Ext {
     public:
-        FlattenConcatRT(int c,int h,int w,int rows,int cols) ;
+        ReflectionPaddingRT(int32_t padH,int32_t padW,int32_t input_h,int32_t input_w,int32_t output_h,int32_t output_w,int32_t c,int32_t n);
 
-        FlattenConcatRT(const void *data, size_t length) ;
+        ReflectionPaddingRT(const void *data,size_t length);
 
-        ~FlattenConcatRT() ;
+        ~ReflectionPaddingRT();
 
-        int getNbOutputs() const NOEXCEPT override ;
+        int getNbOutputs() const NOEXCEPT override;
 
         Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
@@ -56,24 +57,23 @@ namespace nvinfer1 {
         bool canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT override;
 
         void configurePlugin (Dims const *inputDims, int32_t nbInputs, Dims const *outputDims,
-                            int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
-                            bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
-                            int32_t maxBatchSize) NOEXCEPT override;
+                              int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
+                              bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
+                              int32_t maxBatchSize) NOEXCEPT override;
 
         void detachFromContext() NOEXCEPT override;
 
         bool supportsFormat (DataType type, PluginFormat format) const NOEXCEPT override;
 
-        int c, h, w;
-        int rows, cols;
-        cublasHandle_t handle{nullptr};
+        int32_t padH,padW,input_h,input_w,output_h,output_w,n,c;
     private:
         std::string mPluginNamespace;
+
     };
 
-    class FlattenConcatRTPluginCreator : public IPluginCreator {
+    class ReflectionPaddingRTPluginCreator : public IPluginCreator {
     public:
-        FlattenConcatRTPluginCreator() ;
+        ReflectionPaddingRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
@@ -94,7 +94,6 @@ namespace nvinfer1 {
         static std::vector<PluginField> mPluginAttributes;
         std::string mPluginNamespace;
     };
-
-    REGISTER_TENSORRT_PLUGIN(FlattenConcatRTPluginCreator);
 };
 #endif
+

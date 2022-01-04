@@ -2,7 +2,9 @@
 #include <thrust/pair.h>
 #include <stdio.h>
 
-
+/*
+ * Reflection padding is from https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/cuda/ReflectionPad.cu
+ */
 __device__
 inline thrust::pair<int32_t,int32_t> get_index_mapping2d(
         int32_t input_dim_x,int32_t input_dim_y,int32_t output_dim_x,
@@ -66,3 +68,43 @@ void reflection_pad2d_out_forward(int32_t pad_h,int32_t pad_w,float *srcData,flo
     }
 
 }
+
+/*
+ * constant padding is inspired from https://github.com/apache/incubator-mxnet/blob/master/src/operator/pad.cu
+ */
+
+__global__
+void constant_pad2d_kernel(dnnType *srcData,dnnType *dstData,const int32_t padT,const int32_t padL,float constant,int32_t n,int32_t c,int32_t i_h,int32_t i_w,int32_t o_h,int32_t o_w){
+    int outputPointId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(outputPointId >= o_h*o_w){
+        return ;
+    }
+
+    int Ny = i_h;
+    int Nx = i_w;
+
+    int plane =   blockIdx.y;
+    int batch = blockIdx.z;
+    int outputPointX = outputPointId % o_w;
+    int outputPointY = outputPointId / o_w;
+    int checkT       = max(0, outputPointY - padT + 1);
+    int checkB       = max(0, padT + Ny - outputPointY);
+    int checkL       = max(0, outputPointX - padL + 1);
+    int checkR       = max(0, padL + Nx - outputPointX);
+    int inputPointX  = min(max(outputPointX - padL, 0), Nx - 1);
+    int inputPointY  = min(max(outputPointY - padT, 0), Ny - 1);
+    int need_pad     = !(checkT * checkB * checkL * checkR);
+    float value_to_copy = srcData[batch*c*i_h*i_w + plane*i_h*i_w + inputPointY*i_w + inputPointX];
+    dstData[batch*c*o_w*o_h + plane*o_h*o_w + outputPointY*o_w + outputPointX] = value_to_copy * (!need_pad) + need_pad*constant;
+
+}
+
+void constant_pad2d_forward(dnnType *srcData,dnnType *dstData,int32_t input_h,int32_t input_w,int32_t output_h,
+                            int32_t output_w,int32_t c,int32_t n,int32_t padT,int32_t padL,dnnType constant,cudaStream_t cudaStream){
+    int32_t output_plane_size = output_h*output_w;
+    dim3 block_size(output_plane_size>256 ?256:output_plane_size);
+    dim3 grid_size(ceilDiv(output_plane_size,static_cast<int32_t>(256)),c,n);
+    constant_pad2d_kernel<<<grid_size,block_size,0,cudaStream>>>(srcData,dstData,padT,padL,constant,n,c,input_h,input_w,output_h,output_w);
+
+}
+

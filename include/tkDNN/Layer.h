@@ -535,12 +535,13 @@ typedef enum {
 
 class Padding : public Layer {
 public:
-    Padding(Network *net,int32_t pad_h,int32_t pad_w,tkdnnPaddingMode_t padding_mode);
+    Padding(Network *net,int32_t pad_h,int32_t pad_w,tkdnnPaddingMode_t padding_mode,float constant = 0.0);
     virtual ~Padding();
     virtual layerType_t getLayerType(){return LAYER_PADDING ;};
     virtual dnnType* infer(dataDim_t& dim,dnnType* srcData);
     int32_t paddingH,paddingW;
     tkdnnPaddingMode_t padding_mode;
+    float constant;
 
 };
 

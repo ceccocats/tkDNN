@@ -456,12 +456,42 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
+
+    float rt_ver =  float(NV_TENSORRT_MAJOR) +
+                    float(NV_TENSORRT_MINOR)/10 +
+                    float(NV_TENSORRT_PATCH)/100;
+
+#if ((NV_TENSORRT_MAJOR == 8 && NV_TENSORRT_MINOR >= 2) || NV_TENSORRT_MAJOR > 8)
     auto *lRT = networkRT->addSlice(*input,Dims3{0,0,0},Dims3{l->output_dim.c,l->output_dim.h,l->output_dim.w},Dims3{0,0,0});
     if(l->padding_mode == PADDING_MODE_REFLECTION){
         lRT->setMode(SliceMode::kREFLECT);
+    }else if(l->padding_mode == PADDING_MODE_CONSTANT || l->padding_mode == PADDING_MODE_ZERO){
+        lRT->setMode(SliceMode::kFILL);
+        lRT->setInput(4, reinterpret_cast<ITensor &>(l->constant));
     }
     checkNULL(lRT);
     return lRT;
+#else
+    //todo  add PADDING_MODE_CONSTANT AND PADDING_MODE_ZERO for tensorrt versions < 8.2
+    if(l->padding_mode == PADDING_MODE_REFLECTION){
+    auto creator = getPluginRegistry()->getPluginCreator("ReflectionPaddingRT_tkDNN","1");
+    std::vector<PluginField> mPluginAttributes;
+    PluginFieldCollection mFC{};
+    mPluginAttributes.emplace_back(PluginField("padH",&l->paddingH,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("padW",&l->paddingW,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("inputH",&l->input_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("inputW",&l->input_dim.w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("outputH",&l->output_dim.h,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("outputW",&l->output_dim.w,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("n",&l->input_dim.n,PluginFieldType::kINT32,1));
+    mFC.nbFields = mPluginAttributes.size();
+    mFC.fields = mPluginAttributes.data();
+    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+    }
+    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+    checkNULL(lRT);
+    return lRT;
+#endif
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
