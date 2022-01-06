@@ -202,6 +202,10 @@ target_link_libraries(test_shelfnet_berkeley tkDNN)
 add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
 target_link_libraries(test_shelfnet_mapillary tkDNN)
 
+# MONODEPTH2
+add_executable(test_monodepth2 tests/monodepth2/monodepth2.cpp)
+target_link_libraries(test_monodepth2 tkDNN)
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
