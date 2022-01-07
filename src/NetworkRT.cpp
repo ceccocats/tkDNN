@@ -484,13 +484,15 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
     mPluginAttributes.emplace_back(PluginField("outputH",&l->output_dim.h,PluginFieldType::kINT32,1));
     mPluginAttributes.emplace_back(PluginField("outputW",&l->output_dim.w,PluginFieldType::kINT32,1));
     mPluginAttributes.emplace_back(PluginField("n",&l->input_dim.n,PluginFieldType::kINT32,1));
+    mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
     auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
-    }
     auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
     checkNULL(lRT);
     return lRT;
+    }
+    
 #endif
 }
 
