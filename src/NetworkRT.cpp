@@ -474,24 +474,45 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
 #else
     //todo  add PADDING_MODE_CONSTANT AND PADDING_MODE_ZERO for tensorrt versions < 8.2
     if(l->padding_mode == PADDING_MODE_REFLECTION){
-    auto creator = getPluginRegistry()->getPluginCreator("ReflectionPaddingRT_tkDNN","1");
-    std::vector<PluginField> mPluginAttributes;
-    PluginFieldCollection mFC{};
-    mPluginAttributes.emplace_back(PluginField("padH",&l->paddingH,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("padW",&l->paddingW,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("inputH",&l->input_dim.h,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("inputW",&l->input_dim.w,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("outputH",&l->output_dim.h,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("outputW",&l->output_dim.w,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("n",&l->input_dim.n,PluginFieldType::kINT32,1));
-    mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
-    mFC.nbFields = mPluginAttributes.size();
-    mFC.fields = mPluginAttributes.data();
-    auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
-    auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
-    checkNULL(lRT);
-    return lRT;
+        auto creator = getPluginRegistry()->getPluginCreator("ReflectionPaddingRT_tkDNN","1");
+        std::vector<PluginField> mPluginAttributes;
+        PluginFieldCollection mFC{};
+        mPluginAttributes.emplace_back(PluginField("padH",&l->paddingH,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("padW",&l->paddingW,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("inputH",&l->input_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("inputW",&l->input_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("outputH",&l->output_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("outputW",&l->output_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("n",&l->input_dim.n,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+        auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+    }else if(l->padding_mode == PADDING_MODE_CONSTANT || l->padding_mode == PADDING_MODE_ZERO){
+        auto creator = getPluginRegistry()->getPluginCreator("ConstantPaddingRT_tkDNN","1");
+        std::vector<PluginField> mPluginAttributes;
+        PluginFieldCollection mFC{};
+        mPluginAttributes.emplace_back(PluginField("padH",&l->paddingH,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("padW",&l->paddingW,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("inputH",&l->input_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("inputW",&l->input_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("outputH",&l->output_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("outputW",&l->output_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("n",&l->input_dim.n,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("c",&l->input_dim.c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("constant",&l->constant,PluginFieldType::kFLOAT32,1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+        auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+        auto *lRT = networkRT->addPluginV2(&input,1,*plugin);
+        checkNULL(lRT);
+        return lRT;
     }
+
+    return nullptr;
     
 #endif
 }

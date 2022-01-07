@@ -23,6 +23,8 @@
 #include <pluginsRT/ShortcutRT.h>
 #include <pluginsRT/UpsampleRT.h>
 #include <pluginsRT/YoloRT.h>
+#include <pluginsRT/ConstantPaddingRT.h>
+#include <pluginsRT/ReflectionPadding.h>
 
 
 
