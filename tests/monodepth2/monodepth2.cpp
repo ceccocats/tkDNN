@@ -72,156 +72,135 @@ int main(){
 
     tk::dnn::dataDim_t dim(1,3,192,640,1);
     tk::dnn::Network net(dim);
-    std::vector<tk::dnn::Layer*> features;
-    new tk::dnn::Conv2d(&net,64,7,7,2,2,3,3,encoder_conv1_bin, true,false,1, true);
-    tk::dnn::Layer *encoder_relu_1 =  new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    features.push_back(encoder_relu_1);
-    tk::dnn::Layer *last = new tk::dnn::Pooling(&net,3,3,2,2,1,1,tk::dnn::POOLING_MAX);
+    tk::dnn::Layer* encoder_conv = new tk::dnn::Conv2d(&net,64,7,7,2,2,3,3,encoder_conv1_bin,true,false,1,true);
+    tk::dnn::Layer* encoder_relu = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_maxpool = new tk::dnn::Pooling(&net,3,3,2,2,1,1,tk::dnn::POOLING_MAX);
 
-    //layer 1
-    for(int i=0;i<4;i=i+2){
-        new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[i], true,false,1, true);
-        new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-        new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[i+1],true,false,1,true);
-        new tk::dnn::Shortcut(&net,last);
-        last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    }
-    features.push_back(last);
+    //layer-1
+    tk::dnn::Layer* encoder_layer_1_0_convbn_1 = new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[0],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_1 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_1_0_convbn_2 = new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[1],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_1_0_shortcut_1 = new tk::dnn::Shortcut(&net,encoder_maxpool);
+    tk::dnn::Layer* encoder_relu_2 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_1_1_convbn_1 = new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[2],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_3 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_1_1_convbn_2 = new tk::dnn::Conv2d(&net,64,3,3,1,1,1,1,encoder_layer1_bin[3],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_1_1_shortcut_1 = new tk::dnn::Shortcut(&net,encoder_relu_2);
+    tk::dnn::Layer* encoder_relu_4 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
 
-    //layer2
-    new tk::dnn::Conv2d(&net,128,3,3,2,2,1,1,encoder_layer2_bin[0],true,false,1,true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    tk::dnn::Layer *bn2 = new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[1],true,false,1, true);
-    new tk::dnn::Route(&net,&last,1);
-    new tk::dnn::Conv2d(&net,128,1,1,2,2,0,0,encoder_layer2_bin[2], true,false,1, true);
-    new tk::dnn::Shortcut(&net,bn2);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[3],true,false,1, true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[4],true,false,1, true);
-    new tk::dnn::Shortcut(&net,last);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    features.push_back(last);
+    //layer-2
+    tk::dnn::Layer* encoder_layer_2_0_convbn_1 = new tk::dnn::Conv2d(&net,128,3,3,2,2,1,1,encoder_layer2_bin[0],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_5 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_2_0_convbn_2 = new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[1],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_2_0_route = new tk::dnn::Route(&net,&encoder_relu_4,1);
+    tk::dnn::Layer* encoder_layer_2_0_downsample_convbn = new tk::dnn::Conv2d(&net,128,1,1,2,2,0,0,encoder_layer2_bin[2],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_2_0_shortcut = new tk::dnn::Shortcut(&net,encoder_layer_2_0_convbn_2);
+    tk::dnn::Layer* encoder_relu_6 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_2_1_convbn_1 = new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[3],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_7 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_2_1_convbn_2 = new tk::dnn::Conv2d(&net,128,3,3,1,1,1,1,encoder_layer2_bin[4],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_2_1shortcut = new tk::dnn::Shortcut(&net,encoder_relu_6);
+    tk::dnn::Layer* encoder_relu_8 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
 
+    //layer-3
+    tk::dnn::Layer* encoder_layer_3_0_convbn_1 = new tk::dnn::Conv2d(&net,256,3,3,2,2,1,1,encoder_layer3_bin[0],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_9 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_3_0_convbn_2 = new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[1],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_3_0_route = new tk::dnn::Route(&net,&encoder_relu_8,1);
+    tk::dnn::Layer* encoder_layer_3_0_downsample_convbn = new tk::dnn::Conv2d(&net,256,1,1,2,2,0,0,encoder_layer3_bin[2],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_3_0_shortcut = new tk::dnn::Shortcut(&net,encoder_layer_3_0_convbn_2);
+    tk::dnn::Layer* encoder_relu_10 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_3_1_convbn_1 = new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[3],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_11 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_3_1_convbn_2 = new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[4],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_3_1shortcut = new tk::dnn::Shortcut(&net,encoder_relu_10);
+    tk::dnn::Layer* encoder_relu_12 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
 
-    //layer3
-    new tk::dnn::Conv2d(&net,256,3,3,2,2,1,1,encoder_layer3_bin[0],true,false,1, true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    bn2 = new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[1],true,false,1, true);
-    new tk::dnn::Route(&net,&last,1);
-    new tk::dnn::Conv2d(&net,256,1,1,2,2,0,0,encoder_layer3_bin[2], true,false,1,true);
-    new tk::dnn::Shortcut(&net,bn2);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[3],true,false,1, true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,256,3,3,1,1,1,1,encoder_layer3_bin[4],true,false,1, true);
-    new tk::dnn::Shortcut(&net,last);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    features.push_back(last);
-
-
-    //layer4
-    new tk::dnn::Conv2d(&net,512,3,3,2,2,1,1,encoder_layer4_bin[0],true,false,1, true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    bn2 = new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[1],true,false,1, true);
-    new tk::dnn::Route(&net,&last,1);
-    new tk::dnn::Conv2d(&net,512,1,1,2,2,0,0,encoder_layer4_bin[2], true,false,1, true);
-    new tk::dnn::Shortcut(&net,bn2);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[3],true,false,1, true);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[4],true,false,1, true);
-    new tk::dnn::Shortcut(&net,last);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
-    features.push_back(last);
+     //layer-4
+    tk::dnn::Layer* encoder_layer_4_0_convbn_1 = new tk::dnn::Conv2d(&net,512,3,3,2,2,1,1,encoder_layer4_bin[0],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_13 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_4_0_convbn_2 = new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[1],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_4_0_route = new tk::dnn::Route(&net,&encoder_relu_12,1);
+    tk::dnn::Layer* encoder_layer_4_0_downsample_convbn = new tk::dnn::Conv2d(&net,512,1,1,2,2,0,0,encoder_layer4_bin[2],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_4_0_shortcut = new tk::dnn::Shortcut(&net,encoder_layer_4_0_convbn_2);
+    tk::dnn::Layer* encoder_relu_14 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_4_1_convbn_1 = new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[3],true,false,1,true);
+    tk::dnn::Layer* encoder_relu_15 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
+    tk::dnn::Layer* encoder_layer_4_1_convbn_2 = new tk::dnn::Conv2d(&net,512,3,3,1,1,1,1,encoder_layer4_bin[4],true,false,1,true);
+    tk::dnn::Layer* encoder_layer_4_1shortcut = new tk::dnn::Shortcut(&net,encoder_relu_14);
+    tk::dnn::Layer* encoder_relu_16 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_RELU);
     
-    std::vector<tk::dnn::Layer*> depth_conv_features;
-
-    //decoders
-
-    new tk::dnn::Shortcut(&net,features[4]);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,256,3,3,1,1,0,0,decoder_layer_bin[0], false,false,1, false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    tk::dnn::Layer *upsample_layer_1 = new tk::dnn::Upsample(&net, 2);
-    tk::dnn::Layer *layer_1[2] = {features[3],upsample_layer_1};
-    new tk::dnn::Route(&net,layer_1,2);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,256,3,3,1,1,0,0,decoder_layer_bin[1], false,false,1,false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,128,3,3,1,1,0,0,decoder_layer_bin[2], false,false,1,false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    tk::dnn::Layer *upsample_layer_2 = new tk::dnn::Upsample(&net,2);
-    tk::dnn::Layer *layer_2[2] = {features[2],upsample_layer_2};
-    new tk::dnn::Route(&net,layer_2,2);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,128,3,3,1,1,0,0,decoder_layer_bin[3], false,false,1,false);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    depth_conv_features.push_back(last);
-
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,64,3,3,1,1,0,0,decoder_layer_bin[4],false,false,1,false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    tk::dnn::Layer* upsample_layer_3 = new tk::dnn::Upsample(&net,2);
-    tk::dnn::Layer *layer_3[2] = {features[1],upsample_layer_3};
-    new tk::dnn::Route(&net,layer_3,2);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,64,3,3,1,1,0,0,decoder_layer_bin[5], false,false,1, false);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    depth_conv_features.push_back(last);
-
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,32,3,3,1,1,0,0,decoder_layer_bin[6], false,false,1, false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    tk::dnn::Layer* upsample_layer_4 = new tk::dnn::Upsample(&net,2);
-    tk::dnn::Layer *layer_4[2] = {features[0],upsample_layer_4};
-    new tk::dnn::Route(&net,layer_4,2);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,32,3,3,1,1,0,0,decoder_layer_bin[7], false,false,1,false);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    depth_conv_features.push_back(last);
-
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,16,3,3,1,1,0,0,decoder_layer_bin[8], false,false,1,false);
-    new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    new tk::dnn::Upsample(&net,2);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,16,3,3,1,1,0,0,decoder_layer_bin[9], false, false,1, false);
-    last = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
-    depth_conv_features.push_back(last);
-
-
-    new tk::dnn::Route(&net,&depth_conv_features[3],1);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[0], false, false,1, false);
-    tk::dnn::Layer *disp0 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
+    //decoder
+    tk::dnn::Layer* decoder_reflection_padding_2d = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_4_0 = new tk::dnn::Conv2d(&net,256,3,3,1,1,0,0,decoder_layer_bin[0]);
+    tk::dnn::Layer* decoder_elu = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_upsampling_2d = new tk::dnn::Upsample(&net,2);
+    tk::dnn::Layer* concatenate_layer[2] = {decoder_upsampling_2d,encoder_relu_12};
+    tk::dnn::Layer* decoder_concatenate = new tk::dnn::Route(&net,concatenate_layer,2);
+    tk::dnn::Layer* decoder_reflection_padding_2d_1 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_4_1 = new tk::dnn::Conv2d(&net,256,3,3,1,1,0,0,decoder_layer_bin[1]);
+    tk::dnn::Layer* decoder_elu_1 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_reflection_padding_2d_2 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_3_0 = new tk::dnn::Conv2d(&net,128,3,3,1,1,0,0,decoder_layer_bin[2]);
+    tk::dnn::Layer* decoder_elu_2 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_upsampling_2d_1 = new tk::dnn::Upsample(&net,2);
+    tk::dnn::Layer* concatenate_layer_1[2] = {decoder_upsampling_2d_1,encoder_relu_8};
+    tk::dnn::Layer* decoder_concatenate_layer_1 = new tk::dnn::Route{&net,concatenate_layer_1,2};
+    tk::dnn::Layer* decoder_reflection_padding_2d_3 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_3_1 = new tk::dnn::Conv2d(&net,128,3,3,1,1,0,0,decoder_layer_bin[3]);
+    tk::dnn::Layer* decoder_elu_3 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_reflection_padding_2d_5 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_2_0 = new tk::dnn::Conv2d(&net,64,3,3,1,1,0,0,decoder_layer_bin[4]);
+    tk::dnn::Layer* decoder_elu_4 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_upsampling_2d_2 = new tk::dnn::Upsample(&net,2);
+    tk::dnn::Layer* concatenate_layer_2[2] = {decoder_upsampling_2d_2,encoder_relu_4};
+    tk::dnn::Layer* decoder_concatenate_layer_2 = new tk::dnn::Route(&net,concatenate_layer_2,2);
+    tk::dnn::Layer* decoder_reflection_padding_2d_6 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_2_1 = new tk::dnn::Conv2d(&net,64,3,3,1,1,0,0,decoder_layer_bin[5]);
+    tk::dnn::Layer* decoder_elu_5 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_reflection_padding_2d_8 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_1_0 = new tk::dnn::Conv2d(&net,32,3,3,1,1,0,0,decoder_layer_bin[6]);
+    tk::dnn::Layer* decoder_elu_6 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_upsampling_2d_3 = new tk::dnn::Upsample(&net,2);
+    tk::dnn::Layer* concatenate_layer_3[2] = {decoder_upsampling_2d_3,encoder_relu};
+    tk::dnn::Layer* decoder_concatenate_layer_3 = new tk::dnn::Route(&net,concatenate_layer_3,2);
+    tk::dnn::Layer* decoder_reflection_padding_2d_9 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_1_1 = new tk::dnn::Conv2d(&net,32,3,3,1,1,0,0,decoder_layer_bin[7]);
+    tk::dnn::Layer* decoder_elu_7 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_reflection_padding_2d_11 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_0_0 = new tk::dnn::Conv2d(&net,16,3,3,1,1,0,0,decoder_layer_bin[8]);
+    tk::dnn::Layer* decoder_elu_8 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_upsampling_2d_4 = new tk::dnn::Upsample(&net,2);
+    tk::dnn::Layer* decoder_reflection_padding_2d_12 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_upconv_0_1 = new tk::dnn::Conv2d(&net,16,3,3,1,1,0,0,decoder_layer_bin[9]);
+    tk::dnn::Layer* decoder_elu_9 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_ELU);
+    tk::dnn::Layer* decoder_reflection_padding_2d_13 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_dispconv_0 = new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[0]);
+    tk::dnn::Layer* disp0 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
     disp0->setFinal();
 
-    new tk::dnn::Route(&net,&depth_conv_features[2],1);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[1],false,false,1,false);
-    tk::dnn::Layer *disp1 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
+    tk::dnn::Layer* route_elu_7 = new tk::dnn::Route(&net,&decoder_elu_7,1);
+    tk::dnn::Layer* decoder_reflection_padding_2d_10 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_dispconv_1 = new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[1]);
+    tk::dnn::Layer* disp1 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
     disp1->setFinal();
 
-
-    new tk::dnn::Route(&net,&depth_conv_features[1],1);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[2], false,false,1, false);
-    tk::dnn::Layer *disp2 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
+    tk::dnn::Layer* route_elu_5 = new tk::dnn::Route(&net,&decoder_elu_5,1);
+    tk::dnn::Layer* decoder_reflection_padding_2d_7 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_dispconv_2 = new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[2]);
+    tk::dnn::Layer* disp2 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
     disp2->setFinal();
 
-    new tk::dnn::Route(&net,&depth_conv_features[0],1);
-    new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
-    new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[3], false,false,1, false);
-    tk::dnn::Layer *disp3 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
+    tk::dnn::Layer* route_elu_3 = new tk::dnn::Route(&net,&decoder_elu_3,1);
+    tk::dnn::Layer* decoder_reflection_padding_2d_4 = new tk::dnn::Padding(&net,1,1,tk::dnn::PADDING_MODE_REFLECTION);
+    tk::dnn::Layer* decoder_dispconv_3 = new tk::dnn::Conv2d(&net,1,3,3,1,1,0,0,decoder_dispconv_layer_bin[3]);
+    tk::dnn::Layer* disp3 = new tk::dnn::Activation(&net,CUDNN_ACTIVATION_SIGMOID);
     disp3->setFinal();
 
 
-    
     dnnType *data;
     dnnType *input_H;
-    readBinaryFile(input_monodepth2_bin[1],dim.tot(),&input_H,&data);
+    readBinaryFile(input_monodepth2_bin[0],dim.tot(),&input_H,&data);
     std::cout<<"INPUT DIMENSIONS : "<<dim.tot()<<std::endl;
 
     net.print();
@@ -272,4 +251,6 @@ int main(){
 
 
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
+
+    
 }
