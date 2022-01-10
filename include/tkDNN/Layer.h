@@ -32,7 +32,8 @@ enum layerType_t {
     LAYER_UPSAMPLE,
     LAYER_REGION,
     LAYER_YOLO,
-    LAYER_PADDING
+    LAYER_PADDING,
+    LAYER_BATCHNORM
 };
 
 #define TKDNN_BN_MIN_EPSILON 1e-5
@@ -89,6 +90,7 @@ public:
             case LAYER_REGION:              return "Region";
             case LAYER_YOLO:                return "Yolo";
             case LAYER_PADDING:             return "Padding";
+            case LAYER_BATCHNORM:           return "BatchNorm";
             default:                        return "unknown";
         }
     }
@@ -604,6 +606,25 @@ public:
 
 };
 
+
+class BatchNorm : public LayerBNWgs {
+public:
+    BatchNorm(Network *net,int output,std::string fname_weights);
+    virtual ~BatchNorm();
+    virtual layerType_t getLayerType(){return LAYER_BATCHNORM;};
+    virtual dnnType* infer(dataDim_t& dim,dnnType* srcData);
+    std::string weights_bin;
+protected:
+    cudnnFilterDescriptor_t filterDesc;
+    cudnnConvolutionFwdAlgoPerf_t     algo;
+    cudnnConvolutionBwdDataAlgoPerf_t bwAlgo;
+    cudnnTensorDescriptor_t biasTensorDesc;
+
+    void initCUDNN();
+    void inferCUDNN(dnnType* srcData);
+    void*  workSpace;
+    size_t ws_sizeInBytes;
+};
 /**
     Softmax layer
 */
