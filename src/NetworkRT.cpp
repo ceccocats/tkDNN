@@ -277,6 +277,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (DeformConv2d*) l);
     if(type == LAYER_PADDING)
         return convert_layer(input, (Padding*) l);
+    if(type == LAYER_BATCHNORM)
+        return convert_layer(input,(BatchNorm*) l);
 
     std::cout<<l->getLayerName()<<"\n";
     FatalError("Layer not implemented in tensorRT");
@@ -405,6 +407,38 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     }
 
     return lRT;
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input,BatchNorm *l){
+    void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
+    if(dtRT == DataType::kHALF) {
+        bias_b     = l->bias16_h;
+        power_b    = l->power16_h;
+        mean_b     = l->mean16_h;
+        variance_b = l->variance16_h;
+        scales_b   = l->scales16_h;
+    } else {
+        bias_b     = l->bias_h;
+        power_b    = l->power_h;
+        mean_b     = l->mean_h;
+        variance_b = l->variance_h;
+        scales_b   = l->scales_h;
+    }
+    Weights power{dtRT, power_b, l->outputs};
+    Weights shift{dtRT, mean_b, l->outputs};
+    Weights scale{dtRT, variance_b, l->outputs};
+
+    IScaleLayer *lRT = networkRT->addScale(*input, ScaleMode::kCHANNEL,
+                    shift, scale, power);
+    checkNULL(lRT);
+    Weights shift2{dtRT, bias_b, l->outputs};
+    Weights scale2{dtRT, scales_b, l->outputs};
+    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
+                    shift2, scale2, power);
+    checkNULL(lRT2);
+
+    return lRT2;
+
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
