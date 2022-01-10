@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.15)
 project (tkDNN)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 if(UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-deprecated-declarations -Wno-unused-variable ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations")
 endif()
 if(WIN32)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "/O2 /FS /EHsc")
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
@@ -139,6 +139,9 @@ target_link_libraries(test_shelfnet_berkeley tkDNN)
 
 add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
 target_link_libraries(test_shelfnet_mapillary tkDNN)
+
+add_executable(test_shelfnet_coco tests/shelfnet/shelfnet_coco.cpp)
+target_link_libraries(test_shelfnet_coco tkDNN)
 
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)

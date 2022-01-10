@@ -17,6 +17,8 @@ bool CenterTrack::init(const std::string& tensor_path, const int n_classes, cons
     init_pre_inf();
     init_postprocessing();
     init_visualization(n_classes);
+
+    return true;
 }
 
 bool CenterTrack::init_preprocessing(){
@@ -59,6 +61,8 @@ bool CenterTrack::init_preprocessing(){
     checkCuda( cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot() * nBatches));
     checkCuda( cudaMalloc(&input_pre_inf_d, sizeof(dnnType)*dim.tot()));
     checkCuda( cudaMalloc(&d_ptrs, dim.tot() * sizeof(float)) );
+
+    return true;
 }
 
 bool CenterTrack::init_pre_inf(){
@@ -202,6 +206,8 @@ bool CenterTrack::init_postprocessing(){
     trRes.resize(nBatches);
     countTr.resize(nBatches, 0);
     trackId.resize(nBatches, 0);
+
+    return true;
 }
 
 bool CenterTrack::init_visualization(const int n_classes){
@@ -274,6 +280,8 @@ bool CenterTrack::init_visualization(const int n_classes){
     faceId.push_back({3,0,4,7});
     faceId.push_back({2,3,7,6});
     // ([[0,1,5,4], [1,2,6, 5], [2,3,7,6], [3,0,4,7]]);
+
+    return true;
 }
 
 void CenterTrack::_get_additional_inputs(){
@@ -308,7 +316,7 @@ void CenterTrack::preprocess(cv::Mat &frame, const int bi){
         }
         
         float c[] = {new_width / 2.0f, new_height /2.0f};
-        float s[] = {dim.w, dim.h};
+        float s[] = {float(dim.w), float(dim.h)};
         // float s = new_width >= new_height ? new_width : new_height;
         // ----------- get_affine_transform
         // rot_rad = pi * 0 / 100 --> 0

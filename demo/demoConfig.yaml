@@ -1,0 +1,14 @@
+# video input
+input     : "../demo/yolo_test.mp4"
+win_input : "..\\..\\..\\demo\\yolo_test.mp4"
+
+# network config
+net         : "yolo4tiny_fp32.rt"
+ntype       : 'y'
+n_classes   : 80
+n_batch     : 1
+conf_thresh : 0.3
+
+# demo config
+show  : true
+save  : true
