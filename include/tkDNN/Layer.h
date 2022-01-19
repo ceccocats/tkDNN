@@ -536,7 +536,6 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-protected:
     dnnType mul, add;
     dnnType *add_vector;
 };

@@ -229,6 +229,9 @@ target_link_libraries(demoTracker tkDNN)
 add_executable(seg_demo demo/demo/seg_demo.cpp)
 target_link_libraries(seg_demo tkDNN)
 
+add_executable(demoDepth demo/demo/demoDepth.cpp)
+target_link_libraries(demoDepth tkDNN)
+
 #-------------------------------------------------------------------------------
 # Install
 #-------------------------------------------------------------------------------

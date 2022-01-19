@@ -99,6 +99,7 @@ public:
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeformConv2d *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input,Padding *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor* input,BatchNorm *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor* input,MulAdd *l);
 
 #if NV_TENSORRT_MAJOR > 5 && NV_TENSORRT_MAJOR < 8
     bool serialize(const char *filename);
