@@ -571,7 +571,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
                     float(NV_TENSORRT_MINOR)/10 +
                     float(NV_TENSORRT_PATCH)/100;
 
-#if ((NV_TENSORRT_MAJOR == 8 && NV_TENSORRT_MINOR >= 2) || NV_TENSORRT_MAJOR > 8)
+/*#if ((NV_TENSORRT_MAJOR == 8 && NV_TENSORRT_MINOR >= 2) || NV_TENSORRT_MAJOR > 8)
     auto *lRT = networkRT->addSlice(*input,Dims3{0,0,0},Dims3{l->output_dim.c,l->output_dim.h,l->output_dim.w},Dims3{0,0,0});
     if(l->padding_mode == PADDING_MODE_REFLECTION){
         lRT->setMode(SliceMode::kREFLECT);
@@ -581,8 +581,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
     }
     checkNULL(lRT);
     return lRT;
-#else
-    //todo  add PADDING_MODE_CONSTANT AND PADDING_MODE_ZERO for tensorrt versions < 8.2
+#else*/
+    //todo use ISliceLayer for padding,currently using ISliceLayer for reflection padding generates an error with monodepth2
     if(l->padding_mode == PADDING_MODE_REFLECTION){
         auto creator = getPluginRegistry()->getPluginCreator("ReflectionPaddingRT_tkDNN","1");
         std::vector<PluginField> mPluginAttributes;
@@ -623,8 +623,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
     }
 
     return nullptr;
-    
-#endif
+
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
