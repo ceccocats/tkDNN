@@ -66,10 +66,12 @@ const char* output_bin[] = {
         "monodepth2/debug/outputs/output-disp-3.bin"
 };
 
-const char* input_monodepth2_bin[] = {"monodepth2/debug/input.bin","monodepth2/debug/input2.bin"};
+const char* input_bin = "monodepth2/debug/input.bin";
 
 
 int main(){
+
+    downloadWeightsifDoNotExist(input_bin, "monodepth2", "https://cloud.hipert.unimore.it/s/iYw9QwgP6CsqxLR/download");
 
     tk::dnn::dataDim_t dim(1,3,192,640,1);
     tk::dnn::Network net(dim);
@@ -204,7 +206,7 @@ int main(){
 
     dnnType *data;
     dnnType *input_H;
-    readBinaryFile(input_monodepth2_bin[0],dim.tot(),&input_H,&data);
+    readBinaryFile(input_bin, dim.tot(),&input_H,&data);
     std::cout<<"INPUT DIMENSIONS : "<<dim.tot()<<std::endl;
 
     net.print();

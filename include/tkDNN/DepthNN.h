@@ -30,6 +30,9 @@ class DepthNN {
         dnnType *input_d;
         float* depth_h;
 
+        int output_w;
+        int output_h;
+
         int nBatches = 1;
 
         cv::Mat bgr[3];
@@ -68,6 +71,9 @@ class DepthNN {
                 depths[i].resize(netRT->buffersDIM[1].tot());
 
             depth_h = (float *)malloc(netRT->buffersDIM[1].tot() * sizeof(float));
+
+            output_h = netRT->buffersDIM[1].h;
+            output_w = netRT->buffersDIM[1].w;
             
         }
 

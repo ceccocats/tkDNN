@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
 
     cv::VideoWriter resultVideo;
     if(save) {
-        int w = cap.get(cv::CAP_PROP_FRAME_WIDTH);
-        int h = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
+        int w = depthNN.output_w;
+        int h = depthNN.output_h;
+        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(w, h));
     }
 
     if(show)
@@ -87,6 +87,9 @@ int main(int argc, char *argv[]) {
             cv::waitKey(1);
 
         }
+
+        if(save)
+            resultVideo << depthNN.depthMats[0];
     }
 
     std::cout<<"detection end\n";   
