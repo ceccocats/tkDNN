@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iomanip>
 #include <stdlib.h>
+#include <yaml-cpp/yaml.h>
+
 
 #include "cuda.h"
 #include "cuda_runtime_api.h"
@@ -16,7 +18,6 @@
 
 #ifdef __linux__
 #include <unistd.h>
-
 #endif
 
 #include <ios>
@@ -159,6 +160,20 @@ void removePathAndExtension(const std::string &full_string, std::string &name);
 static inline bool isCudaPointer(void *data) {
   cudaPointerAttributes attr;
   return cudaPointerGetAttributes(&attr, data) == 0;
+}
+
+inline YAML::Node YAMLloadConf(const std::string& conf_file) {
+    std::cerr<<"Loading YAML: "<<conf_file<<"\n";
+    return YAML::LoadFile(conf_file);
+}
+
+template<typename T>
+inline T YAMLgetConf(YAML::Node conf, std::string key, T defaultVal) {
+    T val = defaultVal;
+    if(conf && conf[key]) {
+        val = conf[key].as<T>();
+    }
+    return val;
 }
 
 

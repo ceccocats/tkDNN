@@ -85,12 +85,14 @@ endif()
 find_package(CUDNN REQUIRED)
 include_directories(${CUDNN_INCLUDE_DIR})
 
+find_package(yaml-cpp REQUIRED)
+
 
 # compile
 file(GLOB tkdnn_CUSRC "src/kernels/*.cu" "src/sorting.cu" "src/pluginsRT/*.cpp")
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 cuda_add_library(kernels SHARED ${tkdnn_CUSRC})
-target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+target_link_libraries(kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} yaml-cpp)
 
 
 
@@ -120,7 +122,6 @@ endif()
 # endif()
 
 # gives problems in cross-compiling, probably malformed cmake config
-find_package(yaml-cpp REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Build Libraries

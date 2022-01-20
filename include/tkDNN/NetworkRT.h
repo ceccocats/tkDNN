@@ -23,6 +23,8 @@
 #include <pluginsRT/ShortcutRT.h>
 #include <pluginsRT/UpsampleRT.h>
 #include <pluginsRT/YoloRT.h>
+#include <pluginsRT/ConstantPaddingRT.h>
+#include <pluginsRT/ReflectionPadding.h>
 
 
 
@@ -93,10 +95,16 @@ public:
     nvinfer1::IPluginV2Layer* convert_layer(nvinfer1::ITensor *input, Region *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Shortcut *l);
     nvinfer1::IPluginV2Layer* convert_layer(nvinfer1::ITensor *input, Yolo *l);
-    nvinfer1::IPluginV2Layer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
+    nvinfer1::IResizeLayer* convert_layer(nvinfer1::ITensor *input, Upsample *l);
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, DeformConv2d *l);
+    nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input,Padding *l);
 
+#if NV_TENSORRT_MAJOR > 5 && NV_TENSORRT_MAJOR < 8
     bool serialize(const char *filename);
+#else
+    bool serialize(const char *filename,nvinfer1::IHostMemory *ptr);
+#endif
+
     bool deserialize(const char *filename);
     void destroy();
 

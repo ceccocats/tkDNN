@@ -1,21 +1,26 @@
-#ifndef _FLATTENCONCATRT_PLUGIN_H
-#define _FLATTENCONCATRT_PLUGIN_H
+//
+// Created by perseusdg on 1/7/22.
+//
+
+#ifndef _CONSTANTPADDINGRT_PLUGIN_H
+#define _CONSTANTPADDINGRT_PLUGIN_H
 
 #include<cassert>
 #include <NvInfer.h>
 #include <vector>
 #include <utils.h>
-namespace nvinfer1 {
-    class FlattenConcatRT : public IPluginV2Ext {
+#include <kernels.h>
 
+namespace nvinfer1{
+    class ConstantPaddingRT : public IPluginV2Ext {
     public:
-        FlattenConcatRT(int c,int h,int w,int rows,int cols) ;
+        ConstantPaddingRT(int32_t padH,int32_t padW,int32_t n,int32_t c,int32_t i_h,int32_t i_w,int32_t o_h,int32_t o_w,float constant);
 
-        FlattenConcatRT(const void *data, size_t length) ;
+        ConstantPaddingRT(const void *data,size_t length);
 
-        ~FlattenConcatRT() ;
+        ~ConstantPaddingRT();
 
-        int getNbOutputs() const NOEXCEPT override ;
+        int getNbOutputs() const NOEXCEPT override;
 
         Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
@@ -24,6 +29,7 @@ namespace nvinfer1 {
         void terminate() NOEXCEPT override ;
 
         size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
+
 
 #if NV_TENSORRT_MAJOR > 7
         int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace, cudaStream_t stream) NOEXCEPT override ;
@@ -56,28 +62,28 @@ namespace nvinfer1 {
         bool canBroadcastInputAcrossBatch(int inputIndex) const NOEXCEPT override;
 
         void configurePlugin (Dims const *inputDims, int32_t nbInputs, Dims const *outputDims,
-                            int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
-                            bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
-                            int32_t maxBatchSize) NOEXCEPT override;
+                              int32_t nbOutputs, DataType const *inputTypes, DataType const *outputTypes,
+                              bool const *inputIsBroadcast, bool const *outputIsBroadcast, PluginFormat floatFormat,
+                              int32_t maxBatchSize) NOEXCEPT override;
 
         void detachFromContext() NOEXCEPT override;
 
         bool supportsFormat (DataType type, PluginFormat format) const NOEXCEPT override;
 
-        int c, h, w;
-        int rows, cols;
-        cublasHandle_t handle{nullptr};
+        int32_t i_h,i_w,o_h,o_w,n,c,padH,padW;
+        float constant;
     private:
         std::string mPluginNamespace;
+
     };
 
-    class FlattenConcatRTPluginCreator : public IPluginCreator {
+    class ConstantPaddingRTPluginCreator : public IPluginCreator {
     public:
-        FlattenConcatRTPluginCreator() ;
+        ConstantPaddingRTPluginCreator();
 
-        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+        void setPluginNamespace(const char* pluginNamespace) NOEXCEPT override;
 
-        const char *getPluginNamespace() const NOEXCEPT override ;
+        const char *getPluginNamespace() const NOEXCEPT override;
 
         IPluginV2Ext *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
 
@@ -93,8 +99,11 @@ namespace nvinfer1 {
         static PluginFieldCollection mFC;
         static std::vector<PluginField> mPluginAttributes;
         std::string mPluginNamespace;
+
     };
 
-    REGISTER_TENSORRT_PLUGIN(FlattenConcatRTPluginCreator);
+    REGISTER_TENSORRT_PLUGIN(ConstantPaddingRTPluginCreator);
 };
-#endif
+
+
+#endif //TKDNN_CONSTANTPADDINGRT_H
