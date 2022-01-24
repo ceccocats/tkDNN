@@ -207,9 +207,6 @@ target_link_libraries(test_shelfnet_mapillary tkDNN)
 add_executable(test_monodepth2 tests/monodepth2/monodepth2.cpp)
 target_link_libraries(test_monodepth2 tkDNN)
 
-add_executable(test_monodepth2_new_format tests/monodepth2/monodepth2_new_format.cpp)
-target_link_libraries(test_monodepth2_new_format tkDNN)
-
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)

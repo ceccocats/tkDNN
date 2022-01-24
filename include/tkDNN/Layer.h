@@ -33,7 +33,6 @@ enum layerType_t {
     LAYER_REGION,
     LAYER_YOLO,
     LAYER_PADDING,
-    LAYER_BATCHNORM
 };
 
 #define TKDNN_BN_MIN_EPSILON 1e-5
@@ -90,7 +89,6 @@ public:
             case LAYER_REGION:              return "Region";
             case LAYER_YOLO:                return "Yolo";
             case LAYER_PADDING:             return "Padding";
-            case LAYER_BATCHNORM:           return "BatchNorm";
             default:                        return "unknown";
         }
     }
@@ -181,65 +179,6 @@ public:
     }
 };
 
-
-class LayerBNWgs : public Layer {
-public:
-    LayerBNWgs(Network* net, int input, int output, std::string fname_weights);
-    ~LayerBNWgs();
-
-    int inputs, outputs;
-    std::string weights_path;
-
-    dnnType* bias_h, * bias_d;
-    dnnType* power_h = nullptr;
-    dnnType* scales_h = nullptr, * scales_d = nullptr;
-    dnnType* mean_h = nullptr, * mean_d = nullptr;
-    dnnType* variance_h = nullptr, * variance_d = nullptr;
-
-    __half* bias16_h = nullptr, * bias16_d = nullptr;
-    __half* power16_h = nullptr, * power16_d = nullptr;
-    __half* scales16_h = nullptr, * scales16_d = nullptr;
-    __half* mean16_h = nullptr, * mean16_d = nullptr;
-    __half* variance16_h = nullptr, * variance16_d = nullptr;
-
-
-    void releaseHost(bool release32 = true, bool release16 = true) {
-        if (release32) {
-            if (bias_h != nullptr) { delete[]     bias_h;     bias_h = nullptr; }
-            if (scales_h != nullptr) { delete[]   scales_h;   scales_h = nullptr; }
-            if (mean_h != nullptr) { delete[]     mean_h;     mean_h = nullptr; }
-            if (variance_h != nullptr) { delete[] variance_h; variance_h = nullptr; }
-            if (power_h != nullptr) { delete[]    power_h;    power_h = nullptr; }
-        }
-        if (net->fp16 && release16) {
-            if (bias16_h != nullptr) { delete[]     bias16_h;     bias16_h = nullptr; }
-            if (scales16_h != nullptr) { delete[]   scales16_h;   scales16_h = nullptr; }
-            if (mean16_h != nullptr) { delete[]     mean16_h;     mean16_h = nullptr; }
-            if (variance16_h != nullptr) { delete[] variance16_h; variance16_h = nullptr; }
-            if (power16_h != nullptr) { delete[]    power16_h;    power16_h = nullptr; }
-
-        }
-    }
-
-    void releaseDevice(bool release32 = true, bool release16 = true) {
-        if (release32) {
-            if (bias_d != nullptr) { cudaFree(bias_d);     bias_d = nullptr; }
-            if (scales_d != nullptr) { cudaFree(scales_d);   scales_d = nullptr; }
-            if (mean_d != nullptr) { cudaFree(mean_d);     mean_d = nullptr; }
-            if (variance_d != nullptr) { cudaFree(variance_d); variance_d = nullptr; }
-        }
-        if (net->fp16 && release16) {
-            if (bias16_d != nullptr) { cudaFree(bias16_d);     bias16_d = nullptr; }
-            if (scales16_d != nullptr) { cudaFree(scales16_d);   scales16_d = nullptr; }
-            if (mean16_d != nullptr) { cudaFree(mean16_d);     mean16_d = nullptr; }
-            if (variance16_d != nullptr) { cudaFree(variance16_d); variance16_d = nullptr; }
-            if (power16_d != nullptr) { cudaFree(power16_d);    power16_d = nullptr; }
-        }
-    }
-
-
-
-};
 
 /**
     Input layer (it doesn't need weights)
@@ -606,24 +545,7 @@ public:
 };
 
 
-class BatchNorm : public LayerBNWgs {
-public:
-    BatchNorm(Network *net,int output,std::string fname_weights);
-    virtual ~BatchNorm();
-    virtual layerType_t getLayerType(){return LAYER_BATCHNORM;};
-    virtual dnnType* infer(dataDim_t& dim,dnnType* srcData);
-    std::string weights_bin;
-protected:
-    cudnnFilterDescriptor_t filterDesc;
-    cudnnConvolutionFwdAlgoPerf_t     algo;
-    cudnnConvolutionBwdDataAlgoPerf_t bwAlgo;
-    cudnnTensorDescriptor_t biasTensorDesc;
 
-    void initCUDNN();
-    void inferCUDNN(dnnType* srcData);
-    void*  workSpace;
-    size_t ws_sizeInBytes;
-};
 /**
     Softmax layer
 */
