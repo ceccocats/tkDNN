@@ -32,7 +32,7 @@ enum layerType_t {
     LAYER_UPSAMPLE,
     LAYER_REGION,
     LAYER_YOLO,
-    LAYER_PADDING
+    LAYER_PADDING,
 };
 
 #define TKDNN_BN_MIN_EPSILON 1e-5
@@ -475,7 +475,6 @@ public:
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 
-protected:
     dnnType mul, add;
     dnnType *add_vector;
 };
@@ -544,6 +543,8 @@ public:
     float constant;
 
 };
+
+
 
 /**
     Softmax layer

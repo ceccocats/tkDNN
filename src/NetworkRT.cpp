@@ -277,6 +277,10 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (DeformConv2d*) l);
     if(type == LAYER_PADDING)
         return convert_layer(input, (Padding*) l);
+    if(type == LAYER_BATCHNORM)
+        return convert_layer(input,(BatchNorm*) l);
+    if(type == LAYER_MULADD)
+        return convert_layer(input,(MulAdd*) l);
 
     std::cout<<l->getLayerName()<<"\n";
     FatalError("Layer not implemented in tensorRT");
@@ -407,6 +411,112 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Conv2d *l) {
     return lRT;
 }
 
+ILayer* NetworkRT::convert_layer(ITensor *input,BatchNorm *l){
+    void *bias_b, *power_b, *mean_b, *variance_b, *scales_b;
+    if(dtRT == DataType::kHALF) {
+        bias_b     = l->bias16_h;
+        power_b    = l->power16_h;
+        mean_b     = l->mean16_h;
+        variance_b = l->variance16_h;
+        scales_b   = l->scales16_h;
+    } else {
+        bias_b     = l->bias_h;
+        power_b    = l->power_h;
+        mean_b     = l->mean_h;
+        variance_b = l->variance_h;
+        scales_b   = l->scales_h;
+    }
+    Weights power{dtRT, power_b, l->outputs};
+    Weights shift{dtRT, mean_b, l->outputs};
+    Weights scale{dtRT, variance_b, l->outputs};
+
+    IScaleLayer *lRT = networkRT->addScale(*input, ScaleMode::kCHANNEL,
+                    shift, scale, power);
+    checkNULL(lRT);
+    Weights shift2{dtRT, bias_b, l->outputs};
+    Weights scale2{dtRT, scales_b, l->outputs};
+    IScaleLayer *lRT2 = networkRT->addScale(*lRT->getOutput(0), ScaleMode::kCHANNEL,
+                    shift2, scale2, power);
+    checkNULL(lRT2);
+
+    return lRT2;
+
+}
+
+ILayer* NetworkRT::convert_layer(ITensor *input,MulAdd *l){
+
+    void *power_b, *shift_b, *scales_b;
+    int size = l->input_dim.tot();    
+
+    power_b = new dnnType[size];
+    shift_b = new dnnType[size];
+    scales_b = new dnnType[size];
+
+    for(int i=0; i<size; i++) {
+        ((dnnType*) power_b)[i] = 1.0;
+        ((dnnType*) shift_b)[i] = l->add;
+        ((dnnType*) scales_b)[i] = l->mul;
+    }
+
+    if(dtRT == DataType::kHALF) {
+
+        __half *power16_h    = nullptr,    *power16_d = nullptr;
+        __half *scales16_h   = nullptr,   *scales16_d = nullptr;
+        __half *shift16_h     = nullptr,     *shift16_d = nullptr;
+
+        dnnType * power_d = nullptr;
+        dnnType * scales_d = nullptr;
+        dnnType * shift_d = nullptr;
+
+        cudaMalloc(&power_d, size*sizeof(dnnType));
+        cudaMemcpy(power_d, power_b, size*sizeof(dnnType), cudaMemcpyHostToDevice);
+
+        cudaMalloc(&shift_d, size*sizeof(dnnType));
+        cudaMemcpy(shift_d, shift_b, size*sizeof(dnnType), cudaMemcpyHostToDevice);
+
+        cudaMalloc(&scales_d, size*sizeof(dnnType));
+        cudaMemcpy(scales_d, scales_b, size*sizeof(dnnType), cudaMemcpyHostToDevice);
+
+        //convert to fp16
+        power16_h = new __half[size];
+        cudaMalloc(&power16_d, size*sizeof(__half));
+        float2half(power_d, power16_d, size);
+        cudaMemcpy(power16_h, power16_d, size*sizeof(__half), cudaMemcpyDeviceToHost);
+
+        shift16_h = new __half[size];
+        cudaMalloc(&shift16_d, size*sizeof(__half));
+        float2half(shift_d, shift16_d, size);
+        cudaMemcpy(shift16_h, shift16_d, size*sizeof(__half), cudaMemcpyDeviceToHost);
+
+        scales16_h = new __half[size];
+        cudaMalloc(&scales16_d, size*sizeof(__half));
+        float2half(scales_d, scales16_d, size);
+        cudaMemcpy(scales16_h, scales16_d, size*sizeof(__half), cudaMemcpyDeviceToHost);
+
+        power_b = power16_h;
+        shift_b = shift16_h;
+        scales_b = scales16_h;
+
+
+        cudaFree(power16_d);
+        cudaFree(shift16_d);
+        cudaFree(scales16_d);
+
+        cudaFree(power_d);
+        cudaFree(shift_d);
+        cudaFree(scales_d);
+    } 
+
+    Weights power{dtRT, power_b,  size};
+    Weights shift{dtRT, shift_b,  size};
+    Weights scale{dtRT, scales_b, size};
+    IScaleLayer *lRT = networkRT->addScale(*input, ScaleMode::kELEMENTWISE,
+                    shift, scale, power);
+    checkNULL(lRT);
+    return lRT;
+}
+
+
 ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
     // std::cout<<"convert Pooling\n";
 
@@ -461,7 +571,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
                     float(NV_TENSORRT_MINOR)/10 +
                     float(NV_TENSORRT_PATCH)/100;
 
-#if ((NV_TENSORRT_MAJOR == 8 && NV_TENSORRT_MINOR >= 2) || NV_TENSORRT_MAJOR > 8)
+/*#if ((NV_TENSORRT_MAJOR == 8 && NV_TENSORRT_MINOR >= 2) || NV_TENSORRT_MAJOR > 8)
     auto *lRT = networkRT->addSlice(*input,Dims3{0,0,0},Dims3{l->output_dim.c,l->output_dim.h,l->output_dim.w},Dims3{0,0,0});
     if(l->padding_mode == PADDING_MODE_REFLECTION){
         lRT->setMode(SliceMode::kREFLECT);
@@ -471,8 +581,8 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
     }
     checkNULL(lRT);
     return lRT;
-#else
-    //todo  add PADDING_MODE_CONSTANT AND PADDING_MODE_ZERO for tensorrt versions < 8.2
+#else*/
+    //todo use ISliceLayer for padding,currently using ISliceLayer for reflection padding generates an error with monodepth2
     if(l->padding_mode == PADDING_MODE_REFLECTION){
         auto creator = getPluginRegistry()->getPluginCreator("ReflectionPaddingRT_tkDNN","1");
         std::vector<PluginField> mPluginAttributes;
@@ -513,8 +623,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input,Padding *l){
     }
 
     return nullptr;
-    
-#endif
+
 }
 
 ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
