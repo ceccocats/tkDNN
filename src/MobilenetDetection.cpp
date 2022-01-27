@@ -211,38 +211,8 @@ bool MobilenetDetection::init(const std::string& tensor_path, const int n_classe
 }
 
 void MobilenetDetection::preprocess(cv::Mat &frame, const int bi){
-#ifdef OPENCV_CUDACONTRIB
-        //move original image on GPU
-        cv::cuda::GpuMat orig_img, frame_nomean;
-        orig_img = cv::cuda::GpuMat(frame);
-
-        //resize image, remove mean, divide by std
-        cv::cuda::resize (orig_img, orig_img, cv::Size(netRT->input_dim.w, netRT->input_dim.h)); 
-        orig_img.convertTo(frame_nomean, CV_32FC3, 1, -127);
-        frame_nomean.convertTo(imagePreproc, CV_32FC3, 1 / 128.0, 0);
-
-        //copy image into tensors
-        cv::cuda::split(imagePreproc, bgr);
-
-        for(int i=0; i < netRT->input_dim.c; i++){
-            int idx = i * imagePreproc.rows * imagePreproc.cols;
-            checkCuda( cudaMemcpy((void *)&input_d[idx + netRT->input_dim.tot()*bi], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols* sizeof(float), cudaMemcpyDeviceToDevice) );
-        }
-#else
-        //resize image, remove mean, divide by std
-        cv::Mat frame_nomean;
-        resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-        frame.convertTo(frame_nomean, CV_32FC3, 1, -127);
-        frame_nomean.convertTo(imagePreproc, CV_32FC3, 1 / 128.0, 0);
-
-        //copy image into tensor and copy it into GPU
-        cv::split(imagePreproc, bgr);
-        for (int i = 0; i < netRT->input_dim.c; i++){
-            int idx = i * imagePreproc.rows * imagePreproc.cols;
-            memcpy((void *)&input[idx + netRT->input_dim.tot()*bi], (void *)bgr[i].data, imagePreproc.rows * imagePreproc.cols * sizeof(dnnType));
-        }
-        checkCuda(cudaMemcpyAsync(input_d+ netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
-#endif
+    resizeAndSplit(frame, &frame_d, frame_size, input_d, netRT, bi, false);
+    normalize(input_d +  netRT->input_dim.tot()*bi,  netRT->input_dim.c,  netRT->input_dim.h,  netRT->input_dim.w, 127.0f, 128.0f);
 }
 
 void MobilenetDetection::postprocess(const int bi, const bool mAP){

@@ -57,38 +57,8 @@ bool Yolo3Detection::init(const std::string& tensor_path, const int n_classes, c
 } 
 
 void Yolo3Detection::preprocess(cv::Mat &frame, const int bi){
-#ifdef OPENCV_CUDACONTRIB
-    cv::cuda::GpuMat orig_img, img_resized;
-    orig_img = cv::cuda::GpuMat(frame);
-    cv::cuda::resize(orig_img, img_resized, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-
-    img_resized.convertTo(imagePreproc, CV_32FC3, 1/255.0); 
-
-    //split channels
-    cv::cuda::split(imagePreproc,bgr);//split source
-
-    //write channels
-    for(int i=0; i<netRT->input_dim.c; i++) {
-        int size = imagePreproc.rows * imagePreproc.cols;
-        int ch = netRT->input_dim.c-1 -i;
-        bgr[ch].download(bgr_h); //TODO: don't copy back on CPU
-        checkCuda( cudaMemcpy(input_d + i*size + netRT->input_dim.tot()*bi, (float*)bgr_h.data, size*sizeof(dnnType), cudaMemcpyHostToDevice));
-    }
-#else
-    cv::resize(frame, frame, cv::Size(netRT->input_dim.w, netRT->input_dim.h));
-    frame.convertTo(imagePreproc, CV_32FC3, 1/255.0); 
-
-    //split channels
-    cv::split(imagePreproc,bgr);//split source
-
-    //write channels
-    for(int i=0; i<netRT->input_dim.c; i++) {
-        int idx = i*imagePreproc.rows*imagePreproc.cols;
-        int ch = netRT->input_dim.c-1 -i;
-        memcpy((void*)&input[idx + netRT->input_dim.tot()*bi], (void*)bgr[ch].data, imagePreproc.rows*imagePreproc.cols*sizeof(dnnType));     
-    }
-    checkCuda(cudaMemcpyAsync(input_d + netRT->input_dim.tot()*bi, input + netRT->input_dim.tot()*bi, netRT->input_dim.tot()*sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
-#endif
+    resizeAndSplit(frame, &frame_d, frame_size, input_d, netRT, bi, true);
+    normalize(input_d +  netRT->input_dim.tot()*bi,  netRT->input_dim.c,  netRT->input_dim.h,  netRT->input_dim.w, 0.0f, 255.0f);
 }
 
 void Yolo3Detection::postprocess(const int bi, const bool mAP){

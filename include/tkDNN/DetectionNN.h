@@ -1,6 +1,8 @@
 #ifndef DETECTIONNN_H
 #define DETECTIONNN_H
 
+#include "kernels.h"
+
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>    
@@ -16,6 +18,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "tkdnn.h"
+#include "utilsNN.h"
 
 //#define OPENCV_CUDACONTRIB //if OPENCV has been compiled with CUDA and contrib.
 
@@ -31,6 +34,7 @@ class DetectionNN {
 
     protected:
         tk::dnn::NetworkRT *netRT = nullptr;
+        uint8_t *frame_d = nullptr;
         dnnType *input_d;
 
         std::vector<cv::Size> originalSize;
@@ -38,6 +42,7 @@ class DetectionNN {
         cv::Scalar colors[256];
 
         int nBatches = 1;
+        int frame_size = 0;
 
 #ifdef OPENCV_CUDACONTRIB
         cv::cuda::GpuMat bgr[3];

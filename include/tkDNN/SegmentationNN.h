@@ -1,6 +1,8 @@
 #ifndef SEGMENTATIONNN_H
 #define SEGMENTATIONNN_H
 
+#include "kernels.h"
+
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>    
@@ -16,6 +18,7 @@
 #include "tkdnn.h"
 #include "NetworkViz.h"
 #include "kernelsThrust.h"
+#include "utilsNN.h"
 
 namespace tk { namespace dnn {
 
@@ -23,7 +26,9 @@ class SegmentationNN {
 
     protected:
         tk::dnn::NetworkRT *netRT = nullptr;
+        uint8_t *frame_d = nullptr;
         int nBatches = 1;
+        int frame_size = 0;
 
         std::vector<cv::Size> originalSize;
         cv::Mat bgr[3];
@@ -76,18 +81,7 @@ class SegmentationNN {
             cv::copyMakeBorder(frame, frame_cropped, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0) );
 
             tk::dnn::dataDim_t idim = netRT->input_dim;
-
-            resize(frame_cropped, frame_cropped, cv::Size(idim.w, idim.h));
-            
-            cv::split(frame_cropped, bgr);
-            for (int i = 0; i < idim.c; i++){
-                int idx = i * frame_cropped.rows * frame_cropped.cols;
-                int ch = idim.c-1 -i;
-                memcpy((void *)&input[idx + idim.tot()*bi], (void *)bgr[ch].data, frame_cropped.rows * frame_cropped.cols * sizeof(dnnType));
-            }
-
-            checkCuda(cudaMemcpyAsync(input_d+ idim.tot()*bi, input + idim.tot()*bi, idim.tot() * sizeof(dnnType), cudaMemcpyHostToDevice, netRT->stream));
-
+            resizeAndSplit(frame_cropped, &frame_d, frame_size, input_d, netRT, bi, true);
             normalize(input_d + idim.tot()*bi, idim.c, idim.h, idim.w, mean_d, stddev_d);
         }        
 
