@@ -31,7 +31,6 @@ void sort(dnnType *src_begin, dnnType *src_end, int *idsrc);
 void topk(dnnType *src_begin, int *idsrc, int K, float *topk_scores,
             int *topk_inds, float *topk_ys, float *topk_xs);
 // void sortAndTopKonDevice(dnnType *src_begin, int *idsrc, float *topk_scores, int *topk_inds, float *topk_ys, float *topk_xs, const int size, const int K, const int n_classes);            
-void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev);
 void transformDep(float *src_begin, float *src_end, float *dst_begin, float *dst_end);
 void subtractWithThreshold(dnnType *src_begin, dnnType *src_end, dnnType *src2_begin, dnnType *src_out, struct threshold op);
 void topKxyclasses(int *ids_begin, int *ids_end, const int K, const int size, const int wh, int *clses, int *xs, int *ys);

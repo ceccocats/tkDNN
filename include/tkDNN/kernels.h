@@ -48,4 +48,11 @@ void dcnV2CudaForward(cublasStatus_t stat, cublasHandle_t handle,
                          const int dst_dim, cudaStream_t stream = cudaStream_t(0));
 
 void scalAdd(dnnType* dstData, int size, float alpha, float beta, int inc, cudaStream_t stream = cudaStream_t(0));
+
+void normalize(float *bgr, const int ch, const int h, const int w, const float *mean, const float *stddev);
+void normalize(float *bgr, const int ch, const int h, const int w, const float mean, const float stddev);
+
+void interleavedToPlanar( uint8_t *d_src, float *d_dst, int s_w, int s_h, int s_c, int d_w, int d_h);
+void interleavedRGBToPlanarBGR( uint8_t *d_src, float *d_dst, int s_w, int s_h, int s_c, int d_w, int d_h);
+
 #endif //KERNELS_H
