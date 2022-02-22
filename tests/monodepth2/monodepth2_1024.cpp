@@ -5,75 +5,75 @@
 #include <tkdnn.h>
 #include "tkDNN/NetworkViz.h"
 
-const char* encoder_conv1_bin = "monodepth2/layers/encoder/encoder-conv1.bin";
+const char* encoder_conv1_bin = "monodepth2_1024/layers/encoder/encoder-conv1.bin";
 const char* encoder_layer1_bin[] = {
-        "monodepth2/layers/encoder/encoder-layer1-0-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer1-0-conv2.bin",
-        "monodepth2/layers/encoder/encoder-layer1-1-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer1-1-conv2.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer1-0-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer1-0-conv2.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer1-1-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer1-1-conv2.bin",
 };
 
 const char* encoder_layer2_bin[] = {
-        "monodepth2/layers/encoder/encoder-layer2-0-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer2-0-conv2.bin",
-        "monodepth2/layers/encoder/encoder-layer2-0-downsample-0.bin",
-        "monodepth2/layers/encoder/encoder-layer2-1-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer2-1-conv2.bin"
+        "monodepth2_1024/layers/encoder/encoder-layer2-0-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer2-0-conv2.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer2-0-downsample-0.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer2-1-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer2-1-conv2.bin"
 };
 
 const char* encoder_layer3_bin[]={
-        "monodepth2/layers/encoder/encoder-layer3-0-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer3-0-conv2.bin",
-        "monodepth2/layers/encoder/encoder-layer3-0-downsample-0.bin",
-        "monodepth2/layers/encoder/encoder-layer3-1-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer3-1-conv2.bin"
+        "monodepth2_1024/layers/encoder/encoder-layer3-0-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer3-0-conv2.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer3-0-downsample-0.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer3-1-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer3-1-conv2.bin"
 };
 
 const char* encoder_layer4_bin[] = {
-        "monodepth2/layers/encoder/encoder-layer4-0-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer4-0-conv2.bin",
-        "monodepth2/layers/encoder/encoder-layer4-0-downsample-0.bin",
-        "monodepth2/layers/encoder/encoder-layer4-1-conv1.bin",
-        "monodepth2/layers/encoder/encoder-layer4-1-conv2.bin"
+        "monodepth2_1024/layers/encoder/encoder-layer4-0-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer4-0-conv2.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer4-0-downsample-0.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer4-1-conv1.bin",
+        "monodepth2_1024/layers/encoder/encoder-layer4-1-conv2.bin"
 };
 
-const char *encoder_fc_bin = "monodepth2/layers/encoder/encoder-fc.bin";
+const char *encoder_fc_bin = "monodepth2_1024/layers/encoder/encoder-fc.bin";
 
 const char* decoder_layer_bin[] = {
-        "monodepth2/layers/depth_decoder/decoder-0-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-1-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-2-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-3-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-4-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-5-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-6-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-7-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-8-conv-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-9-conv-conv.bin"
+        "monodepth2_1024/layers/depth_decoder/decoder-0-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-1-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-2-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-3-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-4-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-5-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-6-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-7-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-8-conv-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-9-conv-conv.bin"
 };
 
 const char* decoder_dispconv_layer_bin[] = {
-        "monodepth2/layers/depth_decoder/decoder-10-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-11-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-12-conv.bin",
-        "monodepth2/layers/depth_decoder/decoder-13-conv.bin"
+        "monodepth2_1024/layers/depth_decoder/decoder-10-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-11-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-12-conv.bin",
+        "monodepth2_1024/layers/depth_decoder/decoder-13-conv.bin"
 };
 
 const char* output_bin[] = {
-        "monodepth2/debug/outputs/output-disp-0.bin",
-        "monodepth2/debug/outputs/output-disp-1.bin",
-        "monodepth2/debug/outputs/output-disp-2.bin",
-        "monodepth2/debug/outputs/output-disp-3.bin"
+        "monodepth2_1024/debug/outputs/output-disp-0.bin",
+        "monodepth2_1024/debug/outputs/output-disp-1.bin",
+        "monodepth2_1024/debug/outputs/output-disp-2.bin",
+        "monodepth2_1024/debug/outputs/output-disp-3.bin"
 };
 
-const char* input_bin = "monodepth2/debug/input.bin";
+const char* input_bin = "monodepth2_1024/debug/input.bin";
 
 
 int main(){
 
-    downloadWeightsifDoNotExist(input_bin, "monodepth2", "https://cloud.hipert.unimore.it/s/iYw9QwgP6CsqxLR/download");
+    //downloadWeightsifDoNotExist(input_bin, "monodepth2_1024", "https://cloud.hipert.unimore.it/s/iYw9QwgP6CsqxLR/download");
 
-    tk::dnn::dataDim_t dim(1,3,192,640,1);
+    tk::dnn::dataDim_t dim(1,3,320,1024,1);
     tk::dnn::Network net(dim);
 
     tk::dnn::Layer* muladd_sub = new tk::dnn::MulAdd(&net, 1.0f, -0.45f);
@@ -211,7 +211,7 @@ int main(){
 
     net.print();
 
-    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("monodepth2"));
+    tk::dnn::NetworkRT netRT(&net, net.getNetworkRTName("monodepth2_1024"));
     tk::dnn::dataDim_t dim1 = dim;
     dnnType *cudnn_out = nullptr;
     printCenteredTitle(" CUDNN inference ", '=', 30);
