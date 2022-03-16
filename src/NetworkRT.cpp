@@ -834,7 +834,7 @@ IPluginV2Layer* NetworkRT::convert_layer(ITensor *input, Yolo *l) {
     return lRT;
 }
 
-IResizeLayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
+ILayer* NetworkRT::convert_layer(ITensor *input, Upsample *l) {
 
 #if NV_TENSORRT_MAJOR < 8
     auto creator = getPluginRegistry()->getPluginCreator("UpSample_tkDNN","1");
@@ -1008,6 +1008,7 @@ bool NetworkRT::deserialize(const char *filename) {
     return true;
 }
 
+#if NV_TENSORRT_MAJOR > 7
 void NetworkRT::destroy() {
     delete contextRT;
     if(builderActive) {
@@ -1015,5 +1016,11 @@ void NetworkRT::destroy() {
         delete builderRT;
     }
 }
+#elif NV_TENSORRT_MAJOR <=7
+void NetworkRT::destroy() {
+
+}
+#endif
+
 
 }}

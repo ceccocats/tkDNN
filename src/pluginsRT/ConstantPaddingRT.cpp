@@ -66,11 +66,12 @@ int ConstantPaddingRT::enqueue(int batchSize, const void *const *inputs, void *c
      return 0;
 }
 #elif NV_TENSORRT_MAJOR <= 7
-    int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) {
-        dnnType* srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
-        dnnType* dstData = reinterpret_cast<dnnType*>(outputs[0]);
-        constant_pad2d_forward(srcData,dstData,i_h,i_w,o_h,o_w,c,n,padH,padW,constant,stream);
-        return 0;
+int32_t ConstantPaddingRT::enqueue(int32_t batchSize, const void *const *inputs, void **outputs, void *workspace,
+                                   cudaStream_t stream) {
+    dnnType* srcData = (dnnType*)reinterpret_cast<const dnnType*>(inputs[0]);
+    dnnType* dstData = reinterpret_cast<dnnType*>(outputs[0]);
+    constant_pad2d_forward(srcData,dstData,i_h,i_w,o_h,o_w,c,n,padH,padW,constant,stream);
+    return 0;
 }
 #endif
 
@@ -150,6 +151,8 @@ void ConstantPaddingRT::detachFromContext() NOEXCEPT {
 bool ConstantPaddingRT::supportsFormat(DataType type, PluginFormat format) const NOEXCEPT {
     return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 }
+
+
 
 ConstantPaddingRTPluginCreator::ConstantPaddingRTPluginCreator() {
     mPluginAttributes.clear();
