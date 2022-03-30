@@ -26,7 +26,7 @@ namespace tk { namespace dnn {
 
 std::map<Layer*, nvinfer1::ITensor*>tensors; 
 
-NetworkRT::NetworkRT(Network *net, const char *name) {
+NetworkRT::NetworkRT(Network *net, const char *name, dimFormat_t dim_format, const char *input_name, const char *output_name) {
 
     float rt_ver = float(NV_TENSORRT_MAJOR) + 
                    float(NV_TENSORRT_MINOR)/10 + 
@@ -97,13 +97,13 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
             calibrator.reset(new Int8EntropyCalibrator(calibrationStream, 1, 
                                             calib_table_name, 
-                                            "data"));
+                                            input_name));
             configRT->setInt8Calibrator(calibrator.get());
         }
 #endif
         
         // add input layer
-        ITensor *input = networkRT->addInput("data", DataType::kFLOAT, 
+        ITensor *input = networkRT->addInput(input_name, DataType::kFLOAT, 
                         DimsCHW{ dim.c, dim.h, dim.w});
         checkNULL(input);
 
@@ -130,7 +130,7 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
             FatalError("conversion failed");
 
         //build tensorRT
-        input->setName("out");
+        input->setName(output_name);
         networkRT->markOutput(*input);
 
         std::cout<<"Selected maxBatchSize: "<<builderRT->getMaxBatchSize()<<"\n";
@@ -162,31 +162,25 @@ NetworkRT::NetworkRT(Network *net, const char *name) {
 
 	// In order to bind the buffers, we need to know the names of the input and output tensors.
 	// note that indices are guaranteed to be less than IEngine::getNbBindings()
-	buf_input_idx = engineRT->getBindingIndex("data"); 
-    buf_output_idx = engineRT->getBindingIndex("out");
+	buf_input_idx = engineRT->getBindingIndex(input_name); 
+    buf_output_idx = engineRT->getBindingIndex(output_name);
     std::cout<<"input index = "<<buf_input_idx<<" -> output index = "<<buf_output_idx<<"\n";
 
 
     Dims iDim = engineRT->getBindingDimensions(buf_input_idx);
-    input_dim.n = 1;
-    input_dim.c = iDim.d[0];
-    input_dim.h = iDim.d[1];
-    input_dim.w = iDim.d[2];
+    input_dim = dataDim_t(iDim, dim_format);
     input_dim.print();
 
     Dims oDim = engineRT->getBindingDimensions(buf_output_idx);
-    output_dim.n = 1;
-    output_dim.c = oDim.d[0];
-    output_dim.h = oDim.d[1];
-    output_dim.w = oDim.d[2];
+    output_dim = dataDim_t(oDim, dim_format);
     output_dim.print();
 	
     // create GPU buffers and a stream
     for(int i=0; i<engineRT->getNbBindings(); i++) {
         Dims dim = engineRT->getBindingDimensions(i);
-        buffersDIM[i] = dataDim_t(1, dim.d[0], dim.d[1], dim.d[2]);
+        buffersDIM[i] = dataDim_t(dim, dim_format);
         std::cout<<"RtBuffer "<<i<<"   dim: "; buffersDIM[i].print();
-        checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*dim.d[0]*dim.d[1]*dim.d[2]*sizeof(dnnType)));
+        checkCuda(cudaMalloc(&buffersRT[i], engineRT->getMaxBatchSize()*buffersDIM[i].tot()*sizeof(dnnType)));
     }
     checkCuda(cudaMalloc(&output, engineRT->getMaxBatchSize()*output_dim.tot()*sizeof(dnnType)));
 	checkCuda(cudaStreamCreate(&stream));
