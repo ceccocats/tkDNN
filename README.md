@@ -23,12 +23,11 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 - [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
 #### 24 November 2021
 - [x] Support to sematic segmentation on cuda 11
-- [x] Support to TensorRT8 (tensort8 branch). 
-
+- [x] Support to TensorRT8. (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg))
 #### 30 March 2022
-- [x] Support to monocular depth esitmation (tensort8 branch) [README](docs/README_depth.md)
+- [x] Support to monocular depth esitmation [README](docs/README_depth.md) (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg))
 
-TensorRT8 (and therefore Jetpack 4.6) is currently supported only on the branch tensort8 due to [performance issue with TensorRT8](https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-8.html)). We will merge it to the master as soon as those issues are fixed (probably in future minor releases).
+
 
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
@@ -120,8 +119,8 @@ git clone https://github.com/ceccocats/tkDNN
 cd tkDNN
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -G"Ninja" .. 
-ninja
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
 ```
 
 ## Workflow
@@ -179,11 +178,10 @@ For specific details on how to run tkDNN on Windows 10/11 see [HERE](./docs/wind
 | yolo4_320         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 320x320       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
 | yolo4_512         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
 | yolo4_608         | Yolov4 <sup>8</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 608x608       | [weights](https://cloud.hipert.unimore.it/s/d97CFzYqCPCp5Hg/download)     |
-| yolo4_berkeley             | Yolov4 <sup>8</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)                          | 10        | 540x320       | [weights](https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download)     |
+| yolo4_berkeley             | Yolov4 <sup>8</sup>                           | [BDD100K  ](https://bair.berkeley.edu/blog/2018/05/30/bdd/)                          | 10        | 544x320       | [weights](https://cloud.hipert.unimore.it/s/nkWFa5fgb4NTdnB/download)     |
 | yolo4tiny             | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 416x416       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
-| yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 
+| yolo4x             | Yolov4x-mish  <sup>9</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 640x640       | [weights](https://cloud.hipert.unimore.it/s/5MFjtNtgbDGdJEo/download)     |
 | yolo4tiny_512           | Yolov4 tiny <sup>9</sup>                           | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/iRnc4pSqmx78gJs/download)     |
-80        | 640x640       | [weights](https://cloud.hipert.unimore.it/s/5MFjtNtgbDGdJEo/download)     |
 | yolo4x-cps            | Scaled Yolov4 <sup>10</sup>                          | [COCO 2017](http://cocodataset.org/)                          | 80        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/AfzHE4BfTeEm2gH/download)     |
 | shelfnet              | ShelfNet18_realtime<sup>11</sup>                      | [Cityscapes](https://www.cityscapes-dataset.com/)                          | 19        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/mEDZMRJaGCFWSJF/download)                                                                   |
 | shelfnet_berkeley              | ShelfNet18_realtime<sup>11</sup>                           | [DeepDrive](https://bdd-data.berkeley.edu/)                          | 20        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download)                                                                   |

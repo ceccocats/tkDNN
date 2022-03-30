@@ -23,6 +23,7 @@
 #include <ios>
 #include <chrono>
 
+#include <yaml-cpp/yaml.h>
 
 
 
@@ -175,6 +176,5 @@ inline T YAMLgetConf(YAML::Node conf, std::string key, T defaultVal) {
     }
     return val;
 }
-
 
 #endif //UTILS_H

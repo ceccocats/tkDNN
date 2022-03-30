@@ -198,7 +198,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const std::string&
         "bottle" , "wine glass" , "cup" , "fork" , "knife" , "spoon" , "bowl" , "banana" , 
         "apple" , "sandwich" , "orange" , "broccoli" , "carrot" , "hot dog" , "pizza" , 
         "donut" , "cake" , "chair" , "sofa" , "pottedplant" , "bed" , "diningtable" , 
-        "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , 
+    "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , 
         "cell phone" , "microwave" , "oven" , "toaster" , "sink" , "refrigerator" , 
         "book" , "clock" , "vase" , "scissors" , "teddy bear" , "hair drier" , "toothbrush"};
         classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
@@ -207,7 +207,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const std::string&
     else{
         FatalError("Number of classes not supported for mobilenet");
     }
-    return 1;
+    return true;
 }
 
 void MobilenetDetection::preprocess(cv::Mat &frame, const int bi){

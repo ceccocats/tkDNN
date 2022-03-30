@@ -120,6 +120,7 @@ bool CenternetDetection::init(const std::string& tensor_path, const std::string&
     dst2.at<float>(2,1)=dst2.at<float>(1,1) + (dst2.at<float>(0,0)-dst2.at<float>(1,0) );
     return true;
     
+    return true;
 }
 
 

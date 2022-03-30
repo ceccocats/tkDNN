@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd build
+#cd build
 
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -29,24 +29,28 @@ function print_output {
 
 } 
 
+out_dir=results
 out_file=results.log
-rm $out_file
+rm -rf $out_dir/
+mkdir -p $out_dir
 
 function test_net {
-    ./test_$1 &>> $out_file
+    ./test_$1 &> $out_dir/$1_${TKDNN_MODE}_build_$out_file
     print_output $? $1
-    ./test_rtinference $1*.rt $TKDNN_BATCHSIZE &>> $out_file
+    ./test_rtinference $1*.rt 1 &> $out_dir/$1_${TKDNN_MODE}_inference_batch1_$out_file
+    print_output $? "infer $1"
+    ./test_rtinference $1*.rt $TKDNN_BATCHSIZE &> $out_dir/$1_${TKDNN_MODE}_inference_batch${TKDNN_BATCHSIZE}_$out_file
     print_output $? "batched $1"
 }
 
 
-modes=( 1 ) # only FP32
-# modes=( 1 2 ) # FP32 and FP16
+# modes=( 1 ) # only FP32
+modes=( 1 2 ) # FP32 and FP16
 # modes=( 1 2 3 ) # FP32, FP16 and INT8
 
 for i in "${modes[@]}"
 do
-    rm *rt
+    rm -f *rt
     if [ $i -eq 1 ]
     then
         export TKDNN_MODE=FP32
@@ -73,37 +77,37 @@ do
     # print_output $? imuodom
 
     test_net yolo4
-    test_net yolo4_320
-    test_net yolo4_320_coco2
-    test_net yolo4_512
-    test_net yolo4_608
-    test_net yolo4-csp
-    test_net yolo4x
-    test_net yolo4_berkeley
-    test_net yolo4_berkeley_f1
-    test_net yolo4tiny
-    test_net yolo4tiny_512
-    test_net yolo3
-    test_net yolo3_berkeley
-    test_net yolo3_coco4
-    test_net yolo3_flir
-    test_net yolo3_512
-    test_net yolo3tiny
-    test_net yolo3tiny_512
-    test_net yolo2
-    test_net yolo2_voc
-    #test_net yolo2tiny
-    test_net csresnext50-panet-spp
-    #test_net csresnext50-panet-spp_berkeley
-    test_net resnet101_cnet
-    test_net dla34_cnet
-    test_net dla34_cnet3d
-    test_net mobilenetv2ssd
-    test_net mobilenetv2ssd512
-    test_net bdd-mobilenetv2ssd
-    test_net dla34_ctrack
-    test_net shelfnet
-    test_net shelfnet_berkeley
+    # test_net yolo4_320
+    # test_net yolo4_320_coco2
+    # test_net yolo4_512
+    # test_net yolo4_608
+    # test_net yolo4-csp
+    # test_net yolo4x
+    # test_net yolo4_berkeley
+    # test_net yolo4_berkeley_f1
+    # test_net yolo4tiny
+    # test_net yolo4tiny_512
+    # test_net yolo3
+    # test_net yolo3_berkeley
+    # test_net yolo3_coco4
+    # test_net yolo3_flir
+    # test_net yolo3_512
+    # test_net yolo3tiny
+    # test_net yolo3tiny_512
+    # test_net yolo2
+    # test_net yolo2_voc
+    # test_net yolo2tiny
+    # test_net csresnext50-panet-spp
+    # test_net csresnext50-panet-spp_berkeley
+    # test_net resnet101_cnet
+    # test_net dla34_cnet
+    # test_net dla34_cnet3d
+    # test_net mobilenetv2ssd
+    # test_net mobilenetv2ssd512
+    # test_net bdd-mobilenetv2ssd
+    # test_net dla34_ctrack
+    # test_net shelfnet
+    # test_net shelfnet_berkeley
 done
 
-echo "If errors occured, check logfile $out_file" 
+echo "If errors occured, check logfiles in directory: $out_dir" 

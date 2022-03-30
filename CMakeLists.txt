@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 14)
 
 option(ENABLE_OPENCV_CUDA_CONTRIB "Enable OpenCV CUDA Contrib" OFF )
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "default build" FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 find_package(CUDA 9.0 REQUIRED)
 if (CUDA_FOUND)
     set(OUTPUTFILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda_script) # No suffix required
@@ -202,12 +206,17 @@ target_link_libraries(test_shelfnet_berkeley tkDNN)
 add_executable(test_shelfnet_mapillary tests/shelfnet/shelfnet_mapillary.cpp)
 target_link_libraries(test_shelfnet_mapillary tkDNN)
 
+add_executable(test_shelfnet_coco tests/shelfnet/shelfnet_coco.cpp)
+target_link_libraries(test_shelfnet_coco tkDNN)
+
 # MONODEPTH2
 add_executable(test_monodepth2_640 tests/monodepth2/monodepth2_640.cpp)
 target_link_libraries(test_monodepth2_640 tkDNN)
 
 add_executable(test_monodepth2_1024 tests/monodepth2/monodepth2_1024.cpp)
 target_link_libraries(test_monodepth2_1024 tkDNN)
+
+
 # DEMOS
 add_executable(test_rtinference tests/test_rtinference/rtinference.cpp)
 target_link_libraries(test_rtinference tkDNN)
