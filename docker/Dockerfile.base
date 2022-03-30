@@ -4,7 +4,7 @@ LABEL maintainer "Francesco Gatti"
 ADD nv-tensorrt-repo-ubuntu1804-cuda10.2-trt7.0.0.11-ga-20191216_1-1_amd64.deb /tmp/trt.deb
 RUN apt-get update && dpkg -i /tmp/trt.deb && rm /tmp/trt.deb && apt-get update
 RUN apt install -y libnvinfer7=7.0.0-1+cuda10.2 libnvinfer-dev=7.0.0-1+cuda10.2
-RUN DEBIAN_FRONTEND=noninteractive apt install -y git wget libeigen3-dev libyaml-cpp-dev
+RUN DEBIAN_FRONTEND=noninteractive apt install -y git wget libeigen3-dev libyaml-cpp-dev curl
 RUN cd /tmp && \
     wget https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-x86_64.sh && \
     chmod +x cmake-3.17.3-Linux-x86_64.sh && \
