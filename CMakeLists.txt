@@ -78,8 +78,7 @@ endif()
 #-------------------------------------------------------------------------------
 # CUDA
 #-------------------------------------------------------------------------------
-
-#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_30 --compiler-options '-fPIC'")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" --compiler-options '-fPIC')
 
 
 find_package(CUDNN REQUIRED)
