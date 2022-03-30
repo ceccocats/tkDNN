@@ -5,7 +5,6 @@
 #include <NvInfer.h>
 #include <vector>
 #include <tkdnn.h>
-using namespace tk::dnn;
 
 
 namespace nvinfer1 {

@@ -27,10 +27,12 @@
 
 
 
-#if NV_TENSORRT_MAJOR > 7
-#define NOEXCEPT noexcept
-#else
-#define NOEXCEPT
+#ifndef NOEXCEPT
+  #if NV_TENSORRT_MAJOR > 7
+  #define NOEXCEPT noexcept
+  #else
+  #define NOEXCEPT
+  #endif
 #endif
 
 
