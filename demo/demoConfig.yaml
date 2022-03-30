@@ -2,16 +2,8 @@
 input     : "../demo/yolo_test.mp4"
 win_input : "..\\..\\..\\demo\\yolo_test.mp4"
 
-#cfg input
-cfg_input : "../tests/darknet/cfg/yolo4tiny.cfg"
-cfg_win_input : "..\\..\\..\\tests\\darknet\\cfg\\yolo4tiny.cfg"
-
-#name input
-name_input : "../tests/darknet/names/coco.names"
-name_win_input : "..\\..\\..\\tests\\darknet\\names\\coco.names"
-
 # network config
-net         : "yolo4tiny_fp32.rt"
+net         : "yolo4_berkeley_fp32.rt"
 ntype       : 'y'
 n_classes   : 80
 n_batch     : 1

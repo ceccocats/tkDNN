@@ -30,10 +30,6 @@
 
 namespace tk { namespace dnn {
 
-using namespace nvinfer1;
-
-
-
 class NetworkRT {
 
 public:
@@ -57,6 +53,7 @@ public:
     dnnType *output;
     cudaStream_t stream;
 
+    std::vector<nvinfer1::YoloRT*> yolo_plugins; // yolo layers in network
 
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();

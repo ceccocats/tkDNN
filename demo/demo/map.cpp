@@ -45,8 +45,6 @@ int main(int argc, char *argv[])
     bool verbose;
     int classes, map_points, map_levels;
     float map_step, IoU_thresh, conf_thresh;
-    std::string cfg_path = "../tests/darknet/cfg/yolo4tiny.cfg";
-    std::string name_path = "../tests/darknet/names/coco.names";
     double vm_total = 0, rss_total = 0;
     double vm, rss;
 
@@ -56,17 +54,13 @@ int main(int argc, char *argv[])
     if(argc > 2)
         ntype = argv[2][0];
     if(argc > 3)
-        cfg_path = argv[3];
+        labels_path = argv[3]; 
     if(argc > 4)
-        name_path = argv[4];
+        config_filename = argv[4]; 
     if(argc > 5)
-        labels_path = argv[5];
+        n_batches = atoi(argv[5]); 
     if(argc > 6)
-        config_filename = argv[6];
-    if(argc > 7)
-        n_batches = atoi(argv[7]);
-    if(argc > 8)
-        confidence_thresh = atof(argv[8]);
+        confidence_thresh = atof(argv[6]); 
 
     std::cout<<"conf t: "<<confidence_thresh<<std::endl;
 
@@ -121,7 +115,7 @@ int main(int argc, char *argv[])
         default:
             FatalError("Network type not allowed (3rd parameter)\n");
     }
-    detNN->init(net,cfg_path,name_path,n_classes, 1, conf_thresh);
+    detNN->init(net,n_classes, 1, conf_thresh);
 
     //read images 
     std::ifstream all_labels(labels_path);

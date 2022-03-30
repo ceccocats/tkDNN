@@ -39,12 +39,8 @@ int main(int argc, char *argv[]) {
 
     #ifdef __linux__
         std::string input = YAMLgetConf<std::string>(conf, "input", "../demo/yolo_test.mp4");
-        std::string cfgPath = YAMLgetConf<std::string>(conf,"cfg_input", "../tests/darknet/cfg/yolo4tiny.cfg");
-        std::string namePath = YAMLgetConf<std::string>(conf,"name_input","../tests/darknet/names/coco.names");
     #elif _WIN32
         std::string input = YAMLgetConf<std::string>(conf, "win_input", "..\\..\\..\\demo\\yolo_test.mp4");
-        std::string cfgPath = YAMLgetConf<std::string>(conf,"cfg_win_input","..\\..\\..\\tests\\darknet\\cfg\\yolo4tiny.cfg");
-        std::string namePath = YAMLgetConf<std::string>(conf,"name_win_input","..\\..\\..\\tests\\darknet\\names\\coco.names");
     #endif
         if(!fileExist(input.c_str()))
         FatalError("The given input video does not exist.");
@@ -90,12 +86,7 @@ int main(int argc, char *argv[]) {
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    if(ntype == 'c' || ntype == 'm'){
-        cfgPath = "";
-        namePath = "";
-    }
-
-    detNN->init(net,cfgPath,namePath,n_classes,n_batch,conf_thresh);
+    detNN->init(net,n_classes,n_batch,conf_thresh);
 
     // open video stream
     cv::VideoCapture cap(input);

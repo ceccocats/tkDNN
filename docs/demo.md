@@ -46,8 +46,6 @@ The config file is a yaml file with the following attributes:
 * ```conf_thresh``` confidence threshold for the detector. Only bounding boxes with threshold greater than conf-thresh will be displayed.
 * ```show``` if set to 0 the demo will not show the visualization (if n-batches ==1)
 * ```save``` if set to 1 the demo will save the video of the demo into result.mp4 (if n-batches ==1)
-* ```cfg_input``` (for linux) \ ```cfg_win_input``` (for windows)  is the location of the cfg path of the network for mobilenet and centernet networks use ```" "```
-* ```name_input``` (for linux) \ ```name_win_input``` (for windows)  is the location of the name path of the network for mobilenet and centernet networks use ```" "```
 
 N.B. By default it is used FP32 inference
 
