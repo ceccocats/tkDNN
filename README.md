@@ -23,7 +23,10 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 - [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
 #### 24 November 2021
 - [x] Support to sematic segmentation on cuda 11
-- [x] Support to TensorRT8. 
+- [x] Support to TensorRT8 (tensort8 branch). 
+
+#### 30 March 2022
+- [x] Support to monocular depth esitmation (tensort8 branch) [README](docs/README_depth.md)
 
 TensorRT8 (and therefore Jetpack 4.6) is currently supported only on the branch tensort8 due to [performance issue with TensorRT8](https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-8.html)). We will merge it to the master as soon as those issues are fixed (probably in future minor releases).
 
@@ -138,6 +141,7 @@ For specific details on how to export weights see [HERE](./docs/exporting_weight
 For specific details on how to run:
 - 2D object detection demos, details on FP16, INT8 and batching see [HERE](./docs/demo.md).
 - segmentation demos see [HERE](./docs/README_seg.md).
+- monocular depth estimation see [HERE](./docs/README_depth.md).
 - 2D/3D object detection and tracking demos see [HERE](./docs/README_2d3dtracking.md).
 - mAP demo to evaluate 2D object detectors see [HERE](./docs/mAP_demo.md).
 
@@ -185,6 +189,8 @@ For specific details on how to run tkDNN on Windows 10/11 see [HERE](./docs/wind
 | shelfnet_berkeley              | ShelfNet18_realtime<sup>11</sup>                           | [DeepDrive](https://bdd-data.berkeley.edu/)                          | 20        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download)                                                                   |
 | dla34_cnet3d        | Centernet3D (DLA34 backend)<sup>4</sup>         | [KITTI 2017](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d)                          | 1        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/2MDyWGzQsTKMjmR/download)     |
 | dla34_ctrack        | CenterTrack (DLA34 backend)<sup>12</sup>         | [NuScenes 3D](https://www.nuscenes.org/)                          | 7        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/rjNfgGL9FtAXLHp/download)     |
+| monodepth2        | Monodepth2 <sup>13</sup>         | [KITTI DEPTH](http://www.cvlibs.net/datasets/kitti/raw_data.php)                          | -        | 640x192       | [weights-mono](https://cloud.hipert.unimore.it/s/iYw9QwgP6CsqxLR/download)     |
+| monodepth2        | Monodepth2 <sup>13</sup>         | [KITTI DEPTH](http://www.cvlibs.net/datasets/kitti/raw_data.php)                          | -        | 640x192       | [weights-stereo](https://cloud.hipert.unimore.it/s/XmwbWNXDfqyQ4EL/download)     |
 
 
 ## References
@@ -201,3 +207,11 @@ For specific details on how to run tkDNN on Windows 10/11 see [HERE](./docs/wind
 10. Wang, Chien-Yao, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. "Scaled-YOLOv4: Scaling Cross Stage Partial Network." arXiv preprint arXiv:2011.08036 (2020).
 11. Zhuang, Juntang, et al. "ShelfNet for fast semantic segmentation." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2019.
 12. Zhou, Xingyi, Vladlen Koltun, and Philipp Krähenbühl. "Tracking objects as points." European Conference on Computer Vision. Springer, Cham, 2020.
+13. Godard, Clément, et al. "Digging into self-supervised monocular depth estimation." Proceedings of the IEEE/CVF International Conference on Computer Vision. 2019.
+
+## Contributors
+The main contibutors, in chronological order, are: 
+- [Francesco Gatti](https://github.com/ceccocats), francesco.gatti@hipert.it
+- [Micaela Verucchi](https://github.com/mive93), micaela.verucchi@unimore.it
+- [Davide Sapienza](https://github.com/sapienzadavide), davide.sapienza@unimore.it
+- [Harshvardhan Chandirasekar](https://github.com/perseusdg), f20180523@goa.bits-pilani.ac.in
