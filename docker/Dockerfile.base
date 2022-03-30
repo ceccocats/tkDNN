@@ -1,57 +1,140 @@
-FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
-LABEL maintainer "Francesco Gatti"
+FROM nvidia/cudagl:11.3.1-devel-ubuntu20.04
 
-ADD nv-tensorrt-repo-ubuntu1804-cuda10.2-trt7.0.0.11-ga-20191216_1-1_amd64.deb /tmp/trt.deb
-RUN apt-get update && dpkg -i /tmp/trt.deb && rm /tmp/trt.deb && apt-get update
-RUN apt install -y libnvinfer7=7.0.0-1+cuda10.2 libnvinfer-dev=7.0.0-1+cuda10.2
-RUN DEBIAN_FRONTEND=noninteractive apt install -y git wget libeigen3-dev libyaml-cpp-dev
-RUN cd /tmp && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-x86_64.sh && \
-    chmod +x cmake-3.17.3-Linux-x86_64.sh && \
-    ./cmake-3.17.3-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir --skip-license && \
-    rm ./cmake-3.17.3-Linux-x86_64.sh
+LABEL maintainer "TKDNN AUTHORS"
+LABEL Description="tkDNN+cudagl"
+LABEL com.tkdnn.nvidia.version="11.3.1"
 
-RUN echo "INSTALL OPENCV"
-RUN apt-get install -y build-essential \
-    unzip \
-    pkg-config \
-    libjpeg-dev \
-    libpng-dev \
-    libtiff-dev \
-    libavcodec-dev \
-    libavformat-dev \
-    libswscale-dev \
-    libv4l-dev \
-    libxvidcore-dev \
-    libx264-dev \
-    libgtk-3-dev \
-    libatlas-base-dev \
-    gfortran \
-    libgstreamer1.0-dev \
-    libgstreamer-plugins-base1.0-dev \
-    libdc1394-22-dev \
-    libavresample-dev
-RUN cd && wget https://github.com/opencv/opencv/archive/4.3.0.tar.gz && tar -xf 4.3.0.tar.gz && rm *.tar.gz
-RUN cd && wget https://github.com/opencv/opencv_contrib/archive/4.3.0.tar.gz && tar -xf 4.3.0.tar.gz && rm *.tar.gz
-RUN cd && \
-    cd opencv-4.3.0 && mkdir build && cd build && \
+ENV DEBIAN_FRONTEND noninteractive
+ENV CC gcc
+ENV CXX g++
+
+RUN apt-get update && apt-get install -y \
+libblkid-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+libcudnn8-dev=8.2.1.32-1+cuda11.3 \
+libcudnn8=8.2.1.32-1+cuda11.3 \
+libnvinfer-dev=8.0.3-1+cuda11.3 \
+libnvinfer8=8.0.3-1+cuda11.3 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+libblkid-dev \
+locales \
+lsb-release \
+mesa-utils \
+git \
+nano \
+terminator \
+wget \
+curl \
+libssl-dev \
+htop \
+dbus-x11 \
+libqt5opengl5-dev \
+libgtk-3-dev \
+libvtk7-dev \
+libv4l-dev \
+tar \
+libgoogle-glog-dev \
+libgflags-dev \
+gfortran-9 \
+libtbb-dev \
+libgstreamer1.0-dev \
+libgstreamer-plugins-base1.0-dev \
+libdc1394-22-dev \
+libavresample-dev \
+libatlas-cpp-0.6-dev \
+python3-dev \
+gdb \
+python3-pip \
+unzip libtbb-dev && \
+apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+software-properties-common && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-add-repository universe
+RUN apt-get update && apt-get install -y python3-pip  python3 openssh-server ssh pyqt5-dev sip-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade virtualenv
+RUN pip3 install --upgrade paramiko
+RUN pip3 install --ignore-installed --upgrade numpy protobuf
+
+
+RUN cd ~ && mkdir build
+RUN cd ~/build && wget https://github.com/Kitware/CMake/releases/download/v3.21.4/cmake-3.21.4.tar.gz  && \
+tar -xvf cmake-3.21.4.tar.gz && cd cmake-3.21.4 && ./configure --prefix=/usr/local --qt-gui --parallel=12 && \
+make -j8 && make install
+
+RUN apt-get update && apt-get install -y automake autoconf pkg-config libevent-dev libncurses5-dev bison && \
+apt-get clean && rm -rf /var/lib/apt/lists/
+
+RUN git clone https://github.com/tmux/tmux.git && \
+cd tmux && git checkout tags/3.2 && ls -la && sh autogen.sh && ./configure && make -j8 && make install
+
+RUN apt-get update && apt-get install -y zsh && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
+RUN chsh -s /usr/bin/zsh root
+RUN git clone https://github.com/sindresorhus/pure /root/.oh-my-zsh/custom/pure
+RUN ln -s /root/.oh-my-zsh/custom/pure/pure.zsh-theme /root/.oh-my-zsh/custom/
+RUN ln -s /root/.oh-my-zsh/custom/pure/async.zsh /root/.oh-my-zsh/custom/
+RUN sed -i -e 's/robbyrussell/refined/g' /root/.zshrc
+RUN sed -i '/plugins=(/c\plugins=(git git-flow adb pyenv tmux)' /root/.zshrc
+
+RUN mkdir -p /root/.config/terminator/
+COPY assets/terminator_config /root/.config/terminator/config
+
+RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/local/cuda/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:/usr/local/lib:${LD_LIBRARY_PATH}
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility,graphics
+
+
+
+RUN cd ~/build && wget https://github.com/opencv/opencv/archive/4.5.4.tar.gz && tar -xf 4.5.4.tar.gz && rm 4.5.4.tar.gz
+RUN cd ~/build && wget https://github.com/opencv/opencv_contrib/archive/4.5.4.tar.gz && tar -xf 4.5.4.tar.gz && rm 4.5.4.tar.gz
+RUN cd ~/build && \
+    cd opencv-4.5.4 && mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=RELEASE \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
     -D INSTALL_PYTHON_EXAMPLES=OFF \
     -D INSTALL_C_EXAMPLES=OFF \
-    -D OPENCV_EXTRA_MODULES_PATH='~/opencv_contrib-4.3.0/modules' \
+    -D OPENCV_EXTRA_MODULES_PATH='~/build/opencv_contrib-4.5.4/modules' \
     -D BUILD_EXAMPLES=OFF \
+    -D BUILD_TESTS=OFF \
+    -D BUILD_PERF_TESTS=OFF \
+    -D BUILD_DOCS=OFF \
     -D WITH_CUDA=ON \
+    -D WITH_OPENGL=ON \
+    -D WITH_NVCUVID=ON \
     -D CUDA_ARCH_BIN=7.2 \
-    -D CUDA_ARCH_PTX="" \
+    -D CUDA_ARCH_PTX=7.2 \
     -D ENABLE_FAST_MATH=ON \
     -D CUDA_FAST_MATH=ON \
     -D WITH_CUBLAS=ON \
+    -D WITH_CUDNN=ON \
+    -D WITH_OPENMP=ON \
+    -D WITH_NONFREE=ON \
     -D WITH_LIBV4L=ON \
     -D WITH_GSTREAMER=ON \
     -D WITH_GSTREAMER_0_10=OFF \
     -D WITH_TBB=ON \
-    ../ && make -j12 && make install
-RUN apt clean
+    ../ && make -j12 && make install && ldconfig
 
+RUN cd ~ && rm -rf build
 
+RUN cd ~ && mkdir Development && cd Development && \
+git clone https://github.com/ceccocats/tkDNN.git && cd tkDNN && \
+mkdir build && cd build && \
+cmake -DCMAKE_BUILD_TYPE=Release .. && \
+make -j6
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY assets/entrypoint_setup.sh /
+ENTRYPOINT ["/entrypoint_setup.sh"]
+CMD ["terminator"]

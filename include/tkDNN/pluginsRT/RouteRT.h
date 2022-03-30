@@ -1,96 +1,90 @@
 #include<cassert>
 #include "../kernels.h"
+#include <vector>
+#include <NvInfer.h>
 
-class RouteRT : public IPlugin {
+namespace nvinfer1 {
+    class RouteRT : public IPluginV2 {
 
-	/**
-		THIS IS NOT USED ANYMORE
-	*/
+        /**
+            THIS IS NOT USED ANYMORE
+        */
 
-public:
-	RouteRT(int groups, int group_id) {
-		this->groups = groups;
-		this->group_id = group_id;
-	}
+    public:
+        RouteRT(int groups, int group_id) ;
 
-	~RouteRT(){
+        ~RouteRT() ;
 
-	}
+        RouteRT(const void *data, size_t length) ;
 
-	int getNbOutputs() const override {
-		return 1;
-	}
+        int getNbOutputs() const NOEXCEPT override ;
 
-	Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override {
-		int out_c = 0;
-		for(int i=0; i<nbInputDims; i++) out_c += inputs[i].d[0];
-		return DimsCHW{out_c/groups, inputs[0].d[1], inputs[0].d[2]};
-	}
+        Dims getOutputDimensions(int index, const Dims *inputs, int nbInputDims) NOEXCEPT override ;
 
-	void configure(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, int maxBatchSize) override {
-		in = nbInputs;
-		c = 0;
-		for(int i=0; i<nbInputs; i++) {
-			c_in[i] = inputDims[i].d[0]; 
-			c += inputDims[i].d[0];
-		}
-		h = inputDims[0].d[1];
-		w = inputDims[0].d[2];
-		c /= groups;
-	}
+        void configureWithFormat(const Dims *inputDims, int nbInputs, const Dims *outputDims, int nbOutputs, DataType type,PluginFormat format, int maxBatchSize) NOEXCEPT override ;
 
-	int initialize() override {
+        int initialize() NOEXCEPT override ;
 
-		return 0;
-	}
+        void terminate() NOEXCEPT override ;
 
-	virtual void terminate() override {
-	}
+        size_t getWorkspaceSize(int maxBatchSize) const NOEXCEPT override ;
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override {
-		return 0;
-	}
+#if NV_TENSORRT_MAJOR > 7
+        int enqueue(int batchSize, const void *const *inputs, void *const *outputs, void *workspace,cudaStream_t stream) NOEXCEPT override ;
+#elif NV_TENSORRT_MAJOR == 7
+        int32_t enqueue (int32_t batchSize, const void *const *inputs, void **outputs, void *workspace, cudaStream_t stream) override;
+#endif
 
-	virtual int enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream) override {
-		
-		dnnType *dstData = reinterpret_cast<dnnType*>(outputs[0]);
+        size_t getSerializationSize() const NOEXCEPT override ;
 
-		for(int b=0; b<batchSize; b++) {
-			int offset = 0;
-			for(int i=0; i<in; i++) {
-				dnnType *input = (dnnType*)reinterpret_cast<const dnnType*>(inputs[i]);
-				int in_dim = c_in[i]*h*w;
-				int part_in_dim = in_dim / this->groups;
-				checkCuda( cudaMemcpyAsync(dstData + b*c*w*h + offset, input + b*c*w*h*groups + this->group_id*part_in_dim, part_in_dim*sizeof(dnnType), cudaMemcpyDeviceToDevice, stream) );
-				offset += part_in_dim;
-			}
-		}
+        void serialize(void *buffer) const NOEXCEPT override ;
 
-		return 0;
-	}
+        const char *getPluginType() const NOEXCEPT override ;
 
+        const char *getPluginVersion() const NOEXCEPT override ;
 
-	virtual size_t getSerializationSize() override {
-		return (6+MAX_INPUTS)*sizeof(int);
-	}
+        void destroy() NOEXCEPT override ;
 
-	virtual void serialize(void* buffer) override {
-		char *buf = reinterpret_cast<char*>(buffer),*a=buf;
-		tk::dnn::writeBUF(buf, groups);
-		tk::dnn::writeBUF(buf, group_id);
-		tk::dnn::writeBUF(buf, in);
-		for(int i=0; i<MAX_INPUTS; i++)
-			tk::dnn::writeBUF(buf, c_in[i]);
+        const char *getPluginNamespace() const NOEXCEPT override ;
 
-		tk::dnn::writeBUF(buf, c);
-		tk::dnn::writeBUF(buf, h);
-		tk::dnn::writeBUF(buf, w);
-		assert(buf == a + getSerializationSize());
-	}
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 
-	static const int MAX_INPUTS = 4;
-	int in;
-	int c_in[MAX_INPUTS];
-	int c, h, w;
-	int groups, group_id;
+        bool supportsFormat(DataType type, PluginFormat format) const NOEXCEPT override ;
+
+        IPluginV2 *clone() const NOEXCEPT override ;
+
+        static const int MAX_INPUTS = 4;
+        int in;
+        int c_in[MAX_INPUTS];
+        int c, h, w;
+        int groups, group_id;
+    private:
+        std::string mPluginNamespace;
+    };
+
+    class RouteRTPluginCreator : public IPluginCreator {
+    public:
+        RouteRTPluginCreator() ;
+
+        void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
+
+        const char *getPluginNamespace() const NOEXCEPT override ;
+
+        IPluginV2 *deserializePlugin(const char *name, const void *serialData, size_t serialLength) NOEXCEPT override ;
+
+        IPluginV2 *createPlugin(const char *name, const PluginFieldCollection *fc) NOEXCEPT override ;
+
+        const char *getPluginName() const NOEXCEPT override ;
+
+        const char *getPluginVersion() const NOEXCEPT override ;
+
+        const PluginFieldCollection *getFieldNames() NOEXCEPT override ;
+
+    private:
+        static PluginFieldCollection mFC;
+        static std::vector<PluginField> mPluginAttributes;
+        std::string mPluginNamespace;
+    };
+
+    REGISTER_TENSORRT_PLUGIN(RouteRTPluginCreator);
 };

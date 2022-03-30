@@ -15,6 +15,11 @@ Flatten::Flatten(Network *net) : Layer(net) {
     output_dim.w = 1;
     output_dim.l = 1;
 
+    this->h = 1;
+    this->w = 1;
+    this->rows = input_dim.c;
+    this->cols = input_dim.h * input_dim.w;
+    this->c = input_dim.w * input_dim.h * input_dim.c;
 }
 
 Flatten::~Flatten() {

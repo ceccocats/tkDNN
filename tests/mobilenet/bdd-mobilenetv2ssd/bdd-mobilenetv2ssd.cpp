@@ -542,5 +542,6 @@ int main()
     ret_cudnn_tensorrt |= checkResult(conf->output_dim.tot(), conf->dstData, rt_out3) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     ret_cudnn_tensorrt |= checkResult(loc->output_dim.tot(), loc->dstData, rt_out4) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
 
+    netRT.destroy();
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

@@ -28,6 +28,7 @@ int main() {
     int ret = testInference(input_bins, output_bins, net, netRT);
     net->releaseLayers();
     delete net;
+    netRT->destroy();
     delete netRT;
     return ret;
 }

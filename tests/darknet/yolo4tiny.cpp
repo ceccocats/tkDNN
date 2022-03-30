@@ -26,8 +26,10 @@ int main() {
     tk::dnn::NetworkRT *netRT = new tk::dnn::NetworkRT(net, net->getNetworkRTName(bin_path.c_str()));
     
     int ret = testInference(input_bins, output_bins, net, netRT);
+    std::cout<<ret<<std::endl;
     net->releaseLayers();
     delete net;
+    netRT->destroy();
     delete netRT;
     return ret;
 }

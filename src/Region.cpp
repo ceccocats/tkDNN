@@ -16,7 +16,6 @@ Region::Region(Network *net, int classes, int coords, int num) :
     this->classes = classes;
     this->coords = coords;
     this->num = num;
-
     // same
     output_dim.n = input_dim.n;
     output_dim.c = input_dim.c;

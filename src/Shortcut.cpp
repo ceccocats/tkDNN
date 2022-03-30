@@ -9,6 +9,9 @@ Shortcut::Shortcut(Network *net, Layer *backLayer, bool mul) : Layer(net) {
 
     this->backLayer = backLayer;
     this->mul = mul;
+    this->c = input_dim.c;
+    this->h = input_dim.h;
+    this->w = input_dim.w;
     checkCuda( cudaMalloc(&dstData, output_dim.tot()*sizeof(dnnType)) );
 
     if( ( backLayer->output_dim.c != input_dim.c && mul ) ||

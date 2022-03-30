@@ -37,14 +37,18 @@ int main(int argc, char *argv[]) {
     if(!fileExist(net.c_str()))
         FatalError("The given network does not exist. Create the rt first.");
 
-    #ifdef __linux__ 
+    #ifdef __linux__
         std::string input = YAMLgetConf<std::string>(conf, "input", "../demo/yolo_test.mp4");
+        std::string cfgPath = YAMLgetConf<std::string>(conf,"cfg_input", "../tests/darknet/cfg/yolo4tiny.cfg");
+        std::string namePath = YAMLgetConf<std::string>(conf,"name_input","../tests/darknet/names/coco.names");
     #elif _WIN32
-        std::string input = YAMLgetConf(conf, "win_input", "..\\..\\..\\demo\\yolo_test.mp4");
+        std::string input = YAMLgetConf<std::string>(conf, "win_input", "..\\..\\..\\demo\\yolo_test.mp4");
+        std::string cfgPath = YAMLgetConf<std::string>(conf,"cfg_win_input","..\\..\\..\\tests\\darknet\\cfg\\yolo4tiny.cfg");
+        std::string namePath = YAMLgetConf<std::string>(conf,"name_win_input","..\\..\\..\\tests\\darknet\\names\\coco.names");
     #endif
-    if(!fileExist(input.c_str()))
+        if(!fileExist(input.c_str()))
         FatalError("The given input video does not exist.");
-    
+
     char ntype          = YAMLgetConf<char>(conf, "ntype", 'y');
     int n_classes       = YAMLgetConf<int>(conf, "n_classes", 80);
     int n_batch         = YAMLgetConf<int>(conf, "n_batch", 1);
@@ -66,7 +70,7 @@ int main(int argc, char *argv[]) {
     // create detection network
     tk::dnn::Yolo3Detection yolo;
     tk::dnn::CenternetDetection cnet;
-    tk::dnn::MobilenetDetection mbnet;  
+    tk::dnn::MobilenetDetection mbnet;
 
     tk::dnn::DetectionNN *detNN;  
 
@@ -86,7 +90,12 @@ int main(int argc, char *argv[]) {
         FatalError("Network type not allowed (3rd parameter)\n");
     }
 
-    detNN->init(net, n_classes, n_batch, conf_thresh);
+    if(ntype == 'c' || ntype == 'm'){
+        cfgPath = "";
+        namePath = "";
+    }
+
+    detNN->init(net,cfgPath,namePath,n_classes,n_batch,conf_thresh);
 
     // open video stream
     cv::VideoCapture cap(input);
@@ -146,10 +155,10 @@ int main(int argc, char *argv[]) {
     
     double mean = 0; 
     std::cout<<COL_GREENB<<"\n\nTime stats:\n";
-    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())/n_batch<<" ms\n";    
-    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())/n_batch<<" ms\n";    
+    std::cout<<"Min: "<<*std::min_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";
+    std::cout<<"Max: "<<*std::max_element(detNN->stats.begin(), detNN->stats.end())<<" ms\n";    
     for(int i=0; i<detNN->stats.size(); i++) mean += detNN->stats[i]; mean /= detNN->stats.size();
-    std::cout<<"Avg: "<<mean/n_batch<<" ms\t"<<1000/(mean/n_batch)<<" FPS\n"<<COL_END;   
+    std::cout<<"Avg: "<<mean<<" ms\t"<<1000/(mean)<<" FPS\n"<<COL_END;   
 
     return 0;
 }

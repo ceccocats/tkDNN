@@ -133,7 +133,7 @@ void correct_yolo_boxes(Yolo::detection *dets, int n, int w, int h, int netw, in
     }
 }
 
-int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int new_coords) {
+int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int neth, float thresh, int newCoords) {
 
     if(predictions == nullptr)
         predictions = new dnnType[output_dim.tot()];
@@ -157,7 +157,7 @@ int Yolo::computeDetections(Yolo::detection *dets, int &ndets, int netw, int net
             if(objectness <= thresh) continue;
             int box_index  = entry_index(0, n*lw*lh + i, 0, classes, input_dim, output_dim);
             
-            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh, new_coords);
+            dets[count].bbox = get_yolo_box(predictions, bias_h, mask_h[n], box_index, col, row, lw, lh, netw, neth, lw*lh, newCoords);
             dets[count].objectness = objectness;
             dets[count].classes = classes;
             for(j = 0; j < classes; ++j){

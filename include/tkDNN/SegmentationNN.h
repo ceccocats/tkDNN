@@ -4,7 +4,9 @@
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>    
+#ifdef __linux__
 #include <unistd.h>
+#endif 
 #include <mutex>
 #include "utils.h"
 
@@ -181,6 +183,7 @@ class SegmentationNN {
 
             checkCuda(cudaMemcpyAsync(mean_d, mean.data(), mean.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
             checkCuda(cudaMemcpyAsync(stddev_d, stddev.data(), stddev.size() * sizeof(float), cudaMemcpyHostToDevice, netRT->stream));
+            return true;
 
             return true;
         }

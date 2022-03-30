@@ -7,17 +7,18 @@
  - [Run the demo on Windows](#run-the-demo-on-windows)
     - [FP16 inference windows](#fp16-inference-windows)
     - [INT8 inference windows](#int8-inference-windows)
+ - [Run tkDNN on WSL2 with cuda](#tkdnn-on-cuda-wsl)
  - [Known issues with tkDNN on Windows](#known-issues-with-tkdnn-on-windows)
 
 ### Dependencies-Windows 
 This branch should work on every NVIDIA GPU supported in windows with the following dependencies:
 
-* WINDOWS 10 1803 or HIGHER 
-* CUDA 10.0 (Recommended CUDA 11.2 )
-* CUDNN 7.6 (Recommended CUDNN 8.1.1 )
-* TENSORRT 6.0.1 (Recommended TENSORRT 7.2.3.4 )
-* OPENCV 3.4 (Recommended OPENCV 4.2.0 )
-* MSVC 16.7 
+* WINDOWS 10 1803/WINDOWS 11 or HIGHER 
+* CUDA 11.2 
+* CUDNN 8.1.1
+* TENSORRT 7.2.3 
+* OPENCV 4.2  
+* MSVC 16.9+
 * YAML-CPP 
 * EIGEN3
 * 7ZIP (ADD TO PATH)
@@ -58,7 +59,7 @@ To run the object detection file create .rt file bu running:
 
 Once the rt file has been successfully create,run the demo using the following command:
 ```
-.\demo.exe yolo4tiny_fp32.rt ..\demo\yolo_test.mp4 y 
+.\demo.exe yolo4_fp32.rt ..\demo\yolo_test.mp4 y 80 ..\tests\darknet\cfg\yolo4.cfg ..\tests\darknet\names\cococ.names 
 ```
  For general info on more demo paramters,check Run the demo section on top 
  To run the test_all_tests.sh on windows,use git bash or msys2 
@@ -85,11 +86,17 @@ del /f  yolo4tiny_int8.rt        # be sure to delete(or move) old tensorRT files
 
 ```
 
+### Run tkDNN on WSL2 with cuda
+tkDNN works on wsl2 with cuda,although not all networks (centernet,mobilenet) work properly.
+If you encounter issues with running the network as a result of driver not found or cuda launch error,running the following command should solve the issue
+```cp /usr/lib/wsl/lib/lib* /usr/lib/x86_64-linux-gnu/ ```
+
+
+
 ### Known issues with tkDNN on Windows
 
-Mobilenet and Centernet demos work properly only when built with msvc 16.7 in Release Mode,when built in debug mode for the mentioned networks one might encounter opencv assert errors
+In theory all models (centernet,mobilenet,darknet,centertrack,cnet3d and shelfnet) should work on Windows.
 
-All Darknet models work properly with demo using MSVC version(16.7-16.9)
+On pascal cards(sm 6x) ,nvidia cuda wsl driver 510.06 don't work well with tkDNN both on windows and cuda wsl , Nvidia drivers >465+ and < 500 are completely supported .
 
-It is recommended to use Nvidia Driver(465+),Cuda unknown errors have been observed when using older drivers on pascal(SM 61) devices.
 
