@@ -1,6 +1,6 @@
 #include<iostream>
 #include<algorithm>
-#include "tkdnn.h"
+#include "tkDNN/tkdnn.h"
 #include <stdlib.h>     /* srand, rand */
 
 
@@ -66,11 +66,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    double min = *std::min_element(stats.begin(), stats.end())/BATCH_SIZE;
-    double max = *std::max_element(stats.begin(), stats.end())/BATCH_SIZE;
+    double min = *std::min_element(stats.begin(), stats.end()); ///BATCH_SIZE;
+    double max = *std::max_element(stats.begin(), stats.end()); ///BATCH_SIZE;
     double mean =0;
     for(int i=0; i<stats.size(); i++) mean += stats[i]; mean /= stats.size();
-    mean /=BATCH_SIZE;
+    //mean /=BATCH_SIZE;
 
     std::cout<<"Min: "<<min<<" ms\n";    
     std::cout<<"Max: "<<max<<" ms\n";    
