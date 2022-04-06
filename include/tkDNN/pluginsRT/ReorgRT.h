@@ -95,3 +95,4 @@ namespace nvinfer1 {
 
     REGISTER_TENSORRT_PLUGIN(ReorgRTPluginCreator);
 };
+

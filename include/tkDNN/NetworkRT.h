@@ -33,6 +33,7 @@ namespace tk { namespace dnn {
 using namespace nvinfer1;
 
 
+
 class NetworkRT {
 
 public:
@@ -56,7 +57,6 @@ public:
     dnnType *output;
     cudaStream_t stream;
 
-    PluginFactory *pluginFactory;
 
     NetworkRT(Network *net, const char *name);
     virtual ~NetworkRT();
