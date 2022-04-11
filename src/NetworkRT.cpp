@@ -646,17 +646,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         checkNULL(lRT);
         return lRT;
     }
-    else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU){
-        IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kELU);
-    else if(l->act_mode == ACTIVATION_SWISH) {
-        IPlugin *plugin = new ActivationSwishRT();
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
-        checkNULL(lRT);
-        return lRT;
+    else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU) {
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kELU);
     }
-    else if(l->act_mode == ACTIVATION_LOGISTIC) {
-        IPlugin *plugin = new ActivationLogisticRT();
-        IPluginLayer *lRT = networkRT->addPlugin(&input, 1, *plugin);
+    else if(l->act_mode == ACTIVATION_SWISH) {
+        IPluginV2 *plugin = new ActivationSwishRT();
+        ILayer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -1034,48 +1029,17 @@ bool NetworkRT::deserialize(const char *filename) {
 }
 
 #if NV_TENSORRT_MAJOR > 7
-void NetworkRT::destroy() {
-    delete contextRT;
-    if(builderActive) {
-        delete engineRT;
-        delete builderRT;
-
-
-IPlugin* PluginFactory::createPlugin(const char* layerName, const void* serialData, size_t serialLength) {
-    const char * buf = reinterpret_cast<const char*>(serialData),*bufCheck = buf;
-
-    std::string name(layerName);
-    //std::cout<<name<<std::endl;
-
-    if(name.find("ActivationLeaky") == 0) {
-        ActivationLeakyRT *a = new ActivationLeakyRT(readBUF<float>(buf));
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationMish") == 0) {
-        ActivationMishRT *a = new ActivationMishRT();
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationSwish") == 0) {
-        ActivationSwishRT *a = new ActivationSwishRT();
-        a->size = readBUF<int>(buf);
-        assert(buf == bufCheck + serialLength);
-        return a;
-    }
-    if(name.find("ActivationLogistic") == 0) {
-        ActivationLogisticRT *a = new ActivationLogisticRT();
-        a->size = readBUF<int>(buf);
-        return a;
-    }
-}
+        void NetworkRT::destroy() {
+            delete contextRT;
+            if(builderActive) {
+                delete engineRT;
+                delete builderRT;
+            }
+        }
 #elif NV_TENSORRT_MAJOR <=7
-void NetworkRT::destroy() {
+        void NetworkRT::destroy() {
 
 }
 #endif
-
 
 }}
