@@ -383,7 +383,7 @@ cv::Mat vizFloat2colorMap(cv::Mat map,double min, double max, int classes) {
     default:
         // expand your range to 0..255. Similar to histEq();
         map.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
-        applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_JET);
+        applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_PARULA);
     }
     return falseColorsMap;
 }

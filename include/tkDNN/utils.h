@@ -6,16 +6,18 @@
 #include <fstream>
 #include <iomanip>
 #include <stdlib.h>
+#include <yaml-cpp/yaml.h>
+
 
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 #include <cublas_v2.h>
 #include <cudnn.h>
+#include <NvInferVersion.h>
 
 
 #ifdef __linux__
 #include <unistd.h>
-
 #endif
 
 #include <ios>
@@ -23,7 +25,31 @@
 
 #include <yaml-cpp/yaml.h>
 
+
+
+#ifndef NOEXCEPT
+  #if NV_TENSORRT_MAJOR > 7
+  #define NOEXCEPT noexcept
+  #else
+  #define NOEXCEPT
+  #endif
+#endif
+
+
 #define dnnType float
+
+template<typename T> void writeBUF(char*& buffer, const T& val)
+{
+    *reinterpret_cast<T*>(buffer) = val;
+    buffer += sizeof(T);
+}
+
+template<typename T> T readBUF(const char*& buffer)
+{
+    T val = *reinterpret_cast<const T*>(buffer);
+    buffer += sizeof(T);
+    return val;
+}
 
 
 // Colored output

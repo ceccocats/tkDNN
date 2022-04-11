@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
     char ntype = 'y';
     const char *config_filename = "../demo/config.yaml";
-    const char * net = "yolo3.rt";
+    const char * net = "yolo4tiny_fp32.rt";
     const char * labels_path = "../demo/COCO_val2017/all_labels.txt";
     int n_batches = 1;
     float confidence_thresh = 0.3;
@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
     bool verbose;
     int classes, map_points, map_levels;
     float map_step, IoU_thresh, conf_thresh;
-
     double vm_total = 0, rss_total = 0;
     double vm, rss;
 
@@ -53,7 +52,7 @@ int main(int argc, char *argv[])
     if(argc > 1)
         net = argv[1]; 
     if(argc > 2)
-        ntype = argv[2][0];    
+        ntype = argv[2][0];
     if(argc > 3)
         labels_path = argv[3]; 
     if(argc > 4)
@@ -116,7 +115,7 @@ int main(int argc, char *argv[])
         default:
             FatalError("Network type not allowed (3rd parameter)\n");
     }
-    detNN->init(net, n_classes, 1, conf_thresh);
+    detNN->init(net,n_classes, 1, conf_thresh);
 
     //read images 
     std::ifstream all_labels(labels_path);

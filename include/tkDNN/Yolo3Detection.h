@@ -4,9 +4,9 @@
 #include "opencv2/opencv.hpp"
 
 #include "DetectionNN.h"
+#include "DarknetParser.h"
 
-namespace tk { namespace dnn { 
-
+namespace tk { namespace dnn {
 class Yolo3Detection : public DetectionNN
 {
 private:

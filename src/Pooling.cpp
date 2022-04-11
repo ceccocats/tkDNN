@@ -17,6 +17,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->pool_mode = pool_mode;
     this->paddingH = paddingH;
     this->paddingW = paddingW;
+    this->padding = winH -1;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 

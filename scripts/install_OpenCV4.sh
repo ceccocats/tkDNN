@@ -27,17 +27,21 @@ sudo apt-get install -y build-essential \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     libdc1394-22-dev \
-    libavresample-dev
+    libavresample-dev \
+    libtbb-dev \
 
 git clone https://github.com/opencv/opencv.git
+cd opencv && git checkout 4.5.4 && cd ..
 git clone https://github.com/opencv/opencv_contrib.git
+cd opencv_contrib && git checkout 4.5.4 && cd ..
+
 
 python3 -m venv opencv4
 source opencv4/bin/activate
 pip install wheel
 pip install numpy
 
-cd opencv && mkdir build && cd build
+cd opencv &&  mkdir build && cd build
 
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
@@ -56,6 +60,8 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
     -D WITH_GSTREAMER=ON \
     -D WITH_GSTREAMER_0_10=OFF \
     -D WITH_TBB=ON \
+    -D WITH_OPENGL=ON \
+    -D WITH_VULKAN=ON \
     ../
 
 make -j4

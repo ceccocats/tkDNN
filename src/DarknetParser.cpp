@@ -17,8 +17,8 @@ namespace tk { namespace dnn {
         if(sep == std::string::npos)
             return false;
         
-        name   = line.substr(0, sep);   
-        value  = line.substr(sep+1, line.size() - (sep+1));   
+        name   = line.substr(0, sep);
+        value  = line.substr(sep+1, line.size() - (sep+1));
         return true;
     }
 
@@ -29,6 +29,16 @@ namespace tk { namespace dnn {
 
         while(getline(linestream,value,delimiter))
             values.push_back(std::stoi(value));
+        return values;
+    }
+
+    std::vector<float> fromStringToFloatVec(const std::string& line, const char delimiter){
+        std::stringstream linestream(line);
+        std::string value;
+        std::vector<float> values;
+
+        while(getline(linestream,value,delimiter))
+            values.push_back(std::stof(value));
         return values;
     }
 
@@ -269,7 +279,133 @@ namespace tk { namespace dnn {
         }
         return net;
     }
-        
-    
+    std::vector<int> noYolosLine(const std::string &cfg_file){
+        std::ifstream if_cfg(cfg_file);
+        if(!if_cfg.is_open())
+            FatalError("cloud not open cfg file: " + cfg_file);
+        std::string line;
+        std::vector<int> lineNo;
+        int count = 0;
+        while(std::getline(if_cfg,line)){
+            std::size_t found = line.find("#");
+            if ( found != std::string::npos ) {
+                line = line.substr(0, found);
+            }
+            // skip empty lines
+            if(line.empty())
+                continue;
+            if(line == "[yolo]"){
+                lineNo.push_back(count);
+
+
+            }
+            count++;
+        }
+        return lineNo;
+    }
+    void loadYoloInfo(const std::string &cfg_file,int lineNo,std::vector<float> &mask,std::vector<float> &anchors,int &num,int &classes,float &nms_thresh,int &nms_kind,int &coords){
+        std::vector<float> maskTemp,anchorsTemp;
+        int classesTemp,numTemp,nmsKindTemp;
+        int new_coordsTemp=0;
+        float nmsThreshTemp=0.45;
+
+        std::ifstream if_cfg(cfg_file);
+        if(!if_cfg.is_open())
+            FatalError("cloud not open cfg file: " + cfg_file);
+        std::string line;
+        int count = 0;
+        while(std::getline(if_cfg,line)){
+            std::string name,value;
+            std::size_t found = line.find("#");
+            if ( found != std::string::npos ) {
+                line = line.substr(0, found);
+            }
+            // skip empty lines
+            if(line.empty())
+                continue;
+            if(count > lineNo && count <=lineNo+30){
+                    divideNameAndValue(line,name,value);
+                    if(name == "mask "){
+                        maskTemp = fromStringToFloatVec(value,',');
+                    }
+                    if(name == "anchors "){
+                        anchorsTemp = fromStringToFloatVec(value,',');
+                    }
+                    if(name == "classes"){
+                        classesTemp = std::stoi(value);
+                    }
+                    if(name == "num"){
+                        numTemp = std::stoi(value);
+                    }
+                    if(name == "nms_kind"){
+                        if(value == "greedynms"){
+                            nmsKindTemp = 0;
+                        }else if(value == "diounms"){
+                            nmsKindTemp=1;
+                        }
+                        else{
+                            std::cout<<"NMS NOT SUPPORTED DEFAULTING TO GREEDYNMS"<<std::endl;
+                            nmsKindTemp=0;
+                        }
+                    }
+                    if(name == "new_coords"){
+                        new_coordsTemp = std::stoi(value);
+                    }
+                    if(name == "beta_nms"){
+                        nmsThreshTemp = std::stof(value);
+                    }
+            }
+            count++;
+        }
+        mask = maskTemp;
+        anchors = anchorsTemp;
+        num = numTemp;
+        nms_kind = nmsKindTemp;
+        nms_thresh = nmsThreshTemp;
+        coords = new_coordsTemp;
+        classes = classesTemp;
+
+    }
+    void loadYoloInitInfo(int &channels,int &width,int &height,const std::string &cfg_file){
+        std::ifstream if_cfg(cfg_file);
+        if(!if_cfg.is_open())
+            FatalError("cloud not open cfg file: " + cfg_file);
+        std::string line;
+        int count = 0;
+
+        while(std::getline(if_cfg,line)){
+            if(count == 7){
+                std::string name,value;
+                divideNameAndValue(line,name,value);
+                if(name == "width"){
+                    width = std::stoi(value);
+                }
+            }
+
+            if(count == 8){
+                std::string name,value;
+                divideNameAndValue(line,name,value);
+                if(name == "height"){
+                    height = std::stoi(value);
+                }
+            }
+
+            if(count == 9){
+                std::string name,value;
+                divideNameAndValue(line,name,value);
+                if(name == "channels"){
+                    channels = std::stoi(value);
+                    break;
+                }
+                else{
+                    std::cerr<<"EXITING PROGRAM DUE TO INSUFFICENT DATA FROM CFG"<<std::endl;
+                    break;
+                }
+            }
+
+            count++;
+        }
+
+    }
 
 }}

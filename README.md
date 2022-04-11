@@ -23,9 +23,11 @@ If you use tkDNN in your research, please cite the [following paper](https://iee
 - [x] Support 2D/3D Object Detection and Tracking [README](docs/README_2d3dtracking.md)
 #### 24 November 2021
 - [x] Support to sematic segmentation on cuda 11
-- [x] Support to TensorRT8 (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg)). 
+- [x] Support to TensorRT8. (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg))
+#### 30 March 2022
+- [x] Support to monocular depth esitmation [README](docs/README_depth.md) (thanks to [Harshvardhan Chandirasekar](https://github.com/perseusdg))
 
-TensorRT8 (and therefore Jetpack 4.6) is currently supported only on the branch tensorrt8 due to [performance issue with TensorRT8](https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-8.html)). We will merge it to the master as soon as those issues are fixed (probably in future minor releases).
+
 
 ## FPS Results
 Inference FPS of yolov4 with tkDNN, average of 1200 images with the same dimension as the input size, on 
@@ -80,17 +82,17 @@ Results for COCO val 2017 (5k images), on RTX 2080Ti, with conf threshold=0.001
   - [Workflow](#workflow)
   - [Exporting weights](#exporting-weights)
   - [Run the demos](#run-the-demos)
-  - [tkDNN on Windows 10 (experimental)](#tkdnn-on-windows-10-experimental)
+  - [tkDNN on Windows 10 or Windows 11](#tkdnn-on-windows-10-or-windows-11)
   - [Existing tests and supported networks](#existing-tests-and-supported-networks)
   - [References](#references)
   
 
 ## Dependencies
 This branch works on every NVIDIA GPU that supports the following (latest tested) dependencies:
-* CUDA 11.0 (or >= 10) [the segmentation only works with CUDA 10 for now]
-* cuDNN 8.0.4 (or >= 7.3)
-* TensorRT 7.2.0 (or >=5)
-* OpenCV 4.5.2 (or >=4)
+* CUDA 11.3 (or >= 10.2) 
+* cuDNN 8.2.1 (or >= 8.0.4)
+* TensorRT 8.0.3 (or >=7.2)
+* OpenCV 4.5.4 (or >=4)
 * cmake 3.21 (or >= 3.15)
 * yaml-cpp 0.5.2
 * eigen3 3.3.4
@@ -106,16 +108,18 @@ To compile and install OpenCV4 with contrib us the script ```install_OpenCV4.sh`
 ```
 bash scripts/install_OpenCV4.sh
 ```
-When using openCV not compiled with contrib, comment the definition of OPENCV_CUDACONTRIBCONTRIB in include/tkDNN/DetectionNN.h. When commented, the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
+If you have OpenCV compiled with cuda and contrib and want to use it with tkDNN pass  ```ENABLE_OPENCV_CUDA_CONTRIB=ON``` flag when compiling tkDBB
+. If the flag is not passed,the preprocessing of the networks is computed on the CPU, otherwise on the GPU. In the latter case some milliseconds are saved in the end-to-end latency. 
 
 ## How to compile this repo
-Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above). 
+Build with cmake. If using Ubuntu 18.04 a new version of cmake is needed (3.15 or above).
+On both linux and windows ,the ```CMAKE_BUILD_TYPE``` variable needs to be defined as either ```Release``` or ```Debug```.
 ```
 git clone https://github.com/ceccocats/tkDNN
 cd tkDNN
 mkdir build
 cd build
-cmake .. 
+cmake -DCMAKE_BUILD_TYPE=Release .. 
 make
 ```
 
@@ -136,14 +140,15 @@ For specific details on how to export weights see [HERE](./docs/exporting_weight
 For specific details on how to run:
 - 2D object detection demos, details on FP16, INT8 and batching see [HERE](./docs/demo.md).
 - segmentation demos see [HERE](./docs/README_seg.md).
+- monocular depth estimation see [HERE](./docs/README_depth.md).
 - 2D/3D object detection and tracking demos see [HERE](./docs/README_2d3dtracking.md).
 - mAP demo to evaluate 2D object detectors see [HERE](./docs/mAP_demo.md).
 
 ![demo](https://user-images.githubusercontent.com/11562617/72547657-540e7800-388d-11ea-83c6-49dfea2a0607.gif)
 
-## tkDNN on Windows 10 (experimental)
+## tkDNN on Windows 10 or Windows 11
 
-For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows.md).
+For specific details on how to run tkDNN on Windows 10/11 see [HERE](./docs/windows.md).
 
 ## Existing tests and supported networks
 
@@ -182,6 +187,8 @@ For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows
 | shelfnet_berkeley              | ShelfNet18_realtime<sup>11</sup>                           | [DeepDrive](https://bdd-data.berkeley.edu/)                          | 20        | 1024x1024       | [weights](https://cloud.hipert.unimore.it/s/m92e7QdD9gYMF7f/download)                                                                   |
 | dla34_cnet3d        | Centernet3D (DLA34 backend)<sup>4</sup>         | [KITTI 2017](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d)                          | 1        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/2MDyWGzQsTKMjmR/download)     |
 | dla34_ctrack        | CenterTrack (DLA34 backend)<sup>12</sup>         | [NuScenes 3D](https://www.nuscenes.org/)                          | 7        | 512x512       | [weights](https://cloud.hipert.unimore.it/s/rjNfgGL9FtAXLHp/download)     |
+| monodepth2        | Monodepth2 <sup>13</sup>         | [KITTI DEPTH](http://www.cvlibs.net/datasets/kitti/raw_data.php)                          | -        | 640x192       | [weights-mono](https://cloud.hipert.unimore.it/s/iYw9QwgP6CsqxLR/download)     |
+| monodepth2        | Monodepth2 <sup>13</sup>         | [KITTI DEPTH](http://www.cvlibs.net/datasets/kitti/raw_data.php)                          | -        | 640x192       | [weights-stereo](https://cloud.hipert.unimore.it/s/XmwbWNXDfqyQ4EL/download)     |
 
 
 ## References
@@ -198,3 +205,11 @@ For specific details on how to run tkDNN on Windows 10 see [HERE](./docs/windows
 10. Wang, Chien-Yao, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. "Scaled-YOLOv4: Scaling Cross Stage Partial Network." arXiv preprint arXiv:2011.08036 (2020).
 11. Zhuang, Juntang, et al. "ShelfNet for fast semantic segmentation." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2019.
 12. Zhou, Xingyi, Vladlen Koltun, and Philipp Krähenbühl. "Tracking objects as points." European Conference on Computer Vision. Springer, Cham, 2020.
+13. Godard, Clément, et al. "Digging into self-supervised monocular depth estimation." Proceedings of the IEEE/CVF International Conference on Computer Vision. 2019.
+
+## Contributors
+The main contibutors, in chronological order, are: 
+- [Francesco Gatti](https://github.com/ceccocats), francesco.gatti@hipert.it
+- [Micaela Verucchi](https://github.com/mive93), micaela.verucchi@unimore.it
+- [Davide Sapienza](https://github.com/sapienzadavide), davide.sapienza@unimore.it
+- [Harshvardhan Chandirasekar](https://github.com/perseusdg), f20180523@goa.bits-pilani.ac.in

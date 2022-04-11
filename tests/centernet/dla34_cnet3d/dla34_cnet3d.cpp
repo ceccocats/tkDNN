@@ -558,5 +558,6 @@ int main()
         std::cout<<"CUDNN vs TRT    "; 
         ret_cudnn_tensorrt |= checkResult(odim, cudnn_out, rt_out) == 0 ? 0 : ERROR_CUDNNvsTENSORRT;
     }
+    netRT.destroy();
     return ret_cudnn | ret_tensorrt | ret_cudnn_tensorrt;
 }

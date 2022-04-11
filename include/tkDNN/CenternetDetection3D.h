@@ -9,6 +9,11 @@
 #include <numeric>      // std::iota
 #include <algorithm>    // std::sort
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#include <math.h>
+#endif 
+
 #include "DetectionNN3D.h"
 
 #include "kernelsThrust.h"

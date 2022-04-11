@@ -17,7 +17,6 @@ bool CenterTrack::init(const std::string& tensor_path, const int n_classes, cons
     init_pre_inf();
     init_postprocessing();
     init_visualization(n_classes);
-
     return true;
 }
 
@@ -61,7 +60,6 @@ bool CenterTrack::init_preprocessing(){
     checkCuda( cudaMalloc(&input_d, sizeof(dnnType)*netRT->input_dim.tot() * nBatches));
     checkCuda( cudaMalloc(&input_pre_inf_d, sizeof(dnnType)*dim.tot()));
     checkCuda( cudaMalloc(&d_ptrs, dim.tot() * sizeof(float)) );
-
     return true;
 }
 
@@ -206,7 +204,6 @@ bool CenterTrack::init_postprocessing(){
     trRes.resize(nBatches);
     countTr.resize(nBatches, 0);
     trackId.resize(nBatches, 0);
-
     return true;
 }
 
@@ -316,7 +313,7 @@ void CenterTrack::preprocess(cv::Mat &frame, const int bi){
         }
         
         float c[] = {new_width / 2.0f, new_height /2.0f};
-        float s[] = {float(dim.w), float(dim.h)};
+        float s[] = {static_cast<float>(dim.w), static_cast<float>(dim.h)};
         // float s = new_width >= new_height ? new_width : new_height;
         // ----------- get_affine_transform
         // rot_rad = pi * 0 / 100 --> 0
@@ -421,9 +418,9 @@ cv::Mat CenterTrack::transform_preds_with_trans(float x1, float x2){
 }
 
 void CenterTrack::tracking(const int bi) {
-    float item_size[countDet];
-    int item_cl[countDet];
-    float dets[2*countDet];
+    std::vector<float> item_size(countDet);
+    std::vector<int> item_cl(countDet);
+    std::vector<float> dets(2*countDet);
     for(int i=0; i<countDet; i++){
         item_size[i] = (detRes[i].bb1.at<float>(0,0) - detRes[i].bb0.at<float>(0,0)) * 
                        (detRes[i].bb1.at<float>(0,1) - detRes[i].bb0.at<float>(0,1));
@@ -432,9 +429,9 @@ void CenterTrack::tracking(const int bi) {
         dets[i*2+1]  =  detRes[i].ct.at<float>(0,1);
     }
     
-    float track_size[countTr[bi]];
-    int track_cl[countTr[bi]];
-    float tracks[2*countTr[bi]];
+    std::vector<float> track_size(countTr[bi]);
+    std::vector<int> track_cl(countTr[bi]);
+    std::vector<float> tracks(2*countTr[bi]);
     for(int i=0; i<countTr[bi]; i++){
         track_size[i] = (trRes[bi][i].det_res.bb1.at<float>(0,0) - trRes[bi][i].det_res.bb0.at<float>(0,0)) * 
                         (trRes[bi][i].det_res.bb1.at<float>(0,1) - trRes[bi][i].det_res.bb0.at<float>(0,1));
@@ -442,7 +439,7 @@ void CenterTrack::tracking(const int bi) {
         tracks[i*2]   =  trRes[bi][i].det_res.ct.at<float>(0,0);
         tracks[i*2+1] =  trRes[bi][i].det_res.ct.at<float>(0,1);
     } 
-    float dist[countTr[bi]*countDet];
+    std::vector<float> dist(countTr[bi]*countDet);
     bool invalid;
     for(int i=0; i<countTr[bi]; i++){
         for(int j=0; j<countDet; j++){
@@ -454,7 +451,7 @@ void CenterTrack::tracking(const int bi) {
             dist[j*countTr[bi]+i] = dist[j*countTr[bi]+i] + invalid * (1 << 18);
         }
     }
-    int matched_indices[2*countTr[bi]];
+    std::vector<int> matched_indices(2*countTr[bi]);
     float min_tr;
     int min_idtr = -1;
     for(int i=0; i<countTr[bi]; i++) {
@@ -477,10 +474,10 @@ void CenterTrack::tracking(const int bi) {
         }
     }
     
-    bool unmatched_dets[countDet];
+    std::vector<bool> unmatched_dets(countDet);
     for(int i=0; i<countDet; i++)
         unmatched_dets[i] = false;
-    bool unmatched_tracks[countTr[bi]];
+    std::vector<bool> unmatched_tracks(countTr[bi]);
     for(int i=0; i<countTr[bi]; i++) 
         unmatched_tracks[i] = false;
     for(int i=0; i<countTr[bi]; i++) {
