@@ -5,19 +5,19 @@
 #include "DarknetParser.h"
 
 int main() {
-    std::string bin_path  = "yolo4_berkeley_f1";
+    std::string bin_path  = "yolo4-csp_crowd";
     std::vector<std::string> input_bins = { 
         bin_path + "/layers/input.bin"
     };
     std::vector<std::string> output_bins = {
-        bin_path + "/debug/layer139_out.bin",
-        bin_path + "/debug/layer150_out.bin",
-        bin_path + "/debug/layer161_out.bin"
+        bin_path + "/debug/layer144_out.bin",
+        bin_path + "/debug/layer159_out.bin",
+        bin_path + "/debug/layer174_out.bin"
     };
     std::string wgs_path  = bin_path + "/layers";
-    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4_berkeley.cfg";
-    std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/berkeley.names";
-    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/q9dwoqQ5YQqEi7s/download");
+    std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4-csp_crowd.cfg";
+    std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/crowdhuman.names";
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/RKWfWNmWXfJigsK/download");
 
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
@@ -29,7 +29,6 @@ int main() {
     int ret = testInference(input_bins, output_bins, net, netRT);
     net->releaseLayers();
     delete net;
-    netRT->destroy();
     delete netRT;
     return ret;
 }

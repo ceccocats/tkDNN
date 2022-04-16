@@ -5,7 +5,6 @@
 #include <vector>
 #include "../kernels.h"
 #include <NvInfer.h>
-#include <tkdnn.h>
 
 #define YOLORT_CLASSNAME_W 256
 
@@ -80,8 +79,10 @@ namespace nvinfer1 {
         float nms_thresh;
         int nms_kind;
         int new_coords;
-        int NUM = 0;
+
         std::vector<std::string> classesNames;
+        std::vector<dnnType> mask;
+        std::vector<dnnType> bias;
 
 
         int entry_index(int batch, int location, int entry) {

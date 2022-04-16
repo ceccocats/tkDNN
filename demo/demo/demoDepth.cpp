@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     if(save) {
         int w = depthNN.output_w;
         int h = depthNN.output_h;
-        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(w, h));
+        resultVideo.open("result.mp4", cv::VideoWriter::fourcc('M','P','4','V'), 30, cv::Size(w, h));
     }
 
     if(show)

@@ -126,7 +126,7 @@ float MobilenetDetection::iou(const tk::dnn::box &a, const tk::dnn::box &b){
     return iou;
 }
 
-bool MobilenetDetection::init(const std::string& tensor_path, const std::string& cfg_path,const std::string& name_path,const int n_classes, const int n_batches, const float conf_thresh){
+bool MobilenetDetection::init(const std::string& tensor_path, const int n_classes, const int n_batches, const float conf_thresh){
     std::cout<<(tensor_path).c_str()<<"\n";
     netRT = new tk::dnn::NetworkRT(NULL, (tensor_path).c_str());
     imageSize = netRT->input_dim.h;
@@ -198,7 +198,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const std::string&
         "bottle" , "wine glass" , "cup" , "fork" , "knife" , "spoon" , "bowl" , "banana" , 
         "apple" , "sandwich" , "orange" , "broccoli" , "carrot" , "hot dog" , "pizza" , 
         "donut" , "cake" , "chair" , "sofa" , "pottedplant" , "bed" , "diningtable" , 
-        "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , 
+    "toilet" , "tvmonitor" , "laptop" , "mouse" , "remote" , "keyboard" , 
         "cell phone" , "microwave" , "oven" , "toaster" , "sink" , "refrigerator" , 
         "book" , "clock" , "vase" , "scissors" , "teddy bear" , "hair drier" , "toothbrush"};
         classesNames = std::vector<std::string>(classes_names_, std::end(classes_names_));
@@ -207,7 +207,7 @@ bool MobilenetDetection::init(const std::string& tensor_path, const std::string&
     else{
         FatalError("Number of classes not supported for mobilenet");
     }
-    return 1;
+    return true;
 }
 
 void MobilenetDetection::preprocess(cv::Mat &frame, const int bi){

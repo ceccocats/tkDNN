@@ -86,6 +86,18 @@ mkdir layer debug
 python export.py
 ```
 
+### 6)Export weights for monodepth2
+To get the weights needed to run Shelfnet tests use [this](https://github.com/perseusdg/monodepth2) fork of a Pytorch implementation of monodepth2 network. 
+
+```
+git clone https://github.com/perseusdg/monodepth2
+cd monodepth2
+mkdir models # Download the official weights and put depth.pth and encorder.pth inside this new folder
+conda env create --file monodepth.yaml
+conda activate monodepth2
+python exporter.py # you will find the weights inside the tkDNN_bin folder
+```
+
 ## Darknet Parser
 tkDNN implement and easy parser for darknet cfg files, a network can be converted with *tk::dnn::darknetParser*:
 ```

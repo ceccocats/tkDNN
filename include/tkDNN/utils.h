@@ -23,13 +23,16 @@
 #include <ios>
 #include <chrono>
 
+#include <yaml-cpp/yaml.h>
 
 
 
-#if NV_TENSORRT_MAJOR > 7
-#define NOEXCEPT noexcept
-#else
-#define NOEXCEPT
+#ifndef NOEXCEPT
+  #if NV_TENSORRT_MAJOR > 7
+  #define NOEXCEPT noexcept
+  #else
+  #define NOEXCEPT
+  #endif
 #endif
 
 
@@ -175,6 +178,5 @@ inline T YAMLgetConf(YAML::Node conf, std::string key, T defaultVal) {
     }
     return val;
 }
-
 
 #endif //UTILS_H
