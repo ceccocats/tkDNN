@@ -15,8 +15,8 @@
 
 using namespace nvinfer1;
 
-extern std::mutex gYoloPlugins_mutex;
-extern std::vector<YoloRT*> gYoloPlugins;
+TKDNN_LIB_IMPORT_API extern std::mutex gYoloPlugins_mutex;
+TKDNN_LIB_IMPORT_API extern std::vector<YoloRT*> gYoloPlugins;
 
 // Logger for info/warning/errors
 class Logger : public ILogger {

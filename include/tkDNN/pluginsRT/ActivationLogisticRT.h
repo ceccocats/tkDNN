@@ -62,7 +62,7 @@ namespace nvinfer1 {
 
     class ActivationLogisticRTPluginCreator : public IPluginCreator {
     public:
-        ActivationLogisticRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API ActivationLogisticRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

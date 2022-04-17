@@ -82,7 +82,7 @@ namespace nvinfer1 {
 
     class RegionRTPluginCreator : public IPluginCreator {
     public:
-        RegionRTPluginCreator();
+        TKDNN_LIB_EXPORT_API RegionRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

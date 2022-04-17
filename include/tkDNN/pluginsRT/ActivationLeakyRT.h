@@ -61,7 +61,7 @@ namespace nvinfer1 {
 
     class ActivationLeakyRTPluginCreator : public IPluginCreator {
     public:
-        ActivationLeakyRTPluginCreator();
+        TKDNN_LIB_EXPORT_API ActivationLeakyRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 

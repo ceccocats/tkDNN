@@ -11,7 +11,7 @@ namespace nvinfer1 {
         */
 
     public:
-        RouteRT(int groups, int group_id) ;
+        TKDNN_LIB_EXPORT_API RouteRT(int groups, int group_id) ;
 
         ~RouteRT() ;
 
@@ -64,7 +64,7 @@ namespace nvinfer1 {
 
     class RouteRTPluginCreator : public IPluginCreator {
     public:
-        RouteRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API RouteRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

@@ -38,18 +38,18 @@ const int MAX_LAYERS = 512;
 class Network {
 
 public:
-    Network(dataDim_t input_dim);
-    virtual ~Network();
-    void releaseLayers();
+    TKDNN_LIB_EXPORT_API Network(dataDim_t input_dim);
+    TKDNN_LIB_EXPORT_API virtual ~Network();
+    TKDNN_LIB_EXPORT_API void releaseLayers();
 
     /**
         Do inference for every added layer
     */
-    dnnType* infer(dataDim_t &dim, dnnType* data);
+    TKDNN_LIB_EXPORT_API dnnType* infer(dataDim_t &dim, dnnType* data);
 
     bool addLayer(Layer *l);
-    void print();
-    const char *getNetworkRTName(const char *network_name);
+    TKDNN_LIB_EXPORT_API void print();
+    TKDNN_LIB_EXPORT_API const char *getNetworkRTName(const char *network_name);
     void adjustFeatureMapSizeWithShortcuts();
 
     cudnnDataType_t dataType;
@@ -61,7 +61,7 @@ public:
     int num_layers; //current number of layers
 
     dataDim_t input_dim;
-    dataDim_t getOutputDim();
+    TKDNN_LIB_EXPORT_API dataDim_t getOutputDim();
 
     bool fp16, dla, int8;
     int maxBatchSize;

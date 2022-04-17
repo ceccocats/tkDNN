@@ -35,6 +35,15 @@
   #endif
 #endif
 
+#ifdef _WIN32
+#define TKDNN_LIB_EXPORT_API __declspec(dllexport)
+#define TKDNN_LIB_IMPORT_API __declspec(dllimport)
+#elif __linux__
+#define TKDNN_LIB_EXPORT_API __attribute__((visibility("default")))
+#define TKDNN_LIB_IMPORT_API
+#endif
+
+
 
 #define dnnType float
 
@@ -143,23 +152,23 @@ typedef enum {
   ERROR_CUDNNvsTENSORRT = 8    
 } resultError_t;
 
-void printCenteredTitle(const char *title, char fill, int dim = 30);
-bool fileExist(const char *fname);
-void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url);
-void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
-int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10, bool verbose=true);
-void printDeviceVector(int size, dnnType* vec_d, bool device = true);
+TKDNN_LIB_EXPORT_API void printCenteredTitle(const char *title, char fill, int dim = 30);
+TKDNN_LIB_EXPORT_API bool fileExist(const char *fname);
+TKDNN_LIB_EXPORT_API void downloadWeightsifDoNotExist(const std::string& input_bin, const std::string& test_folder, const std::string& weights_url);
+TKDNN_LIB_EXPORT_API void readBinaryFile(std::string fname, int size, dnnType** data_h, dnnType** data_d, int seek = 0);
+TKDNN_LIB_EXPORT_API int checkResult(int size, dnnType *data_d, dnnType *correct_d, bool device = true, int limit = 10, bool verbose=true);
+TKDNN_LIB_EXPORT_API void printDeviceVector(int size, dnnType* vec_d, bool device = true);
 float getColor(const int c, const int x, const int max);
 void resize(int size, dnnType **data);
 
-void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, int rows, int cols);
+TKDNN_LIB_EXPORT_API void matrixTranspose(cublasHandle_t handle, dnnType* srcData, dnnType* dstData, int rows, int cols);
 
 void matrixMulAdd(  cublasHandle_t handle, dnnType* srcData, dnnType* dstData, 
                     dnnType* add_vector, int dim, dnnType mul);
 
-void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
+TKDNN_LIB_EXPORT_API void getMemUsage(double& vm_usage_kb, double& resident_set_kb);
 void printCudaMemUsage();
-void removePathAndExtension(const std::string &full_string, std::string &name);
+TKDNN_LIB_EXPORT_API void removePathAndExtension(const std::string &full_string, std::string &name);
 static inline bool isCudaPointer(void *data) {
   cudaPointerAttributes attr;
   return cudaPointerGetAttributes(&attr, data) == 0;

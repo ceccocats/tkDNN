@@ -73,7 +73,7 @@ namespace nvinfer1 {
 
     class FlattenConcatRTPluginCreator : public IPluginCreator {
     public:
-        FlattenConcatRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API FlattenConcatRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

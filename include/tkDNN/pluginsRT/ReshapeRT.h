@@ -74,7 +74,7 @@ namespace nvinfer1 {
 
     class ReshapeRTPluginCreator : public IPluginCreator {
     public:
-        ReshapeRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API ReshapeRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

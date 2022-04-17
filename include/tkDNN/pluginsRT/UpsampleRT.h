@@ -75,7 +75,7 @@ namespace nvinfer1 {
 
         class UpsampleRTPluginCreator : public IPluginCreator {
         public:
-            UpsampleRTPluginCreator();
+            TKDNN_LIB_EXPORT_API UpsampleRTPluginCreator();
 
             void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 
