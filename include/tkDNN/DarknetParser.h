@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include "tkDNN/tkdnn.h"
+#include "tkdnn.h"
 
 namespace tk { namespace dnn {
 
