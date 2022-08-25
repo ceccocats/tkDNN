@@ -7,7 +7,7 @@
 #include "Layer.h"
 #include "NvInfer.h"
 #include <memory>
-#include <tkDNN/kernels.h>
+#include <kernels.h>
 #include <pluginsRT/ActivationLeakyRT.h>
 #include <pluginsRT/ActivationLogisticRT.h>
 #include <pluginsRT/ActivationMishRT.h>
