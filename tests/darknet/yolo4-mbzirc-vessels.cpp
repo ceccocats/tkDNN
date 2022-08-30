@@ -17,7 +17,7 @@ int main() {
     std::string wgs_path  = bin_path + "/layers";
     std::string cfg_path  = std::string(TKDNN_PATH) + "/tests/darknet/cfg/yolo4-mbzirc-10.cfg";
     std::string name_path = std::string(TKDNN_PATH) + "/tests/darknet/names/vessels.names";
-    // downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/pNsZxzogfMcKTK4/download");
+    downloadWeightsifDoNotExist(input_bins[0], bin_path, "https://cloud.hipert.unimore.it/s/76FRPXYqbGarTJi/download");
 
     // parse darknet network
     tk::dnn::Network *net = tk::dnn::darknetParser(cfg_path, wgs_path, name_path);
