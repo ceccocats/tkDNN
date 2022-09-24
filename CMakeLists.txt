@@ -178,6 +178,9 @@ target_link_libraries(test_mobilenetv2ssd512 tkDNN)
 add_executable(test_resnet101 tests/backbones/resnet101/resnet101.cpp)
 target_link_libraries(test_resnet101 tkDNN)
 
+add_executable(test_Resnet-101-AP-GeM tests/backbones/resnet101/Resnet-101-AP-GeM.cpp)
+target_link_libraries(test_Resnet-101-AP-GeM tkDNN)
+
 add_executable(test_dla34 tests/backbones/dla34/dla34.cpp)
 target_link_libraries(test_dla34 tkDNN)
 

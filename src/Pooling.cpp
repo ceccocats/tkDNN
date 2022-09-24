@@ -7,7 +7,7 @@ namespace tk { namespace dnn {
 
 Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
                   int paddingH, int paddingW,
-                  tkdnnPoolingMode_t pool_mode) : 
+                  tkdnnPoolingMode_t pool_mode, float p) : 
     Layer(net) {
 
     this->winH = winH;
@@ -18,6 +18,7 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
     this->paddingH = paddingH;
     this->paddingW = paddingW;
     this->padding = winH -1;
+    this->pow_param = p;
 
     checkCUDNN( cudnnCreatePoolingDescriptor(&poolingDesc) );
 
@@ -42,6 +43,8 @@ Pooling::Pooling( Network *net, int winH, int winW, int strideH, int strideW,
 
     cudnnPoolingMode_t cudnn_pool_mode = cudnnPoolingMode_t(pool_mode);
     if(pool_mode == POOLING_MAX_FIXEDSIZE) cudnn_pool_mode = cudnnPoolingMode_t(tkdnnPoolingMode_t::POOLING_MAX);
+    if(pool_mode == POOLING_GENERALIZED_MEAN_P) cudnn_pool_mode = cudnnPoolingMode_t(tkdnnPoolingMode_t::POOLING_AVERAGE);
+    
 
     checkCUDNN( cudnnSetPooling2dDescriptor(poolingDesc, cudnn_pool_mode,
                 CUDNN_NOT_PROPAGATE_NAN, winH, winW, paddingH, paddingW, strideH, strideW) );
@@ -113,6 +116,9 @@ dnnType* Pooling::infer(dataDim_t &dim, dnnType* srcData) {
 
     if(pool_mode == tkdnnPoolingMode_t::POOLING_MAX_FIXEDSIZE){
         MaxPoolingForward(poolSrc, poolDst, dim.n, dim.c, dim.h, dim.w, this->strideH, this->strideW, this->winH, this->winH-1);
+    }
+    else if(pool_mode == tkdnnPoolingMode_t::POOLING_GENERALIZED_MEAN_P){
+        GeneralizedMeanPoolingP(poolSrc, poolDst, dim.n, dim.c, dim.h, dim.w, pow_param);
     }
     else{
         dnnType alpha = dnnType(1);

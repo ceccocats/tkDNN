@@ -20,6 +20,8 @@ void reorgForward(dnnType *srcData, dnnType *dstData,
 
 void MaxPoolingForward(dnnType *srcData, dnnType *dstData, int n, int c, int h, int w, int stride_x, int stride_y, int size, int padding, cudaStream_t stream = cudaStream_t(0));
 
+void GeneralizedMeanPoolingP(dnnType* srcData, dnnType* dstData, int n, int c, int h, int w, float p, cudaStream_t stream  = cudaStream_t(0));
+
 void softmaxForward(float *input, int n, int batch, int batch_offset,
                     int groups, int group_offset, int stride, float temp, float *output, cudaStream_t stream = cudaStream_t(0));
 

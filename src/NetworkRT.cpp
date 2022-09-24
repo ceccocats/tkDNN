@@ -515,6 +515,28 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Pooling *l) {
         return lRT;
 
     }
+    else if(l->pool_mode == tkdnnPoolingMode_t::POOLING_GENERALIZED_MEAN_P)
+    {
+        auto creator = getPluginRegistry()->getPluginCreator("GeneralizedMeanPoolingPRT_tkDNN","1");
+        std::vector<PluginField> mPluginAttributes;
+        PluginFieldCollection mFC{};
+        mPluginAttributes.emplace_back(PluginField("i_c",&l->input_dim.c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("i_h",&l->input_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("i_w",&l->input_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("i_n",&l->input_dim.n,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("o_c",&l->output_dim.c,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("o_h",&l->output_dim.h,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("o_w",&l->output_dim.w,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("o_n",&l->output_dim.n,PluginFieldType::kINT32,1));
+        mPluginAttributes.emplace_back(PluginField("p",&l->pow_param,PluginFieldType::kFLOAT32,1));
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
+        auto *plugin = creator->createPlugin(l->getLayerName().c_str(),&mFC);
+        auto *lRT = networkRT->addPluginV2(&input, 1, *plugin);
+        checkNULL(lRT);
+        return lRT;
+
+    }
     else
     {
 #if NV_TENSORRT_MAJOR < 8
