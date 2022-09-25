@@ -73,11 +73,7 @@ void GeneralizedMeanPoolingP(dnnType* srcData, dnnType* dstData, int n, int c, i
     int blocks = (tot_size+255)/256;
     int threads = 256;
 
-    std::cerr<<"Calling forward_gen_avgpool_p_layer_kernel "<<n<< " "<< c<<" "<<h<< " "<< w<< "\n";
-
     forward_gen_avgpool_p_layer_kernel<<<blocks, threads, 0, stream>>>(n*c, h, w, c, p, srcData, dstData);
-
-
 }
 
 void MaxPoolingForward(dnnType* srcData, dnnType* dstData, int n, int c, int h, int w, int stride_x, int stride_y, int size, int padding, cudaStream_t stream) 

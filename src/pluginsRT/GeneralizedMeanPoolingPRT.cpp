@@ -77,7 +77,7 @@ int32_t GeneralizedMeanPoolingPRT::enqueue(int32_t batchSize, const void *const 
 
 
 size_t GeneralizedMeanPoolingPRT::getSerializationSize() const NOEXCEPT {
-    return 8*sizeof(int);
+    return 8*sizeof(int) + sizeof(float);
 }
 
 void GeneralizedMeanPoolingPRT::serialize(void *buffer) const NOEXCEPT {

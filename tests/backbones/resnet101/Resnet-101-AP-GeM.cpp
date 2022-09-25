@@ -154,8 +154,8 @@ const char *layer4_bin[]={
 const char *fc_bin = "Resnet-101-AP-GeM/layers/module-fc.bin";
 
 // const char *output_bin = "Resnet-101-AP-GeM/debug/module-layer4-2-bn3.bin";
-const char *output_bin = "Resnet-101-AP-GeM/debug/module-adpool.bin";
-// const char *output_bin = "Resnet-101-AP-GeM/debug/module-fc.bin";
+// const char *output_bin = "Resnet-101-AP-GeM/debug/module-adpool.bin";
+const char *output_bin = "Resnet-101-AP-GeM/debug/module-fc.bin";
 
 int main()
 {
@@ -285,7 +285,7 @@ int main()
 
     //final
     tk::dnn::Pooling avgpool(&net, 24, 32, 24, 32, 0, 0, tk::dnn::POOLING_GENERALIZED_MEAN_P, 2.9963f);
-    // tk::dnn::Dense   fc(&net, 2048, fc_bin);
+    tk::dnn::Dense   fc(&net, 2048, fc_bin);
 
     // Load input
     dnnType *data;
@@ -324,7 +324,7 @@ int main()
         TKDNN_TSTOP
         dim2.print();
     }
-    rt_out = (dnnType *)netRT.buffersRT[1];
+    rt_out = (dnnType *)netRT.buffersRT[2];
 
 
     printCenteredTitle(std::string(" RESNET CHECK RESULTS ").c_str(), '=', 30);
