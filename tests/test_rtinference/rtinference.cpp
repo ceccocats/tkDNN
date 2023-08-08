@@ -13,6 +13,10 @@ int main(int argc, char *argv[]) {
     if(argc >2)
         BATCH_SIZE = atoi(argv[2]);
 
+    int NTEST = 100;
+    if(argc >3)
+        NTEST = atoi(argv[3]);
+
     //always same test 
     srand (0); 
 
@@ -35,7 +39,7 @@ int main(int argc, char *argv[]) {
     std::vector<double> stats;
     printCenteredTitle(" TENSORRT inference ", '=', 30); 
     float total_time = 0;
-    for(int i=0; i<64; i++) {
+    for(int i=0; (NTEST > 0 ? i<NTEST : true) ; i++) {
 
         // generate input
         for(int j=0; j<netRT.input_dim.tot(); j++) {
