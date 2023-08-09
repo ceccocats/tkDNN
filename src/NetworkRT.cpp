@@ -254,7 +254,7 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Layer *l) {
         return convert_layer(input, (Conv2d*) l);
     if(type == LAYER_POOLING)
         return convert_layer(input, (Pooling*) l);
-    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_LOGISTIC)
+    if(type == LAYER_ACTIVATION || type == LAYER_ACTIVATION_CRELU || type == LAYER_ACTIVATION_LEAKY || type == LAYER_ACTIVATION_MISH || type == LAYER_ACTIVATION_SWISH || type == LAYER_ACTIVATION_LOGISTIC)
         return convert_layer(input, (Activation*) l);
     if(type == LAYER_SOFTMAX)
         return convert_layer(input, (Softmax*) l);
@@ -646,8 +646,12 @@ ILayer* NetworkRT::convert_layer(ITensor *input, Activation *l) {
         checkNULL(lRT);
         return lRT;
     }
-    else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU){
-        IActivationLayer *lRT = networkRT->addActivation(*input,ActivationType::kELU);
+    else if(l->act_mode == CUDNN_ACTIVATION_ELU || l->act_mode == ACTIVATION_ELU) {
+        IActivationLayer *lRT = networkRT->addActivation(*input, ActivationType::kELU);
+    }
+    else if(l->act_mode == ACTIVATION_SWISH) {
+        IPluginV2 *plugin = new ActivationSwishRT();
+        ILayer *lRT = networkRT->addPluginV2(&input, 1, *plugin);
         checkNULL(lRT);
         return lRT;
     }
@@ -1025,18 +1029,17 @@ bool NetworkRT::deserialize(const char *filename) {
 }
 
 #if NV_TENSORRT_MAJOR > 7
-void NetworkRT::destroy() {
-    delete contextRT;
-    if(builderActive) {
-        delete engineRT;
-        delete builderRT;
-    }
-}
+        void NetworkRT::destroy() {
+            delete contextRT;
+            if(builderActive) {
+                delete engineRT;
+                delete builderRT;
+            }
+        }
 #elif NV_TENSORRT_MAJOR <=7
-void NetworkRT::destroy() {
+        void NetworkRT::destroy() {
 
 }
 #endif
-
 
 }}

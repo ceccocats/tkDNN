@@ -53,6 +53,10 @@ dnnType* Activation::infer(dataDim_t &dim, dnnType* srcData) {
         activationMishForward(srcData, dstData, dim.tot());
 
     }
+    else if(act_mode == ACTIVATION_SWISH) {
+        activationSwishForward(srcData, dstData, dim.tot());
+
+    }
     else if(act_mode == ACTIVATION_LOGISTIC) {
         activationLOGISTICForward(srcData, dstData, dim.tot());
 
