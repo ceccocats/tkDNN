@@ -55,8 +55,8 @@ public:
 
     std::vector<nvinfer1::YoloRT*> yolo_plugins; // yolo layers in network
 
-    NetworkRT(Network *net, const char *name);
-    virtual ~NetworkRT();
+    TKDNN_LIB_EXPORT_API NetworkRT(Network *net, const char *name);
+    TKDNN_LIB_EXPORT_API virtual ~NetworkRT();
 
     int getMaxBatchSize() {
         if(engineRT != nullptr)
@@ -75,7 +75,7 @@ public:
     /**
         Do inference
     */
-    dnnType* infer(dataDim_t &dim, dnnType* data);
+    TKDNN_LIB_EXPORT_API dnnType* infer(dataDim_t &dim, dnnType* data);
     void enqueue(int batchSize = 1);    
 
     nvinfer1::ILayer* convert_layer(nvinfer1::ITensor *input, Layer *l);
@@ -104,7 +104,7 @@ public:
 #endif
 
     bool deserialize(const char *filename);
-    void destroy();
+    TKDNN_LIB_EXPORT_API void destroy();
 
 
 

@@ -78,7 +78,7 @@ namespace nvinfer1 {
 
     class MaxPoolFixedSizeRTPluginCreator : public IPluginCreator {
     public:
-        MaxPoolFixedSizeRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API MaxPoolFixedSizeRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

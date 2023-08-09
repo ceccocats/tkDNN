@@ -73,7 +73,7 @@ namespace nvinfer1{
 
     class ReflectionPaddingRTPluginCreator : public IPluginCreator {
     public:
-        ReflectionPaddingRTPluginCreator();
+        TKDNN_LIB_EXPORT_API ReflectionPaddingRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

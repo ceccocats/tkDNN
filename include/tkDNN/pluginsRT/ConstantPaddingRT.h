@@ -79,7 +79,7 @@ namespace nvinfer1{
 
     class ConstantPaddingRTPluginCreator : public IPluginCreator {
     public:
-        ConstantPaddingRTPluginCreator();
+        TKDNN_LIB_EXPORT_API ConstantPaddingRTPluginCreator();
 
         void setPluginNamespace(const char* pluginNamespace) NOEXCEPT override;
 

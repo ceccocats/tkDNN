@@ -5,8 +5,8 @@
 using namespace nvinfer1;
 
 // used to retrive Yolo plugin during network deserialization
-std::mutex gYoloPlugins_mutex;
-std::vector<YoloRT*> gYoloPlugins;
+TKDNN_LIB_EXPORT_API std::mutex gYoloPlugins_mutex;
+TKDNN_LIB_EXPORT_API std::vector<YoloRT*> gYoloPlugins;
 
 std::vector<PluginField> YoloRTPluginCreator::mPluginAttributes;
 PluginFieldCollection YoloRTPluginCreator::mFC{};

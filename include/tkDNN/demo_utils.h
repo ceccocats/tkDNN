@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip>
 #include <stdlib.h>
+#include "utils.h"
 
 #ifdef __linux__
 #include <unistd.h>
@@ -18,6 +19,6 @@
 #include <yaml-cpp/yaml.h>
 
 
-void readCalibrationMatrix(const std::string& path, cv::Mat& calib_mat);
+TKDNN_LIB_EXPORT_API void readCalibrationMatrix(const std::string& path, cv::Mat& calib_mat);
 
 #endif //DEMO_UTILS_H

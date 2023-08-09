@@ -43,8 +43,8 @@ enum layerType_t {
 class Layer {
 
 public:
-    Layer(Network *net);
-    virtual ~Layer();
+    TKDNN_LIB_EXPORT_API Layer(Network *net);
+    TKDNN_LIB_EXPORT_API virtual ~Layer();
     virtual layerType_t getLayerType() = 0;
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData) {
@@ -208,8 +208,8 @@ public:
 class Dense : public LayerWgs {
 
 public:
-    Dense(Network *net, int out_ch, std::string fname_weights); 
-    virtual ~Dense();
+    TKDNN_LIB_EXPORT_API Dense(Network *net, int out_ch, std::string fname_weights); 
+    TKDNN_LIB_EXPORT_API virtual ~Dense();
     virtual layerType_t getLayerType() { return LAYER_DENSE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -236,8 +236,8 @@ public:
     float ceiling;
     float slope;
 
-    Activation(Network *net, int act_mode, const float ceiling=0.0, const float slope=0.1); 
-    virtual ~Activation();
+    TKDNN_LIB_EXPORT_API Activation(Network *net, int act_mode, const float ceiling=0.0, const float slope=0.1); 
+    TKDNN_LIB_EXPORT_API virtual ~Activation();
     virtual layerType_t getLayerType() { 
         if(act_mode == CUDNN_ACTIVATION_CLIPPED_RELU)
             return LAYER_ACTIVATION_CRELU;
@@ -272,10 +272,10 @@ protected:
 class Conv2d : public LayerWgs {
 
 public:
-    Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
+    TKDNN_LIB_EXPORT_API Conv2d( Network *net, int out_ch, int kernelH, int kernelW, 
                 int strideH, int strideW, int paddingH, int paddingW,
                 std::string fname_weights, bool batchnorm = false, bool deConv = false, int groups = 1, bool additional_bias=false);
-    virtual ~Conv2d();
+    TKDNN_LIB_EXPORT_API virtual ~Conv2d();
     virtual layerType_t getLayerType() { return LAYER_CONV2D; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -325,8 +325,8 @@ protected:
 class LSTM : public Layer {
 
 public:
-    LSTM(Network *net, int hiddensize, bool returnSeq, std::string fname_weights);
-    virtual ~LSTM();
+    TKDNN_LIB_EXPORT_API LSTM(Network *net, int hiddensize, bool returnSeq, std::string fname_weights);
+    TKDNN_LIB_EXPORT_API virtual ~LSTM();
     virtual layerType_t getLayerType() { return LAYER_LSTM; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -376,7 +376,7 @@ public:
     virtual ~DeConv2d() {}
     virtual layerType_t getLayerType() { return LAYER_DECONV2D; };
 
-    virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
+    TKDNN_LIB_EXPORT_API virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
 };
 
 
@@ -386,10 +386,10 @@ public:
 class DeformConv2d : public LayerWgs {
 
 public:
-    DeformConv2d( Network *net, int out_ch, int deformable_group, int kernelH, int kernelW,
+    TKDNN_LIB_EXPORT_API DeformConv2d( Network *net, int out_ch, int deformable_group, int kernelH, int kernelW,
                 int strideH, int strideW, int paddingH, int paddingW,
                 std::string d_fname_weights, std::string fname_weights, bool batchnorm);
-    virtual ~DeformConv2d();
+    TKDNN_LIB_EXPORT_API virtual ~DeformConv2d();
     virtual layerType_t getLayerType() { return LAYER_DEFORMCONV2D; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -420,8 +420,8 @@ protected:
 class Flatten : public Layer {
 
 public:
-    Flatten(Network *net); 
-    virtual ~Flatten();
+    TKDNN_LIB_EXPORT_API Flatten(Network *net); 
+    TKDNN_LIB_EXPORT_API virtual ~Flatten();
     virtual layerType_t getLayerType() { return LAYER_FLATTEN; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -435,8 +435,8 @@ public:
 class Reshape : public Layer {
 
 public:
-    Reshape(Network *net, dataDim_t new_dim); 
-    virtual ~Reshape();
+    TKDNN_LIB_EXPORT_API Reshape(Network *net, dataDim_t new_dim); 
+    TKDNN_LIB_EXPORT_API virtual ~Reshape();
     virtual layerType_t getLayerType() { return LAYER_RESHAPE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -453,7 +453,7 @@ enum ResizeMode_t { NEAREST= 0,
 class Resize : public Layer {
 
 public:
-    Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false, ResizeMode_t mode=NEAREST);
+    TKDNN_LIB_EXPORT_API Resize(Network *net, int scale_c, int scale_h, int scale_w, bool fixed=false, ResizeMode_t mode=NEAREST);
     virtual ~Resize();
     virtual layerType_t getLayerType() { return LAYER_RESIZE; };
 
@@ -469,7 +469,7 @@ public:
 class MulAdd : public Layer {
 
 public:
-    MulAdd(Network *net, dnnType mul, dnnType add); 
+    TKDNN_LIB_EXPORT_API MulAdd(Network *net, dnnType mul, dnnType add); 
     virtual ~MulAdd();
     virtual layerType_t getLayerType() { return LAYER_MULADD; };
 
@@ -505,11 +505,11 @@ public:
     bool size;
     tkdnnPoolingMode_t pool_mode;
 
-    Pooling(Network *net, int winH, int winW, 
+    TKDNN_LIB_EXPORT_API Pooling(Network *net, int winH, int winW, 
             int strideH, int strideW, 
             int paddingH, int paddingW,
             tkdnnPoolingMode_t pool_mode);
-    virtual ~Pooling();
+    TKDNN_LIB_EXPORT_API virtual ~Pooling();
     virtual layerType_t getLayerType() { return LAYER_POOLING; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -534,7 +534,7 @@ typedef enum {
 
 class Padding : public Layer {
 public:
-    Padding(Network *net,int32_t pad_h,int32_t pad_w,tkdnnPaddingMode_t padding_mode,float constant = 0.0);
+    TKDNN_LIB_EXPORT_API Padding(Network *net,int32_t pad_h,int32_t pad_w,tkdnnPaddingMode_t padding_mode,float constant = 0.0);
     virtual ~Padding();
     virtual layerType_t getLayerType(){return LAYER_PADDING ;};
     virtual dnnType* infer(dataDim_t& dim,dnnType* srcData);
@@ -553,8 +553,8 @@ public:
 class Softmax : public Layer {
 
 public:
-    Softmax(Network *net, const tk::dnn::dataDim_t* dim=nullptr, const cudnnSoftmaxMode_t mode=CUDNN_SOFTMAX_MODE_CHANNEL); 
-    virtual ~Softmax();
+    TKDNN_LIB_EXPORT_API Softmax(Network *net, const tk::dnn::dataDim_t* dim=nullptr, const cudnnSoftmaxMode_t mode=CUDNN_SOFTMAX_MODE_CHANNEL); 
+    TKDNN_LIB_EXPORT_API virtual ~Softmax();
     virtual layerType_t getLayerType() { return LAYER_SOFTMAX; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -569,8 +569,8 @@ public:
 class Route : public Layer {
 
 public:
-    Route(Network *net, Layer **layers, int layers_n, int groups = 1, int group_id = 0); 
-    virtual ~Route();
+    TKDNN_LIB_EXPORT_API Route(Network *net, Layer **layers, int layers_n, int groups = 1, int group_id = 0); 
+    TKDNN_LIB_EXPORT_API virtual ~Route();
     virtual layerType_t getLayerType() { return LAYER_ROUTE; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -607,8 +607,8 @@ public:
 class Shortcut : public Layer {
 
 public:
-    Shortcut(Network *net, Layer *backLayer, bool mul=false); 
-    virtual ~Shortcut();
+    TKDNN_LIB_EXPORT_API Shortcut(Network *net, Layer *backLayer, bool mul=false); 
+    TKDNN_LIB_EXPORT_API virtual ~Shortcut();
     virtual layerType_t getLayerType() { return LAYER_SHORTCUT; };
 
     virtual dnnType* infer(dataDim_t &dim, dnnType* srcData);
@@ -627,7 +627,7 @@ public:
 class Upsample : public Layer {
 
 public:
-    Upsample(Network *net, int stride);
+    TKDNN_LIB_EXPORT_API Upsample(Network *net, int stride);
     virtual ~Upsample();
     virtual layerType_t getLayerType() { return LAYER_UPSAMPLE; };
 

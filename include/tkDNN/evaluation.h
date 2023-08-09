@@ -33,7 +33,7 @@ struct PR
     void print();
 };
 
-void readmAPParams( const char* config_filename, int& classes, int& map_points, 
+TKDNN_LIB_EXPORT_API void readmAPParams( const char* config_filename, int& classes, int& map_points, 
                     int& map_levels, float& map_step, float& IoU_thresh, 
                     float& conf_thresh, bool& verbose);
 
@@ -85,7 +85,7 @@ double computeMap(  std::vector<Frame> &images,const int classes,
  * @return  mAP IoU_tresh:IoU_tresh+map_step*map_levels (e.g. mAP 0.5:0.95 when 
  *          map_step=0.05 and map_levels=10)
  */
-double computeMapNIoULevels(std::vector<Frame> &images,const int classes,
+TKDNN_LIB_EXPORT_API double computeMapNIoULevels(std::vector<Frame> &images,const int classes,
                 const float i_IoU_thresh=0.5, const float conf_thresh=0.3, 
                 const int map_points=101, const float map_step=0.05, 
                 const int map_levels=10, const bool verbose=false, 
@@ -105,7 +105,7 @@ double computeMapNIoULevels(std::vector<Frame> &images,const int classes,
  *                      are written on file
  * @param net name of the considered neural network 
  */
-void computeTPFPFN( std::vector<Frame> &images,const int classes,
+TKDNN_LIB_EXPORT_API void computeTPFPFN( std::vector<Frame> &images,const int classes,
                     const float IoU_thresh=0.5, const float conf_thresh=0.3, 
                     bool verbose=false, const bool write_on_file=false,    
                     std::string net="");

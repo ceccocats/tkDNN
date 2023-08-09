@@ -80,7 +80,7 @@ namespace nvinfer1 {
 
     class ShortcutRTPluginCreator : public IPluginCreator {
     public:
-        ShortcutRTPluginCreator();
+        TKDNN_LIB_EXPORT_API ShortcutRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 

@@ -56,7 +56,7 @@ namespace nvinfer1 {
 
     class ActivationReLUCeilingPluginCreator : public IPluginCreator {
     public:
-        ActivationReLUCeilingPluginCreator() ;
+        TKDNN_LIB_EXPORT_API ActivationReLUCeilingPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

@@ -73,7 +73,7 @@ namespace nvinfer1 {
 
     class ResizeLayerRTPluginCreator : public IPluginCreator {
     public:
-        ResizeLayerRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API ResizeLayerRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

@@ -71,7 +71,7 @@ namespace nvinfer1 {
 
     class ReorgRTPluginCreator : public IPluginCreator {
     public:
-        ReorgRTPluginCreator();
+        TKDNN_LIB_EXPORT_API ReorgRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 

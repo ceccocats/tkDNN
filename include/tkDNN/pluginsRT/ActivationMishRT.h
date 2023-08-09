@@ -57,7 +57,7 @@ namespace nvinfer1 {
 
     class ActivationMishRTPluginCreator : public IPluginCreator {
     public:
-        ActivationMishRTPluginCreator() ;
+        TKDNN_LIB_EXPORT_API ActivationMishRTPluginCreator() ;
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
         const char *getPluginNamespace() const NOEXCEPT override ;

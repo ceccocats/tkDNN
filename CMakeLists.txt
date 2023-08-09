@@ -61,7 +61,6 @@ if(WIN32)
         set(CMAKE_CXX_FLAGS "/Od /FS /EHsc /MDd")
         set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} --maxrregcount=32 -G -g)
     endif()
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif(WIN32)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/tkDNN)
@@ -82,7 +81,13 @@ endif()
 #-------------------------------------------------------------------------------
 # CUDA
 #-------------------------------------------------------------------------------
+if(UNIX)
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" --compiler-options '-fPIC')
+endif(UNIX)
+
+if(WIN32)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" --compiler-options)
+endif(WIN32)
 
 
 find_package(CUDNN REQUIRED)

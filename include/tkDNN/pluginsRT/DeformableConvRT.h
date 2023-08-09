@@ -112,7 +112,7 @@ namespace nvinfer1 {
 
     class DeformableConvRTPluginCreator : public IPluginCreator {
     public:
-        DeformableConvRTPluginCreator();
+        TKDNN_LIB_EXPORT_API DeformableConvRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override ;
 

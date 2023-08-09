@@ -170,12 +170,12 @@ public:
     tk::dnn::Network *pre_phase_net = nullptr;
     CenterTrack() {};
     ~CenterTrack() {};
-    bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, 
+    TKDNN_LIB_EXPORT_API bool init(const std::string& tensor_path, const int n_classes=3, const int n_batches=1, 
               const float conf_thresh=0.3, const bool mode_3d=true, 
               const std::vector<cv::Mat>& k_calibs=std::vector<cv::Mat>());
-    void preprocess(cv::Mat &frame, const int bi=0);
-    void postprocess(const int bi=0,const bool mAP=false);
-    void draw(std::vector<cv::Mat>& frames);
+    TKDNN_LIB_EXPORT_API void preprocess(cv::Mat &frame, const int bi=0);
+    TKDNN_LIB_EXPORT_API void postprocess(const int bi=0,const bool mAP=false);
+    TKDNN_LIB_EXPORT_API void draw(std::vector<cv::Mat>& frames);
 };
 
 

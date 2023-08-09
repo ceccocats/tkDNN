@@ -46,7 +46,7 @@ namespace tk { namespace dnn {
     void darknetAddLayer(tk::dnn::Network *net, darknetFields_t &f, std::string wgs_path, 
                          std::vector<tk::dnn::Layer*> &netLayers, const std::vector<std::string>& names);
     std::vector<std::string> darknetReadNames(const std::string& names_file);
-    tk::dnn::Network* darknetParser(const std::string& cfg_file, const std::string& wgs_path, const std::string& names_file);
+    TKDNN_LIB_EXPORT_API tk::dnn::Network* darknetParser(const std::string& cfg_file, const std::string& wgs_path, const std::string& names_file);
     void loadYoloInfo(const std::string &cfg_file,int lineNo,std::vector<float> &mask,std::vector<float> &anchors,int &num,int &classes,float &nms_thresh,int &nms_kind,int &coords);
     void loadYoloInitInfo(int &channels,int &width,int &height,const std::string &cfg_file);
     std::vector<int> noYolosLine(const std::string &cfg_file);

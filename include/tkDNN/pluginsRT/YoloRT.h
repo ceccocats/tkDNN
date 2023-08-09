@@ -98,7 +98,7 @@ namespace nvinfer1 {
 
     class YoloRTPluginCreator : public IPluginCreator {
     public:
-        YoloRTPluginCreator();
+        TKDNN_LIB_EXPORT_API YoloRTPluginCreator();
 
         void setPluginNamespace(const char *pluginNamespace) NOEXCEPT override;
 
